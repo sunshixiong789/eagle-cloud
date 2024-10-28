@@ -1,2 +1,2 @@
 rootProject.name = 'eleganteer-cloud'
-include(':eleganteer-business-system')
+include(":eleganteer-upms")
