@@ -1,0 +1,4 @@
+dependencies {
+    implementation project(":eleganteer-system:eleganteer-system-biz")
+    implementation project(":eleganteer-system:eleganteer-system-facade")
+}
