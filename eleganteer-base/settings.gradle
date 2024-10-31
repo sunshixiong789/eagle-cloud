@@ -1,1 +1,2 @@
 rootProject.name = 'eleganteer-base'
+include(":eleganteer-gateway")

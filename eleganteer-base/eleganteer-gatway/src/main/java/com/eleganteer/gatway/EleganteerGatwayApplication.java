@@ -1,13 +1,13 @@
-package com.eleganteer.systemfacad;
+package com.eleganteer.gatway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class EleganteerSystemFacadApplication {
+public class EleganteerGatwayApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(EleganteerSystemFacadApplication.class, args);
+        SpringApplication.run(EleganteerGatwayApplication.class, args);
     }
 
 }
