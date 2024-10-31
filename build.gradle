@@ -1,5 +1,45 @@
 
+plugins {
+    id 'org.springframework.boot' version '3.2.4' apply false
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE' apply false
+    id 'org.graalvm.buildtools.native' version '0.10.3' apply false
+}
+ext {
+    group = 'com.eleganteer'
+    version = '1.0.0'
+    set('springCloudVersion', "2023.0.3")
+    set('springModulithVersion', "1.2.4")
+}
 
 allprojects {
+    apply plugin: 'java'
+    sourceCompatibility = '21'
+    targetCompatibility = '21'
+
+    repositories {
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        mavenCentral()
+    }
+}
+subprojects {
+
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'org.graalvm.buildtools.native'
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.modulith:spring-modulith-bom:${springModulithVersion}"
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        }
+    }
+
+    dependencies {
+        runtimeOnly 'org.springframework.modulith:spring-modulith-actuator'
+        runtimeOnly 'org.springframework.modulith:spring-modulith-observability'
+        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+        annotationProcessor 'org.projectlombok:lombok'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
 
 }
