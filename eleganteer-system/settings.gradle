@@ -1,3 +1,0 @@
-rootProject.name = 'eleganteer-system'
-include(":eleganteer-system-biz")
-include(":eleganteer-system-facade")

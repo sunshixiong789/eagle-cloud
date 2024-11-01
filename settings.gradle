@@ -1,6 +1,4 @@
 rootProject.name = 'eleganteer-cloud'
-include(":eleganteer-base")
 include(":eleganteer-base:eleganteer-gateway")
-include(":eleganteer-system")
 include(":eleganteer-system:eleganteer-system-biz")
 include(":eleganteer-system:eleganteer-system-facade")
