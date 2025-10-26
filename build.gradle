@@ -1,11 +1,11 @@
 plugins {
-    id 'org.springframework.boot' version '3.2.4' apply false
-    id 'io.spring.dependency-management' version '1.1.6' apply false
-    id 'org.graalvm.buildtools.native' version '0.10.3' apply false
+    id 'org.springframework.boot' version '3.5.7' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
+    id 'org.graalvm.buildtools.native' version '0.11.2' apply false
 }
 ext {
-    set('springCloudVersion', "2023.0.3")
-    set('springModulithVersion', "1.2.4")
+    set('springCloudVersion', "2025.0.0")
+    set('springModulithVersion', "1.4.4")
 }
 
 allprojects {
