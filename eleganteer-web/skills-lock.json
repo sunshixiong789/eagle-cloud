@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "mui": {
+      "source": "davila7/claude-code-templates",
+      "sourceType": "github",
+      "computedHash": "42c7b1620ab65d1cb1d3bcbf931320757113f921bc6bf9f8883d0c402b9445a3"
+    }
+  }
+}
