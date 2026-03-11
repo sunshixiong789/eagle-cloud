@@ -1,4 +1,14 @@
 rootProject.name = 'eleganteer-cloud'
-include(":eleganteer-base:eleganteer-gateway")
-include(":eleganteer-base:eleganteer-core")
-include(":eleganteer-system:eleganteer-system-biz")
+
+// 基础服务模块
+include ':eleganteer-base-server:eleganteer-authorization-server'
+include ':eleganteer-base-server:eleganteer-gateway-server'
+include ':eleganteer-base-server:eleganteer-register-server'
+include ':eleganteer-base-server:eleganteer-system-server'
+
+// Starter 模块
+include ':eleganteer-starter:eleganteer-common-starter'
+include ':eleganteer-starter:eleganteer-feign-starter'
+include ':eleganteer-starter:eleganteer-resource-server-starter'
+include ':eleganteer-starter:eleganteer-swagger-starter'
+
