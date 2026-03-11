@@ -1,14 +1,14 @@
 rootProject.name = 'eleganteer-cloud'
 
 // 基础服务模块
-include ':eleganteer-authorization-server'
-include ':eleganteer-gateway-server'
-include ':eleganteer-register-server'
-include ':eleganteer-system-server'
+include ':eleganteer-base-server:eleganteer-authorization-server'
+include ':eleganteer-base-server:eleganteer-gateway-server'
+include ':eleganteer-base-server:eleganteer-register-server'
+include ':eleganteer-base-server:eleganteer-system-server'
 
 // Starter 模块
-include ':eleganteer-common-starter'
-include ':eleganteer-feign-starter'
-include ':eleganteer-resource-server-starter'
-include ':eleganteer-swagger-starter'
+include ':eleganteer-starter:eleganteer-common-starter'
+include ':eleganteer-starter:eleganteer-feign-starter'
+include ':eleganteer-starter:eleganteer-resource-server-starter'
+include ':eleganteer-starter:eleganteer-swagger-starter'
 
