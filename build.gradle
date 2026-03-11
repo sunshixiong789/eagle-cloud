@@ -1,17 +1,20 @@
 plugins {
-    id 'org.springframework.boot' version '3.5.7' apply false
+    id 'java'
+    id 'org.springframework.boot' version '4.0.3' apply false
     id 'io.spring.dependency-management' version '1.1.7' apply false
-    id 'org.graalvm.buildtools.native' version '0.11.2' apply false
+    id 'org.graalvm.buildtools.native' version '0.11.5' apply false
 }
 ext {
-    set('springCloudVersion', "2025.0.0")
-    set('springModulithVersion', "1.4.4")
+    set('springCloudVersion', "2025.1.1")
 }
 
 allprojects {
     apply plugin: 'java'
-    sourceCompatibility = '21'
-    targetCompatibility = '21'
+
+    java {
+        sourceCompatibility = '25'
+        targetCompatibility = '25'
+    }
 
     group = 'com.eleganteer'
     version = '1.0.0'
@@ -29,15 +32,12 @@ subprojects {
 
     dependencyManagement {
         imports {
-            mavenBom "org.springframework.modulith:spring-modulith-bom:${springModulithVersion}"
             mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
         }
     }
 
     dependencies {
         implementation 'org.projectlombok:lombok'
-        runtimeOnly 'org.springframework.modulith:spring-modulith-actuator'
-        runtimeOnly 'org.springframework.modulith:spring-modulith-observability'
         annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     }
