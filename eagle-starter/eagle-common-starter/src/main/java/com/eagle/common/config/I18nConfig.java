@@ -1,4 +1,4 @@
-package com.eagle.system.config;
+package com.eagle.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

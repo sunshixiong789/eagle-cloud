@@ -1,6 +1,6 @@
 package com.eagle.common.base;
 
-import com.eagle.system.common.event.BaseDomainEvent;
+import com.eagle.common.event.BaseDomainEvent;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;

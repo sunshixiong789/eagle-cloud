@@ -1,7 +1,7 @@
 package com.eagle.authorization.config;
 
-import com.eagle.eagle.common.constant.SecurityConstants;
-import com.eagle.eagle.common.dto.EagleUser;
+import com.eagle.common.constant.SecurityConstants;
+import com.eagle.common.dto.EagleUser;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
@@ -55,7 +55,6 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static com.eagle.eagle.common.constant.SecurityConstants.DETAILS_ROLES;
 
 /**
  * @author 孙士雄 15:24
@@ -222,7 +221,7 @@ public class SecurityConfig {
                 String username = principal.getName();
                 EagleUser user = (EagleUser) userDetailsService.loadUserByUsername(username);
                 context.getClaims()
-                        .claim(DETAILS_ROLES, user.getAuthorities().stream()
+                        .claim(SecurityConstants.DETAILS_ROLES, user.getAuthorities().stream()
                                 .map(GrantedAuthority::getAuthority).filter(Objects::nonNull)
                                 .filter(a -> !a.startsWith(SecurityConstants.ROLE_START))
                                 .collect(Collectors.toList()))

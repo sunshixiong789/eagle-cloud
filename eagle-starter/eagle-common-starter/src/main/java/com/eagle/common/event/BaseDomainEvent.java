@@ -1,10 +1,9 @@
 package com.eagle.common.event;
 
-//import com.github.f4b6a3.uuid.UuidCreator;
+import com.github.f4b6a3.uuid.UuidCreator;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * 领域事件基类
@@ -32,7 +31,7 @@ public class BaseDomainEvent {
     private final LocalDateTime occurredOn;
 
     protected BaseDomainEvent() {
-        this.eventId = UUID.randomUUID().toString();
+        this.eventId = UuidCreator.getTimeOrderedEpoch().toString();
         this.occurredOn = LocalDateTime.now();
     }
 

@@ -9,10 +9,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @Slf4j
 @SpringBootApplication
-public class EagleSystemBizApplication {
+public class EagleSystemApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(EagleSystemBizApplication.class, args);
+        SpringApplication.run(EagleSystemApplication.class, args);
     }
 
 }

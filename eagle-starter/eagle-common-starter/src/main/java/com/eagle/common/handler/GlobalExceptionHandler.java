@@ -1,12 +1,11 @@
-package com.eagle.system.config.handler;
+package com.eagle.common.handler;
 
-import com.eagle.eagle.common.dto.ErrorResult;
-import com.eagle.eagle.common.exception.BusinessException;
-import com.eagle.eagle.common.exception.ResourceConflictException;
-import com.eagle.eagle.common.exception.ResourceNotFoundException;
+import com.eagle.common.dto.ErrorResult;
+import com.eagle.common.exception.BusinessException;
+import com.eagle.common.exception.ResourceConflictException;
+import com.eagle.common.exception.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -90,33 +89,6 @@ public class GlobalExceptionHandler {
     public ErrorResult handleIllegalState(IllegalStateException e, HttpServletRequest request) {
         log.warn("状态冲突：{}", e.getMessage());
         return ErrorResult.of(HttpStatus.CONFLICT, e.getMessage(), request.getRequestURI());
-    }
-
-    /**
-     * 处理数据库唯一性约束异常 - 409
-     * <p>
-     * 当数据库唯一索引冲突时（如用户名、手机号、邮箱重复），
-     * 捕获 DataIntegrityViolationException 并返回友好的错误信息
-     */
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    @ResponseBody
-    public ErrorResult handleDataIntegrityViolation(DataIntegrityViolationException e, HttpServletRequest request) {
-        String message = "数据冲突";
-        String errorMsg = e.getMessage();
-
-        if (errorMsg != null) {
-            if (errorMsg.contains("username") || errorMsg.contains("idx_username")) {
-                message = "用户名已存在";
-            } else if (errorMsg.contains("phone") || errorMsg.contains("idx_phone")) {
-                message = "手机号已被注册";
-            } else if (errorMsg.contains("email") || errorMsg.contains("idx_email")) {
-                message = "邮箱已被注册";
-            }
-        }
-
-        log.warn("数据库约束冲突：{}", message, e);
-        return ErrorResult.of(HttpStatus.CONFLICT, message, request.getRequestURI());
     }
 
     /**
