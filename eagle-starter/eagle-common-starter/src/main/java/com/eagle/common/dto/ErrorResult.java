@@ -1,4 +1,4 @@
-package com.eagle.system.common.dto;
+package com.eagle.common.dto;
 
 import lombok.Data;
 import org.springframework.http.HttpStatus;

@@ -1,4 +1,4 @@
-package com.eagle.system.common.dto;
+package com.eagle.common.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;

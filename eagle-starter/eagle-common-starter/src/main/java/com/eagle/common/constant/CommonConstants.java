@@ -1,4 +1,4 @@
-package com.eagle.system.common.constant;
+package com.eagle.common.constant;
 
 /**
  * 全局常量

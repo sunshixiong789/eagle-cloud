@@ -1,5 +1,6 @@
-package com.eagle.system.common.base;
+package com.eagle.common.base;
 
+import com.eagle.system.common.event.BaseDomainEvent;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
@@ -8,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Transient;
 import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,9 +20,13 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * DTO for {@link BaseEntity}
+ * 聚合根基类
+ * <p>
+ * 提供领域事件管理能力，所有聚合根都应该继承此类
  *
  * @author sunshixiong
  */
@@ -28,29 +34,29 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @EntityListeners(AuditingEntityListener.class)
-public abstract class BaseEntity {
+public abstract class BaseAggregate implements AggregateRoot {
 
+    /**
+     * 领域事件列表（不持久化）
+     */
+    @Transient
+    private final List<BaseDomainEvent> domainEvents = new ArrayList<>();
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(comment = "主键 ID")
     private Long id;
-
     @CreatedBy
     @Column(updatable = false, comment = "创建人 ID")
     private Long createBy;
-
     @LastModifiedBy
     @Column(comment = "更新人 ID")
     private Long updateBy;
-
     @CreatedDate
     @Column(nullable = false, updatable = false, comment = "创建时间")
     private LocalDateTime createTime;
-
     @LastModifiedDate
     @Column(comment = "更新时间")
     private LocalDateTime updateTime;
-
     @Version
     @Column(comment = "乐观锁版本号")
     private Long version;
@@ -62,6 +68,31 @@ public abstract class BaseEntity {
             createTime = LocalDateTime.now();
         }
         updateTime = LocalDateTime.now();
+    }
+
+
+    // ==================== 领域事件管理 ====================
+
+    /**
+     * 注册领域事件
+     */
+    protected void registerEvent(BaseDomainEvent event) {
+        this.domainEvents.add(event);
+    }
+
+    /**
+     * 获取所有领域事件
+     */
+    @Transient
+    public List<BaseDomainEvent> getDomainEvents() {
+        return this.domainEvents;
+    }
+
+    /**
+     * 清除所有领域事件
+     */
+    public void clearDomainEvents() {
+        this.domainEvents.clear();
     }
 
 }

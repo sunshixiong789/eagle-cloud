@@ -1,4 +1,4 @@
-package com.eagle.system.common.i18n;
+package com.eagle.common.i18n;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;

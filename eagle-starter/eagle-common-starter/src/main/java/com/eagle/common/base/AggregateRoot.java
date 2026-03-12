@@ -1,4 +1,4 @@
-package com.eagle.system.common.base;
+package com.eagle.common.base;
 
 /**
  * 聚合根标记接口

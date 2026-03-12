@@ -1,4 +1,4 @@
-package com.eagle.system.common.event;
+package com.eagle.common.event;
 
 //import com.github.f4b6a3.uuid.UuidCreator;
 import lombok.Getter;

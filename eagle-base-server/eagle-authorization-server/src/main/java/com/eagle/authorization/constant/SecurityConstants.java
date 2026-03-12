@@ -1,4 +1,4 @@
-package com.eagle.system.common.constant;
+package com.eagle.authorization.constant;
 
 /**
  * 权限相关通用常量

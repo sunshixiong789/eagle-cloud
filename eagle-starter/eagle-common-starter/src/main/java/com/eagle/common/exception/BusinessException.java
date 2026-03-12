@@ -1,4 +1,4 @@
-package com.eagle.system.common.exception;
+package com.eagle.common.exception;
 
 import lombok.Getter;
 
