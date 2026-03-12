@@ -9,63 +9,32 @@ ext {
     // Spring 版本
     set('springBootVersion', '4.0.3')
     set('springCloudVersion', '2025.1.1')
+    set('springModulithVersion', "2.0.3")
     set('springDependencyManagementVersion', '1.1.7')
 
     // 数据库驱动版本
-    set('mysqlConnectorVersion', '9.1.0')
-    set('postgresqlVersion', '42.7.4')
-    set('h2Version', '2.3.232')
-
-    // 持久层框架版本
-    set('mybatisPlusVersion', '3.5.9')
-    set('mybatisSpringBootVersion', '3.0.4')
+    set('mysqlConnectorVersion', '9.6.0')
+    set('postgresqlVersion', '42.7.10')
 
     // 连接池版本
-    set('druidVersion', '1.2.24')
-    set('hikariVersion', '6.2.1')
+    set('druidVersion', '1.2.28')
 
     // Redis 版本
-    set('redissonVersion', '3.40.2')
+    set('redissonVersion', '4.3.0')
 
     // 工具类版本
-    set('lombokVersion', '1.18.36')
-    set('hutoolVersion', '5.8.34')
-    set('guavaVersion', '33.4.0-jre')
-    set('commonsLang3Version', '3.17.0')
-    set('commonsCollections4Version', '4.5.0-M2')
-    set('commonsIoVersion', '2.18.0')
-
-    // JSON 处理版本
-    set('jacksonVersion', '2.18.2')
-    set('gsonVersion', '2.11.0')
-    set('fastjsonVersion', '2.0.54')
+    set('hutoolVersion', '5.8.43')
+    set('guavaVersion', '33.5.0-jre')
+    set('commonsLang3Version', '3.14.0-r3')
+    set('commonsCollections4Version', '4.5.0')
+    set('commonsIoVersion', '2.21.0')
+    set('uuidCreator', '6.1.1')
 
     // API 文档版本
-    set('springdocVersion', '2.7.0')
-    set('swaggerVersion', '2.2.27')
-    set('knifej4Version', '4.5.0')
+    set('springdocVersion', '3.0.2')
 
-    // 安全框架版本
-    set('jjwtVersion', '0.12.6')
-    set('saTokenVersion', '1.40.0')
-
-    // 日志版本
-    set('logbackVersion', '1.5.15')
-    set('slf4jVersion', '2.0.16')
-
-    // 测试框架版本
-    set('junitVersion', '5.11.4')
-    set('mockitoVersion', '5.15.2')
-
-    // 其他常用依赖版本
-    set('validationApiVersion', '3.1.0')
-    set('servletApiVersion', '6.1.0')
-    set('aspectjVersion', '1.9.24')
-    set('caffeineVersion', '3.1.8')
     set('mapstructVersion', '1.6.3')
 
-    // GraalVM 版本
-    set('graalvmVersion', '0.11.5')
 }
 
 allprojects {
@@ -92,6 +61,7 @@ subprojects {
 
     dependencyManagement {
         imports {
+            mavenBom "org.springframework.modulith:spring-modulith-bom:${springModulithVersion}"
             mavenBom "org.springframework.boot:spring-boot-dependencies:${springBootVersion}"
             mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
         }
@@ -99,7 +69,6 @@ subprojects {
             // 数据库驱动
             dependency "com.mysql:mysql-connector-j:${mysqlConnectorVersion}"
             dependency "org.postgresql:postgresql:${postgresqlVersion}"
-            dependency "com.h2database:h2:${h2Version}"
 
             // 连接池
             dependency "com.alibaba:druid-spring-boot-3-starter:${druidVersion}"
@@ -113,11 +82,10 @@ subprojects {
             dependency "org.apache.commons:commons-lang3:${commonsLang3Version}"
             dependency "org.apache.commons:commons-collections4:${commonsCollections4Version}"
             dependency "commons-io:commons-io:${commonsIoVersion}"
+            dependency "com.github.f4b6a3:uuid-creator:${uuidCreator}"
 
             // API 文档
             dependency "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
-            dependency "io.swagger.core.v3:swagger-annotations:${swaggerVersion}"
-            dependency "com.github.xiaoymin:knife4j-openapi3-jakarta-spring-boot-starter:${knifej4Version}"
 
             // mapstruct
             dependency "org.mapstruct:mapstruct:${mapstructVersion}"

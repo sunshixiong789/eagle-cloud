@@ -12,3 +12,4 @@ include ':eleganteer-starter:eleganteer-feign-starter'
 include ':eleganteer-starter:eleganteer-resource-server-starter'
 include ':eleganteer-starter:eleganteer-swagger-starter'
 
+
