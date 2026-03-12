@@ -117,7 +117,7 @@ $ ./gradlew bootBuildImage
 Then, you can run the app like any other container:
 
 ```
-$ docker run --rm -p 8080:8080 eleganteer-upms:0.0.1-SNAPSHOT
+$ docker run --rm -p 8080:8080 eagle-upms:0.0.1-SNAPSHOT
 ```
 
 ### Executable with Native Build Tools
@@ -136,7 +136,7 @@ $ ./gradlew nativeCompile
 Then, you can run the app as follows:
 
 ```
-$ build/native/nativeCompile/eleganteer-upms
+$ build/native/nativeCompile/eagle-upms
 ```
 
 You can also run your existing tests suite in a native image.

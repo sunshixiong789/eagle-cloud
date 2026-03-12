@@ -1,0 +1,158 @@
+# -------只适用于开发环境----------
+version: '3.8'
+# 网络配置
+networks:
+  eagle-network:
+    driver: bridge
+
+services:
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0.30
+    container_name: eagle-mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    networks:
+      - eagle-network
+    environment:
+      - MYSQL_ROOT_PASSWORD=root123456
+      - MYSQL_DATABASE=eagle
+      - TZ=Asia/Shanghai
+    volumes:
+      - mysql-data:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123456" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Redis 缓存
+  redis:
+    image: redis:8.6.1
+    container_name: eagle-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - eagle-network
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --requirepass redis123456
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "redis123456", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Nacos 注册中心
+  nacos:
+    image: nacos/nacos-server:v3.1.1
+    container_name: eagle-nacos
+    restart: always
+    ports:
+      - "8080:8080"
+      - "8848:8848"
+      - "9848:9848"
+    networks:
+      - eagle-network
+    environment:
+      - PREFER_HOST_MODE=hostname
+      - MODE=standalone
+      - NACOS_AUTH_IDENTITY_KEY=serverIdentity
+      - NACOS_AUTH_IDENTITY_VALUE=security
+      - NACOS_AUTH_TOKEN=VGhpc0lzTXlDdXN0b21TZWNyZXRLZXkwMTIzNDU2Nzg=
+      - TZ=Asia/Shanghai
+    volumes:
+      - nacos-data:/home/nacos/data
+  # 网关服务
+  gateway:
+    build:
+      context: ./eagle-gateway-server
+      dockerfile: Dockerfile
+    image: eagle-gateway:1.0.0
+    container_name: eagle-gateway
+    restart: always
+    ports:
+      - "8080:8080"
+    networks:
+      - eagle-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - JAVA_OPTS=-server -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      authorization:
+        condition: service_healthy
+      system:
+        condition: service_healthy
+
+  # 认证授权服务
+  authorization:
+    build:
+      context: ./eagle-authorization-server
+      dockerfile: Dockerfile
+    image: eagle-authorization:1.0.0
+    container_name: eagle-authorization
+    restart: always
+    ports:
+      - "8081:8081"
+    networks:
+      - eagle-network
+    environment:
+      - JAVA_OPTS=-server -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8081/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+
+  # 系统服务
+  system:
+    build:
+      context: ./eagle-system-server
+      dockerfile: Dockerfile
+    image: eagle-system:1.0.0
+    container_name: eagle-system
+    restart: always
+    ports:
+      - "8082:8082"
+    networks:
+      - eagle-network
+    environment:
+      - JAVA_OPTS=-server -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8082/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+

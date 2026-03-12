@@ -6,11 +6,13 @@ plugins {
 }
 
 ext {
-    // Spring 版本
+    // Spring/spring cloud 版本
     set('springBootVersion', '4.0.3')
     set('springCloudVersion', '2025.1.1')
-    set('springModulithVersion', "2.0.3")
+    set('springCloudAlibabaVersion', '2025.1.0.0')
     set('springDependencyManagementVersion', '1.1.7')
+
+    set('springModulithVersion', "2.0.3")
 
     // 数据库驱动版本
     set('mysqlConnectorVersion', '9.6.0')
@@ -45,7 +47,7 @@ allprojects {
         targetCompatibility = '25'
     }
 
-    group = 'com.eleganteer'
+    group = 'com.eagle'
     version = '1.0.0'
 
     repositories {
@@ -64,6 +66,7 @@ subprojects {
             mavenBom "org.springframework.modulith:spring-modulith-bom:${springModulithVersion}"
             mavenBom "org.springframework.boot:spring-boot-dependencies:${springBootVersion}"
             mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+            mavenBom "com.alibaba.cloud:spring-cloud-alibaba-dependencies:${springCloudAlibabaVersion}"
         }
         dependencies {
             // 数据库驱动

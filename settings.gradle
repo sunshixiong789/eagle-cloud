@@ -1,15 +1,14 @@
-rootProject.name = 'eleganteer-cloud'
+rootProject.name = 'eagle-cloud'
 
 // 基础服务模块
-include ':eleganteer-base-server:eleganteer-authorization-server'
-include ':eleganteer-base-server:eleganteer-gateway-server'
-include ':eleganteer-base-server:eleganteer-register-server'
-include ':eleganteer-base-server:eleganteer-system-server'
+include ':eagle-base-server:eagle-authorization-server'
+include ':eagle-base-server:eagle-gateway-server'
+include ':eagle-base-server:eagle-system-server'
 
 // Starter 模块
-include ':eleganteer-starter:eleganteer-common-starter'
-include ':eleganteer-starter:eleganteer-feign-starter'
-include ':eleganteer-starter:eleganteer-resource-server-starter'
-include ':eleganteer-starter:eleganteer-swagger-starter'
+include ':eagle-starter:eagle-common-starter'
+include ':eagle-starter:eagle-feign-starter'
+include ':eagle-starter:eagle-resource-server-starter'
+include ':eagle-starter:eagle-swagger-starter'
 
 
