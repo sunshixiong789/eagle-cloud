@@ -1,12 +1,12 @@
-package com.eagle.system.system.infrastructure.config;
+package com.eagle.authorization.config;
 
-import com.eagle.eagle.common.dto.EagleUser;
-import com.eagle.eagle.system.domain.model.Dept;
-import com.eagle.eagle.system.domain.model.Role;
-import com.eagle.eagle.system.domain.model.User;
-import com.eagle.eagle.system.domain.repository.DeptRepository;
-import com.eagle.eagle.system.domain.repository.RoleRepository;
-import com.eagle.eagle.system.domain.repository.UserRepository;
+import com.eagle.common.dto.EagleUser;
+import com.eagle.system.domain.model.Dept;
+import com.eagle.system.domain.model.Role;
+import com.eagle.system.domain.model.User;
+import com.eagle.system.domain.repository.DeptRepository;
+import com.eagle.system.domain.repository.RoleRepository;
+import com.eagle.system.domain.repository.UserRepository;
 import com.google.common.collect.Sets;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
@@ -46,7 +46,6 @@ public class EagleUserDetailsServiceImpl implements UserDetailsService {
                     "孙士雄", 23231L, "技术部", "17708080863",
                     AuthorityUtils.createAuthorityList("USER", "ADMIN"));
         }
-
         Optional<User> userOptional = userRepository.findByUsername(username);
         if (userOptional.isPresent()) {
             Set<String> dbAuthsSet = Sets.newHashSet();

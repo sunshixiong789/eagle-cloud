@@ -1,8 +1,11 @@
 plugins {
     id 'java'
+    id 'java-library'
+    id 'maven-publish'
     id 'org.springframework.boot' version '4.0.3' apply false
     id 'io.spring.dependency-management' version '1.1.7' apply false
     id 'org.graalvm.buildtools.native' version '0.11.5' apply false
+    id 'org.hibernate.orm' version '7.2.6.Final'
 }
 
 ext {
@@ -27,7 +30,7 @@ ext {
     // 工具类版本
     set('hutoolVersion', '5.8.43')
     set('guavaVersion', '33.5.0-jre')
-    set('commonsLang3Version', '3.14.0-r3')
+    set('commonsLang3Version', '3.20.0')
     set('commonsCollections4Version', '4.5.0')
     set('commonsIoVersion', '2.21.0')
     set('uuidCreator', '6.1.1')
@@ -36,11 +39,17 @@ ext {
     set('springdocVersion', '3.0.2')
 
     set('mapstructVersion', '1.6.3')
+    set('lombokMapstructVersion', '0.2.0')
 
 }
 
 allprojects {
     apply plugin: 'java'
+    apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'org.graalvm.buildtools.native'
 
     java {
         sourceCompatibility = '25'
@@ -54,12 +63,32 @@ allprojects {
         maven { url 'https://maven.aliyun.com/repository/public' }
         mavenCentral()
     }
+
+    hibernate {
+        enhancement {
+            enableAssociationManagement = true
+        }
+    }
+
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+
+                groupId = 'com.eagle'
+                version = '1.0.0-SNAPSHOT'
+            }
+        }
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+
+    tasks.named('processAot') {
+    }
 }
 subprojects {
-
-    apply plugin: 'org.springframework.boot'
-    apply plugin: 'io.spring.dependency-management'
-    apply plugin: 'org.graalvm.buildtools.native'
 
     dependencyManagement {
         imports {
@@ -91,15 +120,17 @@ subprojects {
             dependency "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
 
             // mapstruct
+            dependency "org.projectlombok:lombok-mapstruct-binding:${lombokMapstructVersion}"
             dependency "org.mapstruct:mapstruct:${mapstructVersion}"
             dependency "org.mapstruct:mapstruct-processor:${mapstructVersion}"
         }
     }
 
     dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter'
         implementation 'org.projectlombok:lombok'
-        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
         annotationProcessor 'org.projectlombok:lombok'
+        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     }
 

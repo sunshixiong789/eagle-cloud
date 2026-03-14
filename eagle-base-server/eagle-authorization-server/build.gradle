@@ -1,8 +1,7 @@
 
 dependencies {
     implementation project(':eagle-starter:eagle-common-starter')
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation project(':eagle-starter:eagle-data-jpa-starter')
+    implementation project(':eagle-starter:eagle-resource-server-starter')
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
