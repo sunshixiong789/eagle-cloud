@@ -4,6 +4,8 @@ import com.eagle.system.base.domain.model.User;
 import com.eagle.system.base.domain.model.valueobject.UserProfile;
 import com.eagle.system.base.interfaces.dto.request.CreateUserRequest;
 import org.mapstruct.Mapper;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.ReportingPolicy;
 
 /**
  * 用户对象映射器
@@ -13,7 +15,10 @@ import org.mapstruct.Mapper;
  * @author 孙士雄
  * @since 1.0.0
  */
-@Mapper(componentModel = "spring")
+@Mapper(
+        componentModel = MappingConstants.ComponentModel.SPRING,
+        unmappedTargetPolicy = ReportingPolicy.IGNORE
+)
 public interface UserMapper {
 
     // ==================== Request → Entity ====================
@@ -22,6 +27,7 @@ public interface UserMapper {
      * 创建请求转实体（仅用于字段映射，不包含密码和初始化逻辑）
      * <p>
      * 注意：UserProfile 是不可变值对象，需要在应用层手动设置
+     *
      * @param request 创建用户请求
      * @return 用户实体
      */

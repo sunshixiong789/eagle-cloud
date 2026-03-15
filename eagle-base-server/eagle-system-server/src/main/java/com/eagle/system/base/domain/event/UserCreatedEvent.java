@@ -1,6 +1,6 @@
 package com.eagle.system.base.domain.event;
 
-import com.eagle.common.event.BaseDomainEvent;
+import com.eagle.common.event.BaseEvent;
 import lombok.Getter;
 
 /**
@@ -12,7 +12,7 @@ import lombok.Getter;
  * @since 1.0.0
  */
 @Getter
-public class UserCreatedEvent extends BaseDomainEvent {
+public class UserCreatedEvent extends BaseEvent {
 
     /**
      * 用户ID

@@ -1,6 +1,6 @@
 package com.eagle.system.base.application.service;
 
-import com.eagle.eagle.common.exception.ResourceNotFoundException;
+import com.eagle.common.exception.ResourceNotFoundException;
 import com.eagle.system.base.application.mapper.UserMapper;
 import com.eagle.system.base.domain.model.User;
 import com.eagle.system.base.domain.repository.UserRepository;
@@ -70,11 +70,8 @@ public class UserService {
         // 4. 调用聚合根的业务方法（会发布 UserCreatedEvent）
         user.initializeAsNewUser(passwordEncryptor, request.getPassword());
 
-        // 5. 持久化（唯一性约束由数据库保证）
+        // 5. 持久化并发布领域事件（唯一性约束由数据库保证）
         User savedUser = userRepository.save(user);
-
-        // 6. 发布领域事件
-        publishDomainEvents(savedUser);
 
         return savedUser.getId();
     }
@@ -113,11 +110,8 @@ public class UserService {
         // 2. 调用实体的业务方法（包含旧密码验证，会发布 UserPasswordChangedEvent）
         user.changePassword(request.getOldPassword(), request.getNewPassword(), passwordEncryptor);
 
-        // 3. 持久化
+        // 3. 保存并领域事件
         userRepository.save(user);
-
-        // 4. 发布领域事件
-        publishDomainEvents(user);
     }
 
     /**
@@ -148,15 +142,5 @@ public class UserService {
         // 调用实体的业务方法（包含状态校验）
         user.unlock();
         userRepository.save(user);
-    }
-
-    // ==================== 私有辅助方法 ====================
-
-    /**
-     * 发布实体中的领域事件
-     */
-    private void publishDomainEvents(User user) {
-        user.getDomainEvents().forEach(eventPublisher::publishEvent);
-        user.clearDomainEvents();
     }
 }

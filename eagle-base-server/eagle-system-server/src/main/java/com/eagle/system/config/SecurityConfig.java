@@ -68,7 +68,6 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .oauth2AuthorizationServer((authorizationServer) -> {
                     http.securityMatcher(authorizationServer.getEndpointsMatcher());
                     authorizationServer
@@ -96,7 +95,6 @@ public class SecurityConfig {
         http
                 // JWT 无状态，必须禁用 CSRF
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers("/login", SecurityConstants.AUTH_TOKEN).permitAll()
                         .requestMatchers("/public/**").permitAll()
@@ -121,23 +119,6 @@ public class SecurityConfig {
                         .permitAll()
                 );
         return http.build();
-    }
-
-    /**
-     * 跨域配置，允许所有。生产改为部分跨域
-     *
-     * @return CorsConfigurationSource
-     */
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("*"));
-        config.setAllowedMethods(List.of("POST"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setMaxAge(3600L);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration(SecurityConstants.AUTH_TOKEN, config);
-        return source;
     }
 
     @Bean

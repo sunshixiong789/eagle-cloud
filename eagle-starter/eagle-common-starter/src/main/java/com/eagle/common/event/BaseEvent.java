@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
  * @since 1.0.0
  */
 @Getter
-public class BaseDomainEvent {
+public class BaseEvent {
 
     /**
      * 事件ID
@@ -30,7 +30,7 @@ public class BaseDomainEvent {
      */
     private final LocalDateTime occurredOn;
 
-    protected BaseDomainEvent() {
+    protected BaseEvent() {
         this.eventId = UuidCreator.getTimeOrderedEpoch().toString();
         this.occurredOn = LocalDateTime.now();
     }

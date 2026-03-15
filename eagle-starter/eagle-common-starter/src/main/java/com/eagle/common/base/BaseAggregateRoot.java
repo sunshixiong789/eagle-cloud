@@ -1,6 +1,6 @@
 package com.eagle.common.base;
 
-import com.eagle.common.event.BaseDomainEvent;
+import com.eagle.common.event.BaseEvent;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
@@ -41,7 +41,7 @@ public abstract class BaseAggregateRoot<T extends AbstractAggregateRoot<T>> exte
      * 领域事件列表（不持久化）
      */
     @Transient
-    private final List<BaseDomainEvent> domainEvents = new ArrayList<>();
+    private final List<BaseEvent> domainEvents = new ArrayList<>();
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(comment = "主键 ID")
