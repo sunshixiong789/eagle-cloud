@@ -1,5 +1,33 @@
 server:
-  port: 8082
+  port: 8081
 spring:
   application:
     name: eagle-system-server
+  security:
+    oauth2:
+      authorizationserver:
+        client:
+          oidc-client:
+            registration:
+              client-id: "eagle-web"
+              client-secret: "{noop}123456"
+              client-authentication-methods:
+                - "none"
+              authorization-grant-types:
+                - "authorization_code"
+                - "refresh_token"
+              redirect-uris:
+                - "http://localhost:8080/auth/auth0/sign-in"
+              post-logout-redirect-uris:
+                - "http://localhost:8080/"
+              scopes:
+                - "openid"
+                - "profile"
+                - "email"
+                - "phone"
+                - "address"
+            require-authorization-consent: true
+            require-proof-key: true
+            token:
+              access-token-time-to-live: 3600s
+              refresh-token-time-to-live: 86400s

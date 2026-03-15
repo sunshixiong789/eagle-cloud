@@ -8,4 +8,5 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation "com.github.f4b6a3:uuid-creator"
     implementation 'org.apache.tomcat.embed:tomcat-embed-core'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

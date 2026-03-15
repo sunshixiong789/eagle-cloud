@@ -69,7 +69,7 @@ subprojects {
 
     // 聚合模块和 starter 模块不应该是可执行应用
     if (project.name in ['eagle-base-server', 'eagle-starter'] ||
-        project.path.contains(':eagle-starter:')) {
+            project.path.contains(':eagle-starter:')) {
         bootJar {
             enabled = false
         }
@@ -101,6 +101,12 @@ subprojects {
 
     tasks.named('test') {
         useJUnitPlatform()
+    }
+
+    tasks.withType(JavaExec).configureEach {
+        jvmArgs += [
+                "-XX:+AllowRedefinitionToAddDeleteMethods"
+        ]
     }
 
     dependencyManagement {

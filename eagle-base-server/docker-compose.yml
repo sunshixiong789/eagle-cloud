@@ -100,34 +100,6 @@ services:
       system:
         condition: service_healthy
 
-  # 认证授权服务
-  authorization:
-    build:
-      context: ./eagle-authorization-server
-      dockerfile: Dockerfile
-    image: eagle-authorization:1.0.0
-    container_name: eagle-authorization
-    restart: always
-    ports:
-      - "8081:8081"
-    networks:
-      - eagle-network
-    environment:
-      - JAVA_OPTS=-server -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0
-    healthcheck:
-      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8081/actuator/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      nacos:
-        condition: service_healthy
-
   # 系统服务
   system:
     build:

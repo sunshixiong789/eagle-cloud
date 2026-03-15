@@ -1,8 +1,7 @@
 
 dependencies {
-    implementation project(':eagle-starter:eagle-common-starter')
     implementation project(':eagle-starter:eagle-data-jpa-starter')
     implementation project(':eagle-starter:eagle-resource-server-starter')
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
 }

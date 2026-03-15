@@ -1,7 +1,6 @@
 rootProject.name = 'eagle-cloud'
 
 // 基础服务模块
-include ':eagle-base-server:eagle-authorization-server'
 include ':eagle-base-server:eagle-gateway-server'
 include ':eagle-base-server:eagle-system-server'
 
