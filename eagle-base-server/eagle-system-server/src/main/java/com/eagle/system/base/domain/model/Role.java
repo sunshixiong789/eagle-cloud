@@ -1,6 +1,6 @@
 package com.eagle.system.base.domain.model;
 
-import com.eagle.eagle.common.base.BaseEntity;
+import com.eagle.common.base.BaseEntity;
 import com.eagle.system.base.domain.model.enums.DataScope;
 import com.eagle.system.base.domain.model.enums.RoleStatus;
 import com.eagle.system.base.domain.model.enums.RoleType;

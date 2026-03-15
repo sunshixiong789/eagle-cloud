@@ -17,6 +17,7 @@ import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.domain.AbstractAggregateRoot;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
@@ -34,7 +35,7 @@ import java.util.List;
 @Getter
 @Setter
 @EntityListeners(AuditingEntityListener.class)
-public abstract class BaseAggregate implements AggregateRoot {
+public abstract class BaseAggregateRoot<T extends AbstractAggregateRoot<T>> extends AbstractAggregateRoot<T> {
 
     /**
      * 领域事件列表（不持久化）
@@ -68,31 +69,6 @@ public abstract class BaseAggregate implements AggregateRoot {
             createTime = LocalDateTime.now();
         }
         updateTime = LocalDateTime.now();
-    }
-
-
-    // ==================== 领域事件管理 ====================
-
-    /**
-     * 注册领域事件
-     */
-    protected void registerEvent(BaseDomainEvent event) {
-        this.domainEvents.add(event);
-    }
-
-    /**
-     * 获取所有领域事件
-     */
-    @Transient
-    public List<BaseDomainEvent> getDomainEvents() {
-        return this.domainEvents;
-    }
-
-    /**
-     * 清除所有领域事件
-     */
-    public void clearDomainEvents() {
-        this.domainEvents.clear();
     }
 
 }

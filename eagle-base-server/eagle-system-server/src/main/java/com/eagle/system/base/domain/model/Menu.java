@@ -1,6 +1,6 @@
 package com.eagle.system.base.domain.model;
 
-import com.eagle.eagle.common.base.BaseEntity;
+import com.eagle.common.base.BaseEntity;
 import com.eagle.system.base.domain.model.enums.MenuStatus;
 import com.eagle.system.base.domain.model.enums.MenuType;
 import jakarta.persistence.Column;

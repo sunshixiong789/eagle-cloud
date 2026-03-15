@@ -1,7 +1,7 @@
 package com.eagle.system.base.domain.model;
 
 
-import com.eagle.eagle.common.base.BaseEntity;
+import com.eagle.common.base.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;

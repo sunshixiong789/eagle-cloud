@@ -1,6 +1,7 @@
 package com.eagle.system.base.domain.model;
 
-import com.eagle.eagle.common.base.BaseEntity;
+import com.eagle.common.base.BaseAggregateRoot;
+import com.eagle.common.base.BaseEntity;
 import com.eagle.system.base.domain.model.entity.DictItemEntity;
 import com.eagle.system.base.domain.model.enums.DictStatus;
 import com.eagle.system.base.domain.model.enums.DictType;
@@ -29,7 +30,7 @@ import java.util.List;
 @Table(name = "sys_dict", comment = "字典类型表", indexes = {
         @Index(name = "idx_dict_type", columnList = "dict_type", unique = true)
 })
-public class Dict extends BaseEntity {
+public class Dict extends BaseAggregateRoot<Dict> {
 
     @OneToMany(mappedBy = "dictId", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DictItemEntity> dictItems;

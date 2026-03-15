@@ -1,6 +1,6 @@
 package com.eagle.system.base.domain.model.entity;
 
-import com.eagle.eagle.common.base.BaseEntity;
+import com.eagle.common.base.BaseEntity;
 import com.eagle.system.base.domain.model.enums.DictStatus;
 import com.eagle.system.base.domain.model.enums.DictType;
 import jakarta.persistence.Column;

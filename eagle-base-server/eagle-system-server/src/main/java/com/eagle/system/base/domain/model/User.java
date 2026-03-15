@@ -1,6 +1,6 @@
 package com.eagle.system.base.domain.model;
 
-import com.eagle.eagle.common.base.BaseEventEntity;
+import com.eagle.common.base.BaseAggregateRoot;
 import com.eagle.system.base.domain.event.UserCreatedEvent;
 import com.eagle.system.base.domain.event.UserPasswordChangedEvent;
 import com.eagle.system.base.domain.model.valueobject.Address;
@@ -50,7 +50,7 @@ import java.util.Set;
         @Index(name = "idx_dept_id", columnList = "dept_id")
 })
 @NoArgsConstructor
-public class User extends BaseEventEntity {
+public class User extends BaseAggregateRoot<User> {
 
     // ==================== 聚合内部（值对象）====================
 
