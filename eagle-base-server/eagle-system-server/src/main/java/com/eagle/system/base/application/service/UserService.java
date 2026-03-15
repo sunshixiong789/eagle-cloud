@@ -60,7 +60,7 @@ public class UserService {
         User user = userMapper.requestToEntity(request);
 
         // 2. 手动设置值对象（因为值对象不可变）
-        user.setProfile(userMapper.createProfile(request));
+        // user.setProfile(userMapper.createProfile(request));
 
         // 3. 设置部门（如果有）
         if (request.getDepartmentId() != null) {

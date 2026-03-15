@@ -32,11 +32,11 @@ public class RegisterApplicationService {
     public boolean registerUser(String name, String phone, String email, String password) {
 
         User user = new User();
-        user.setUsername(name);
+       /* user.setUsername(name);
         user.setPassword(passwordEncoder.encode(password));
         user.setPhone(phone);
         user.setEmail(email);
-
+*/
         userRepository.save(user);
         return true;
     }
