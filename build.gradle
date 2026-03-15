@@ -45,11 +45,6 @@ ext {
 
 allprojects {
     apply plugin: 'java'
-    apply plugin: 'java-library'
-    apply plugin: 'maven-publish'
-    apply plugin: 'org.springframework.boot'
-    apply plugin: 'io.spring.dependency-management'
-    apply plugin: 'org.graalvm.buildtools.native'
 
     java {
         sourceCompatibility = '25'
@@ -62,6 +57,29 @@ allprojects {
     repositories {
         maven { url 'https://maven.aliyun.com/repository/public' }
         mavenCentral()
+    }
+}
+
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'org.graalvm.buildtools.native'
+
+    // 聚合模块和 starter 模块不应该是可执行应用
+    if (project.name in ['eagle-base-server', 'eagle-starter'] ||
+        project.path.contains(':eagle-starter:')) {
+        bootJar {
+            enabled = false
+        }
+        jar {
+            enabled = true
+        }
+        // 禁用 AOT 相关任务
+        tasks.matching { it.name in ['processAot', 'processTestAot'] }.configureEach {
+            enabled = false
+        }
     }
 
     hibernate {
@@ -84,11 +102,6 @@ allprojects {
     tasks.named('test') {
         useJUnitPlatform()
     }
-
-    tasks.named('processAot') {
-    }
-}
-subprojects {
 
     dependencyManagement {
         imports {
