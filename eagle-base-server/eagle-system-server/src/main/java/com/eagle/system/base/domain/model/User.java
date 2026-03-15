@@ -283,43 +283,4 @@ public class User extends BaseAggregateRoot<User> {
         }
     }
 
-    // ==================== Setter（仅供 JPA 和 MapStruct 使用）====================
-
-    /**
-     * 设置用户名
-     * <p>
-     * 注意：此方法仅供 JPA 和 MapStruct 使用，业务代码不应直接调用
-     */
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setProfile(UserProfile profile) {
-        this.profile = profile;
-    }
-
-    public void setAddress(Address address) {
-        this.address = address;
-    }
-
-    public void setDeptId(Long deptId) {
-        this.deptId = deptId;
-    }
-
-    public void setLockFlag(Boolean lockFlag) {
-        this.lockFlag = lockFlag;
-    }
-
 }

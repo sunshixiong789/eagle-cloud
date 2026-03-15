@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: org.h2.Driver
-    url: jdbc:h2:file:D:/matchmaking-sites/eagle
+    url: jdbc:h2:file:/Users/sunshixiong/IdeaProjects/eagle/db
     hikari:
       # 连接池配置
       connection-timeout: 30000

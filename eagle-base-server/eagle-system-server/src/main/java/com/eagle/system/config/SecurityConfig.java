@@ -121,6 +121,11 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * 问题：JWT 签名密钥每次启动重新生成
+     * @return JWK Source <RSAKey>
+     * @throws NoSuchAlgorithmException NoSuchAlgorithmException  异常
+     */
     @Bean
     public JWKSource<SecurityContext> jwkSource() throws NoSuchAlgorithmException {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");

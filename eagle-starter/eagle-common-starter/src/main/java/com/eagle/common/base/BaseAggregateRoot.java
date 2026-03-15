@@ -37,11 +37,7 @@ import java.util.List;
 @EntityListeners(AuditingEntityListener.class)
 public abstract class BaseAggregateRoot<T extends AbstractAggregateRoot<T>> extends AbstractAggregateRoot<T> {
 
-    /**
-     * 领域事件列表（不持久化）
-     */
-    @Transient
-    private final List<BaseEvent> domainEvents = new ArrayList<>();
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(comment = "主键 ID")
