@@ -1,13 +1,13 @@
 rootProject.name = 'eagle-cloud'
 
 // 基础服务模块
-include ':eagle-base-server:eagle-gateway-server'
-include ':eagle-base-server:eagle-system-server'
+include 'eagle-base-server:eagle-gateway-server'
+include 'eagle-base-server:eagle-system-server'
 
 // Starter 模块
-include ':eagle-starter:eagle-common-starter'
-include ':eagle-starter:eagle-data-jpa-starter'
-include ':eagle-starter:eagle-feign-starter'
-include ':eagle-starter:eagle-resource-server-starter'
+include 'eagle-starter:eagle-common-starter'
+include 'eagle-starter:eagle-data-jpa-starter'
+include 'eagle-starter:eagle-feign-starter'
+include 'eagle-starter:eagle-resource-server-starter'
 
 
