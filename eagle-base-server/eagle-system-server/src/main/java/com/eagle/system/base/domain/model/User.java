@@ -106,7 +106,7 @@ public class User extends BaseAggregateRoot<User> {
      * - 初始化用户资料
      * - 发布用户创建事件
      *
-     * @param encryptor 密码加密器
+     * @param encryptor     密码加密器
      * @param plainPassword 明文密码
      */
     public void initializeAsNewUser(PasswordEncryptor encryptor, String plainPassword) {
@@ -264,7 +264,7 @@ public class User extends BaseAggregateRoot<User> {
      */
     private void validateContactInfo() {
         if ((this.username == null || this.username.isBlank()) &&
-            (this.email == null || this.email.isBlank())) {
+                (this.email == null || this.email.isBlank())) {
             throw new IllegalArgumentException("用户名和邮箱至少填写一个");
         }
     }

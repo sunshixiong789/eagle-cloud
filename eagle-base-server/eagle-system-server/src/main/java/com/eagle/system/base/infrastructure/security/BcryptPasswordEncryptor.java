@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public class BCryptPasswordEncryptor implements PasswordEncryptor {
+public class BcryptPasswordEncryptor implements PasswordEncryptor {
 
     private final PasswordEncoder passwordEncoder;
 
