@@ -74,4 +74,12 @@ public class EagleUser extends User {
         this.deptName = deptName;
         this.phone = phone;
     }
+    public EagleUser(Long id, String username, String name, Long deptId, String deptName, String phone, Collection<? extends GrantedAuthority> authorities) {
+        super(username, null, true, true, true, true, authorities);
+        this.id = id;
+        this.name = name;
+        this.deptId = deptId;
+        this.deptName = deptName;
+        this.phone = phone;
+    }
 }
