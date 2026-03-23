@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
  */
 @Embeddable
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor  // JPA 需要
 @AllArgsConstructor
 public class UserProfile {
 

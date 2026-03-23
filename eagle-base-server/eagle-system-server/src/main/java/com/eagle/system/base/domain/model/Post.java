@@ -1,6 +1,5 @@
 package com.eagle.system.base.domain.model;
 
-
 import com.eagle.common.base.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,13 +9,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
- * 岗位信息表
+ * 岗位实体（充血模型）
  *
  * @author sunshixiong
  */
 @Getter
+@NoArgsConstructor
 @Entity
 @Table(name = "sys_post", comment = "岗位信息表", indexes = {
         @Index(name = "idx_post_code", columnList = "post_code", unique = true)
@@ -40,4 +41,40 @@ public class Post extends BaseEntity {
     @Size(max = 500, message = "备注长度不能超过500个字符")
     @Column(length = 500, comment = "备注")
     private String remark;
+
+    // ==================== 业务方法（充血模型）====================
+
+    /**
+     * 创建岗位（静态工厂方法）
+     */
+    public static Post create(String postCode, String postName, Integer postSort, String remark) {
+        Post post = new Post();
+        post.postCode = postCode;
+        post.postName = postName;
+        post.postSort = postSort;
+        post.remark = remark;
+        return post;
+    }
+
+    /**
+     * 更新岗位信息
+     */
+    public void updateInfo(String postName, Integer postSort, String remark) {
+        if (postName != null) {
+            this.postName = postName;
+        }
+        if (postSort != null) {
+            this.postSort = postSort;
+        }
+        if (remark != null) {
+            this.remark = remark;
+        }
+    }
+
+    /**
+     * 更新排序
+     */
+    public void updateSort(Integer postSort) {
+        this.postSort = postSort;
+    }
 }

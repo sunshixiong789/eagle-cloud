@@ -1,7 +1,8 @@
 package com.eagle.system.base.domain.event;
 
-import com.eagle.common.event.BaseEvent;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * 用户密码已修改事件
@@ -12,21 +13,17 @@ import lombok.Getter;
  * @since 1.0.0
  */
 @Getter
-public class UserPasswordChangedEvent extends BaseEvent {
+@AllArgsConstructor
+@NoArgsConstructor
+public class UserPasswordChangedEvent {
 
     /**
      * 用户ID
      */
-    private final Long userId;
+    private Long userId;
 
     /**
      * 用户名
      */
-    private final String username;
-
-    public UserPasswordChangedEvent(Long userId, String username) {
-        super();
-        this.userId = userId;
-        this.username = username;
-    }
+    private String username;
 }

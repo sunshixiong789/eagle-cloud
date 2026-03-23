@@ -17,15 +17,18 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 角色
+ * 角色实体（充血模型）
  *
  * @author sunshixiong
  */
 @Getter
+@NoArgsConstructor
 @Entity
 @Table(name = "sys_role", comment = "系统角色表", indexes = {
         @Index(name = "idx_role_code", columnList = "role_code", unique = true),
@@ -73,17 +76,75 @@ public class Role extends BaseEntity {
             joinColumns = @JoinColumn(name = "role_id"),
             inverseJoinColumns = @JoinColumn(name = "menu_id")
     )
-    private List<Menu> menus;
+    private List<Menu> menus = new ArrayList<>();
 
-    // ==================== 业务方法 ====================
+    // ==================== 业务方法（充血模型）====================
+
+    /**
+     * 创建角色（静态工厂方法）
+     */
+    public static Role create(String roleName, String roleCode, String roleDesc, Integer sortOrder) {
+        Role role = new Role();
+        role.roleName = roleName;
+        role.roleCode = roleCode;
+        role.roleDesc = roleDesc;
+        role.sortOrder = sortOrder;
+        role.roleType = RoleType.BUSINESS;
+        role.dataScope = DataScope.SELF;
+        role.status = RoleStatus.NORMAL;
+        return role;
+    }
+
+    /**
+     * 更新角色信息
+     */
+    public void updateInfo(String roleName, String roleDesc, Integer sortOrder) {
+        if (roleName != null) {
+            this.roleName = roleName;
+        }
+        if (roleDesc != null) {
+            this.roleDesc = roleDesc;
+        }
+        if (sortOrder != null) {
+            this.sortOrder = sortOrder;
+        }
+    }
+
+    /**
+     * 分配菜单权限
+     */
+    public void assignMenus(List<Menu> menus) {
+        this.menus.clear();
+        if (menus != null) {
+            this.menus.addAll(menus);
+        }
+    }
+
+    /**
+     * 设置数据范围
+     */
+    public void setDataScope(DataScope dataScope) {
+        this.dataScope = dataScope;
+    }
+
+    /**
+     * 启用角色
+     */
+    public void enable() {
+        this.status = RoleStatus.NORMAL;
+    }
+
+    /**
+     * 禁用角色
+     */
+    public void disable() {
+        this.status = RoleStatus.DISABLED;
+    }
 
     /**
      * 判断角色是否启用
-     *
-     * @return true 表示启用
      */
     public boolean isActive() {
         return RoleStatus.NORMAL.equals(this.status);
     }
-
 }

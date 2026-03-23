@@ -1,7 +1,8 @@
 package com.eagle.system.base.domain.event;
 
-import com.eagle.common.event.BaseEvent;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * 用户已创建事件
@@ -12,33 +13,28 @@ import lombok.Getter;
  * @since 1.0.0
  */
 @Getter
-public class UserCreatedEvent extends BaseEvent {
+@AllArgsConstructor
+@NoArgsConstructor
+public class UserCreatedEvent {
 
     /**
      * 用户ID
      */
-    private final Long userId;
+    private  Long userId;
 
     /**
      * 用户名
      */
-    private final String username;
+    private  String username;
 
     /**
      * 手机号
      */
-    private final String phone;
+    private  String phone;
 
     /**
      * 邮箱
      */
-    private final String email;
+    private  String email;
 
-    public UserCreatedEvent(Long userId, String username, String phone, String email) {
-        super();
-        this.userId = userId;
-        this.username = username;
-        this.phone = phone;
-        this.email = email;
-    }
 }

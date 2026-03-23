@@ -1,6 +1,6 @@
 package com.eagle.system.base.domain.model;
 
-import com.eagle.common.base.BaseEntity;
+import com.eagle.common.base.BaseAggregateRoot;
 import com.eagle.system.base.domain.model.enums.DeptStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,13 +12,15 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
- * 部门
+ * 部门聚合根（充血模型）
  *
  * @author sunshixiong
  */
 @Getter
+@NoArgsConstructor
 @Entity
 @Table(name = "sys_dept", comment = "部门表", indexes = {
         @Index(name = "idx_parent_id_dept", columnList = "parent_id"),
@@ -26,7 +28,7 @@ import lombok.Getter;
         @Index(name = "idx_leader_id", columnList = "leader_id"),
         @Index(name = "idx_status", columnList = "status")
 })
-public class Dept extends BaseEntity {
+public class Dept extends BaseAggregateRoot<Dept> {
 
     @Column(comment = "父级部门 ID")
     private Long parentId;
@@ -58,4 +60,66 @@ public class Dept extends BaseEntity {
     @Enumerated
     private DeptStatus status = DeptStatus.NORMAL;
 
+    // ==================== 业务方法（充血模型）====================
+
+    /**
+     * 创建部门（静态工厂方法）
+     */
+    public static Dept create(Long parentId, String name, Long leaderId, String phone, Integer sortOrder) {
+        Dept dept = new Dept();
+        dept.parentId = parentId;
+        dept.name = name;
+        dept.leaderId = leaderId;
+        dept.phone = phone;
+        dept.sortOrder = sortOrder;
+        dept.status = DeptStatus.NORMAL;
+        return dept;
+    }
+
+    /**
+     * 更新部门信息
+     */
+    public void updateInfo(String name, Long leaderId, String phone, Integer sortOrder) {
+        if (name != null) {
+            this.name = name;
+        }
+        if (leaderId != null) {
+            this.leaderId = leaderId;
+        }
+        if (phone != null) {
+            this.phone = phone;
+        }
+        if (sortOrder != null) {
+            this.sortOrder = sortOrder;
+        }
+    }
+
+    /**
+     * 更新负责人
+     */
+    public void updateLeader(Long leaderId) {
+        this.leaderId = leaderId;
+    }
+
+    /**
+     * 设置部门路径和层级
+     */
+    public void setPathAndLevel(String deptPath, Integer level) {
+        this.deptPath = deptPath;
+        this.level = level;
+    }
+
+    /**
+     * 启用部门
+     */
+    public void enable() {
+        this.status = DeptStatus.NORMAL;
+    }
+
+    /**
+     * 禁用部门
+     */
+    public void disable() {
+        this.status = DeptStatus.DISABLED;
+    }
 }

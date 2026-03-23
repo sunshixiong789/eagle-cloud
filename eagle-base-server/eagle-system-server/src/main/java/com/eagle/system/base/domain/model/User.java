@@ -2,10 +2,10 @@ package com.eagle.system.base.domain.model;
 
 import com.eagle.common.base.BaseAggregateRoot;
 import com.eagle.system.base.domain.event.UserCreatedEvent;
+import com.eagle.system.base.domain.event.UserLockedEvent;
 import com.eagle.system.base.domain.event.UserPasswordChangedEvent;
 import com.eagle.system.base.domain.model.valueobject.Address;
 import com.eagle.system.base.domain.model.valueobject.UserProfile;
-import com.eagle.system.base.domain.service.PasswordEncryptor;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -43,13 +43,13 @@ import java.util.Set;
  */
 @Entity
 @Getter
+@NoArgsConstructor
 @Table(name = "sys_user", comment = "系统用户表", indexes = {
         @Index(name = "idx_username", columnList = "username", unique = true),
         @Index(name = "idx_phone", columnList = "phone"),
         @Index(name = "idx_email", columnList = "email"),
         @Index(name = "idx_dept_id", columnList = "dept_id")
 })
-@NoArgsConstructor
 public class User extends BaseAggregateRoot<User> {
 
     // ==================== 聚合内部（值对象）====================
@@ -95,192 +95,105 @@ public class User extends BaseAggregateRoot<User> {
     @Column(name = "post_id")
     private Set<Long> postIds = new HashSet<>();
 
-    // ==================== 业务行为方法 ====================
+    // ==================== 业务方法（充血模型）====================
 
     /**
-     * 初始化新用户（创建时调用）
-     * <p>
-     * 业务规则：
-     * - 用户名和邮箱至少填写一个
-     * - 设置初始状态为未锁定
-     * - 初始化用户资料
-     * - 发布用户创建事件
-     *
-     * @param encryptor     密码加密器
-     * @param plainPassword 明文密码
+     * 创建新用户（静态工厂方法）
      */
-    public void initializeAsNewUser(PasswordEncryptor encryptor, String plainPassword) {
-        // 前置条件检查
-        validateContactInfo();
-        validateUsername();
-
-        // 设置业务状态
-        this.password = encryptor.encrypt(plainPassword);
-        this.lockFlag = false;
-
-        // 初始化嵌入对象
-        if (this.profile == null) {
-            this.profile = new UserProfile();
+    public static User create(String username, String password, String phone, String email, UserProfile profile) {
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("用户名不能为空");
+        }
+        if (password == null || password.isBlank()) {
+            throw new IllegalArgumentException("密码不能为空");
+        }
+        if ((phone == null || phone.isBlank()) && (email == null || email.isBlank())) {
+            throw new IllegalArgumentException("手机号和邮箱至少填写一个");
         }
 
-        // 初始化集合
-        if (this.roleIds == null) {
-            this.roleIds = new HashSet<>();
-        }
-        if (this.postIds == null) {
-            this.postIds = new HashSet<>();
-        }
-
-        // 发布领域事件
-        registerEvent(new UserCreatedEvent(this.getId(), this.username, this.phone, this.email));
-    }
-
-    /**
-     * 锁定用户
-     *
-     * @throws IllegalStateException 如果用户已被锁定
-     */
-    public void lock() {
-        if (Boolean.TRUE.equals(this.lockFlag)) {
-            throw new IllegalStateException("用户已经被锁定");
-        }
-        this.lockFlag = true;
-    }
-
-    /**
-     * 解锁用户
-     *
-     * @throws IllegalStateException 如果用户未被锁定
-     */
-    public void unlock() {
-        if (Boolean.FALSE.equals(this.lockFlag)) {
-            throw new IllegalStateException("用户未被锁定，无需解锁");
-        }
-        this.lockFlag = false;
+        User user = new User();
+        user.username = username;
+        user.password = password;
+        user.phone = phone;
+        user.email = email;
+        user.profile = profile;
+        user.lockFlag = false;
+        user.registerEvent(new UserCreatedEvent(null, username, phone, email));
+        return user;
     }
 
     /**
      * 修改密码
-     * <p>
-     * 发布 UserPasswordChangedEvent 领域事件
-     *
-     * @param oldPassword 旧密码（明文）
-     * @param newPassword 新密码（明文）
-     * @param encryptor   密码加密器
-     * @throws IllegalArgumentException 如果旧密码不正确
      */
-    public void changePassword(String oldPassword, String newPassword, PasswordEncryptor encryptor) {
-        if (!encryptor.matches(oldPassword, this.password)) {
-            throw new IllegalArgumentException("原密码不正确");
+    public void changePassword(String newPassword) {
+        if (newPassword == null || newPassword.isBlank()) {
+            throw new IllegalArgumentException("新密码不能为空");
         }
-        this.password = encryptor.encrypt(newPassword);
+        this.password = newPassword;
+        this.registerEvent(new UserPasswordChangedEvent(this.getId(), this.username));
+    }
 
-        // 发布密码修改事件
-        registerEvent(new UserPasswordChangedEvent(this.getId(), this.username));
+    /**
+     * 锁定用户
+     */
+    public void lock(String reason) {
+        if (Boolean.TRUE.equals(this.lockFlag)) {
+            throw new IllegalStateException("用户已被锁定");
+        }
+        this.lockFlag = true;
+        this.registerEvent(new UserLockedEvent(this.getId(), this.username, reason));
+    }
+
+    /**
+     * 解锁用户
+     */
+    public void unlock() {
+        if (Boolean.FALSE.equals(this.lockFlag)) {
+            throw new IllegalStateException("用户未被锁定");
+        }
+        this.lockFlag = false;
     }
 
     /**
      * 更新用户资料
-     * <p>
-     * 通过聚合根方法修改内部值对象，保证一致性
-     *
-     * @param name     真实姓名
-     * @param nickname 昵称
-     * @param avatar   头像 URL
      */
-    public void updateProfile(String name, String nickname, String avatar) {
-        if (this.profile == null) {
-            this.profile = new UserProfile();
-        }
-        // 值对象不可变，创建新对象替换
-        this.profile = this.profile.update(name, nickname, avatar);
+    public void updateProfile(UserProfile newProfile) {
+        this.profile = newProfile;
     }
 
     /**
-     * 分配到部门
-     *
-     * @param deptId 部门 ID
+     * 更新联系方式
      */
-    public void assignToDept(Long deptId) {
-        if (deptId == null) {
-            throw new IllegalArgumentException("部门 ID 不能为空");
+    public void updateContact(String phone, String email) {
+        if (phone != null) {
+            this.phone = phone;
         }
-        this.deptId = deptId;
+        if (email != null) {
+            this.email = email;
+        }
     }
 
     /**
      * 分配角色
-     * <p>
-     * 业务规则：用户最多分配 10 个角色
-     *
-     * @param roleId 角色 ID
      */
-    public void assignRole(Long roleId) {
-        if (roleId == null) {
-            throw new IllegalArgumentException("角色 ID 不能为空");
+    public void assignRoles(Set<Long> roleIds) {
+        if (roleIds != null && roleIds.size() > 10) {
+            throw new IllegalArgumentException("用户最多分配 10 个角色");
         }
-        if (this.roleIds.size() >= 10) {
-            throw new IllegalStateException("用户角色数量不能超过 10 个");
-        }
-        this.roleIds.add(roleId);
+        this.roleIds = roleIds != null ? new HashSet<>(roleIds) : new HashSet<>();
     }
 
     /**
-     * 移除角色
-     *
-     * @param roleId 角色 ID
+     * 分配部门
      */
-    public void removeRole(Long roleId) {
-        this.roleIds.remove(roleId);
+    public void assignDept(Long deptId) {
+        this.deptId = deptId;
     }
 
     /**
      * 分配岗位
-     *
-     * @param postId 岗位 ID
      */
-    public void assignPost(Long postId) {
-        if (postId == null) {
-            throw new IllegalArgumentException("岗位 ID 不能为空");
-        }
-        this.postIds.add(postId);
+    public void assignPosts(Set<Long> postIds) {
+        this.postIds = postIds != null ? new HashSet<>(postIds) : new HashSet<>();
     }
-
-    /**
-     * 移除岗位
-     *
-     * @param postId 岗位 ID
-     */
-    public void removePost(Long postId) {
-        this.postIds.remove(postId);
-    }
-
-    // ==================== 私有辅助方法（业务规则校验）====================
-
-    /**
-     * 校验联系方式
-     * <p>
-     * 业务规则：用户名和邮箱至少填写一个
-     */
-    private void validateContactInfo() {
-        if ((this.username == null || this.username.isBlank()) &&
-                (this.email == null || this.email.isBlank())) {
-            throw new IllegalArgumentException("用户名和邮箱至少填写一个");
-        }
-    }
-
-    /**
-     * 校验用户名格式
-     */
-    private void validateUsername() {
-        if (this.username != null && !this.username.isBlank()) {
-            if (this.username.length() < 2 || this.username.length() > 64) {
-                throw new IllegalArgumentException("用户名长度必须在 2-64 个字符之间");
-            }
-            if (!this.username.matches("^[a-zA-Z0-9_-]{2,64}$")) {
-                throw new IllegalArgumentException("用户名只能包含字母、数字、下划线和中划线");
-            }
-        }
-    }
-
 }

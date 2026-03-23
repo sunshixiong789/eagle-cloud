@@ -12,6 +12,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
+import lombok.Setter;
 
 /**
  * 字典项
@@ -20,11 +21,13 @@ import lombok.Getter;
  */
 
 @Getter
+@Setter
 @Entity
 @Table(name = "sys_dict_item", comment = "字典项表", indexes = {
         @Index(name = "idx_dict_id", columnList = "dict_id"),
         @Index(name = "idx_dict_type", columnList = "dict_type"),
-        @Index(name = "idx_item_value", columnList = "item_value")
+        @Index(name = "idx_item_value", columnList = "item_value"),
+        @Index(name = "idx_parent_id", columnList = "parent_id")
 })
 public class DictItemEntity extends BaseEntity {
 
@@ -47,6 +50,9 @@ public class DictItemEntity extends BaseEntity {
     @Enumerated
     private DictType dictType;
 
+    @Column(name = "parent_id", nullable = false, comment = "父级字典项ID，0表示顶级")
+    private Long parentId = 0L;
+
     @Column(length = 500, comment = "描述")
     private String description;
 
@@ -61,4 +67,37 @@ public class DictItemEntity extends BaseEntity {
     @Size(max = 500, message = "备注长度不能超过500个字符")
     @Column(length = 500, comment = "备注")
     private String remarks;
+
+    public static DictItemEntity create(Long dictId, String itemValue, String name,
+                                        DictType dictType, Long parentId,
+                                        String description, Integer sortOrder, String remarks) {
+        DictItemEntity item = new DictItemEntity();
+        item.dictId = dictId;
+        item.itemValue = itemValue;
+        item.name = name;
+        item.dictType = dictType;
+        item.parentId = parentId != null ? parentId : 0L;
+        item.description = description;
+        item.sortOrder = sortOrder;
+        item.remarks = remarks;
+        item.status = DictStatus.ACTIVE;
+        return item;
+    }
+
+    public void updateInfo(String itemValue, String name, String description,
+                           Integer sortOrder, String remarks) {
+        if (itemValue != null) this.itemValue = itemValue;
+        if (name != null) this.name = name;
+        if (description != null) this.description = description;
+        if (sortOrder != null) this.sortOrder = sortOrder;
+        if (remarks != null) this.remarks = remarks;
+    }
+
+    public void activate() {
+        this.status = DictStatus.ACTIVE;
+    }
+
+    public void deactivate() {
+        this.status = DictStatus.INACTIVE;
+    }
 }

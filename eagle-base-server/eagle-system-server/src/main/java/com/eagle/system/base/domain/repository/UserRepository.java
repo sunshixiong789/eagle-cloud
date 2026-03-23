@@ -3,6 +3,7 @@ package com.eagle.system.base.domain.repository;
 import com.eagle.system.base.domain.model.User;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.stereotype.Repository;
 
@@ -18,7 +19,7 @@ import java.util.Optional;
  */
 @Repository
 @RepositoryRestResource(collectionResourceRel = "users", path = "user")
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
 
     /**
      * 通过用户名查找用户

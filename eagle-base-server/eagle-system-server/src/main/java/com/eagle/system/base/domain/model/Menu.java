@@ -12,13 +12,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
- * 菜单
+ * 菜单实体（充血模型）
  *
  * @author sunshixiong
  */
 @Getter
+@NoArgsConstructor
 @Entity
 @Table(name = "sys_menu", comment = "系统菜单表", indexes = {
         @Index(name = "idx_parent_id_menu", columnList = "parent_id"),
@@ -86,4 +88,125 @@ public class Menu extends BaseEntity {
     @Column(nullable = false, length = 20, comment = "菜单状态")
     @Enumerated
     private MenuStatus status = MenuStatus.ACTIVE;
+
+    // ==================== 业务方法（充血模型）====================
+
+    /**
+     * 创建菜单（静态工厂方法）
+     */
+    public static Menu create(String name, String enName, String permission, Long parentId,
+                              String icon, String path, String component, Boolean visible,
+                              Integer sortOrder, MenuType menuType) {
+        Menu menu = new Menu();
+        menu.name = name;
+        menu.enName = enName;
+        menu.permission = permission;
+        menu.parentId = parentId;
+        menu.icon = icon;
+        menu.path = path;
+        menu.component = component;
+        menu.visible = visible != null ? visible : true;
+        menu.sortOrder = sortOrder;
+        menu.menuType = menuType;
+        menu.keepAlive = false;
+        menu.embedded = false;
+        menu.isFrame = false;
+        menu.status = MenuStatus.ACTIVE;
+        return menu;
+    }
+
+    /**
+     * 更新菜单信息
+     */
+    public void updateInfo(String name, String enName, String permission, String icon,
+                          String path, String component, Boolean visible, Integer sortOrder) {
+        if (name != null) {
+            this.name = name;
+        }
+        if (enName != null) {
+            this.enName = enName;
+        }
+        if (permission != null) {
+            this.permission = permission;
+        }
+        if (icon != null) {
+            this.icon = icon;
+        }
+        if (path != null) {
+            this.path = path;
+        }
+        if (component != null) {
+            this.component = component;
+        }
+        if (visible != null) {
+            this.visible = visible;
+        }
+        if (sortOrder != null) {
+            this.sortOrder = sortOrder;
+        }
+    }
+
+    /**
+     * 设置菜单路径和层级
+     */
+    public void setPathAndLevel(String menuPath, Integer level) {
+        this.menuPath = menuPath;
+        this.level = level;
+    }
+
+    /**
+     * 显示菜单
+     */
+    public void show() {
+        this.visible = true;
+    }
+
+    /**
+     * 隐藏菜单
+     */
+    public void hide() {
+        this.visible = false;
+    }
+
+    /**
+     * 启用菜单
+     */
+    public void enable() {
+        this.status = MenuStatus.ACTIVE;
+    }
+
+    /**
+     * 禁用菜单
+     */
+    public void disable() {
+        this.status = MenuStatus.INACTIVE;
+    }
+
+    /**
+     * 设置缓存
+     */
+    public void setKeepAlive(Boolean keepAlive) {
+        this.keepAlive = keepAlive;
+    }
+
+    /**
+     * 判断是否为目录
+     */
+    public boolean isDirectory() {
+        return MenuType.DIRECTORY.equals(this.menuType);
+    }
+
+    /**
+     * 判断是否为菜单
+     */
+    public boolean isMenu() {
+        return MenuType.MENU.equals(this.menuType);
+    }
+
+    /**
+     * 判断是否为按钮
+     */
+    public boolean isButton() {
+        return MenuType.BUTTON.equals(this.menuType);
+    }
 }

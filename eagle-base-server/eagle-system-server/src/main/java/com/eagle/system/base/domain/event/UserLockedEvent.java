@@ -1,7 +1,8 @@
 package com.eagle.system.base.domain.event;
 
-import com.eagle.common.event.BaseEvent;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * 用户已锁定事件
@@ -12,27 +13,22 @@ import lombok.Getter;
  * @since 1.0.0
  */
 @Getter
-public class UserLockedEvent extends BaseEvent {
+@AllArgsConstructor
+@NoArgsConstructor
+public class UserLockedEvent {
 
     /**
      * 用户ID
      */
-    private final Long userId;
+    private Long userId;
 
     /**
      * 用户名
      */
-    private final String username;
+    private String username;
 
     /**
      * 锁定原因
      */
-    private final String reason;
-
-    public UserLockedEvent(Long userId, String username, String reason) {
-        super();
-        this.userId = userId;
-        this.username = username;
-        this.reason = reason;
-    }
+    private String reason;
 }
