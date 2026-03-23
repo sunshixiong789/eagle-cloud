@@ -27,9 +27,8 @@ public class EventHandler {
      */
     @HandleBeforeCreate
     public void beforeCreate(User user) {
-        if (user.getPassword() != null) {
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-        }
+        // 新增用户密码加密
+
     }
 
     /**

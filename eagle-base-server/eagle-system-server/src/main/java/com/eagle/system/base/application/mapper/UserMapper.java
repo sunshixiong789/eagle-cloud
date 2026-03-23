@@ -7,11 +7,12 @@ import com.eagle.system.base.web.dto.request.RegisterRequest;
 import com.eagle.system.base.web.dto.response.UserResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
 /**
  * User 映射器
  */
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserMapper {
 
     @Mapping(target = "nickname", source = "profile.nickname")

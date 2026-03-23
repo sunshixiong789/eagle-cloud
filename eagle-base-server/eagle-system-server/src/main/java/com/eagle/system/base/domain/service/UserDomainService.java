@@ -53,7 +53,7 @@ public class UserDomainService {
         }
 
         // 3. 委托给聚合根执行（包含业务规则校验）
-        user.assignRole(roleId);
+        //user.assignRole(roleId);
     }
 
     /**
@@ -75,6 +75,6 @@ public class UserDomainService {
      * @param roleId 角色 ID
      */
     public void removeRoleFromUser(User user, Long roleId) {
-        user.removeRole(roleId);
+       // user.removeRole(roleId);
     }
 }
