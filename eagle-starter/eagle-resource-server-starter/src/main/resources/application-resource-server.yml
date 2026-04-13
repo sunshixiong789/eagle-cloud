@@ -1,0 +1,31 @@
+# Eagle 资源服务器配置示例
+# 将此配置添加到你的 application.yml 或 application.properties 中
+
+eagle:
+  security:
+    oauth2:
+      resource-server:
+        # 是否启用资源服务器（默认 true）
+        enabled: true
+        # 授权服务器地址（JWT 签发者）
+        issuer-uri: http://localhost:8080
+        # JWK Set URI（可选，如果不配置会自动从 issuer-uri 推导）
+        # jwk-set-uri: http://localhost:8080/oauth2/jwks
+        # 公开路径（不需要认证）
+        public-paths:
+          - /public/**
+          - /actuator/health
+          - /actuator/info
+        # 是否启用 Swagger 文档访问（默认 true）
+        enable-swagger: true
+
+# Spring Security OAuth2 资源服务器配置
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # JWT 签发者 URI（必须与授权服务器一致）
+          issuer-uri: http://localhost:8080
+          # 或者直接配置 JWK Set URI
+          # jwk-set-uri: http://localhost:8080/oauth2/jwks
