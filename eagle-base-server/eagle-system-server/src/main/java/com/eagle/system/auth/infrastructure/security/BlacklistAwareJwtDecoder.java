@@ -1,6 +1,6 @@
 package com.eagle.system.auth.infrastructure.security;
 
-import com.eagle.auth.domain.port.OnlineUserPort;
+import com.eagle.system.auth.domain.port.OnlineUserPort;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import lombok.RequiredArgsConstructor;

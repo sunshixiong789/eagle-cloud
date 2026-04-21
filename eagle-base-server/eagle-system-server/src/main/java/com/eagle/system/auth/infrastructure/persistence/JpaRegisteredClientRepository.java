@@ -1,7 +1,7 @@
 package com.eagle.system.auth.infrastructure.persistence;
 
-import com.eagle.auth.domain.model.OAuthClient;
-import com.eagle.auth.domain.repository.OAuthClientRepository;
+import com.eagle.system.auth.domain.model.OAuthClient;
+import com.eagle.system.auth.domain.repository.OAuthClientRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

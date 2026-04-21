@@ -17,3 +17,4 @@
 @NamedInterface("domain-services")
 package com.eagle.system.auth.domain.service;
 
+import org.springframework.modulith.NamedInterface;

@@ -1,311 +1,118 @@
 package com.eagle.common.exception;
 
 import com.eagle.common.i18n.MessageSourceUtil;
-import lombok.Getter;
+
+import java.util.Locale;
 
 /**
- * 错误码枚举
+ * 错误码接口
  * <p>
- * 定义系统中常用的业务错误码，统一管理错误码和错误消息。
- * 按照阿里规范，错误码设计应该具有可读性，能快速定位问题。
- * <p>
- * <strong>国际化支持：</strong>
- * 每个错误码都有对应的消息键（messageKey），通过国际化资源文件获取实际消息。
- * 资源文件位置：
+ * 各业务域实现此接口（见 {@code codes/} 子包），统一提供：
  * <ul>
- *   <li>中文：src/main/resources/messages_zh_CN.properties</li>
- *   <li>英文：src/main/resources/messages_en.properties</li>
+ *   <li>数字错误码 {@link #getCode()} — 前端/日志用于精确识别错误</li>
+ *   <li>i18n 消息键 {@link #getMessageKey()} — 配合 MessageSource 多语言</li>
+ *   <li>默认消息 {@link #getDefaultMessage()} — i18n 失败时的降级文本</li>
  * </ul>
  *
- * <p>错误码规范：
- * <ul>
- *   <li>2xx: 成功状态</li>
- *   <li>4xx: 客户端错误</li>
- *   <li>5xx: 服务端错误</li>
- *   <li>自定义业务错误码: 1xxxx（5位数字）</li>
- * </ul>
- *
- * <p>使用示例：
+ * <p>用法示例：
  * <pre>{@code
- * // 使用国际化消息
- * throw ErrorCode.USER_NOT_FOUND.toException();
- *
- * // 带上下文数据
- * throw ErrorCode.INVALID_PARAMETER.toException().putData("field", "username");
- *
- * // 使用自定义消息（忽略国际化）
- * throw ErrorCode.USER_NOT_FOUND.toException("用户ID: 123 不存在");
- *
- * // 带参数的国际化消息
- * throw ErrorCode.USER_NOT_FOUND.toExceptionWithArgs("张三");
+ * throw UserErrorCode.USER_NOT_FOUND.toNotFoundException();
+ * throw AuthErrorCode.SMS_RATE_LIMIT.toServiceException();
+ * throw SystemErrorCode.DEPT_NOT_FOUND.toNotFoundException();
  * }</pre>
  *
- * @author 孙士雄（sunshix@seeyon.com）
+ * <p>新增错误码只需在对应枚举文件中增加一行常量，无需修改其他代码。
+ *
+ * @author sunshixiong
  */
-@Getter
-public enum ErrorCode {
-
-    // ========== 通用错误码 4xx ==========
-    /**
-     * 请求参数错误
-     */
-    INVALID_PARAMETER(400, "error.common.invalid_parameter", "请求参数错误"),
+public interface ErrorCode {
 
     /**
-     * 未授权
+     * 数字错误码，用于 API 响应和日志定位
      */
-    UNAUTHORIZED(401, "error.common.unauthorized", "未授权，请先登录"),
+    int getCode();
 
     /**
-     * 无权限
+     * i18n 资源键，对应 messages_*.properties 中的 key
      */
-    FORBIDDEN(403, "error.common.forbidden", "无权限访问"),
+    String getMessageKey();
 
     /**
-     * 资源不存在
+     * 当 i18n 解析失败时的中文降级消息
      */
-    NOT_FOUND(404, "error.common.not_found", "资源不存在"),
+    String getDefaultMessage();
+
+    // ==================== 消息解析 ====================
 
     /**
-     * 请求方法不支持
+     * 使用 LocaleContextHolder 解析当前语言消息（MVC 上下文）
      */
-    METHOD_NOT_ALLOWED(405, "error.common.method_not_allowed", "请求方法不支持"),
-
-    /**
-     * 请求冲突
-     */
-    CONFLICT(409, "error.common.conflict", "请求冲突"),
-
-    /**
-     * 请求频率过高
-     */
-    TOO_MANY_REQUESTS(429, "error.common.too_many_requests", "请求过于频繁，请稍后再试"),
-
-    // ========== 服务端错误码 5xxx ==========
-    /**
-     * 服务器内部错误
-     */
-    INTERNAL_SERVER_ERROR(500, "error.server.internal_error", "服务器内部错误"),
-
-    /**
-     * 服务不可用
-     */
-    SERVICE_UNAVAILABLE(503, "error.server.service_unavailable", "服务暂时不可用"),
-
-    // ========== 用户相关错误码 10xxx ==========
-    /**
-     * 用户不存在
-     */
-    USER_NOT_FOUND(10001, "error.user.not_found", "用户不存在"),
-
-    /**
-     * 用户已存在
-     */
-    USER_ALREADY_EXISTS(10002, "error.user.already_exists", "用户已存在"),
-
-    /**
-     * 用户名或密码错误
-     */
-    INVALID_CREDENTIALS(10003, "error.user.invalid_credentials", "用户名或密码错误"),
-
-    /**
-     * 用户已被锁定
-     */
-    USER_LOCKED(10004, "error.user.locked", "用户已被锁定"),
-
-    /**
-     * 用户已被禁用
-     */
-    USER_DISABLED(10005, "error.user.disabled", "用户已被禁用"),
-
-    /**
-     * 密码强度不足
-     */
-    WEAK_PASSWORD(10006, "error.user.weak_password", "密码强度不足"),
-
-    // ========== 认证相关错误码 11xxx ==========
-    /**
-     * Token无效
-     */
-    INVALID_TOKEN(11001, "error.auth.invalid_token", "Token无效"),
-
-    /**
-     * Token已过期
-     */
-    TOKEN_EXPIRED(11002, "error.auth.token_expired", "Token已过期"),
-
-    /**
-     * 验证码错误
-     */
-    INVALID_CAPTCHA(11003, "error.auth.invalid_captcha", "验证码错误"),
-
-    /**
-     * 验证码已过期
-     */
-    CAPTCHA_EXPIRED(11004, "error.auth.captcha_expired", "验证码已过期"),
-
-    // ========== 数据验证错误码 12xxx ==========
-    /**
-     * 数据已存在
-     */
-    DATA_ALREADY_EXISTS(12001, "error.data.already_exists", "数据已存在"),
-
-    /**
-     * 数据不存在
-     */
-    DATA_NOT_FOUND(12002, "error.data.not_found", "数据不存在"),
-
-    /**
-     * 数据格式错误
-     */
-    INVALID_DATA_FORMAT(12003, "error.data.invalid_format", "数据格式错误"),
-
-    /**
-     * 数据校验失败
-     */
-    DATA_VALIDATION_FAILED(12004, "error.data.validation_failed", "数据校验失败"),
-
-    // ========== 业务操作错误码 13xxx ==========
-    /**
-     * 操作失败
-     */
-    OPERATION_FAILED(13001, "error.operation.failed", "操作失败"),
-
-    /**
-     * 重复操作
-     */
-    DUPLICATE_OPERATION(13002, "error.operation.duplicate", "请勿重复操作"),
-
-    /**
-     * 操作不允许
-     */
-    OPERATION_NOT_ALLOWED(13003, "error.operation.not_allowed", "当前状态不允许此操作"),
-
-    /**
-     * 依赖数据存在
-     */
-    DEPENDENT_DATA_EXISTS(13004, "error.operation.dependent_data_exists", "存在关联数据，无法删除"),
-
-    // ========== 文件相关错误码 14xxx ==========
-    /**
-     * 文件不存在
-     */
-    FILE_NOT_FOUND(14001, "error.file.not_found", "文件不存在"),
-
-    /**
-     * 文件格式不支持
-     */
-    UNSUPPORTED_FILE_FORMAT(14002, "error.file.unsupported_format", "文件格式不支持"),
-
-    /**
-     * 文件大小超限
-     */
-    FILE_SIZE_EXCEEDED(14003, "error.file.size_exceeded", "文件大小超过限制"),
-
-    /**
-     * 文件上传失败
-     */
-    FILE_UPLOAD_FAILED(14004, "error.file.upload_failed", "文件上传失败"),
-
-    // ========== 外部服务错误码 15xxx ==========
-    /**
-     * 外部服务调用失败
-     */
-    EXTERNAL_SERVICE_ERROR(15001, "error.external.service_error", "外部服务调用失败"),
-
-    /**
-     * 外部服务超时
-     */
-    EXTERNAL_SERVICE_TIMEOUT(15002, "error.external.service_timeout", "外部服务调用超时");
-
-    /**
-     * 错误码
-     */
-    private final Integer code;
-
-    /**
-     * 国际化消息键
-     */
-    private final String messageKey;
-
-    /**
-     * 默认错误消息（用于国际化失败时的降级）
-     */
-    private final String defaultMessage;
-
-    ErrorCode(Integer code, String messageKey, String defaultMessage) {
-        this.code = code;
-        this.messageKey = messageKey;
-        this.defaultMessage = defaultMessage;
+    default String getMessage() {
+        return MessageSourceUtil.getMessage(getMessageKey(), null, getDefaultMessage());
     }
 
     /**
-     * 获取国际化消息
-     * <p>
-     * 根据当前语言环境自动获取对应的消息
-     *
-     * @return 国际化消息
-     */
-    public String getMessage() {
-        return MessageSourceUtil.getMessage(this.messageKey, null, this.defaultMessage);
-    }
-
-    /**
-     * 获取国际化消息（带参数）
-     * <p>
-     * 支持参数化消息，例如："用户 {0} 不存在"
+     * 带参数的消息解析，支持 {0} {1} 占位符
      *
      * @param args 消息参数
-     * @return 国际化消息
      */
-    public String getMessage(Object... args) {
-        return MessageSourceUtil.getMessage(this.messageKey, args, this.defaultMessage);
+    default String getMessage(Object... args) {
+        return MessageSourceUtil.getMessage(getMessageKey(), args, getDefaultMessage());
     }
 
     /**
-     * 转换为业务异常
-     * <p>
-     * 使用国际化消息
+     * 显式传入 Locale（过滤器/异步上下文中使用，LocaleContextHolder 不可用时）
      *
-     * @return BusinessException 实例
+     * @param locale 语言环境
      */
-    public BusinessException toException() {
-        return new BusinessException(this.code, getMessage());
+    default String getMessage(Locale locale) {
+        return MessageSourceUtil.getMessage(getMessageKey(), null, getDefaultMessage(), locale);
+    }
+
+    // ==================== 异常工厂方法 ====================
+
+    /**
+     * 创建 HTTP 404 Not Found 异常
+     *
+     * @param args 消息占位符参数（可选）
+     */
+    default NotFoundException toNotFoundException(Object... args) {
+        return new NotFoundException(this, args);
     }
 
     /**
-     * 转换为业务异常（带参数的国际化消息）
-     * <p>
-     * 例如：ErrorCode.USER_NOT_FOUND.toExceptionWithArgs("张三")
+     * 创建 HTTP 409 Conflict 异常
      *
-     * @param args 消息参数
-     * @return BusinessException 实例
+     * @param args 消息占位符参数（可选）
      */
-    public BusinessException toExceptionWithArgs(Object... args) {
-        return new BusinessException(this.code, getMessage(args));
+    default ConflictException toConflictException(Object... args) {
+        return new ConflictException(this, args);
     }
 
     /**
-     * 转换为业务异常（带自定义消息）
-     * <p>
-     * 忽略国际化，使用自定义消息
+     * 创建 HTTP 400 Bad Request 异常（领域验证、状态不变性）
      *
-     * @param customMessage 自定义消息
-     * @return BusinessException 实例
+     * @param args 消息占位符参数（可选）
      */
-    public BusinessException toException(String customMessage) {
-        return new BusinessException(this.code, customMessage);
+    default DomainException toDomainException(Object... args) {
+        return new DomainException(this, args);
     }
 
     /**
-     * 转换为业务异常（带原因异常）
-     * <p>
-     * 使用国际化消息，并携带原因异常
+     * 创建 HTTP 500 Internal Server Error 异常（基础设施、外部服务故障）
      *
-     * @param cause 原因异常
-     * @return BusinessException 实例
+     * @param args 消息占位符参数（可选）
      */
-    public BusinessException toException(Throwable cause) {
-        return new BusinessException(this.code, getMessage(), cause);
+    default ServiceException toServiceException(Object... args) {
+        return new ServiceException(this, args);
+    }
+
+    /**
+     * 创建 HTTP 500 Internal Server Error 异常（带原因异常链）
+     *
+     * @param cause 原始异常
+     */
+    default ServiceException toServiceException(Throwable cause) {
+        return new ServiceException(this, cause);
     }
 }

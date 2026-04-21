@@ -1,8 +1,8 @@
 package com.eagle.system.auth.infrastructure.config;
 
-import com.eagle.auth.domain.model.Account;
-import com.eagle.auth.domain.model.valueobject.ProfileHints;
-import com.eagle.auth.domain.repository.AccountRepository;
+import com.eagle.system.auth.domain.model.Account;
+import com.eagle.system.auth.domain.model.valueobject.ProfileHints;
+import com.eagle.system.auth.domain.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

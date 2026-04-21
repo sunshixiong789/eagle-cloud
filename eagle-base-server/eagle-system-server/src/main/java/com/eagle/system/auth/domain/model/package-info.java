@@ -9,3 +9,4 @@
 @NamedInterface("domain-model")
 package com.eagle.system.auth.domain.model;
 
+import org.springframework.modulith.NamedInterface;

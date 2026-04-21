@@ -1,8 +1,8 @@
 package com.eagle.system.auth.domain.model;
 
 import com.eagle.common.base.BaseEntity;
-import com.eagle.common.exception.codes.AuthErrorCode;
-import com.eagle.system.common.exception.DomainException;
+import com.eagle.system.common.exception.AuthErrorCode;
+import com.eagle.common.exception.DomainException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;

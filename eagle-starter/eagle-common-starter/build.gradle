@@ -9,4 +9,5 @@ dependencies {
     api "com.github.f4b6a3:uuid-creator"
     api 'org.apache.tomcat.embed:tomcat-embed-core'
     api 'com.google.guava:guava'
+    api "com.alibaba.fastjson2:fastjson2"
 }

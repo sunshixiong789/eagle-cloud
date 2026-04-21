@@ -1,15 +1,15 @@
 package com.eagle.system.config;
 
-import com.eagle.auth.infrastructure.security.BlacklistAwareJwtDecoder;
-import com.eagle.auth.infrastructure.security.EagleUserAuthenticationToken;
-import com.eagle.auth.infrastructure.security.LoginRateLimitFilter;
-import com.eagle.auth.infrastructure.security.SmsCodeAuthenticationConverter;
-import com.eagle.auth.infrastructure.security.SmsCodeAuthenticationProvider;
-import com.eagle.auth.infrastructure.security.TokenTrackingHandler;
-import com.eagle.auth.infrastructure.security.WechatMiniProgramAuthenticationConverter;
-import com.eagle.auth.infrastructure.security.WechatMiniProgramAuthenticationProvider;
 import com.eagle.common.constant.SecurityConstants;
 import com.eagle.common.dto.EagleUser;
+import com.eagle.system.auth.infrastructure.security.BlacklistAwareJwtDecoder;
+import com.eagle.system.auth.infrastructure.security.EagleUserAuthenticationToken;
+import com.eagle.system.auth.infrastructure.security.LoginRateLimitFilter;
+import com.eagle.system.auth.infrastructure.security.SmsCodeAuthenticationConverter;
+import com.eagle.system.auth.infrastructure.security.SmsCodeAuthenticationProvider;
+import com.eagle.system.auth.infrastructure.security.TokenTrackingHandler;
+import com.eagle.system.auth.infrastructure.security.WechatMiniProgramAuthenticationConverter;
+import com.eagle.system.auth.infrastructure.security.WechatMiniProgramAuthenticationProvider;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;

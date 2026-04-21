@@ -1,6 +1,6 @@
 package com.eagle.system.auth.domain.repository;
 
-import com.eagle.auth.domain.model.Account;
+import com.eagle.system.auth.domain.model.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

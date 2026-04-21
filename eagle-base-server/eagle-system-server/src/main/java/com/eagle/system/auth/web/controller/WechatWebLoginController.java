@@ -1,10 +1,10 @@
 package com.eagle.system.auth.web.controller;
 
-import com.eagle.auth.application.service.WechatWebUserService;
-import com.eagle.auth.domain.model.Account;
-import com.eagle.auth.domain.service.WechatWebService;
-import com.eagle.auth.domain.service.WechatWebService.WechatWebUserInfo;
-import com.eagle.auth.infrastructure.config.WechatWebProperties;
+import com.eagle.system.auth.application.service.WechatWebUserService;
+import com.eagle.system.auth.domain.model.Account;
+import com.eagle.system.auth.domain.service.WechatWebService;
+import com.eagle.system.auth.domain.service.WechatWebService.WechatWebUserInfo;
+import com.eagle.system.auth.infrastructure.config.WechatWebProperties;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;

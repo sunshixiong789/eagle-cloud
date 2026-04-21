@@ -1,12 +1,12 @@
 package com.eagle.system.auth.application.service;
 
-import com.eagle.auth.application.mapper.OAuthClientMapper;
-import com.eagle.auth.domain.model.OAuthClient;
-import com.eagle.auth.domain.repository.OAuthClientRepository;
-import com.eagle.auth.web.dto.request.CreateOAuthClientRequest;
-import com.eagle.auth.web.dto.request.UpdateOAuthClientRequest;
-import com.eagle.auth.web.dto.response.OAuthClientResponse;
-import com.eagle.common.exception.codes.AuthErrorCode;
+import com.eagle.system.auth.application.mapper.OAuthClientMapper;
+import com.eagle.system.auth.domain.model.OAuthClient;
+import com.eagle.system.auth.domain.repository.OAuthClientRepository;
+import com.eagle.system.auth.web.dto.request.CreateOAuthClientRequest;
+import com.eagle.system.auth.web.dto.request.UpdateOAuthClientRequest;
+import com.eagle.system.auth.web.dto.response.OAuthClientResponse;
+import com.eagle.system.common.exception.AuthErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

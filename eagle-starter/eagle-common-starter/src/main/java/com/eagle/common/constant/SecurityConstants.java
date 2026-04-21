@@ -9,11 +9,11 @@ public class SecurityConstants {
     /**
      * oauth 认证端点
      */
-    public static final String AUTH_AUTHORIZE = "/authorize";
+    public static final String AUTH_AUTHORIZE = "/oauth2/authorize";
     /**
      * 授权token url
      */
-    public static final String AUTH_TOKEN = "/oauth/token";
+    public static final String AUTH_TOKEN = "/oauth2/token";
     /**
      * 注销token url
      */

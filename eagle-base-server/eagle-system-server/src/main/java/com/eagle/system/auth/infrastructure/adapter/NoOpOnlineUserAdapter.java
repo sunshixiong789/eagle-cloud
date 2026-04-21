@@ -1,7 +1,7 @@
 package com.eagle.system.auth.infrastructure.adapter;
 
-import com.eagle.auth.domain.port.OnlineUserInfo;
-import com.eagle.auth.domain.port.OnlineUserPort;
+import com.eagle.system.auth.domain.port.OnlineUserInfo;
+import com.eagle.system.auth.domain.port.OnlineUserPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;

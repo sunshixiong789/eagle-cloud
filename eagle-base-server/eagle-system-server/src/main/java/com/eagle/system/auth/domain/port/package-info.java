@@ -18,3 +18,4 @@
 @NamedInterface("port")
 package com.eagle.system.auth.domain.port;
 
+import org.springframework.modulith.NamedInterface;

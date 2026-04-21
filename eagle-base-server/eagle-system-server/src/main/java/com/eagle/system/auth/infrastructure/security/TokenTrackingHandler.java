@@ -1,8 +1,8 @@
 package com.eagle.system.auth.infrastructure.security;
 
 import com.alibaba.fastjson2.JSON;
-import com.eagle.auth.domain.port.OnlineUserInfo;
-import com.eagle.auth.domain.port.OnlineUserPort;
+import com.eagle.system.auth.domain.port.OnlineUserInfo;
+import com.eagle.system.auth.domain.port.OnlineUserPort;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

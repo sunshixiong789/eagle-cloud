@@ -1,8 +1,8 @@
 package com.eagle.system.auth.infrastructure.adapter;
 
 import com.alibaba.fastjson2.JSON;
-import com.eagle.auth.domain.port.OnlineUserInfo;
-import com.eagle.auth.domain.port.OnlineUserPort;
+import com.eagle.system.auth.domain.port.OnlineUserInfo;
+import com.eagle.system.auth.domain.port.OnlineUserPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -39,8 +39,8 @@ public class OnlineUserAdapter implements OnlineUserPort {
         try {
             String json = JSON.toJSONString(info);
             redisTemplate.opsForValue().set(
-                ONLINE_KEY_PREFIX + info.tokenId(), json,
-                info.expiresIn(), TimeUnit.SECONDS);
+                    ONLINE_KEY_PREFIX + info.tokenId(), json,
+                    info.expiresIn(), TimeUnit.SECONDS);
         } catch (Exception e) {
             // Redis 不可用时降级处理，仅记录调试日志，不阻断登录流程
             log.debug("Failed to track online user for tokenId: {}, Redis may be unavailable", info.tokenId());
@@ -52,9 +52,9 @@ public class OnlineUserAdapter implements OnlineUserPort {
         List<OnlineUserInfo> result = new ArrayList<>();
         try (var cursor = redisTemplate.scan(
                 org.springframework.data.redis.core.ScanOptions.scanOptions()
-                    .match(ONLINE_KEY_PREFIX + "*")
-                    .count(100)
-                    .build())) {
+                        .match(ONLINE_KEY_PREFIX + "*")
+                        .count(100)
+                        .build())) {
             cursor.forEachRemaining(key -> {
                 String json = redisTemplate.opsForValue().get(key);
                 if (json != null) {
@@ -81,8 +81,8 @@ public class OnlineUserAdapter implements OnlineUserPort {
             redisTemplate.delete(onlineKey);
             long blacklistTtl = (ttl != null && ttl > 0) ? ttl : DEFAULT_TTL_SECONDS;
             redisTemplate.opsForValue().set(
-                BLACKLIST_KEY_PREFIX + tokenId, "1",
-                blacklistTtl, TimeUnit.SECONDS);
+                    BLACKLIST_KEY_PREFIX + tokenId, "1",
+                    blacklistTtl, TimeUnit.SECONDS);
         } catch (Exception e) {
             // Redis 不可用时降级处理
             log.debug("Failed to force logout for tokenId: {}, Redis may be unavailable", tokenId);

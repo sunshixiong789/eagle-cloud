@@ -40,6 +40,7 @@ public class EagleJwtAuthenticationConverter implements Converter<Jwt, AbstractA
         EagleUser user = new EagleUser(
                 userId,
                 username,
+                "",
                 name,
                 deptId,
                 deptName,

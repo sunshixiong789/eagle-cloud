@@ -29,3 +29,4 @@
 package com.eagle.system.common;
 
 import org.jspecify.annotations.NullMarked;
+import org.springframework.modulith.ApplicationModule;

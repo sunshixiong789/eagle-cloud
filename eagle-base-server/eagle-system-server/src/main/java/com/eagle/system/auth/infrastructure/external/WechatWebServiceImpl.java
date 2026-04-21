@@ -1,8 +1,8 @@
 package com.eagle.system.auth.infrastructure.external;
 
-import com.eagle.auth.domain.service.WechatWebService;
-import com.eagle.auth.infrastructure.config.WechatWebProperties;
-import com.eagle.common.exception.codes.AuthErrorCode;
+import com.eagle.system.auth.domain.service.WechatWebService;
+import com.eagle.system.auth.infrastructure.config.WechatWebProperties;
+import com.eagle.system.common.exception.AuthErrorCode;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,7 +88,9 @@ public class WechatWebServiceImpl implements WechatWebService {
         );
     }
 
-    /** 微信 access_token 响应（access_token 正常 + errcode 错误二选一） */
+    /**
+     * 微信 access_token 响应（access_token 正常 + errcode 错误二选一）
+     */
     private record WechatTokenResponse(
             @JsonProperty("access_token") String accessToken,
             @JsonProperty("openid") String openid,
@@ -98,7 +100,9 @@ public class WechatWebServiceImpl implements WechatWebService {
     ) {
     }
 
-    /** 微信用户信息响应 */
+    /**
+     * 微信用户信息响应
+     */
     private record WechatUserInfoResponse(
             @JsonProperty("openid") String openid,
             @JsonProperty("unionid") String unionid,

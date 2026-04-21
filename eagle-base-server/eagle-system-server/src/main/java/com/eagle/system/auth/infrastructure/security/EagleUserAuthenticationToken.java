@@ -12,6 +12,7 @@ import org.springframework.security.authentication.AbstractAuthenticationToken;
  * @author sunshixiong
  */
 public class EagleUserAuthenticationToken extends AbstractAuthenticationToken {
+    private static final long serialVersionUID = 1L;
 
     private final EagleUser eagleUser;
 

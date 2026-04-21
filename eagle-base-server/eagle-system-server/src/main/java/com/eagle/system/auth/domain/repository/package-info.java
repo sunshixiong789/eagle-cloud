@@ -9,3 +9,4 @@
 @NamedInterface("repository")
 package com.eagle.system.auth.domain.repository;
 
+import org.springframework.modulith.NamedInterface;

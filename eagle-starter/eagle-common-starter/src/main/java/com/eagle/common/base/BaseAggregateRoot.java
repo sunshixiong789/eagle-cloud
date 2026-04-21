@@ -33,23 +33,27 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 public abstract class BaseAggregateRoot<T extends AbstractAggregateRoot<T>> extends AbstractAggregateRoot<T> {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(comment = "主键 ID")
     private Long id;
+
     @CreatedBy
     @Column(updatable = false, comment = "创建人 ID")
     private Long createBy;
+
     @LastModifiedBy
     @Column(comment = "更新人 ID")
     private Long updateBy;
+
     @CreatedDate
     @Column(nullable = false, updatable = false, comment = "创建时间")
     private LocalDateTime createTime;
+
     @LastModifiedDate
     @Column(comment = "更新时间")
     private LocalDateTime updateTime;
+
     @Version
     @Column(comment = "乐观锁版本号")
     private Long version;
@@ -62,5 +66,4 @@ public abstract class BaseAggregateRoot<T extends AbstractAggregateRoot<T>> exte
         }
         updateTime = LocalDateTime.now();
     }
-
 }

@@ -1,6 +1,6 @@
 package com.eagle.system.auth.infrastructure.security;
 
-import com.eagle.auth.domain.service.PasswordEncryptor;
+import com.eagle.system.auth.domain.service.PasswordEncryptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;

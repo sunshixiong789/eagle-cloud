@@ -33,3 +33,4 @@
 )
 package com.eagle.system.config;
 
+import org.springframework.modulith.ApplicationModule;

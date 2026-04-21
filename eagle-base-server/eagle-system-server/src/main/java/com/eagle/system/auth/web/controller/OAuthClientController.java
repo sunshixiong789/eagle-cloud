@@ -1,9 +1,9 @@
 package com.eagle.system.auth.web.controller;
 
-import com.eagle.auth.application.service.OAuthClientApplicationService;
-import com.eagle.auth.web.dto.request.CreateOAuthClientRequest;
-import com.eagle.auth.web.dto.request.UpdateOAuthClientRequest;
-import com.eagle.auth.web.dto.response.OAuthClientResponse;
+import com.eagle.system.auth.application.service.OAuthClientApplicationService;
+import com.eagle.system.auth.web.dto.request.CreateOAuthClientRequest;
+import com.eagle.system.auth.web.dto.request.UpdateOAuthClientRequest;
+import com.eagle.system.auth.web.dto.response.OAuthClientResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

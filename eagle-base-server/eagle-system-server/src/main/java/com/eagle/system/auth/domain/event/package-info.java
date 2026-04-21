@@ -9,3 +9,4 @@
 @NamedInterface("event")
 package com.eagle.system.auth.domain.event;
 
+import org.springframework.modulith.NamedInterface;

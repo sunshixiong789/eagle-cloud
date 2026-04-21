@@ -2,7 +2,7 @@ package com.eagle.system.auth.infrastructure.security;
 
 import com.alibaba.fastjson2.JSON;
 import com.eagle.common.dto.ErrorResult;
-import com.eagle.common.exception.codes.AuthErrorCode;
+import com.eagle.system.common.exception.AuthErrorCode;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -24,3 +24,4 @@
 @NamedInterface("security")
 package com.eagle.system.auth.infrastructure.security;
 
+import org.springframework.modulith.NamedInterface;

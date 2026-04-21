@@ -9,13 +9,12 @@ plugins {
 }
 
 ext {
-    // Spring/spring cloud 版本
+    // Spring/Spring Cloud 版本
     set('springBootVersion', '4.0.3')
     set('springCloudVersion', '2025.1.1')
     set('springCloudAlibabaVersion', '2025.1.0.0')
     set('springDependencyManagementVersion', '1.1.7')
-
-    set('springModulithVersion', "2.0.3")
+    set('springModulithVersion', '2.0.5')
 
     // 数据库驱动版本
     set('mysqlConnectorVersion', '9.6.0')
@@ -33,22 +32,34 @@ ext {
     set('commonsLang3Version', '3.20.0')
     set('commonsCollections4Version', '4.5.0')
     set('commonsIoVersion', '2.21.0')
-    set('uuidCreator', '6.1.1')
+    set('uuidCreatorVersion', '6.1.1')
+    set('caffeineVersion', '3.2.0')
+
+    // 微信/第三方 SDK 版本
+    set('wxJavaVersion', '4.6.0')
+    set('aliyunSmsVersion', '3.0.0')
 
     // API 文档版本
     set('springdocVersion', '3.0.2')
 
+    // 序列化
+    set('fastjson2Version', '2.0.61')
+
+    // Office 文档处理
+    set('poiVersion', '5.3.0')
+
+    // MapStruct
     set('mapstructVersion', '1.6.3')
     set('lombokMapstructVersion', '0.2.0')
-
 }
 
 allprojects {
     apply plugin: 'java'
 
     java {
-        sourceCompatibility = '25'
-        targetCompatibility = '25'
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
     }
 
     group = 'com.eagle'
@@ -88,6 +99,14 @@ subprojects {
         }
     }
 
+    configurations {
+        compileOnly {
+            extendsFrom annotationProcessor
+        }
+        // mockito-core 单独作为 JVM Agent 加载，避免 JDK 21+ 动态 Agent 加载警告
+        mockitoAgent
+    }
+
     publishing {
         publications {
             mavenJava(MavenPublication) {
@@ -99,14 +118,36 @@ subprojects {
         }
     }
 
+    tasks.named('compileJava') {
+        options.compilerArgs += [
+                '-Amapstruct.defaultComponentModel=spring',
+                '-Amapstruct.unmappedTargetPolicy=IGNORE',
+                '-Xlint:all,-processing'
+        ]
+    }
+
     tasks.named('test') {
         useJUnitPlatform()
+        // 将 mockito-core 作为 JVM Agent 显式加载，修复 JDK 21+ 动态 Agent 加载警告
+        jvmArgs "-javaagent:${configurations.mockitoAgent.asPath}"
+        // 设置测试超时时间，防止测试卡住（5分钟）
+        timeout.set(java.time.Duration.ofMinutes(5))
+        // 显示测试执行信息
+        testLogging {
+            events "passed", "skipped", "failed"
+            showStandardStreams = true
+        }
     }
 
     tasks.withType(JavaExec).configureEach {
         jvmArgs += [
                 "-XX:+AllowRedefinitionToAddDeleteMethods"
         ]
+    }
+
+    // Aliyun SMS SDK 等第三方库的传递依赖可能含重复 JAR
+    tasks.withType(Jar).configureEach {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
 
     dependencyManagement {
@@ -133,12 +174,23 @@ subprojects {
             dependency "org.apache.commons:commons-lang3:${commonsLang3Version}"
             dependency "org.apache.commons:commons-collections4:${commonsCollections4Version}"
             dependency "commons-io:commons-io:${commonsIoVersion}"
-            dependency "com.github.f4b6a3:uuid-creator:${uuidCreator}"
+            dependency "com.github.f4b6a3:uuid-creator:${uuidCreatorVersion}"
+            dependency "com.github.ben-manes.caffeine:caffeine:${caffeineVersion}"
+
+            // 微信/第三方 SDK
+            dependency "com.github.binarywang:weixin-java-miniapp:${wxJavaVersion}"
+            dependency "com.aliyun:dysmsapi20170525:${aliyunSmsVersion}"
 
             // API 文档
             dependency "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
 
-            // mapstruct
+            // 序列化
+            dependency "com.alibaba.fastjson2:fastjson2:${fastjson2Version}"
+
+            // Office 文档处理
+            dependency "org.apache.poi:poi-ooxml:${poiVersion}"
+
+            // MapStruct
             dependency "org.projectlombok:lombok-mapstruct-binding:${lombokMapstructVersion}"
             dependency "org.mapstruct:mapstruct:${mapstructVersion}"
             dependency "org.mapstruct:mapstruct-processor:${mapstructVersion}"
@@ -157,6 +209,19 @@ subprojects {
         developmentOnly 'org.springframework.boot:spring-boot-devtools'
         annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+        // transitive = false：只取 mockito-core jar 本身，不引入传递依赖
+        mockitoAgent('org.mockito:mockito-core') { transitive = false }
     }
 
+    graalvmNative {
+        binaries {
+            main {
+                javaLauncher = javaToolchains.launcherFor {
+                    languageVersion = JavaLanguageVersion.of(25)
+                    vendor = JvmVendorSpec.GRAAL_VM
+                }
+            }
+        }
+    }
 }

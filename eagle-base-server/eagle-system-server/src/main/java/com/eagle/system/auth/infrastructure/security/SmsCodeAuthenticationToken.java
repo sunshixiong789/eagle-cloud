@@ -14,6 +14,7 @@ import java.util.Map;
  */
 @Getter
 public class SmsCodeAuthenticationToken extends OAuth2AuthorizationGrantAuthenticationToken {
+    private static final long serialVersionUID = 1L;
 
     public static final AuthorizationGrantType SMS_CODE =
             new AuthorizationGrantType("sms_code");

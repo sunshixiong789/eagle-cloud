@@ -1,11 +1,11 @@
 package com.eagle.system.auth.web.controller;
 
-import com.eagle.auth.application.service.AccountApplicationService;
-import com.eagle.auth.web.dto.request.BindPhoneRequest;
-import com.eagle.auth.web.dto.request.ChangePasswordRequest;
-import com.eagle.auth.web.dto.request.CreateAccountRequest;
-import com.eagle.auth.web.dto.request.RegisterAccountRequest;
-import com.eagle.auth.web.dto.request.ResetPasswordRequest;
+import com.eagle.system.auth.application.service.AccountApplicationService;
+import com.eagle.system.auth.web.dto.request.BindPhoneRequest;
+import com.eagle.system.auth.web.dto.request.ChangePasswordRequest;
+import com.eagle.system.auth.web.dto.request.CreateAccountRequest;
+import com.eagle.system.auth.web.dto.request.RegisterAccountRequest;
+import com.eagle.system.auth.web.dto.request.ResetPasswordRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

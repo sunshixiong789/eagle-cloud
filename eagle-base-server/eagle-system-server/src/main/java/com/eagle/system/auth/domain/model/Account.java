@@ -1,10 +1,11 @@
 package com.eagle.system.auth.domain.model;
 
-import com.eagle.auth.domain.model.valueobject.ProfileHints;
-import com.eagle.auth.domain.model.valueobject.WechatBinding;
 import com.eagle.common.base.BaseAggregateRoot;
-import com.eagle.common.event.AccountRegisteredEvent;
-import com.eagle.common.exception.codes.AuthErrorCode;
+import com.eagle.system.auth.domain.model.valueobject.ProfileHints;
+import com.eagle.system.auth.domain.model.valueobject.WechatBinding;
+import com.eagle.system.common.event.AccountDeletedEvent;
+import com.eagle.system.common.event.AccountRegisteredEvent;
+import com.eagle.system.common.exception.AuthErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -216,7 +217,7 @@ public class Account extends BaseAggregateRoot<Account> {
      * 发布账号删除事件（跨域事件，system 域级联删除 User）
      */
     public void publishDeletedEvent() {
-        registerEvent(new com.eagle.common.event.AccountDeletedEvent(getId()));
+        registerEvent(new AccountDeletedEvent(getId()));
     }
 
     // ==================== 凭据管理 ====================
