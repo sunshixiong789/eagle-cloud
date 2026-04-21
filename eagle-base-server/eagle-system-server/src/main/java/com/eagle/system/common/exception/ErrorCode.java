@@ -1,0 +1,113 @@
+package com.eagle.system.common.exception;
+
+import com.eagle.common.exception.DomainException;
+import com.eagle.common.i18n.MessageSourceUtil;
+
+import java.util.Locale;
+
+/**
+ * 错误码接口
+ * <p>
+ * 各业务域实现此接口（见 {@code codes/} 子包），统一提供：
+ * <ul>
+ *   <li>数字错误码 {@link #getCode()} — 前端/日志用于精确识别错误</li>
+ *   <li>i18n 消息键 {@link #getMessageKey()} — 配合 MessageSource 多语言</li>
+ *   <li>默认消息 {@link #getDefaultMessage()} — i18n 失败时的降级文本</li>
+ * </ul>
+ *
+ * <p>用法示例：
+ * <pre>{@code
+ * throw UserErrorCode.USER_NOT_FOUND.toNotFoundException();
+ * throw AuthErrorCode.SMS_RATE_LIMIT.toServiceException();
+ * throw SystemErrorCode.DEPT_NOT_FOUND.toNotFoundException();
+ * }</pre>
+ *
+ * <p>新增错误码只需在对应枚举文件中增加一行常量，无需修改其他代码。
+ *
+ * @author sunshixiong
+ */
+public interface ErrorCode {
+
+    /** 数字错误码，用于 API 响应和日志定位 */
+    int getCode();
+
+    /** i18n 资源键，对应 messages_*.properties 中的 key */
+    String getMessageKey();
+
+    /** 当 i18n 解析失败时的中文降级消息 */
+    String getDefaultMessage();
+
+    // ==================== 消息解析 ====================
+
+    /**
+     * 使用 LocaleContextHolder 解析当前语言消息（MVC 上下文）
+     */
+    default String getMessage() {
+        return MessageSourceUtil.getMessage(getMessageKey(), null, getDefaultMessage());
+    }
+
+    /**
+     * 带参数的消息解析，支持 {0} {1} 占位符
+     *
+     * @param args 消息参数
+     */
+    default String getMessage(Object... args) {
+        return MessageSourceUtil.getMessage(getMessageKey(), args, getDefaultMessage());
+    }
+
+    /**
+     * 显式传入 Locale（过滤器/异步上下文中使用，LocaleContextHolder 不可用时）
+     *
+     * @param locale 语言环境
+     */
+    default String getMessage(Locale locale) {
+        return MessageSourceUtil.getMessage(getMessageKey(), null, getDefaultMessage(), locale);
+    }
+
+    // ==================== 异常工厂方法 ====================
+
+    /**
+     * 创建 HTTP 404 Not Found 异常
+     *
+     * @param args 消息占位符参数（可选）
+     */
+    default NotFoundException toNotFoundException(Object... args) {
+        return new NotFoundException(this, args);
+    }
+
+    /**
+     * 创建 HTTP 409 Conflict 异常
+     *
+     * @param args 消息占位符参数（可选）
+     */
+    default ConflictException toConflictException(Object... args) {
+        return new ConflictException(this, args);
+    }
+
+    /**
+     * 创建 HTTP 400 Bad Request 异常（领域验证、状态不变性）
+     *
+     * @param args 消息占位符参数（可选）
+     */
+    default DomainException toDomainException(Object... args) {
+        return new DomainException(this, args);
+    }
+
+    /**
+     * 创建 HTTP 500 Internal Server Error 异常（基础设施、外部服务故障）
+     *
+     * @param args 消息占位符参数（可选）
+     */
+    default ServiceException toServiceException(Object... args) {
+        return new ServiceException(this, args);
+    }
+
+    /**
+     * 创建 HTTP 500 Internal Server Error 异常（带原因异常链）
+     *
+     * @param cause 原始异常
+     */
+    default ServiceException toServiceException(Throwable cause) {
+        return new ServiceException(this, cause);
+    }
+}

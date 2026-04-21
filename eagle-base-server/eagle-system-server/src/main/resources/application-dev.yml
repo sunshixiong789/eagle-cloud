@@ -1,0 +1,52 @@
+# ===========================================
+# 开发/测试环境配置
+# 使用 MySQL 数据库 + Redis 分布式缓存
+# 适用于：开发环境、测试环境、预发布环境
+# ===========================================
+
+spring:
+  # 数据源配置 - MySQL 数据库
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver  # MySQL 8.x 驱动
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:eagle}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}  # 数据库用户名
+    password: ${DB_PASSWORD:}  # 数据库密码，从环境变量读取
+    hikari:
+      # HikariCP 连接池配置
+      connection-timeout: 30000  # 连接超时时间（毫秒）
+      maximum-pool-size: 20  # 最大连接数
+      minimum-idle: 5  # 最小空闲连接数
+      idle-timeout: 300000  # 空闲连接超时时间（毫秒），5 分钟
+      max-lifetime: 1200000  # 连接最大存活时间（毫秒），20 分钟
+      auto-commit: true  # 自动提交
+  # JPA 配置
+  jpa:
+    database: mysql  # 数据库类型
+    database-platform: org.hibernate.dialect.MySQLDialect  # MySQL 方言
+    show-sql: true  # 显示 SQL 语句，便于调试
+    hibernate:
+      ddl-auto: update  # 自动更新数据库结构
+      # 注意：生产环境建议改为 "validate" 以避免意外修改表结构
+  # 缓存配置 - Redis 分布式缓存
+  cache:
+    type: redis  # 使用 Redis 缓存
+    redis:
+      time-to-live: 30m  # 缓存过期时间，30 分钟
+      key-prefix: "eagle:"  # 缓存 key 前缀，便于区分不同应用
+      cache-null-values: true  # 允许缓存空值，防止缓存穿透
+  # Redis 连接配置
+  data:
+    redis:
+      url: redis://${REDIS_PASSWORD:}@${REDIS_HOST:127.0.0.1}:${REDIS_PORT:6379}/0  # Redis 连接 URL
+      connect-timeout: 3000ms  # 连接超时时间
+      lettuce:
+        pool:
+          max-active: 16  # 最大活跃连接数
+          max-idle: 8  # 最大空闲连接数
+          min-idle: 2  # 最小空闲连接数
+          max-wait: 2000ms  # 获取连接最大等待时间
+# Actuator 健康检查配置
+management:
+  health:
+    redis:
+      enabled: true  # 启用 Redis 健康检查
