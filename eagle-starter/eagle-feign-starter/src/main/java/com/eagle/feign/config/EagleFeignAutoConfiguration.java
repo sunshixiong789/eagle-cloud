@@ -3,6 +3,8 @@ package com.eagle.feign.config;
 import com.eagle.feign.decoder.FeignErrorDecoder;
 import com.eagle.feign.interceptor.FeignAuthInterceptor;
 import feign.Logger;
+import io.micrometer.tracing.Tracer;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
@@ -18,13 +20,15 @@ import org.springframework.context.annotation.Bean;
 public class EagleFeignAutoConfiguration {
 
     /**
-     * Feign 请求拦截器：透传 JWT Token。
+     * Feign 请求拦截器：透传 JWT Token 和链路追踪信息。
      *
+     * @param tracerProvider Tracer provider（可选，tracing starter 未引入时为 null）
      * @return FeignAuthInterceptor
      */
     @Bean
-    public FeignAuthInterceptor feignAuthInterceptor() {
-        return new FeignAuthInterceptor();
+    public FeignAuthInterceptor feignAuthInterceptor(ObjectProvider<Tracer> tracerProvider) {
+        Tracer tracer = tracerProvider.getIfAvailable();
+        return new FeignAuthInterceptor(tracer);
     }
 
     /**

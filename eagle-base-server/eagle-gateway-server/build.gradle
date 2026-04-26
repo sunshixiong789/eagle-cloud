@@ -5,12 +5,18 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
 
+    // SpringDoc OpenAPI 网关聚合
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui'
+
     // Nacos 服务发现（接入动态路由）
     implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery'
 
     // Sentinel 网关限流
     implementation 'com.alibaba.cloud:spring-cloud-alibaba-sentinel-gateway'
     implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-sentinel'
+
+    // 链路追踪
+    implementation project(':eagle-starter:eagle-tracing-starter')
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

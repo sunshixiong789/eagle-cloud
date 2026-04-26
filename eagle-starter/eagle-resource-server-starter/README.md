@@ -56,7 +56,7 @@ eagle:
 #### 3.1 获取当前登录用户
 
 ```java
-import com.eagle.resource.util.SecurityUtils;
+import util.com.eagle.resource.server.SecurityUtils;
 
 @RestController
 @RequestMapping("/api/users")
@@ -109,7 +109,7 @@ public class AdminController {
 #### 3.3 编程式权限检查
 
 ```java
-import com.eagle.resource.util.SecurityUtils;
+import util.com.eagle.resource.server.SecurityUtils;
 
 public class SomeService {
 

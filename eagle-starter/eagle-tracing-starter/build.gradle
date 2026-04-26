@@ -1,0 +1,9 @@
+dependencies {
+    api project(':eagle-starter:eagle-common-starter')
+    api 'io.micrometer:micrometer-tracing-bridge-brave'
+    api 'io.zipkin.reporter2:zipkin-reporter-brave'
+    api 'io.zipkin.reporter2:zipkin-sender-okhttp3'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}

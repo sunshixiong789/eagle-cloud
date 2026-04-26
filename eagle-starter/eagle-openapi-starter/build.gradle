@@ -1,0 +1,8 @@
+dependencies {
+    api project(':eagle-starter:eagle-common-starter')
+    api 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
+    api 'org.springframework.boot:spring-boot-starter-security'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}

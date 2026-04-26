@@ -26,6 +26,14 @@ spring:
     show-sql: true  # 显示 SQL 语句，便于调试
     hibernate:
       ddl-auto: update  # 自动更新数据库结构（开发环境适用）
+    # 自动配置排除（本地无 Redis/Nacos，排除避免启动报错）
+  autoconfigure:
+    exclude:
+      - org.redisson.spring.starter.RedissonAutoConfigurationV4
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
   # 缓存配置 - Caffeine 本地缓存
   cache:
     type: caffeine  # 使用 Caffeine 缓存

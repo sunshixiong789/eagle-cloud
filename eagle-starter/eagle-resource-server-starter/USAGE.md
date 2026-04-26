@@ -48,7 +48,7 @@ eagle:
 package com.eagle.yourservice.controller;
 
 import com.eagle.common.dto.EagleUser;
-import com.eagle.resource.util.SecurityUtils;
+import util.com.eagle.resource.server.SecurityUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -92,7 +92,7 @@ public class UserController {
 使用 `SecurityUtils` 工具类：
 
 ```java
-import com.eagle.resource.util.SecurityUtils;
+import util.com.eagle.resource.server.SecurityUtils;
 
 // 获取完整用户对象
 EagleUser user = SecurityUtils.getCurrentUser();
@@ -144,7 +144,7 @@ public class AdminController {
 #### 2.2 编程式权限检查
 
 ```java
-import com.eagle.resource.util.SecurityUtils;
+import util.com.eagle.resource.server.SecurityUtils;
 
 @Service
 public class UserService {

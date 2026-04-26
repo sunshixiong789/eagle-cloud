@@ -45,6 +45,14 @@ spring:
           filters:
             - StripPrefix=0
 
+        # API Docs 聚合路由（每个服务独立访问其文档）
+        - id: system-server-api-docs
+          uri: lb://eagle-system-server
+          predicates:
+            - Path=/v3/api-docs/eagle-system-server
+          filters:
+            - SetPath=/v3/api-docs
+
         # 默认兜底路由
         - id: default
           uri: lb://eagle-system-server
@@ -57,6 +65,15 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: http://localhost:80/oauth2/jwks
+
+# SpringDoc 聚合配置（Nacos 动态发现由 GatewayOpenApiConfig 自动注册）
+springdoc:
+  swagger-ui:
+    path: /swagger-ui
+    config-url: /v3/api-docs/swagger-config
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
 
 # Sentinel 配置
 spring.cloud.sentinel:

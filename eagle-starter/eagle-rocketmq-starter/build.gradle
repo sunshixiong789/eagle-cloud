@@ -1,0 +1,7 @@
+dependencies {
+    api project(':eagle-starter:eagle-common-starter')
+    api 'org.apache.rocketmq:rocketmq-v5-client-spring-boot-starter'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}

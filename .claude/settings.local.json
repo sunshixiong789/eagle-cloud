@@ -1,7 +1,20 @@
 {
   "permissions": {
     "allow": [
-      "Bash(gradle build *)"
+      "Bash(gradle build *)",
+      "Bash(gradle dependencies *)",
+      "WebSearch",
+      "Bash(mkdir -p eagle-starter/eagle-dynamic-datasource-starter/src/main/java/com/eagle/datasource/routing)",
+      "Bash(mkdir -p eagle-starter/eagle-dynamic-datasource-starter/src/main/java/com/eagle/datasource/annotation)",
+      "Bash(mkdir -p eagle-starter/eagle-dynamic-datasource-starter/src/main/java/com/eagle/datasource/aspect)",
+      "Bash(mkdir -p eagle-starter/eagle-dynamic-datasource-starter/src/main/java/com/eagle/datasource/properties)",
+      "Bash(mkdir -p eagle-starter/eagle-dynamic-datasource-starter/src/main/java/com/eagle/datasource/config)",
+      "Bash(gradle compileJava *)",
+      "Bash(mkdir -p eagle-starter/eagle-data-permission-starter/src/main/java/com/eagle/datapermission/annotation)",
+      "Bash(mkdir -p eagle-starter/eagle-data-permission-starter/src/main/java/com/eagle/datapermission/aspect)",
+      "Bash(mkdir -p eagle-starter/eagle-data-permission-starter/src/main/java/com/eagle/datapermission/config)",
+      "Bash(mkdir -p eagle-starter/eagle-data-permission-starter/src/main/java/com/eagle/datapermission/enums)",
+      "Bash(mkdir -p eagle-starter/eagle-data-permission-starter/src/main/java/com/eagle/datapermission/helper)"
     ]
   }
 }

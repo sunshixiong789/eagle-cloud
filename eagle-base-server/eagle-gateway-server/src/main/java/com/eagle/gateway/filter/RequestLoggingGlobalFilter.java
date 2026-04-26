@@ -1,5 +1,7 @@
 package com.eagle.gateway.filter;
 
+import io.micrometer.tracing.Tracer;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -16,13 +18,16 @@ import java.time.Instant;
 /**
  * 请求日志全局过滤器。
  *
- * <p>记录请求方法、路径、状态码、耗时。
+ * <p>记录请求方法、路径、状态码、耗时、链路追踪 ID。
  *
  * @author 孙士雄
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class RequestLoggingGlobalFilter implements GlobalFilter, Ordered {
+
+    private final Tracer tracer;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -32,16 +37,29 @@ public class RequestLoggingGlobalFilter implements GlobalFilter, Ordered {
         String method = request.getMethod().name();
         String path = request.getURI().getPath();
         String clientIp = getClientIp(request);
+        String traceId = extractTraceId();
 
         return chain.filter(exchange)
                 .doFinally(signalType -> {
                     ServerHttpResponse response = exchange.getResponse();
                     long millis = Duration.between(start, Instant.now()).toMillis();
-                    log.info("[Gateway] {} {} {} {}ms from {}",
+                    log.info("[Gateway] {} {} {} {}ms from {} traceId={}",
                             method, path,
                             response.getStatusCode() != null ? response.getStatusCode().value() : 0,
-                            millis, clientIp);
+                            millis, clientIp, traceId);
                 });
+    }
+
+    /**
+     * 提取当前链路追踪 ID。
+     *
+     * @return traceId 或 "-"
+     */
+    private String extractTraceId() {
+        if (tracer == null || tracer.currentSpan() == null) {
+            return "-";
+        }
+        return tracer.currentSpan().context().traceId();
     }
 
     /**

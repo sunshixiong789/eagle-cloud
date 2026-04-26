@@ -8,7 +8,12 @@ include 'eagle-base-server:eagle-system-server'
 include 'eagle-starter:eagle-common-starter'
 include 'eagle-starter:eagle-data-jpa-starter'
 include 'eagle-starter:eagle-feign-starter'
+include 'eagle-starter:eagle-openapi-starter'
 include 'eagle-starter:eagle-redis-starter'
 include 'eagle-starter:eagle-resource-server-starter'
+include 'eagle-starter:eagle-tracing-starter'
+include 'eagle-starter:eagle-rocketmq-starter'
+include 'eagle-starter:eagle-dynamic-datasource-starter'
+include 'eagle-starter:eagle-data-permission-starter'
 
 

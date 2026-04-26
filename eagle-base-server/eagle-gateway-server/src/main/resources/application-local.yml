@@ -1,0 +1,52 @@
+# ===========================================
+# Gateway 本地开发环境配置
+# 不适用 Nacos / Sentinel / Redis
+# ===========================================
+
+spring:
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+    gateway:
+      # 本地环境使用固定地址路由（不依赖服务发现）
+      routes:
+        - id: system-server
+          uri: http://localhost:80
+          predicates:
+            - Path=/api/system/**,/oauth2/**,/login,/logout,/swagger-ui/**,/v3/api-docs/**
+          filters:
+            - StripPrefix=0
+        - id: system-server-api-docs
+          uri: http://localhost:80
+          predicates:
+            - Path=/v3/api-docs/eagle-system-server
+          filters:
+            - SetPath=/v3/api-docs
+        - id: default
+          uri: http://localhost:80
+          predicates:
+            - Path=/**
+
+  # SpringDoc 本地聚合配置（手动指定服务列表）
+  autoconfigure:
+    exclude:
+      - com.eagle.gateway.config.GatewayOpenApiConfig
+
+# 手动配置聚合文档（本地无 Nacos，关闭自动发现）
+eagle:
+  gateway:
+    openapi:
+      discovery-enabled: false
+
+# Sentinel 控制台（本地不启用）
+spring.cloud.sentinel:
+  enabled: false
+
+# SpringDoc 手动聚合
+springdoc:
+  swagger-ui:
+    path: /swagger-ui
+    urls:
+      - name: 系统服务
+        url: /v3/api-docs/eagle-system-server

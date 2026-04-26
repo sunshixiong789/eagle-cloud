@@ -2,4 +2,7 @@ dependencies {
     api project(':eagle-starter:eagle-common-starter')
     api 'org.springframework.cloud:spring-cloud-starter-openfeign'
     api 'org.springframework.boot:spring-boot-starter-webmvc'
+
+    // 可选链路追踪依赖（eagle-tracing-starter 引入时生效）
+    compileOnly 'io.micrometer:micrometer-tracing'
 }
