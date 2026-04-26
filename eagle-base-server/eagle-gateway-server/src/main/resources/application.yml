@@ -1,5 +1,77 @@
+# ===========================================
+# Eagle Gateway 应用配置
+# ===========================================
+
 server:
   port: 8080
+
 spring:
   application:
     name: eagle-gateway-server
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+
+    gateway:
+      # 全局 CORS 配置
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns:
+              - "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+            maxAge: 3600
+
+      # 路由配置（使用服务发现 lb://）
+      routes:
+        # 系统服务（认证授权 + 用户权限管理）
+        - id: system-server
+          uri: lb://eagle-system-server
+          predicates:
+            - Path=/api/system/**,/oauth2/**,/login,/logout,/swagger-ui/**,/v3/api-docs/**
+          filters:
+            - StripPrefix=0
+
+        # 默认兜底路由
+        - id: default
+          uri: lb://eagle-system-server
+          predicates:
+            - Path=/**
+
+  # JWT 解码器配置（授权服务器 JWK Set 地址）
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:80/oauth2/jwks
+
+# Sentinel 配置
+spring.cloud.sentinel:
+  transport:
+    dashboard: ${SENTINEL_DASHBOARD:localhost:8858}
+  filter:
+    enabled: false  # Gateway 使用 SentinelGatewayFilter，关闭默认 Servlet Filter
+
+# Actuator 配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when_authorized

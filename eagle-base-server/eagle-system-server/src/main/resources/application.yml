@@ -9,9 +9,15 @@ server:
 # Spring 基础配置
 spring:
   application:
-    name: eagle  # 应用名称
+    name: eagle-system-server  # 应用名称
   profiles:
     active: local  # 激活的配置文件（local/dev/prod）
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
 # ===========================================
 # Eagle 自定义配置
 # ===========================================

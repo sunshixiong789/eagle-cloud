@@ -1,9 +1,12 @@
 dependencies {
-    implementation project(':eagle-starter:eagle-jpa-starter')
+    implementation project(':eagle-starter:eagle-data-jpa-starter')
     implementation project(':eagle-starter:eagle-resource-server-starter')
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    // Nacos 服务注册与发现
+    implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery'
 
     // 微信/第三方 SDK
     implementation "com.github.binarywang:weixin-java-miniapp"

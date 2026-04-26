@@ -1,5 +1,16 @@
 
 dependencies {
+    implementation project(':eagle-starter:eagle-common-starter')
     implementation 'org.springframework.cloud:spring-cloud-starter-gateway-server-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
+
+    // Nacos 服务发现（接入动态路由）
+    implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery'
+
+    // Sentinel 网关限流
+    implementation 'com.alibaba.cloud:spring-cloud-alibaba-sentinel-gateway'
+    implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-sentinel'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
