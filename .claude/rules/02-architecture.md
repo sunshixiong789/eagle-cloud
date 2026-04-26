@@ -2,17 +2,6 @@
 
 适用于模块化单体（Spring Modulith）和微服务架构。
 
-## 有界上下文（Bounded Context）
-
-项目按业务域划分为多个有界上下文 + 支撑模块：
-
-```
-{root-package}
-├── {domain-a}/    # 业务域 A
-├── {domain-b}/    # 业务域 B
-├── config/        # 全局配置（粘合层）— Security、Cache、Async 等
-└── common/        # 共享内核（Shared Kernel）— 异常体系、错误码、基类、跨域事件
-```
 
 模块边界治理方式：
 - **单体架构**：Spring Modulith `@ApplicationModule` + 架构测试自动验证
@@ -22,7 +11,7 @@
 
 ### 原则一：出站端口（Driven Port）定义在领域层，适配器在基础设施层实现
 
-采用**六边形架构（Ports & Adapters）**。域需要外部提供数据时（如查询授权信息），在**自身的 `domain/port/`** 定义接口，由**外部模块的 `infrastructure/` 层**提供实现（Driven Adapter）。
+采用**六边形架构（Ports & Adapters）**。域需要外部提供数据时（如查询授权信息），在**自身的 `domain/port/`** 定义接口，由**本模块或外部模块的 `infrastructure/` 层**提供实现（Driven Adapter）。
 
 ```
 依赖方向示例（auth 需要授权信息）：
@@ -33,107 +22,122 @@
 ```
 
 ```java
-// ✅ 正确：auth 领域层定义出站端口
-// auth/domain/port/AuthorizationPort.java
+// ✅ auth 定义出站端口，system 在 infrastructure/security/ 提供适配器实现
 public interface AuthorizationPort {
     Optional<AuthorizationInfo> findAuthorizationInfo(Long accountId);
 }
 
-// ✅ 正确：system 基础设施层提供适配器实现
-// system/infrastructure/security/AuthorizationAdapter.java
-@Service
-public class AuthorizationAdapter implements AuthorizationPort {
-    // 查询 system 域的 User、Dept、Role
-}
-
-// ✅ 正确：auth 内部通过 Spring DI 注入，不感知 system 实现
-// auth/infrastructure/adapter/EagleUserDetailsServiceImpl.java
-private final AuthorizationPort authorizationPort;  // 注入的是 AuthorizationAdapter
-
-// ❌ 错误：auth 直接依赖 system 的 service 或 repository
-import com.example.system.domain.repository.UserRepository;  // 跨越有界上下文！
+// ❌ 禁止直接依赖另一个域的 Repository
+import com.example.system.domain.repository.UserRepository;
 ```
 
-**微服务拆分路径**：auth 提取为独立服务时，在 **auth 基础设施层**新增远程适配器（HTTP/gRPC 客户端），实现同一个 `AuthorizationPort` 接口，无需修改领域层任何代码。
+**微服务拆分路径**：auth 提取为独立服务时，在 `auth/infrastructure/remote/` 新增远程适配器（HTTP/gRPC 客户端）实现同一 `AuthorizationPort` 接口即可，领域层零改动。
 
-```java
-// 单体 → 微服务：只需在 auth/infrastructure/ 新增，替换注入
-@Service
-@Profile("microservice")
-public class RemoteAuthorizationAdapter implements AuthorizationPort {
-    // HTTP/gRPC 调用 system 服务
-}
-```
+**禁止直接依赖另一个域的 domain 层**（聚合根、Repository、领域服务）。
 
-**禁止直接依赖另一个域的 domain 层**（聚合根、Repository、领域服务）：
-
-```java
-// ❌ 错误：直接注入另一个域的 Repository
-private final OtherModuleRepository otherRepo;  // 跨越有界上下文边界！
-
-// ❌ 错误：直接构造另一个域的聚合根
-OtherAggregate entity = OtherAggregate.create(...);
-otherRepo.save(entity);
-```
-
-### 原则二：跨域事件必须放在共享模块（common）
-
-事件类是跨域通信的契约，**不能定义在发布方或消费方的 domain.event 包中**，必须放在 `common.event` 包：
-- 发布方和消费方都不直接依赖对方
-- 拆分为微服务时，事件契约可独立抽取为共享 JAR / Schema Registry
-
-```java
-// ✅ 正确：跨域事件放在 common
-package com.example.common.event;
-public record OrderPaidEvent(Long orderId, BigDecimal amount) {}
-
-// ❌ 错误：跨域事件放在发布方域内（消费方必须依赖发布方）
-package com.example.order.domain.event;
-public class OrderPaidEvent { ... }
-```
-
-**域内部事件**（仅本域消费）可以放在自己的 `domain/event/` 包中。
-
-### 原则三：禁止跨域直接操作聚合根
+### 原则二：禁止跨域直接操作聚合根
 
 每个聚合根只能由其所属域的应用服务管理。其他域需要触发操作时：
 
 ```
-方式一（事件驱动）：域 A 发布事件 → common.event → 域 B 监听并处理
+方式一（事件驱动）：域 A 发布事件 → 消息队列（JSON）→ 域 B 监听并处理
 方式二（端口调用）：域 A 在 domain/port/ 定义接口 → 域 B 基础设施层实现适配器
+```
+
+跨域事件通过 **JSON 序列化**在消息队列中传递，消费方按需解析，无需共享 Java 事件类：
+
+```java
+// ✅ 正确：本域定义跨域事件，JSON 解耦，不依赖 common
+package com.example.order.domain.event.integration;
+public record OrderPaidEvent(Long orderId, BigDecimal amount) {}
+
+// ✅ 正确：消费方不依赖事件类，直接解析 JSON 或按需反序列化
 ```
 
 ## 每个模块内的 DDD 分层
 
 ```
 {module}/
-├── web/                           # Presentation layer
-│   ├── controller/               # REST 控制器
-│   └── dto/
-│       ├── request/              # 入参 DTO（Bean Validation）
-│       └── response/             # 出参 DTO
-├── application/                   # Application layer
-│   ├── service/                  # 应用服务（用例编排，事务边界）
-│   ├── port/                     # 对外暴露的应用层端口接口
-│   └── mapper/                   # 对象映射器（MapStruct）
-├── domain/                        # Domain layer（纯业务，无框架依赖）
-│   ├── model/                    # 聚合根、实体、值对象
-│   │   ├── enums/
-│   │   ├── entity/               # 仅聚合内子实体（无独立 Repository）
-│   │   └── valueobject/
-│   ├── event/                    # 域内部领域事件（仅本域消费）
-│   ├── port/                     # 出站端口接口（Driven Ports，六边形架构）
-│   │                             # ← 由外部模块的 infrastructure/ 层实现
-│   ├── repository/               # Repository 接口 + 投影接口（CQRS）
-│   └── service/                  # 领域服务接口（跨聚合业务规则）
-└── infrastructure/                # Infrastructure layer
-    ├── event/                    # 领域事件处理器
-    ├── adapter/                 # 安全相关适配器（含实现其他域 Driven Port 的 Adapter）
-    ├── service/                  # 领域服务实现
-    └── config/                   # 技术配置（Properties 等）
+├── interfaces/                         # Presentation layer
+│   ├── rest/                           # REST 入口
+│   │   └── controller/                 # REST 控制器
+│   ├── rpc/                            # Dubbo / gRPC 入口（预留）
+│   └── dto/                            # 入参 / 出参 DTO（Bean Validation）
+│       ├── request/
+│       └── response/
+├── application/                        # Application layer
+│   ├── service/                        # 应用服务（用例编排，事务边界）
+│   ├── command/                        # CQRS 命令对象（写模型入参）
+│   ├── query/                          # CQRS 查询对象（读模型入参）
+│   ├── assembler/                      # DTO ↔ 领域对象装配器（MapStruct）
+│   └── port/                           # 入站端口（Driving Port，供 interfaces 调用）
+├── domain/                             # Domain layer（纯业务，无框架依赖）
+│   ├── model/
+│   │   ├── aggregate/                  # 聚合根（有独立 Repository）
+│   │   ├── entity/                     # 聚合内子实体（无独立 Repository）
+│   │   ├── valueobject/                # 值对象
+│   │   └── enums/                      # 领域枚举
+│   ├── repository/                     # Repository 接口 + 投影接口（CQRS）
+│   ├── service/                        # 领域服务接口（跨聚合业务规则）
+│   ├── event/
+│   │   ├── domain/                     # 本地领域事件（仅本域消费）
+│   │   └── integration/                # 跨域集成事件（通过 JSON / MQ 传递）
+│   └── port/                           # 出站端口接口（Driven Ports，六边形架构）
+│                                       # ← 由 infrastructure/ 层实现
+└── infrastructure/                     # Infrastructure layer
+    ├── persistence/                    # 数据访问（强制收敛）
+    │   └── repository/                 # Repository 实现（JPA / MyBatis）
+    ├── messaging/                      # 消息队列（MQ）
+    │   ├── producer/                   # 事件生产者
+    │   └── consumer/                   # 事件消费者
+    ├── remote/                         # 外部服务调用（Feign / HTTP / gRPC）
+    ├── scheduler/                      # 定时任务（XXL-JOB / Spring Scheduler）
+    ├── event/                          # 事件分发（domain → integration）
+    ├── service/                        # 领域服务实现
+    ├── config/                         # 技术配置（Properties 等）
+    └── security/                       # 安全适配器
 ```
 
-**分层依赖方向（单向）：** `web → application → domain ← infrastructure`
+**分层依赖方向（单向）：** `interfaces → application → domain ← infrastructure`
+
+## Driving Port 与 Driven Port
+
+| 端口类型 | 位置 | 方向 | 作用 |
+|----------|------|------|------|
+| **Driving Port**（入站端口）| `application/port/` | 外部 → 应用层 | 定义表现层如何驱动应用，由应用服务实现 |
+| **Driven Port**（出站端口）| `domain/port/` | 应用层 → 外部 | 定义领域需要什么外部能力，由基础设施实现 |
+
+### 松散做法 vs 严格六边形
+
+**❌ 松散做法**：Controller 直接注入 `OrderApplicationService` 实现类，导致：
+- interfaces 层与 application 层强耦合
+- 新增 MQ / gRPC 入口时无法复用同一用例
+- 测试 Controller 需 mock 整个 Service
+
+**✅ 严格六边形**：`application/port/` 按**用例分组**定义 Driving Port 接口（如 `OrderCommandPort`、`OrderQueryPort`），由 `application/service/` 实现。REST / RPC / MQ 等所有外部入口统一依赖 Port 接口，不感知实现类。
+
+### 依赖关系
+
+```
+interfaces/
+├── rest/controller/      ──┐
+├── rpc/GrpcService       ──┼──► application/port/OrderCommandPort
+└── messaging/consumer    ──┘         OrderQueryPort
+                                              ▲
+                                              │
+application/service/OrderCommandService implements OrderCommandPort
+application/service/OrderQueryService     implements OrderQueryPort
+              │
+              ▼
+      domain/port/InventoryValidationPort ◄── infrastructure/remote/InventoryAdapter
+```
+
+### 应用层 Service 全部抽象为 Port
+
+| 位置 | 内容 | 命名示例 |
+|------|------|----------|
+| `application/port/` | Driving Port 接口（按用例分组） | `OrderCommandPort`、`OrderQueryPort`、`UserManagePort` |
+| `application/service/` | 接口实现（用例编排 + 事务） | `OrderCommandService`、`OrderQueryService` |
 
 ## 聚合根规范
 
@@ -177,7 +181,7 @@ private List<Permission> permissions;
 3. 应用服务只需一次 `save()` 即可完成持久化 + 事件发布
 
 ```java
-// ✅ 正确：工厂方法接收 hints，@PostPersist 自动注册事件
+// ✅ 工厂方法接收 hints，@PostPersist 在 INSERT 后自动注册事件
 public static Order create(String orderNo, ProfileHints hints) {
     Order order = new Order();
     order.orderNo = orderNo;
@@ -193,22 +197,35 @@ private void onPostPersist() {
     }
 }
 
-// 应用服务：一次 save 搞定
-Order order = Order.create(orderNo, hints);
-orderRepository.save(order);  // INSERT → @PostPersist 注册事件 → Spring Data 发布事件
-
-// ❌ 错误：在 save() 前手动发布事件（getId() 为 null）
-Order order = Order.create(orderNo);
-order.publishCreatedEvent(xxx, null, yyy, null);  // getId() == null!
-orderRepository.save(order);
-
-// ❌ 错误：为了拿 ID 被迫 save 两次
-Order saved = orderRepository.save(order);
-saved.publishCreatedEvent(xxx);
-orderRepository.save(saved);  // 多余的第二次 save
+// 应用服务只需一次 save()
+orderRepository.save(Order.create(orderNo, hints));
 ```
 
 **注意**：`@PostPersist` 仅在 INSERT 时触发，UPDATE 时不会重复发布。对于非创建场景的事件（如删除），因聚合根已有 ID，可直接在业务方法中 `registerEvent()`。
+
+## 事件架构
+
+```
+domain/event/domain/         # 本地事件（仅本域消费）
+domain/event/integration/    # 跨域事件（JSON 解耦，MQ 传递）
+infrastructure/event/        # 事件分发器：domain → integration
+infrastructure/messaging/    # MQ 生产者和消费者
+```
+
+```java
+// domain/event/domain/     — 本地事件（仅本域消费）
+// domain/event/integration/ — 跨域事件（JSON 解耦，MQ 传递）
+
+// infrastructure/event/ — 事件分发器：事务提交后 domain → integration
+@Component
+public class OrderEventDispatcher {
+    @Async
+    @TransactionalEventListener(phase = AFTER_COMMIT)
+    public void onOrderPaid(OrderPaidEvent event) {
+        messagingProducer.send("order-topic", JsonUtils.toJson(event));
+    }
+}
+```
 
 ## 跨聚合操作
 
@@ -248,8 +265,8 @@ Page<OrderSummary> findOrderSummaries(Pageable pageable);
 
 | 单体时 | 拆分后 | 改动范围 |
 |--------|--------|---------|
-| `domain/port/` 接口 + 本地 Adapter | 远程 Adapter（HTTP/gRPC 客户端）实现同一接口 | **仅替换 infrastructure 层实现** |
-| `common.event` 跨域事件 | 消息队列事件契约（Kafka / RabbitMQ），抽取为共享 JAR | 领域层不变 |
+| `domain/port/` 接口 + 本地 Adapter | 远程 Adapter（HTTP/gRPC 客户端）实现同一接口 | **仅替换 infrastructure/remote/ 实现** |
+| `domain/event/integration/` 跨域事件 + `messaging/producer/` | 消息队列事件契约（JSON），消费方按需解析 | 领域层不变 |
 | Spring Modulith `verify()` | 独立部署单元天然隔离 | 持续保证边界 |
 
-**六边形架构的核心价值**：领域层（`domain/port/` 接口）稳定不变，只需在对应服务的 `infrastructure/adapter` 层替换 Adapter 实现，业务代码零改动。
+**六边形架构的核心价值**：领域层（`domain/port/` 接口 + `domain/event/` 事件）稳定不变，只需在对应服务的 `infrastructure/` 层替换实现，业务代码零改动。

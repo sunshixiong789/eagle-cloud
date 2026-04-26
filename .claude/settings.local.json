@@ -14,7 +14,8 @@
       "Bash(mkdir -p eagle-starter/eagle-data-permission-starter/src/main/java/com/eagle/datapermission/aspect)",
       "Bash(mkdir -p eagle-starter/eagle-data-permission-starter/src/main/java/com/eagle/datapermission/config)",
       "Bash(mkdir -p eagle-starter/eagle-data-permission-starter/src/main/java/com/eagle/datapermission/enums)",
-      "Bash(mkdir -p eagle-starter/eagle-data-permission-starter/src/main/java/com/eagle/datapermission/helper)"
+      "Bash(mkdir -p eagle-starter/eagle-data-permission-starter/src/main/java/com/eagle/datapermission/helper)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }
