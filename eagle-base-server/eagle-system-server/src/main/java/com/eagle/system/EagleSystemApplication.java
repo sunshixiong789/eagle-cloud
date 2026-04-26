@@ -1,4 +1,4 @@
-package com.eagle;
+package com.eagle.system;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -23,7 +23,7 @@ import java.util.Optional;
  * </ul>
  * <p>
  * 模块约束声明见各模块的 {@code package-info.java}（使用 {@code @ApplicationModule}）。
- * 架构验证通过测试 {@link com.eagle.ModulithArchitectureTest} 运行：
+ * 架构验证通过测试 {@link com.eagle.system.ModulithArchitectureTest} 运行：
  * <pre>gradle test --tests "com.eagle.ModulithArchitectureTest"</pre>
  *
  * @author sunshixiong

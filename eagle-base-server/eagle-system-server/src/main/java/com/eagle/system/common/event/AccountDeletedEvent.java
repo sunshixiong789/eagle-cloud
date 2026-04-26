@@ -8,7 +8,7 @@ package com.eagle.system.common.event;
  * @author sunshixiong
  */
 public record AccountDeletedEvent(
-        /** 被删除的账号 ID */
+        // 被删除的账号 ID
         Long accountId
 ) {
 }

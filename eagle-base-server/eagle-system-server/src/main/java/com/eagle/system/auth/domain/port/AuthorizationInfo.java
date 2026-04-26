@@ -11,16 +11,16 @@ import java.util.Set;
  * @author sunshixiong
  */
 public record AuthorizationInfo(
-        /** 真实姓名（JWT claim） */
+        // 真实姓名（JWT claim）
         String name,
 
-        /** 部门 ID（JWT claim） */
+        // 部门 ID（JWT claim）
         Long deptId,
 
-        /** 部门名称（JWT claim） */
+        // 部门名称（JWT claim）
         String deptName,
 
-        /** 角色码集合（如 "ROLE_admin"），用于 GrantedAuthority */
+        // 角色码集合（如 "ROLE_admin"），用于 GrantedAuthority
         Set<String> roleCodes
 ) {
 

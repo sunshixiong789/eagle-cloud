@@ -1,33 +1,24 @@
 package com.eagle.gateway.config;
 
-import com.alibaba.csp.sentinel.adapter.gateway.sc.SentinelGatewayFilter;
 import com.alibaba.csp.sentinel.adapter.gateway.sc.callback.BlockRequestHandler;
 import com.alibaba.csp.sentinel.adapter.gateway.sc.callback.GatewayCallbackManager;
-import com.alibaba.csp.sentinel.adapter.gateway.sc.exception.SentinelGatewayBlockExceptionHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.cloud.gateway.filter.GlobalFilter;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerResponse;
-import org.springframework.web.reactive.result.view.ViewResolver;
-import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Mono;
 
 import jakarta.annotation.PostConstruct;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
  * Sentinel 网关限流配置。
+ *
+ * <p>Sentinel Gateway Filter 由 {@code SentinelSCGAutoConfiguration} 自动注册，
+ * 本配置仅自定义限流后的响应处理器。
  *
  * @author 孙士雄
  */
@@ -60,16 +51,5 @@ public class SentinelGatewayConfig {
                     .body(BodyInserters.fromValue(error));
         };
         GatewayCallbackManager.setBlockHandler(handler);
-    }
-
-    /**
-     * Sentinel Gateway Filter（必须注册为 GlobalFilter）。
-     *
-     * @return GlobalFilter
-     */
-    @Bean
-    @Order(Ordered.HIGHEST_PRECEDENCE)
-    public GlobalFilter sentinelGatewayFilter() {
-        return new SentinelGatewayFilter();
     }
 }

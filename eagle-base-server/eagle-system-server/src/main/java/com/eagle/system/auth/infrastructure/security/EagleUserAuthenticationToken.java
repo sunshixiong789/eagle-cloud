@@ -11,6 +11,7 @@ import org.springframework.security.authentication.AbstractAuthenticationToken;
  *
  * @author sunshixiong
  */
+@SuppressWarnings("this-escape")
 public class EagleUserAuthenticationToken extends AbstractAuthenticationToken {
     private static final long serialVersionUID = 1L;
 

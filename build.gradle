@@ -87,10 +87,11 @@ subprojects {
         jar {
             enabled = true
         }
-        // 禁用 AOT 相关任务
-        tasks.matching { it.name in ['processAot', 'processTestAot'] }.configureEach {
-            enabled = false
-        }
+    }
+
+    // 禁用 AOT 相关任务（避免 Gradle 9.x 并发问题和测试扫描问题）
+    tasks.matching { it.name in ['processAot', 'processTestAot'] }.configureEach {
+        enabled = false
     }
 
     hibernate {
@@ -148,6 +149,11 @@ subprojects {
     // Aliyun SMS SDK 等第三方库的传递依赖可能含重复 JAR
     tasks.withType(Jar).configureEach {
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
+
+    // 禁用 GraalVM collectReachabilityMetadata，避免 Gradle 9.x 并发配置解析 bug
+    tasks.matching { it.name == 'collectReachabilityMetadata' }.configureEach {
+        enabled = false
     }
 
     dependencyManagement {
