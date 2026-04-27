@@ -15,5 +15,9 @@ include 'eagle-starter:eagle-tracing-starter'
 include 'eagle-starter:eagle-rocketmq-starter'
 include 'eagle-starter:eagle-dynamic-datasource-starter'
 include 'eagle-starter:eagle-data-permission-starter'
+include 'eagle-starter:eagle-oss-starter'
+include 'eagle-starter:eagle-message-starter'
+include 'eagle-starter:eagle-xxl-job-starter'
+include 'eagle-starter:eagle-tenant-starter'
 
 

@@ -2,6 +2,7 @@ package com.eagle.feign.config;
 
 import com.eagle.feign.decoder.FeignErrorDecoder;
 import com.eagle.feign.interceptor.FeignAuthInterceptor;
+import com.eagle.feign.interceptor.SeataXidRequestInterceptor;
 import feign.Logger;
 import io.micrometer.tracing.Tracer;
 import org.springframework.beans.factory.ObjectProvider;
@@ -49,5 +50,16 @@ public class EagleFeignAutoConfiguration {
     @Bean
     public Logger.Level feignLoggerLevel() {
         return Logger.Level.BASIC;
+    }
+
+    /**
+     * Seata XID 透传拦截器（Seata 在类路径上时生效）。
+     *
+     * @return SeataXidRequestInterceptor
+     */
+    @Bean
+    @ConditionalOnClass(name = "org.apache.seata.core.context.RootContext")
+    public SeataXidRequestInterceptor seataXidRequestInterceptor() {
+        return new SeataXidRequestInterceptor();
     }
 }

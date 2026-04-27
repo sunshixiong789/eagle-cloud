@@ -15,7 +15,12 @@
       "Bash(mkdir -p eagle-starter/eagle-data-permission-starter/src/main/java/com/eagle/datapermission/config)",
       "Bash(mkdir -p eagle-starter/eagle-data-permission-starter/src/main/java/com/eagle/datapermission/enums)",
       "Bash(mkdir -p eagle-starter/eagle-data-permission-starter/src/main/java/com/eagle/datapermission/helper)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(gradle :eagle-starter:eagle-oss-starter:compileJava)",
+      "Bash(gradle :eagle-starter:eagle-oss-starter:dependencies --configuration compileClasspath)",
+      "Bash(java *)",
+      "Bash(gradle :eagle-starter:eagle-xxl-job-starter:compileJava)",
+      "Bash(gradle :eagle-starter:eagle-feign-starter:compileJava :eagle-base-server:eagle-gateway-server:compileJava)"
     ]
   }
 }

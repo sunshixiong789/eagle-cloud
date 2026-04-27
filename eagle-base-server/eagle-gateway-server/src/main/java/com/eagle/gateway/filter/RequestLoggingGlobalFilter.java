@@ -3,6 +3,7 @@ package com.eagle.gateway.filter;
 import io.micrometer.tracing.Tracer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -30,7 +31,7 @@ public class RequestLoggingGlobalFilter implements GlobalFilter, Ordered {
     private final Tracer tracer;
 
     @Override
-    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+    public @NonNull Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         Instant start = Instant.now();
         ServerHttpRequest request = exchange.getRequest();
 

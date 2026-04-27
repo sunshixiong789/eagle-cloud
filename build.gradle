@@ -45,6 +45,15 @@ ext {
     // RocketMQ
     set('rocketMqVersion', '2.3.5')
 
+    // 对象存储
+    set('minioVersion', '8.5.17')
+
+    // 分布式定时任务
+    set('xxlJobVersion', '2.4.2')
+
+    // Seata 分布式事务
+    set('seataVersion', '2.2.0')
+
     // 序列化
     set('fastjson2Version', '2.0.61')
 
@@ -208,6 +217,15 @@ subprojects {
             // RocketMQ
             dependency "org.apache.rocketmq:rocketmq-spring-boot-starter:${rocketMqVersion}"
             dependency "org.apache.rocketmq:rocketmq-v5-client-spring-boot-starter:${rocketMqVersion}"
+
+            // 对象存储
+            dependency "io.minio:minio:${minioVersion}"
+
+            // 分布式定时任务
+            dependency "com.xuxueli:xxl-job-core:${xxlJobVersion}"
+
+            // Seata 分布式事务
+            dependency "org.apache.seata:seata-spring-boot-starter:${seataVersion}"
         }
     }
 

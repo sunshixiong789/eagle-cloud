@@ -1,0 +1,8 @@
+dependencies {
+    api project(':eagle-starter:eagle-common-starter')
+    api 'com.xuxueli:xxl-job-core'
+    api 'org.springframework.boot:spring-boot-starter-web'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}

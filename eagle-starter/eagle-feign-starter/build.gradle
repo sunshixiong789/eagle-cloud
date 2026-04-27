@@ -5,4 +5,7 @@ dependencies {
 
     // 可选链路追踪依赖（eagle-tracing-starter 引入时生效）
     compileOnly 'io.micrometer:micrometer-tracing'
+
+    // 可选 Seata 分布式事务 XID 透传
+    compileOnly 'org.apache.seata:seata-spring-boot-starter'
 }

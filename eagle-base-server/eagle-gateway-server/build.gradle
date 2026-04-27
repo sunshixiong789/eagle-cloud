@@ -15,6 +15,9 @@ dependencies {
     implementation 'com.alibaba.cloud:spring-cloud-alibaba-sentinel-gateway'
     implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-sentinel'
 
+    // Seata 分布式事务 XID 透传
+    implementation 'org.apache.seata:seata-spring-boot-starter'
+
     // 链路追踪
     implementation project(':eagle-starter:eagle-tracing-starter')
 

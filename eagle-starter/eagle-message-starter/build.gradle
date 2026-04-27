@@ -1,0 +1,10 @@
+dependencies {
+    api project(':eagle-starter:eagle-common-starter')
+    api 'org.springframework.boot:spring-boot-starter-web'
+
+    compileOnly 'com.aliyun:dysmsapi20170525'
+    compileOnly 'org.springframework.boot:spring-boot-starter-mail'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}
