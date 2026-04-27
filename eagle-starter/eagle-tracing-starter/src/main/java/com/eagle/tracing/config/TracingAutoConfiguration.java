@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import zipkin2.reporter.BytesMessageSender;
 import zipkin2.reporter.brave.AsyncZipkinSpanHandler;
 import zipkin2.reporter.okhttp3.OkHttpSender;
 
@@ -40,7 +41,7 @@ public class TracingAutoConfiguration {
     @ConditionalOnMissingBean
     @ConditionalOnProperty(name = "eagle.tracing.zipkin.endpoint")
     public AsyncZipkinSpanHandler zipkinSpanHandler(TracingProperties properties) {
-        OkHttpSender sender = OkHttpSender.create(properties.getZipkin().getEndpoint());
+        BytesMessageSender sender = OkHttpSender.create(properties.getZipkin().getEndpoint());
         log.info("Zipkin tracing enabled, endpoint: {}", properties.getZipkin().getEndpoint());
         return AsyncZipkinSpanHandler.newBuilder(sender).build();
     }
