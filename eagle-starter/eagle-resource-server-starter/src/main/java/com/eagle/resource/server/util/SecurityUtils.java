@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -91,7 +92,7 @@ public class SecurityUtils {
         }
         String roleWithPrefix = SecurityConstants.ROLE_START + role;
         return authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
+                .map(GrantedAuthority::getAuthority).filter(Objects::nonNull)
                 .anyMatch(authority -> authority.equals(roleWithPrefix));
     }
 
