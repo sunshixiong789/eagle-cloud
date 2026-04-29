@@ -128,13 +128,15 @@ class EsHighlightUtilTest {
             TestDocument doc = new TestDocument("Long description about iPhone 15 Pro Max");
             SearchHit<TestDocument> hit = mock(SearchHit.class);
             when(hit.getContent()).thenReturn(doc);
+            // Two distinct fragments, each already contains highlight tags
             when(hit.getHighlightFields()).thenReturn(
                     Map.of("title", List.of("<em>iPhone</em> 15", "Pro <em>Max</em>"))
             );
 
             EsHighlightUtil.applyHighlight(hit);
 
-            assertEquals("<em>iPhone</em> 15...<em>Pro Max</em>", doc.getTitle(),
+            // String.join("...", fragments) → "<em>iPhone</em> 15...Pro <em>Max</em>"
+            assertEquals("<em>iPhone</em> 15...Pro <em>Max</em>", doc.getTitle(),
                     "Multiple fragments should be joined with '...'");
         }
 

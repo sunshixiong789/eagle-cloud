@@ -1,8 +1,8 @@
 dependencies {
     api project(':eagle-starter:eagle-common-starter')
-    api 'com.baomidou:mybatis-plus-spring-boot3-starter:3.5.11'
-    api 'com.mysql:mysql-connector-j'
-    api 'com.alibaba:druid-spring-boot-3-starter'
+    api 'com.baomidou:mybatis-plus-spring-boot3-starter'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    compileOnly 'com.alibaba:druid-spring-boot-3-starter'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

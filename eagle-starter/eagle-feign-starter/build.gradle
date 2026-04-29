@@ -7,4 +7,6 @@ dependencies {
     compileOnly project(':eagle-starter:eagle-tenant-starter')
     // 可选：Seata 分布式事务 XID 透传（seata-spring-boot-starter 引入时生效）
     compileOnly 'org.apache.seata:seata-spring-boot-starter'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

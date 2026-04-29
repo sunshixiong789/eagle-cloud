@@ -5,6 +5,7 @@ import com.eagle.feign.interceptor.FeignAuthInterceptor;
 import com.eagle.feign.interceptor.FeignTenantInterceptor;
 import com.eagle.feign.interceptor.SeataXidRequestInterceptor;
 import com.eagle.feign.properties.FeignProperties;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Logger;
 import feign.Request;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
+import org.springframework.cloud.openfeign.support.PageJacksonModule;
+import org.springframework.cloud.openfeign.support.SortJacksonModule;
+import org.springframework.cloud.openfeign.support.SpringQueryMapEncoder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -49,12 +53,15 @@ public class EagleFeignAutoConfiguration {
     }
 
     /**
-     * HTTP 错误解码器：将下游 HTTP 错误响应转换为 AppException 体系异常。
+     * HTTP 错误解码器：解析下游 {@code ErrorResult} JSON，提取真实 message 透传给调用方。
+     *
+     * <p>注入 Spring 容器的 {@link ObjectMapper}（含 {@link PageJacksonModule} 等定制），
+     * 确保与全局 Jackson 配置一致。
      */
     @Bean
     @ConditionalOnMissingBean
-    public FeignErrorDecoder feignErrorDecoder() {
-        return new FeignErrorDecoder();
+    public FeignErrorDecoder feignErrorDecoder(ObjectMapper objectMapper) {
+        return new FeignErrorDecoder(objectMapper);
     }
 
     /**
@@ -80,6 +87,57 @@ public class EagleFeignAutoConfiguration {
                 properties.getConnectTimeout(), TimeUnit.MILLISECONDS,
                 properties.getReadTimeout(), TimeUnit.MILLISECONDS,
                 true);
+    }
+
+    // ==================== Spring Data 分页支持 ====================
+
+    /**
+     * Spring Data {@code Page<T>} 反序列化支持。
+     *
+     * <p>{@code Page} 是接口，Jackson 默认无法实例化。注册此 Module 后，
+     * Feign 客户端可以将下游返回的分页 JSON 直接反序列化为 {@code Page<T>}：
+     * <pre>{@code
+     * @FeignClient(name = "eagle-inventory-server")
+     * public interface InventoryFeignClient {
+     *     @GetMapping("/items")
+     *     Page<ItemResponse> findItems(@SpringQueryMap Pageable pageable);
+     * }
+     * }</pre>
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnClass(name = "org.springframework.data.domain.Page")
+    public PageJacksonModule pageJacksonModule() {
+        return new PageJacksonModule();
+    }
+
+    /**
+     * Spring Data {@code Sort} 反序列化支持。
+     *
+     * <p>与 {@link PageJacksonModule} 配套使用，使嵌套在 {@code Page} 中的
+     * {@code Sort} 字段可以正确反序列化。
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnClass(name = "org.springframework.data.domain.Sort")
+    public SortJacksonModule sortJacksonModule() {
+        return new SortJacksonModule();
+    }
+
+    /**
+     * {@code Pageable} 查询参数编码器。
+     *
+     * <p>使 {@code Pageable} 对象可以通过 {@code @SpringQueryMap} 注解展开为
+     * {@code page=0&size=20&sort=name,asc} 格式的查询参数：
+     * <pre>{@code
+     * Page<ItemResponse> findItems(@SpringQueryMap Pageable pageable);
+     * }</pre>
+     */
+    @Bean
+    @ConditionalOnMissingBean(SpringQueryMapEncoder.class)
+    @ConditionalOnClass(name = "org.springframework.data.domain.Pageable")
+    public SpringQueryMapEncoder springQueryMapEncoder() {
+        return new SpringQueryMapEncoder();
     }
 
     /**

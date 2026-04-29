@@ -1,6 +1,5 @@
 dependencies {
     api project(':eagle-starter:eagle-common-starter')
-    api 'org.springframework.security:spring-security-core'
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
 
     // 数据库驱动（runtimeOnly：运行时按 profile 加载，不暴露给消费方）

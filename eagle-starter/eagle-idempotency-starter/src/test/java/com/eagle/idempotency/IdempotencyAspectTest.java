@@ -174,14 +174,12 @@ class IdempotencyAspectTest {
         }
 
         @Test
-        @DisplayName("shouldThrowWhenKeyEmpty — SpEL 解析为空时抛出 DomainException")
-        @SuppressWarnings("unchecked")
+        @DisplayName("shouldThrowWhenKeyEmpty — 无 SpEL key / keyExtractor / @IdempotencyKey 字段时抛出 DomainException")
         void shouldThrowWhenKeyEmpty() {
-            // key 为空字符串，也没有 keyExtractor，也没有 @IdempotencyKey 字段
+            // key 为空字符串，keyExtractor 为空，args 为空（无 @IdempotencyKey 字段可扫描）
             Idempotent annotation = buildAnnotation(IdempotencyMode.BUSINESS_KEY, "", TOKEN_HEADER, "");
 
-            when(joinPoint.getSignature()).thenReturn(methodSignature);
-            when(methodSignature.getParameterNames()).thenReturn(new String[]{});
+            // resolveKeyByFieldAnnotation: args 为空 → 返回 "" → 触发异常
             when(joinPoint.getArgs()).thenReturn(new Object[]{});
 
             assertThrows(DomainException.class, () -> aspect.around(joinPoint, annotation));
