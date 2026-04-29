@@ -1,4 +1,4 @@
-package com.eagle.system.auth.infrastructure.config;
+package com.eagle.system.auth.infrastructure.security;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

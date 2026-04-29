@@ -1,5 +1,6 @@
 package com.eagle.common.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.LocaleResolver;
@@ -28,6 +29,7 @@ public class I18nConfig {
      * 未携带或未匹配时，回退到 {@link Locale#SIMPLIFIED_CHINESE}。
      */
     @Bean
+    @ConditionalOnMissingBean(name = "localeResolver")
     public LocaleResolver localeResolver() {
         AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver();
         localeResolver.setDefaultLocale(Locale.SIMPLIFIED_CHINESE);

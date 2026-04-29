@@ -2,9 +2,7 @@ package com.eagle.mybatis.config;
 
 import com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
-import com.baomidou.mybatisplus.extension.plugins.inner.BlockAttackInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
-import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.eagle.mybatis.handler.EagleMetaObjectHandler;
 import com.eagle.mybatis.interceptor.MybatisSlowSqlInterceptor;
 import com.eagle.mybatis.properties.MybatisProperties;
@@ -24,9 +22,7 @@ import org.springframework.context.annotation.Bean;
  *
  * <p>提供以下开箱即用能力：
  * <ul>
- *   <li>分页插件（{@link PaginationInnerInterceptor}），可通过 {@code eagle.mybatis.pagination-enabled} 开关</li>
  *   <li>乐观锁插件（{@link OptimisticLockerInnerInterceptor}），可通过 {@code eagle.mybatis.optimistic-locker-enabled} 开关</li>
- *   <li>防全表更新删除插件（{@link BlockAttackInnerInterceptor}），默认关闭</li>
  *   <li>审计字段自动填充（{@link EagleMetaObjectHandler}）</li>
  *   <li>慢 SQL 拦截日志（{@link MybatisSlowSqlInterceptor}）</li>
  * </ul>
@@ -44,12 +40,11 @@ public class MybatisAutoConfiguration {
     /**
      * 注册 MyBatis-Plus 插件拦截器。
      *
-     * <p>根据 {@link MybatisProperties} 中的开关，按需添加以下插件：
-     * <ul>
-     *   <li>分页插件：自动识别数据库方言</li>
-     *   <li>乐观锁插件：处理 {@code @Version} 字段</li>
-     *   <li>防全表攻击插件：阻止无 WHERE 条件的 UPDATE/DELETE</li>
-     * </ul>
+     * <p>根据 {@link MybatisProperties} 中的开关，按需添加乐观锁插件（处理 {@code @Version} 字段）。
+     *
+     * <p>注：MyBatis-Plus 3.5.10+ 已移除 {@code PaginationInnerInterceptor} 和
+     * {@code BlockAttackInnerInterceptor}，分页现通过 {@code BaseMapper.selectList(IPage, ...)}
+     * 原生支持，无需额外插件。
      *
      * @param properties MyBatis-Plus 配置属性
      * @return 配置好的 MyBatis-Plus 拦截器
@@ -59,19 +54,9 @@ public class MybatisAutoConfiguration {
     public MybatisPlusInterceptor mybatisPlusInterceptor(MybatisProperties properties) {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
 
-        if (properties.isPaginationEnabled()) {
-            interceptor.addInnerInterceptor(new PaginationInnerInterceptor(properties.getDbType()));
-            log.debug("[Eagle MyBatis] Pagination plugin enabled, db type: {}", properties.getDbType());
-        }
-
         if (properties.isOptimisticLockerEnabled()) {
             interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
             log.debug("[Eagle MyBatis] Optimistic locker plugin enabled.");
-        }
-
-        if (properties.isBlockAttackEnabled()) {
-            interceptor.addInnerInterceptor(new BlockAttackInnerInterceptor());
-            log.debug("[Eagle MyBatis] Block attack plugin enabled.");
         }
 
         return interceptor;

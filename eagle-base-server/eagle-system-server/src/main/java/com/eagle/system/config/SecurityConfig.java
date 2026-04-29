@@ -2,7 +2,7 @@ package com.eagle.system.config;
 
 import com.eagle.common.constant.SecurityConstants;
 import com.eagle.common.dto.EagleUser;
-import com.eagle.system.auth.infrastructure.config.JwtKeyProperties;
+import com.eagle.system.auth.infrastructure.security.JwtKeyProperties;
 import com.eagle.system.auth.infrastructure.security.BlacklistAwareJwtDecoder;
 import com.eagle.system.auth.infrastructure.security.EagleUserAuthenticationToken;
 import com.eagle.system.auth.infrastructure.security.LoginRateLimitFilter;

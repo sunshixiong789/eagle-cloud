@@ -18,7 +18,7 @@ ext {
     set('springModulithVersion', '2.0.5')
 
     // 数据库驱动版本
-    set('mysqlConnectorVersion', '9.6.0')
+    set('mysqlConnectorVersion', '9.7.0')
     set('postgresqlVersion', '42.7.10')
 
     // 连接池版本
@@ -29,7 +29,7 @@ ext {
 
     // 工具类版本
     set('hutoolVersion', '5.8.43')
-    set('guavaVersion', '33.5.0-jre')
+    set('guavaVersion', '33.6.0-jre')
     set('commonsLang3Version', '3.20.0')
     set('commonsCollections4Version', '4.5.0')
     set('commonsIoVersion', '2.21.0')
@@ -37,8 +37,8 @@ ext {
     set('caffeineVersion', '3.2.0')
 
     // 微信/第三方 SDK 版本
-    set('wxJavaVersion', '4.6.0')
-    set('aliyunSmsVersion', '3.0.0')
+    set('wxJavaVersion', '4.8.2-20260420.104332')
+    set('aliyunSmsVersion', '4.5.1')
 
     // API 文档版本
     set('springdocVersion', '3.0.2')
@@ -50,17 +50,17 @@ ext {
     set('minioVersion', '8.5.17')
 
     // 分布式定时任务
-    set('xxlJobVersion', '2.4.2')
+    set('xxlJobVersion', '3.4.0')
 
     // Seata 分布式事务
-    set('seataVersion', '2.2.0')
+    set('seataVersion', '2.6.0')
 
     // MyBatis-Plus
     set('mybatisPlusVersion', '3.5.16')
 
     // 支付 SDK
     set('alipayVersion', '4.40.771.ALL')
-    set('wechatpayVersion', '0.2.14')
+    set('wechatpayVersion', '0.2.17')
 
     // 序列化
     set('fastjson2Version', '2.0.61')

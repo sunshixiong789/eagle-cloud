@@ -1,6 +1,7 @@
 dependencies {
     api project(':eagle-starter:eagle-common-starter')
     api 'com.baomidou:mybatis-plus-spring-boot4-starter'
+    api 'jakarta.validation:jakarta.validation-api'
     runtimeOnly 'com.mysql:mysql-connector-j'
     compileOnly 'com.alibaba:druid-spring-boot-3-starter'
 

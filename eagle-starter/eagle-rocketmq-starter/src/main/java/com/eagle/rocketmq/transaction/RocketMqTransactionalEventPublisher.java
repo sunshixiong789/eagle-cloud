@@ -8,11 +8,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
 import org.apache.rocketmq.client.apis.ClientException;
 import org.apache.rocketmq.client.apis.ClientServiceProvider;
-import org.apache.rocketmq.client.apis.consumer.TransactionResolution;
 import org.apache.rocketmq.client.apis.message.Message;
+import org.apache.rocketmq.client.apis.producer.Producer;
 import org.apache.rocketmq.client.apis.producer.Transaction;
 import org.apache.rocketmq.client.apis.producer.TransactionChecker;
-import org.apache.rocketmq.client.apis.producer.TransactionProducer;
+import org.apache.rocketmq.client.apis.producer.TransactionResolution;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 
@@ -42,7 +42,7 @@ public class RocketMqTransactionalEventPublisher implements TransactionalEventPu
     private final List<AbstractRocketMqTransactionChecker> checkers;
 
     private ClientServiceProvider provider;
-    private TransactionProducer transactionProducer;
+    private Producer transactionProducer;
 
     public RocketMqTransactionalEventPublisher(RocketMqProperties properties,
             List<AbstractRocketMqTransactionChecker> checkers) {
@@ -66,9 +66,9 @@ public class RocketMqTransactionalEventPublisher implements TransactionalEventPu
             // 组合多个 Checker：按消息 Topic 路由到对应检查器，无匹配则 UNKNOWN
             TransactionChecker compositeChecker = buildCompositeChecker();
 
-            transactionProducer = provider.newTransactionProducerBuilder()
+            transactionProducer = provider.newProducerBuilder()
                     .setClientConfiguration(configuration)
-                    .setChecker(compositeChecker)
+                    .setTransactionChecker(compositeChecker)
                     .build();
             log.info("RocketMQ transaction producer initialized, endpoints: {}, checkers: {}",
                     properties.getEndpoints(), checkers.size());

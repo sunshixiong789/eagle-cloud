@@ -194,8 +194,8 @@ public abstract class AbstractRocketMqListener<T extends BaseEvent> implements I
                     .setConsumerGroup(getConsumerGroup())
                     .setSubscriptionExpressions(Collections.singletonMap(getTopic(), filterExpression))
                     .setMessageListener(this::onMessage)
-                    .setMaxCachedMessageCount(consumerConfig.getMaxCachedMessageCount())
-                    .setMaxCachedMessageSizeInBytes(consumerConfig.getMaxCachedMessageSizeInBytes())
+                    .setMaxCacheMessageCount(consumerConfig.getMaxCachedMessageCount())
+                    .setMaxCacheMessageSizeInBytes(consumerConfig.getMaxCachedMessageSizeInBytes())
                     .build();
 
             log.info("RocketMQ consumer started, topic: {}, group: {}, tag: {}, retryAlertThreshold: {}",

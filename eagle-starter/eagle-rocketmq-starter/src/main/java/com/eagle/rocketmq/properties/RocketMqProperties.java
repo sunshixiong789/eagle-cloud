@@ -58,7 +58,7 @@ public class RocketMqProperties {
          * 本地缓存消息总字节数上限（字节），默认 64 MB。
          * 与 {@link #maxCachedMessageCount} 同时生效，任意一个触发则暂停拉取。
          */
-        private long maxCachedMessageSizeInBytes = 64 * 1024 * 1024L;
+        private int maxCachedMessageSizeInBytes = 64 * 1024 * 1024;
 
         /**
          * 重试次数告警阈值。

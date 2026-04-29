@@ -28,7 +28,7 @@ class TccIdempotencyHelperTest {
     @Mock
     private BusinessActionContext ctx1;
 
-    @Mock
+    @Mock(lenient = true)
     private BusinessActionContext ctx2;
 
     private TccIdempotencyHelper helper;
