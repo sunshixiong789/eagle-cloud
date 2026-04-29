@@ -77,7 +77,7 @@ class EsQueryBuilderTest {
                     .build();
 
             assertNotNull(query);
-            assertEquals(10, query.getFrom(), "from should be (2-1)*10 = 10");
+            assertEquals(10, query.getPageable().getOffset(), "from should be (2-1)*10 = 10");
             assertEquals(10, query.getMaxResults(), "maxResults should equal the configured page size");
         }
 
@@ -87,7 +87,7 @@ class EsQueryBuilderTest {
             NativeQuery query = EsQueryBuilder.of().build();
 
             assertNotNull(query);
-            assertEquals(0, query.getFrom(), "default from should be 0");
+            assertEquals(0, query.getPageable().getOffset(), "default from should be 0");
             assertEquals(20, query.getMaxResults(), "default size should be 20");
         }
 
@@ -98,7 +98,7 @@ class EsQueryBuilderTest {
                     .page(1, 10)
                     .build();
 
-            assertEquals(0, query.getFrom(), "page 1 should have from=0");
+            assertEquals(0, query.getPageable().getOffset(), "page 1 should have from=0");
             assertEquals(10, query.getMaxResults());
         }
 
@@ -109,7 +109,7 @@ class EsQueryBuilderTest {
                     .page(0, 10)
                     .build();
 
-            assertEquals(0, query.getFrom(), "page 0 should be treated as page 1, from=0");
+            assertEquals(0, query.getPageable().getOffset(), "page 0 should be treated as page 1, from=0");
         }
 
         @Test
@@ -161,7 +161,7 @@ class EsQueryBuilderTest {
                     .build();
 
             assertNotNull(query);
-            assertNotNull(query.getHighlightQuery(), "HighlightQuery should be present when fields are set");
+            assertTrue(query.getHighlightQuery().isPresent(), "HighlightQuery should be present when fields are set");
         }
 
         @Test
@@ -169,7 +169,7 @@ class EsQueryBuilderTest {
         void shouldNotIncludeHighlightWhenNotConfigured() {
             NativeQuery query = EsQueryBuilder.of().build();
 
-            assertNull(query.getHighlightQuery(), "HighlightQuery should be null when no highlight fields");
+            assertTrue(query.getHighlightQuery().isEmpty(), "HighlightQuery should be absent when no highlight fields");
         }
 
         @Test
@@ -440,7 +440,7 @@ class EsQueryBuilderTest {
         @DisplayName("should skip when fields array is empty")
         void shouldSkipWhenFieldsEmpty() {
             NativeQuery query = EsQueryBuilder.of().highlight().build();
-            assertNull(query.getHighlightQuery(), "No highlight query when no fields are provided");
+            assertTrue(query.getHighlightQuery().isEmpty(), "No highlight query when no fields are provided");
         }
 
         @Test
@@ -475,7 +475,7 @@ class EsQueryBuilderTest {
         @DisplayName("should compute correct from for page 3 with size 15")
         void shouldComputeCorrectFrom() {
             NativeQuery query = EsQueryBuilder.of().page(3, 15).build();
-            assertEquals(30, query.getFrom(), "from = (3-1)*15 = 30");
+            assertEquals(30, query.getPageable().getOffset(), "from = (3-1)*15 = 30");
             assertEquals(15, query.getMaxResults());
         }
 

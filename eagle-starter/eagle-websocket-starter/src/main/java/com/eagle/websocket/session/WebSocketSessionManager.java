@@ -2,7 +2,7 @@ package com.eagle.websocket.session;
 
 import com.eagle.websocket.metrics.WebSocketMetrics;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 /**
@@ -33,7 +33,9 @@ public class WebSocketSessionManager {
 
     private final SimpMessagingTemplate messagingTemplate;
 
-    /** 可选指标收集器，为 null 时跳过指标上报 */
+    /**
+     * 可选指标收集器，为 null 时跳过指标上报
+     */
     @Nullable
     private final WebSocketMetrics metrics;
 

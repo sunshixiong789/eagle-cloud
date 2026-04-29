@@ -1,13 +1,12 @@
 package com.eagle.common;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
 class EagleCommonApplicationTests {
 
     @Test
     void contextLoads() {
+        // starter 是库模块，无 @SpringBootApplication，不需要 Spring 上下文加载测试
     }
 
 }

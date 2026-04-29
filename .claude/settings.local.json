@@ -20,7 +20,8 @@
       "Bash(gradle :eagle-starter:eagle-oss-starter:dependencies --configuration compileClasspath)",
       "Bash(java *)",
       "Bash(gradle :eagle-starter:eagle-xxl-job-starter:compileJava)",
-      "Bash(gradle :eagle-starter:eagle-feign-starter:compileJava :eagle-base-server:eagle-gateway-server:compileJava)"
+      "Bash(gradle :eagle-starter:eagle-feign-starter:compileJava :eagle-base-server:eagle-gateway-server:compileJava)",
+      "Bash(javap -classpath ~/.gradle/caches/modules-2/files-2.1/org.springframework.data/spring-data-elasticsearch/6.0.3/c3407f0fd0bb839792faeacaabe46212665871e3/spring-data-elasticsearch-6.0.3.jar org.springframework.data.elasticsearch.core.query.NativeQuery)"
     ]
   },
   "enabledPlugins": {

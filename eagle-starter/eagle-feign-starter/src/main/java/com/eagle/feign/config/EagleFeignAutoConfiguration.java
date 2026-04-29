@@ -16,7 +16,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 import org.springframework.cloud.openfeign.support.PageJacksonModule;
 import org.springframework.cloud.openfeign.support.SortJacksonModule;
-import org.springframework.cloud.openfeign.support.SpringQueryMapEncoder;
+import org.springframework.cloud.openfeign.support.PageableSpringQueryMapEncoder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -134,10 +134,10 @@ public class EagleFeignAutoConfiguration {
      * }</pre>
      */
     @Bean
-    @ConditionalOnMissingBean(SpringQueryMapEncoder.class)
+    @ConditionalOnMissingBean(PageableSpringQueryMapEncoder.class)
     @ConditionalOnClass(name = "org.springframework.data.domain.Pageable")
-    public SpringQueryMapEncoder springQueryMapEncoder() {
-        return new SpringQueryMapEncoder();
+    public PageableSpringQueryMapEncoder pageableSpringQueryMapEncoder() {
+        return new PageableSpringQueryMapEncoder();
     }
 
     /**

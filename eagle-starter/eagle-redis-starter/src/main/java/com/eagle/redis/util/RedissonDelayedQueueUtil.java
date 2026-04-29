@@ -48,6 +48,7 @@ public class RedissonDelayedQueueUtil {
      * @param timeUnit  时间单位
      * @param <T>       任务类型
      */
+    @SuppressWarnings("deprecation")
     public <T> void offer(String queueName, T item, long delay, TimeUnit timeUnit) {
         RBlockingQueue<T> blockingQueue = redissonClient.getBlockingQueue(queueName);
         RDelayedQueue<T> delayedQueue = redissonClient.getDelayedQueue(blockingQueue);
@@ -146,6 +147,7 @@ public class RedissonDelayedQueueUtil {
      * @param <T>       任务类型
      * @return {@code true} 取消成功；{@code false} 任务不存在或已到期
      */
+    @SuppressWarnings("deprecation")
     public <T> boolean cancel(String queueName, T item) {
         RBlockingQueue<T> blockingQueue = redissonClient.getBlockingQueue(queueName);
         RDelayedQueue<T> delayedQueue = redissonClient.getDelayedQueue(blockingQueue);

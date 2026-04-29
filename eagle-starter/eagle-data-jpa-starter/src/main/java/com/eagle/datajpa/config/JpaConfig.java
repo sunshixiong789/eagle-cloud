@@ -2,16 +2,20 @@ package com.eagle.datajpa.config;
 
 import com.eagle.common.dto.EagleUser;
 import com.eagle.datajpa.properties.JpaProperties;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.orm.jpa.AbstractEntityManagerFactoryBean;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -48,35 +52,34 @@ public class JpaConfig {
     /**
      * 将 {@link JpaProperties} 中的配置应用到 Hibernate SessionFactory。
      *
-     * <p>等效于在 {@code application.yml} 中设置：
-     * <pre>
-     * spring.jpa.properties:
-     *   hibernate.jdbc.batch_size: 100
-     *   hibernate.order_inserts: true
-     *   hibernate.order_updates: true
-     *   hibernate.session.events.log.LOG_QUERIES_SLOWER_THAN_MS: 2000
-     * </pre>
-     * 通过此 bean 统一管理，消费方只需配置 {@code eagle.jpa.*} 即可，
-     * 无需在每个服务的 yml 里重复写原生 Hibernate 属性。
+     * <p>以 {@link BeanPostProcessor} 方式拦截 {@link AbstractEntityManagerFactoryBean}，
+     * 在 bean 初始化前注入批量写入和慢 SQL 阈值等 Hibernate 属性。
+     * 已通过 {@code spring.jpa.properties.*} 显式设置的属性优先级更高，不会被覆盖。
      */
     @Bean
-    public HibernatePropertiesCustomizer eagleHibernatePropertiesCustomizer(
-            JpaProperties jpaProperties) {
-        return hibernateProperties -> {
-            // 批量写入：相同类型的 INSERT/UPDATE 合并为一次 JDBC batch，减少数据库往返次数
-            if (jpaProperties.getBatchSize() > 0) {
-                hibernateProperties.put("hibernate.jdbc.batch_size",
-                        String.valueOf(jpaProperties.getBatchSize()));
-                hibernateProperties.put("hibernate.order_inserts",
-                        String.valueOf(jpaProperties.isOrderInserts()));
-                hibernateProperties.put("hibernate.order_updates",
-                        String.valueOf(jpaProperties.isOrderUpdates()));
-            }
-            // 慢 SQL 日志：超过阈值的查询以 WARN 级别记录
-            if (jpaProperties.getSlowQueryThresholdMillis() > 0) {
-                hibernateProperties.put(
-                        "hibernate.session.events.log.LOG_QUERIES_SLOWER_THAN_MS",
-                        String.valueOf(jpaProperties.getSlowQueryThresholdMillis()));
+    public BeanPostProcessor eagleHibernatePropertiesConfigurer(JpaProperties jpaProperties) {
+        return new BeanPostProcessor() {
+            @Override
+            public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+                if (!(bean instanceof AbstractEntityManagerFactoryBean emfBean)) {
+                    return bean;
+                }
+                Map<String, Object> defaults = new LinkedHashMap<>();
+                if (jpaProperties.getBatchSize() > 0) {
+                    defaults.put("hibernate.jdbc.batch_size", String.valueOf(jpaProperties.getBatchSize()));
+                    defaults.put("hibernate.order_inserts", String.valueOf(jpaProperties.isOrderInserts()));
+                    defaults.put("hibernate.order_updates", String.valueOf(jpaProperties.isOrderUpdates()));
+                }
+                if (jpaProperties.getSlowQueryThresholdMillis() > 0) {
+                    defaults.put("hibernate.session.events.log.LOG_QUERIES_SLOWER_THAN_MS",
+                            String.valueOf(jpaProperties.getSlowQueryThresholdMillis()));
+                }
+                // 已有属性优先，仅补充未被用户覆盖的键
+                defaults.keySet().removeAll(emfBean.getJpaPropertyMap().keySet());
+                if (!defaults.isEmpty()) {
+                    emfBean.setJpaPropertyMap(defaults);
+                }
+                return emfBean;
             }
         };
     }

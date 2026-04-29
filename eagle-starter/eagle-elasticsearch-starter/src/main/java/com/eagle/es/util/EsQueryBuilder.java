@@ -4,7 +4,9 @@ import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightField;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightFieldParameters;
@@ -160,16 +162,16 @@ public class EsQueryBuilder {
             return this;
         }
         Query rangeQuery = Query.of(q -> q
-                .range(r -> {
-                    r.field(field);
+                .range(r -> r.untyped(u -> {
+                    u.field(field);
                     if (min != null) {
-                        r.gte(co.elastic.clients.json.JsonData.of(min));
+                        u.gte(co.elastic.clients.json.JsonData.of(min));
                     }
                     if (max != null) {
-                        r.lte(co.elastic.clients.json.JsonData.of(max));
+                        u.lte(co.elastic.clients.json.JsonData.of(max));
                     }
-                    return r;
-                })
+                    return u;
+                }))
         );
         boolBuilder.filter(rangeQuery);
         return this;
@@ -286,10 +288,11 @@ public class EsQueryBuilder {
     public NativeQuery build() {
         Query boolQuery = Query.of(q -> q.bool(boolBuilder.build()));
 
-        NativeQuery.Builder queryBuilder = NativeQuery.builder()
+        int effectiveSize = size > 0 ? size : 20;
+        NativeQueryBuilder queryBuilder = NativeQuery.builder()
                 .withQuery(boolQuery)
-                .withFrom(from)
-                .withMaxResults(size);
+                .withPageable(PageRequest.of(from / effectiveSize, effectiveSize))
+                .withMaxResults(effectiveSize);
 
         if (!sorts.isEmpty()) {
             queryBuilder.withSort(sorts);

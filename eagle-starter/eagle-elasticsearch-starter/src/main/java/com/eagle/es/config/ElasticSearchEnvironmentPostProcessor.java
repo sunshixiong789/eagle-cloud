@@ -1,7 +1,7 @@
 package com.eagle.es.config;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.env.EnvironmentPostProcessor;
+import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
+import org.springframework.context.ApplicationListener;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 
@@ -20,7 +20,7 @@ import java.util.Map;
  *
  * @author eagle
  */
-public class ElasticSearchEnvironmentPostProcessor implements EnvironmentPostProcessor {
+public class ElasticSearchEnvironmentPostProcessor implements ApplicationListener<ApplicationEnvironmentPreparedEvent> {
 
     /** 桥接属性源名称 */
     private static final String PROPERTY_SOURCE_NAME = "eagleElasticsearchBridge";
@@ -32,7 +32,8 @@ public class ElasticSearchEnvironmentPostProcessor implements EnvironmentPostPro
     private static final String SPRING_PREFIX = "spring.elasticsearch.";
 
     @Override
-    public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+    public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
+        ConfigurableEnvironment environment = event.getEnvironment();
         Map<String, Object> bridgedProperties = new LinkedHashMap<>();
 
         // 桥接 uris

@@ -5,6 +5,7 @@ import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 
+import java.io.Serial;
 import java.util.Collection;
 
 /**
@@ -23,6 +24,9 @@ import java.util.Collection;
  * @see EagleJwtAuthenticationConverter
  */
 public class EagleAuthentication extends AbstractAuthenticationToken {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     private final EagleUser principal;
     private final Jwt credentials;

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 /**
  * 幂等 Token 生成接口。
@@ -43,7 +43,7 @@ public class IdempotencyTokenController {
         String redisKey = properties.getKeyPrefix() + "token:" + token;
 
         RBucket<String> bucket = redissonClient.getBucket(redisKey);
-        bucket.set("1", properties.getTokenExpireSeconds(), TimeUnit.SECONDS);
+        bucket.set("1", Duration.ofSeconds(properties.getTokenExpireSeconds()));
 
         log.debug("Generated idempotency token: {}, ttl: {}s", token, properties.getTokenExpireSeconds());
         return token;

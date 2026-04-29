@@ -3,9 +3,10 @@ package com.eagle.redis.util;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RRateLimiter;
-import org.redisson.api.RateIntervalUnit;
 import org.redisson.api.RateType;
 import org.redisson.api.RedissonClient;
+
+import java.time.Duration;
 import org.springframework.stereotype.Component;
 
 /**
@@ -38,51 +39,46 @@ public class RedissonRateLimiterUtil {
      *
      * <pre>
      * // 示例：接口每秒最多 10 次请求（全局）
-     * boolean allowed = rateLimiterUtil.tryAcquire("api:createOrder", 10, 1, RateIntervalUnit.SECONDS);
+     * boolean allowed = rateLimiterUtil.tryAcquire("api:createOrder", 10, Duration.ofSeconds(1));
      * </pre>
      *
-     * @param key              限流器 key
-     * @param rate             时间间隔内允许的最大请求数
-     * @param rateInterval     时间间隔数值
-     * @param rateIntervalUnit 时间间隔单位
+     * @param key          限流器 key
+     * @param rate         时间间隔内允许的最大请求数
+     * @param rateInterval 时间间隔
      * @return {@code true} 获取令牌成功；{@code false} 已达速率上限
      */
-    public boolean tryAcquire(String key, long rate, long rateInterval,
-                               RateIntervalUnit rateIntervalUnit) {
-        return tryAcquire(key, rate, rateInterval, rateIntervalUnit, RateType.OVERALL, 1);
+    public boolean tryAcquire(String key, long rate, Duration rateInterval) {
+        return tryAcquire(key, rate, rateInterval, RateType.OVERALL, 1);
     }
 
     /**
      * 尝试获取指定数量的令牌（全局限流）。
      *
-     * @param key              限流器 key
-     * @param rate             时间间隔内允许的最大请求数
-     * @param rateInterval     时间间隔数值
-     * @param rateIntervalUnit 时间间隔单位
-     * @param permits          本次申请的令牌数
+     * @param key          限流器 key
+     * @param rate         时间间隔内允许的最大请求数
+     * @param rateInterval 时间间隔
+     * @param permits      本次申请的令牌数
      * @return {@code true} 获取令牌成功；{@code false} 已达速率上限
      */
-    public boolean tryAcquire(String key, long rate, long rateInterval,
-                               RateIntervalUnit rateIntervalUnit, long permits) {
-        return tryAcquire(key, rate, rateInterval, rateIntervalUnit, RateType.OVERALL, permits);
+    public boolean tryAcquire(String key, long rate, Duration rateInterval, long permits) {
+        return tryAcquire(key, rate, rateInterval, RateType.OVERALL, permits);
     }
 
     /**
      * 完整参数版本：支持指定限流类型和申请令牌数。
      *
-     * @param key              限流器 key
-     * @param rate             时间间隔内允许的最大请求数
-     * @param rateInterval     时间间隔数值
-     * @param rateIntervalUnit 时间间隔单位
-     * @param rateType         限流类型（OVERALL 全局 / PER_CLIENT 单节点）
-     * @param permits          本次申请的令牌数
+     * @param key          限流器 key
+     * @param rate         时间间隔内允许的最大请求数
+     * @param rateInterval 时间间隔
+     * @param rateType     限流类型（OVERALL 全局 / PER_CLIENT 单节点）
+     * @param permits      本次申请的令牌数
      * @return {@code true} 获取令牌成功；{@code false} 已达速率上限
      */
-    public boolean tryAcquire(String key, long rate, long rateInterval,
-                               RateIntervalUnit rateIntervalUnit, RateType rateType, long permits) {
+    public boolean tryAcquire(String key, long rate, Duration rateInterval,
+                               RateType rateType, long permits) {
         RRateLimiter rateLimiter = redissonClient.getRateLimiter(key);
         // trySetRate 仅在 key 不存在时初始化，已存在的限流器不会被重置
-        rateLimiter.trySetRate(rateType, rate, rateInterval, rateIntervalUnit);
+        rateLimiter.trySetRate(rateType, rate, rateInterval);
         return rateLimiter.tryAcquire(permits);
     }
 

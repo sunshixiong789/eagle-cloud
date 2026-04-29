@@ -9,6 +9,8 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 
+import org.springframework.data.domain.Pageable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -128,10 +130,11 @@ public abstract class BaseElasticSearchRepository<T extends EagleDocument> {
         }
 
         long total = searchHits.getTotalHits();
-        int from = query.getFrom() != null ? query.getFrom() : 0;
-        int size = query.getMaxResults() != null ? query.getMaxResults() : 20;
+        Pageable pageable = query.getPageable();
+        int size = pageable.isPaged() ? pageable.getPageSize()
+                : (query.getMaxResults() != null ? query.getMaxResults() : 20);
         // page 从 1 开始
-        int page = size > 0 ? (from / size) + 1 : 1;
+        int page = pageable.isPaged() ? pageable.getPageNumber() + 1 : 1;
 
         return new EsPageResult<>(content, total, page, size);
     }

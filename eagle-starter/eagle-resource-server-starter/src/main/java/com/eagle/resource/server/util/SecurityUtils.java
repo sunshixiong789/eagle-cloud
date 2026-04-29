@@ -139,7 +139,7 @@ public class SecurityUtils {
             return Collections.emptyList();
         }
         return roles.stream()
-                .map(role -> new SimpleGrantedAuthority(SecurityConstants.ROLE_START + role))
+                .<GrantedAuthority>map(role -> new SimpleGrantedAuthority(SecurityConstants.ROLE_START + role))
                 .toList();
     }
 }

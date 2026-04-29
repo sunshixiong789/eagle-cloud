@@ -26,7 +26,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 /**
  * 幂等性 AOP 切面。
@@ -183,8 +183,8 @@ public class IdempotencyAspect {
             try {
                 String json = objectMapper.writeValueAsString(result);
                 long ttl = properties.getResultCacheSeconds();
-                resultBucket.set(json, ttl, TimeUnit.SECONDS);
-                typeBucket.set(returnTypeName, ttl, TimeUnit.SECONDS);
+                resultBucket.set(json, Duration.ofSeconds(ttl));
+                typeBucket.set(returnTypeName, Duration.ofSeconds(ttl));
                 log.debug("RESULT_CACHE stored for token: {}, type: {}, ttl: {}s", token, returnTypeName, ttl);
             } catch (Exception ex) {
                 // 序列化失败不影响主流程，只记录警告
@@ -223,7 +223,7 @@ public class IdempotencyAspect {
         RBucket<String> bucket = redissonClient.getBucket(redisKey);
 
         // setIfAbsent 对应 Redis SETNX：首次请求成功，重复请求返回 false
-        boolean isFirst = bucket.setIfAbsent("1", properties.getResultCacheSeconds(), TimeUnit.SECONDS);
+        boolean isFirst = bucket.setIfAbsent("1", Duration.ofSeconds(properties.getResultCacheSeconds()));
         if (!isFirst) {
             log.warn("Duplicate request detected for business key: {}", businessKey);
             throw IdempotencyErrorCode.IDEMPOTENCY_DUPLICATE_REQUEST.toDomainException();
