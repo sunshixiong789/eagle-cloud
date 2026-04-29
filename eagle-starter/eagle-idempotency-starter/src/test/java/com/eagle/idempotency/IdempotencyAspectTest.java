@@ -22,7 +22,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.context.ApplicationContext;
 
 import java.lang.reflect.Method;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -35,6 +35,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 /**
  * {@link IdempotencyAspect} 单元测试。
@@ -148,7 +149,7 @@ class IdempotencyAspectTest {
             when(methodSignature.getParameterNames()).thenReturn(new String[]{"orderNo"});
             when(joinPoint.getArgs()).thenReturn(new Object[]{"ORDER-001"});
             when(redissonClient.getBucket(KEY_PREFIX + "biz:ORDER-001")).thenReturn(bucket);
-            when(bucket.setIfAbsent(eq("1"), anyLong(), any(TimeUnit.class))).thenReturn(true);
+            when(bucket.setIfAbsent(eq("1"), any(Duration.class))).thenReturn(true);
             when(joinPoint.proceed()).thenReturn("created");
 
             Object result = aspect.around(joinPoint, annotation);
@@ -168,7 +169,7 @@ class IdempotencyAspectTest {
             when(methodSignature.getParameterNames()).thenReturn(new String[]{"orderNo"});
             when(joinPoint.getArgs()).thenReturn(new Object[]{"ORDER-001"});
             when(redissonClient.getBucket(KEY_PREFIX + "biz:ORDER-001")).thenReturn(bucket);
-            when(bucket.setIfAbsent(eq("1"), anyLong(), any(TimeUnit.class))).thenReturn(false);
+            when(bucket.setIfAbsent(eq("1"), any(Duration.class))).thenReturn(false);
 
             assertThrows(DomainException.class, () -> aspect.around(joinPoint, annotation));
         }
@@ -205,8 +206,8 @@ class IdempotencyAspectTest {
             RBucket<String> typeBucket = mock(RBucket.class);
 
             when(request.getHeader(TOKEN_HEADER)).thenReturn(SAMPLE_TOKEN);
-            when(redissonClient.getBucket(resultKey)).thenReturn(resultBucket);
-            when(redissonClient.getBucket(typeKey)).thenReturn(typeBucket);
+            when(redissonClient.<String>getBucket(resultKey)).thenReturn(resultBucket);
+            when(redissonClient.<String>getBucket(typeKey)).thenReturn(typeBucket);
             when(resultBucket.get()).thenReturn(cachedJson);
             when(typeBucket.get()).thenReturn("java.lang.String");
 
@@ -230,8 +231,8 @@ class IdempotencyAspectTest {
             // 模拟目标方法签名以获取返回类型
             Method method = SampleService.class.getMethod("doWork");
             when(request.getHeader(TOKEN_HEADER)).thenReturn(SAMPLE_TOKEN);
-            when(redissonClient.getBucket(resultKey)).thenReturn(resultBucket);
-            when(redissonClient.getBucket(typeKey)).thenReturn(typeBucket);
+            when(redissonClient.<String>getBucket(resultKey)).thenReturn(resultBucket);
+            when(redissonClient.<String>getBucket(typeKey)).thenReturn(typeBucket);
             when(resultBucket.get()).thenReturn(null);
             when(typeBucket.get()).thenReturn(null);
             when(joinPoint.proceed()).thenReturn("computed");
@@ -242,8 +243,8 @@ class IdempotencyAspectTest {
 
             assertEquals("computed", result);
             verify(joinPoint).proceed();
-            verify(resultBucket).set(anyString(), anyLong(), any(TimeUnit.class));
-            verify(typeBucket).set(anyString(), anyLong(), any(TimeUnit.class));
+            verify(resultBucket).set(anyString(), any(Duration.class));
+            verify(typeBucket).set(anyString(), any(Duration.class));
         }
 
         @Test
@@ -268,8 +269,8 @@ class IdempotencyAspectTest {
 
             // 返回一个不兼容的类型名（类名存在但 JSON 与类型不匹配）
             when(request.getHeader(TOKEN_HEADER)).thenReturn(SAMPLE_TOKEN);
-            when(redissonClient.getBucket(resultKey)).thenReturn(resultBucket);
-            when(redissonClient.getBucket(typeKey)).thenReturn(typeBucket);
+            when(redissonClient.<String>getBucket(resultKey)).thenReturn(resultBucket);
+            when(redissonClient.<String>getBucket(typeKey)).thenReturn(typeBucket);
             // 缓存有数据，但 JSON 内容无法反序列化为 int 数组
             when(resultBucket.get()).thenReturn("\"notAnIntArray\"");
             when(typeBucket.get()).thenReturn("[I"); // int[] 类型名
@@ -300,11 +301,9 @@ class IdempotencyAspectTest {
 
             SampleRequest dto = new SampleRequest("ORD-999", 42L);
 
-            when(joinPoint.getSignature()).thenReturn(methodSignature);
-            when(methodSignature.getParameterNames()).thenReturn(new String[]{"req"});
             when(joinPoint.getArgs()).thenReturn(new Object[]{dto});
             when(redissonClient.getBucket(anyString())).thenReturn(bucket);
-            when(bucket.setIfAbsent(eq("1"), anyLong(), any(TimeUnit.class))).thenReturn(true);
+            when(bucket.setIfAbsent(eq("1"), any(Duration.class))).thenReturn(true);
             when(joinPoint.proceed()).thenReturn("done");
 
             aspect.around(joinPoint, annotation);
@@ -350,7 +349,7 @@ class IdempotencyAspectTest {
      */
     private Idempotent buildAnnotation(IdempotencyMode mode, String key,
                                        String tokenHeader, String extractor) {
-        Idempotent annotation = mock(Idempotent.class);
+        Idempotent annotation = mock(Idempotent.class, withSettings().lenient());
         when(annotation.mode()).thenReturn(mode);
         when(annotation.key()).thenReturn(key);
         when(annotation.tokenHeader()).thenReturn(tokenHeader);

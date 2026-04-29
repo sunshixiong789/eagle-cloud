@@ -12,13 +12,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -73,7 +72,7 @@ class IdempotencyTokenControllerTest {
             assertTrue(!token.isBlank(), "Token 不应为空字符串");
             // 验证 Redis bucket 以正确的 key 前缀写入
             verify(redissonClient).getBucket(anyString());
-            verify(bucket).set(eq("1"), eq(TOKEN_EXPIRE_SECONDS), eq(TimeUnit.SECONDS));
+            verify(bucket).set(eq("1"), eq(Duration.ofSeconds(TOKEN_EXPIRE_SECONDS)));
         }
 
         @Test
