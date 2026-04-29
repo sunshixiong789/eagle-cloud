@@ -2,6 +2,7 @@ dependencies {
     api project(':eagle-starter:eagle-common-starter')
     api 'com.alibaba.cloud:spring-cloud-starter-alibaba-sentinel'
 
+    compileOnly 'jakarta.servlet:jakarta.servlet-api'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 

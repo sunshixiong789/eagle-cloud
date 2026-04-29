@@ -55,13 +55,17 @@ class CacheProtectionUtilTest {
 
     @BeforeEach
     void setUp() {
-        when(redisTemplate.opsForValue()).thenReturn(valueOps);
         cacheProtectionUtil = new CacheProtectionUtil(redissonClient, redisTemplate);
     }
 
     @Nested
     @DisplayName("getWithMutex")
     class GetWithMutex {
+
+        @BeforeEach
+        void setUpOpsForValue() {
+            when(redisTemplate.opsForValue()).thenReturn(valueOps);
+        }
 
         @Test
         @DisplayName("should return cached value directly without calling loader on cache hit")

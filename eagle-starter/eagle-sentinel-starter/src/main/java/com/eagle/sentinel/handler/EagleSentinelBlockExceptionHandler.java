@@ -48,7 +48,7 @@ public class EagleSentinelBlockExceptionHandler implements BlockExceptionHandler
      */
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
-            com.alibaba.csp.sentinel.slots.block.BlockException exception) throws Exception {
+            String resourceName, com.alibaba.csp.sentinel.slots.block.BlockException exception) throws Exception {
 
         int status;
         String message;
@@ -74,9 +74,7 @@ public class EagleSentinelBlockExceptionHandler implements BlockExceptionHandler
         }
 
         log.warn("[Sentinel] BlockException triggered: rule={}, resource={}, status={}",
-                exception.getClass().getSimpleName(),
-                exception.getRule() != null ? exception.getRule().getResource() : "unknown",
-                status);
+                exception.getClass().getSimpleName(), resourceName, status);
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("code", status);

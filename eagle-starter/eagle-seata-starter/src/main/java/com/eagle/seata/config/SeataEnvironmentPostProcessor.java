@@ -1,7 +1,7 @@
 package com.eagle.seata.config;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.env.EnvironmentPostProcessor;
+import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
+import org.springframework.context.ApplicationListener;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -27,11 +27,11 @@ import java.util.Map;
  * 用户若需覆盖可直接在配置文件中写 {@code seata.*} 属性。
  *
  * <p>注册方式：{@code META-INF/spring.factories}
- * {@code org.springframework.boot.env.EnvironmentPostProcessor=com.eagle.seata.config.SeataEnvironmentPostProcessor}
+ * {@code org.springframework.context.ApplicationListener=com.eagle.seata.config.SeataEnvironmentPostProcessor}
  *
  * @author 孙士雄
  */
-public class SeataEnvironmentPostProcessor implements EnvironmentPostProcessor {
+public class SeataEnvironmentPostProcessor implements ApplicationListener<ApplicationEnvironmentPreparedEvent> {
 
     /** 合并属性源的名称，用于标识本处理器注入的属性。 */
     private static final String PROPERTY_SOURCE_NAME = "eagleSeataProperties";
@@ -39,12 +39,11 @@ public class SeataEnvironmentPostProcessor implements EnvironmentPostProcessor {
     /**
      * 将 {@code eagle.seata.*} 属性同步到 {@code seata.*} 前缀。
      *
-     * @param environment Spring 环境对象
-     * @param application Spring 应用对象
+     * @param event 环境准备完成事件
      */
     @Override
-    public void postProcessEnvironment(ConfigurableEnvironment environment,
-            SpringApplication application) {
+    public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
+        ConfigurableEnvironment environment = event.getEnvironment();
 
         String appId = environment.getProperty("eagle.seata.application-id");
         String txGroup = environment.getProperty("eagle.seata.tx-service-group", "eagle_tx_group");
