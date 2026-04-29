@@ -1,7 +1,7 @@
 package com.eagle.system.base.infrastructure.event;
 
-import com.eagle.system.common.event.AccountDeletedEvent;
-import com.eagle.system.common.event.AccountRegisteredEvent;
+import com.eagle.system.auth.domain.event.AccountDeletedEvent;
+import com.eagle.system.auth.domain.event.AccountRegisteredEvent;
 import com.eagle.system.base.domain.event.UserCreatedEvent;
 import com.eagle.system.base.domain.event.UserLockedEvent;
 import com.eagle.system.base.domain.event.UserPasswordChangedEvent;
@@ -25,7 +25,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
  * 职责：
  * <ul>
  *   <li>监听并处理用户相关的领域事件</li>
- *   <li>监听 common 包中的跨域事件（AccountRegisteredEvent、AccountDeletedEvent）</li>
+ *   <li>监听 auth 域的跨域事件（AccountRegisteredEvent、AccountDeletedEvent）</li>
  *   <li>实现跨聚合的业务逻辑（如发送通知、记录日志）</li>
  *   <li>保持领域模型的纯粹性（领域模型不依赖基础设施）</li>
  * </ul>
@@ -84,7 +84,7 @@ public class UserEventHandler {
     }
 
     /**
-     * 处理账号注册事件(来自 auth 域,通过 common 包事件契约)
+     * 处理账号注册事件(来自 auth 域,通过 auth::event Named Interface)
      * <p>
      * 跨域协作机制:
      * <ul>
@@ -130,7 +130,7 @@ public class UserEventHandler {
     }
 
     /**
-     * 处理账号删除事件(来自 auth 域,通过 common 包事件契约)
+     * 处理账号删除事件(来自 auth 域,通过 auth::event Named Interface)
      * <p>
      * 跨域级联删除:
      * <ul>

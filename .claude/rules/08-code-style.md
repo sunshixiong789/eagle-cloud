@@ -19,9 +19,16 @@
 
 **Lombok 使用：**
 
-- 实体类标准注解：`@Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor`
+- 聚合根：`@Getter @NoArgsConstructor`（通过业务方法修改状态，不暴露 setter；使用静态工厂方法创建，不用 @Builder）
+- 子实体：`@Getter @Setter @NoArgsConstructor`（由聚合根级联管理，需要 setter）
+- 值对象（`@Embeddable`）：`@Getter @AllArgsConstructor @NoArgsConstructor`（不可变，无 setter）
 - Service / Controller 使用 `@RequiredArgsConstructor`（替代 `@Autowired`）
 - 禁止在 JPA 实体类上使用 `@Data`（影响 equals/hashCode 行为，导致延迟加载和集合操作异常）
+- 禁止在 JPA 实体上使用 `@Builder`（与 Hibernate 代理、延迟加载不兼容）
+
+**空安全：**
+
+- 新增模块的 `package-info.java` 必须添加 JSpecify `@NullMarked` 注解，声明包级空安全
 
 **其他：**
 

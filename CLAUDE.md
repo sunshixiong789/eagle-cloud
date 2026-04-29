@@ -76,13 +76,13 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 | 模块 | 包 | 类型 | 职责 | allowedDependencies |
 |------|----|------|------|---------------------|
 | **auth** | `com.eagle.system.auth` | 业务域 | 认证授权、OAuth2、微信/短信登录 | `common` |
-| **base** | `com.eagle.system.base` | 业务域 | 用户、角色、权限、部门、菜单管理 | `auth::port`, `common` |
+| **base** | `com.eagle.system.base` | 业务域 | 用户、角色、权限、部门、菜单管理 | `auth::port`, `auth::event`, `common` |
 | **config** | `com.eagle.system.config` | 基础设施胶水 | SecurityConfig、CacheConfig、AsyncConfig、WebSocket、i18n、全局异常处理 | `auth::security`, `common` |
-| **common** | `com.eagle.system.common` | 共享内核 (OPEN) | 跨域事件契约、ErrorCode 枚举、通用 DTO | 无外部依赖 |
+| **common** | `com.eagle.system.common` | 共享内核 (OPEN) | ErrorCode 枚举、通用 DTO、异常基础设施 | 无外部依赖 |
 
 **模块间协作方式：**
 - auth 定义 Driven Port（`auth/domain/port/`），base 在 `infrastructure/` 层实现适配器——auth 对 base 零依赖
-- auth → base 通过领域事件（`AccountRegisteredEvent` 等，放在 common 中）异步解耦
+- auth → base 通过领域事件（`AccountRegisteredEvent` 等，放在 `auth/domain/event/`，通过 `@NamedInterface("event")` 暴露）异步解耦
 - config 通过 Named Interface `auth::security` 引用安全组件装配过滤链
 
 ## DDD 分层架构（当前实现）

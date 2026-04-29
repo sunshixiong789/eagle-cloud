@@ -12,6 +12,29 @@ public class Order extends BaseAggregateRoot<Order> { }
 public class OrderItemEntity extends BaseEntity { }
 ```
 
+**值对象（`@Embeddable`）映射：**
+
+值对象使用 `@Embeddable` 嵌入聚合根，聚合根端使用 `@Embedded`：
+
+```java
+// 值对象定义
+@Embeddable
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+public class UserProfile {
+    @Column(comment = "昵称")
+    private String nickname;
+
+    @Column(comment = "头像")
+    private String avatar;
+}
+
+// 聚合根中嵌入
+@Embedded
+private UserProfile profile;
+```
+
 **枚举字段必须指定 `EnumType.STRING`：**
 
 ```java

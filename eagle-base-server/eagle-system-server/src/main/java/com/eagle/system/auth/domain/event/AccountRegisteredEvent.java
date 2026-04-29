@@ -1,12 +1,12 @@
-package com.eagle.system.common.event;
+package com.eagle.system.auth.domain.event;
 
 import java.util.Set;
 
 /**
- * 账号注册事件（跨域事件契约）
+ * 账号注册事件（跨域集成事件）
  * <p>
  * auth 域创建 Account 后发布此事件，system 域订阅后创建对应的 User。
- * 事件类放在 common 包中作为微服务共享契约，避免模块间的直接依赖。
+ * 事件类放在 auth 域的 domain/event 包中，通过 Named Interface "event" 暴露给其他模块。
  * <p>
  * profileHints 字段为可选项，用于管理员创建用户时携带组织信息（部门、角色），
  * system 域的事件处理器可据此直接创建带部门和角色的 User。

@@ -7,7 +7,7 @@
 | 类 / 接口 / 枚举 | `UpperCamelCase` | `OrderApplicationService`、`PaymentErrorCode` |
 | 方法 / 变量 | `lowerCamelCase` | `findByUsername`、`toNotFoundException` |
 | 常量 / 枚举值 | `CONSTANT_CASE` | `ORDER_NOT_FOUND`、`MAX_RETRY_COUNT` |
-| 包名 | 全小写，无下划线 | `com.example.order.domain.model` |
+| 包名 | 全小写，无下划线 | `com.eagle.system.base.domain.model` |
 | 测试类 | 被测类名 + `Test` | `OrderApplicationServiceTest` |
 
 ## DDD 分层命名约定
@@ -46,6 +46,6 @@
 
 | 文件 | 命名规则 | 示例 |
 |------|----------|------|
-| 模块声明 | 包根目录的 `package-info.java` | `order/package-info.java` |
-| 命名接口声明 | 子包的 `package-info.java` | `order/application/port/package-info.java` |
-| 命名接口名称 | 小写短名（kebab-case）| `"application-port"`、`"domain-services"` |
+| 模块声明 | 包根目录的 `package-info.java` | `auth/package-info.java` |
+| 命名接口声明 | 子包的 `package-info.java` | `auth/domain/port/package-info.java` |
+| 命名接口名称 | 小写短名（kebab-case）| `"port"`、`"security"`、`"domain-services"` |

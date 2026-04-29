@@ -26,6 +26,26 @@ public void handleOrderPaid(OrderPaidEvent event) {
 }
 ```
 
+## 跨域事件的事务传播
+
+处理来自其他域的事件时，必须使用 `Propagation.REQUIRES_NEW` 开启独立事务，确保不与发送方事务耦合：
+
+```java
+// ✅ 正确：跨域事件使用独立事务，避免级联回滚
+@Async
+@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+public void handleAccountRegistered(AccountRegisteredEvent event) {
+    userApplicationService.createUserFromAccount(event);
+}
+
+// ❌ 错误：使用默认事务传播，跨域事件处理失败可能影响发送方
+@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+public void handleAccountRegistered(AccountRegisteredEvent event) {
+    userApplicationService.createUserFromAccount(event);
+}
+```
+
 ## 事件驱动缓存失效
 
 缓存失效优先由领域事件驱动，避免在应用服务上手动加 `@CacheEvict`：

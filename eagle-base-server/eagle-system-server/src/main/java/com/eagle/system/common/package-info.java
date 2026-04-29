@@ -11,7 +11,6 @@
  *   <li>{@code exception/}   — 异常基础设施（AppException 层次、ErrorCode 接口）</li>
  *   <li>{@code exception/codes/} — 各域错误码枚举（CommonErrorCode、UserErrorCode 等）</li>
  *   <li>{@code constant/}    — 系统常量</li>
- *   <li>{@code event/}       — 通用事件基础设施</li>
  *   <li>{@code i18n/}        — 国际化工具（MessageSourceUtil）</li>
  * </ul>
  * <p>

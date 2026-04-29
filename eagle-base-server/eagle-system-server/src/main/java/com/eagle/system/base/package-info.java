@@ -3,18 +3,18 @@
  * <p>
  * 职责：用户、角色、权限、部门、菜单、岗位、字典、系统日志的管理。
  * <p>
- * <strong>与 auth 模块的关系（零依赖，事件驱动）</strong>
+ * <strong>与 auth 模块的关系（事件驱动 + Port 适配）</strong>
  * <ul>
- *   <li>system 域不依赖 auth 域的任何类型</li>
- *   <li>通过 common 包中的跨域事件契约（{@code AccountRegisteredEvent}、
- *       {@code AccountDeletedEvent}）接收 auth 域的通知</li>
- *   <li>system 基础设施层实现 auth 域的 {@code AuthorizationPort}（六边形架构 Driven Adapter）</li>
+ *   <li>通过 {@code auth::event} 订阅跨域事件（{@code AccountRegisteredEvent}、
+ *       {@code AccountDeletedEvent}），异步创建/删除对应的 User</li>
+ *   <li>通过 {@code auth::port} 实现 {@code AuthorizationPort}（六边形架构 Driven Adapter）</li>
  * </ul>
  * <p>
  * <strong>依赖约束</strong>
  * <ul>
  *   <li>依赖 {@code auth::port}（实现 AuthorizationPort 接口）</li>
- *   <li>依赖 {@code common}（共享内核：跨域事件、异常体系）</li>
+ *   <li>依赖 {@code auth::event}（订阅跨域事件）</li>
+ *   <li>依赖 {@code common}（共享内核：异常体系、基础 DTO）</li>
  *   <li>禁止依赖 {@code config}（避免循环）</li>
  * </ul>
  *
@@ -22,7 +22,7 @@
  */
 @ApplicationModule(
         displayName = "系统管理模块",
-        allowedDependencies = {"auth::port", "common"}
+        allowedDependencies = {"auth::port", "auth::event", "common"}
 )
 @NullMarked
 package com.eagle.system.base;

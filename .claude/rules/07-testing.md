@@ -1,6 +1,6 @@
 # 单元测试规范（Unit Testing）
 
-**框架：** JUnit 5 + Mockito (`@ExtendWith(MockitoExtension.class)`) + AssertJ
+**框架：** JUnit 5 + Mockito (`@ExtendWith(MockitoExtension.class)`)
 
 ## 架构测试
 
@@ -78,7 +78,7 @@ class OrderApplicationServiceTest {
 
 ## 断言
 
-- 使用 AssertJ（`assertThat(...)`）替代 JUnit 原生 `assertEquals`
+- 使用 JUnit 5 原生断言（`assertEquals`、`assertTrue`、`assertNotNull` 等）
 - 每个测试方法只验证一个行为
 - 异常测试使用 `assertThrows` 并断言异常类型为 DDD 异常体系中的类型
 
