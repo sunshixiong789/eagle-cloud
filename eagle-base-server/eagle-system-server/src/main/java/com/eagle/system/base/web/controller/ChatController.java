@@ -3,22 +3,22 @@ package com.eagle.system.base.web.controller;
 import com.eagle.common.exception.codes.OperationErrorCode;
 import com.eagle.system.base.web.dto.ChatMessage;
 import com.eagle.system.base.web.dto.PrivateMessage;
+import com.eagle.websocket.session.WebSocketSessionManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.socket.messaging.SessionConnectedEvent;
-import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import java.security.Principal;
 
 /**
- * WebSocket 消息控制器
+ * WebSocket 消息控制器。
+ *
+ * <p>处理客户端通过 STOMP 发送的消息（{@link MessageMapping}），
+ * 推送逻辑委托给 {@link WebSocketSessionManager}。
+ * 连接 / 断开事件由 {@link com.eagle.system.config.WebSocketEventListener} 统一处理。
  *
  * @author 孙士雄
  */
@@ -27,23 +27,33 @@ import java.security.Principal;
 @RequiredArgsConstructor
 public class ChatController {
 
-    private final SimpMessagingTemplate messagingTemplate;
+    private final WebSocketSessionManager webSocketSessionManager;
 
     /**
-     * 广播消息
+     * 广播消息：将消息推送到所有订阅了 {@code /topic/public} 的客户端。
+     *
+     * <p>客户端发送路径（appPrefix + mapping）：{@code /message/broadcast-message}
+     *
+     * @param message   消息内容
+     * @param principal 当前用户身份（可为 null，表示匿名连接）
      */
     @MessageMapping("/broadcast-message")
     public void sendMessage(@Payload ChatMessage message, Principal principal) {
         if (message == null || message.getContent() == null || message.getContent().isBlank()) {
             throw OperationErrorCode.MESSAGE_REQUIRED.toDomainException();
         }
-
-        log.info("用户 {} 发送广播消息: {}", principal != null ? principal.getName() : "匿名", message.getContent());
-        messagingTemplate.convertAndSend("/topic/public", message);
+        log.debug("用户 {} 发送广播消息", principal != null ? principal.getName() : "匿名");
+        webSocketSessionManager.broadcast("/topic/public", message);
     }
 
     /**
-     * 私信消息
+     * 私信消息：将消息推送给指定用户。
+     *
+     * <p>客户端发送路径：{@code /message/message-to-one}；
+     * 目标用户订阅 {@code /user/queue/private} 接收。
+     *
+     * @param message   私信内容（含 {@code to} 收件人字段）
+     * @param principal 当前用户身份
      */
     @MessageMapping("/message-to-one")
     public void sendPrivateMessage(@Payload PrivateMessage message, Principal principal) {
@@ -53,41 +63,14 @@ public class ChatController {
         if (message.getContent() == null || message.getContent().isBlank()) {
             throw OperationErrorCode.MESSAGE_REQUIRED.toDomainException();
         }
-
-        log.info("用户 {} 发送私信给 {}: {}",
-                principal != null ? principal.getName() : "匿名",
-                message.getTo(),
-                message.getContent());
-
-        messagingTemplate.convertAndSendToUser(
-                message.getTo(),
-                "/queue/private",
-                message
-        );
+        log.debug("用户 {} 发送私信给 {}", principal != null ? principal.getName() : "匿名", message.getTo());
+        webSocketSessionManager.sendToUser(message.getTo(), "/queue/private", message);
     }
 
     /**
-     * WebSocket 连接建立事件
-     */
-    @EventListener
-    public void handleWebSocketConnectListener(SessionConnectedEvent event) {
-        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-        String sessionId = headerAccessor.getSessionId();
-        log.info("WebSocket 连接建立: sessionId={}", sessionId);
-    }
-
-    /**
-     * WebSocket 连接断开事件
-     */
-    @EventListener
-    public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
-        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-        String sessionId = headerAccessor.getSessionId();
-        log.info("WebSocket 连接断开: sessionId={}", sessionId);
-    }
-
-    /**
-     * 消息处理异常
+     * 统一处理 {@link MessageMapping} 方法抛出的异常。
+     *
+     * @param e 异常
      */
     @MessageExceptionHandler
     public void handleException(Exception e) {

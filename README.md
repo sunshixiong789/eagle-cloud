@@ -2,7 +2,7 @@
 
 基于 **DDD（领域驱动设计）+ 六边形架构 + Spring Modulith** 构建的 Spring Boot 模块化单体平台，为微服务拆分就绪。
 
-内置完整的 **OAuth2 授权服务器**、**RBAC 权限管理**、**多种第三方登录**（微信小程序 / PC 扫码 / H5 / 短信验证码），开箱即用。
+内置完整的 **OAuth2 授权服务器**、**RBAC 权限管理**、**多种第三方登录**（微信小程序 / PC 扫码 / H5 / 短信验证码），以及面向**互联网高并发电商**的全套基础设施，开箱即用。
 
 ## 特性
 
@@ -12,9 +12,18 @@
 - **OAuth2 授权服务器** — 基于 Spring Authorization Server，支持授权码 + PKCE、刷新令牌、微信登录、短信登录
 - **RBAC 权限体系** — 用户、角色、权限、部门、菜单、岗位、字典完整管理
 - **行级数据权限** — 基于 AspectJ 的细粒度数据访问控制
-- **多级缓存** — Redis (Redisson) + Caffeine 两级缓存架构
+- **多级缓存** — Redis (Redisson) + Caffeine 两级缓存，内置缓存穿透 / 击穿 / 雪崩三重防护
 - **API 网关** — Spring Cloud Gateway + Sentinel 限流 + JWT 鉴权 + 链路追踪
 - **统一异常体系** — 类型化异常 + ErrorCode 枚举 + i18n 国际化消息
+- **接口幂等** — TOKEN / BUSINESS_KEY / RESULT_CACHE 三种模式，注解驱动零侵入
+- **分布式 ID** — Snowflake / UUID / 号段三策略，内置订单号 / 支付单号语义生成器
+- **流量治理** — Sentinel 声明式限流（`@RateLimit`）+ 程序化规则管理，支持 WARM_UP / 匀速排队
+- **分布式事务** — Seata AT 模式自动集成 + TCC 模板 + 编程式全局事务
+- **全文搜索** — Elasticsearch 流式 DSL 构建器、通用 Repository、高亮回写、聚合提取
+- **MyBatis-Plus 增强** — 统一分页 / 慢 SQL / 审计填充 / 链式查询条件辅助
+- **支付集成** — 支付宝 / 微信支付双网关，统一 pay / refund / transfer / notify 接口
+- **实时推送** — STOMP WebSocket + SSE 双模式，离线消息存储，Micrometer 连接指标
+- **全链路压测** — `X-Eagle-Gray` 压测流量标记，跨服务自动透传
 - **GraalVM Native Image** — 支持原生镜像编译
 
 ## 技术栈
@@ -25,8 +34,10 @@
 | 框架 | Spring Boot | 4.0.3 |
 | 微服务 | Spring Cloud / Spring Cloud Alibaba | 2025.1.1 / 2025.1.0.0 |
 | 模块治理 | Spring Modulith | 2.0.5 |
-| ORM | Hibernate (JPA) | 7.2.6 |
+| ORM (JPA) | Hibernate | 7.2.6 |
+| ORM (MyBatis) | MyBatis-Plus | 3.5.11 |
 | 数据库 | MySQL / PostgreSQL / H2 | 9.x / 42.7 / - |
+| 搜索引擎 | Elasticsearch | 9.x |
 | 缓存 | Redis (Redisson) + Caffeine | 4.3.0 / 3.2.0 |
 | 安全 | Spring Security + OAuth2 Authorization Server | - |
 | 网关 | Spring Cloud Gateway + Sentinel | - |
@@ -35,6 +46,8 @@
 | 分布式事务 | Seata | 2.2.0 |
 | 定时任务 | XXL-JOB | 2.4.2 |
 | 对象存储 | MinIO | 8.5.17 |
+| 支付 | 支付宝 SDK / 微信支付 APIv3 | 4.39 / 0.2.14 |
+| 实时推送 | STOMP WebSocket + SSE | - |
 | API 文档 | SpringDoc OpenAPI | 3.0.2 |
 | 构建工具 | Gradle (Groovy DSL) | 9.x |
 
@@ -47,21 +60,39 @@ eagle-cloud/
 │   ├── eagle-gateway-server/           # API 网关
 │   └── docker-compose.yml              # 开发环境容器编排
 │
-└── eagle-starter/                      # 可复用 Starter 库
-    ├── eagle-common-starter/           # 核心基础设施（基类、异常、事件、i18n）
-    ├── eagle-data-jpa-starter/         # JPA / Hibernate 配置
-    ├── eagle-redis-starter/            # Redis + Caffeine 多级缓存
-    ├── eagle-resource-server-starter/  # OAuth2 资源服务器
-    ├── eagle-feign-starter/            # OpenFeign 客户端
-    ├── eagle-tracing-starter/          # 分布式链路追踪（Brave / Zipkin）
-    ├── eagle-rocketmq-starter/         # RocketMQ 消息队列
-    ├── eagle-data-permission-starter/  # 行级数据权限
-    ├── eagle-dynamic-datasource-starter/ # 多数据源动态路由
-    ├── eagle-tenant-starter/           # 多租户支持
-    ├── eagle-oss-starter/              # 对象存储（MinIO）
-    ├── eagle-message-starter/          # 多渠道消息（短信 / 邮件）
-    ├── eagle-xxl-job-starter/          # 分布式定时任务
-    └── eagle-openapi-starter/          # Swagger / OpenAPI 文档
+└── eagle-starter/                          # 可复用 Starter 库
+    │
+    │   # ── 基础能力 ──────────────────────────────────────────────────
+    ├── eagle-common-starter/               # 核心基础设施（基类、异常体系、领域事件、i18n、压测流量标记）
+    ├── eagle-data-jpa-starter/             # JPA / Hibernate 配置（审计、多数据库方言）
+    ├── eagle-redis-starter/                # Redis + Caffeine 多级缓存（穿透 / 击穿 / 雪崩防护）
+    ├── eagle-resource-server-starter/      # OAuth2 资源服务器 JWT 验证
+    ├── eagle-feign-starter/                # OpenFeign（JWT / 租户 / Seata XID 透传）
+    ├── eagle-tracing-starter/              # 分布式链路追踪（Brave / Zipkin）
+    ├── eagle-openapi-starter/              # Swagger / OpenAPI 文档集成
+    │
+    │   # ── 数据访问 ──────────────────────────────────────────────────
+    ├── eagle-dynamic-datasource-starter/   # 多数据源动态路由
+    ├── eagle-mybatis-starter/              # MyBatis-Plus 增强（分页 / 慢 SQL / 审计填充 / 查询辅助）
+    ├── eagle-elasticsearch-starter/        # Elasticsearch（流式 DSL / 通用 Repository / 高亮 / 聚合）
+    │
+    │   # ── 消息与任务 ────────────────────────────────────────────────
+    ├── eagle-rocketmq-starter/             # RocketMQ v5 消息队列
+    ├── eagle-xxl-job-starter/              # 分布式定时任务（XXL-JOB）
+    ├── eagle-message-starter/              # 多渠道消息推送（阿里云 SMS / Spring Mail）
+    │
+    │   # ── 高并发电商 ────────────────────────────────────────────────
+    ├── eagle-idempotency-starter/          # 接口幂等（TOKEN / BUSINESS_KEY / RESULT_CACHE 三模式）
+    ├── eagle-id-generator-starter/         # 分布式 ID（Snowflake / UUID / 号段 + 订单号语义生成）
+    ├── eagle-sentinel-starter/             # 流量治理（@RateLimit 注解 + 规则动态管理）
+    ├── eagle-seata-starter/                # 分布式事务（AT 自动集成 + TCC 模板 + 编程式事务）
+    ├── eagle-payment-starter/              # 支付集成（支付宝 / 微信双网关 + 转账 + 签名验证）
+    ├── eagle-websocket-starter/            # 实时推送（STOMP WebSocket + SSE + 离线消息存储）
+    │
+    │   # ── 平台能力 ──────────────────────────────────────────────────
+    ├── eagle-data-permission-starter/      # 行级数据权限（AspectJ）
+    ├── eagle-tenant-starter/               # 多租户支持（动态数据源路由）
+    └── eagle-oss-starter/                  # 对象存储（MinIO）
 ```
 
 ### Spring Modulith 模块划分
@@ -90,6 +121,176 @@ eagle-cloud/
 ```
 
 依赖方向（单向）：`web → application → domain ← infrastructure`
+
+## 高并发电商 Starter 使用说明
+
+### eagle-idempotency-starter — 接口幂等
+
+三种模式通过 `@Idempotent` 注解声明，零侵入：
+
+```java
+// TOKEN 模式：客户端提前申请 token，一次性消费
+@PostMapping("/orders")
+@Idempotent(mode = IdempotencyMode.TOKEN)
+public OrderResponse createOrder(@RequestBody CreateOrderRequest req) { ... }
+
+// BUSINESS_KEY 模式：SpEL 提取业务键 SETNX 防重
+@Idempotent(mode = IdempotencyMode.BUSINESS_KEY, key = "#req.orderNo")
+public void payOrder(@RequestBody PayRequest req) { ... }
+
+// RESULT_CACHE 模式：缓存首次响应，重试直接返回缓存结果
+@Idempotent(mode = IdempotencyMode.RESULT_CACHE, tokenHeader = "X-Idempotency-Key")
+public PayResult submitPay(@RequestBody PayRequest req) { ... }
+```
+
+申请 Token（TOKEN / RESULT_CACHE 模式）：`GET /idempotency/token`
+
+---
+
+### eagle-id-generator-starter — 分布式 ID
+
+```java
+@Autowired
+private IdGeneratorFacade idGen;
+
+long orderId  = idGen.snowflakeId();            // Snowflake ID
+String orderNo = idGen.orderNo();               // ORD20240115000000001
+String payNo   = idGen.payNo();                 // PAY20240115000000002
+String refundNo = idGen.refundNo();             // RFD20240115000000003
+```
+
+---
+
+### eagle-sentinel-starter — 流量治理
+
+```java
+// 声明式限流
+@RateLimit(resource = "createOrder", qps = 100, behavior = FlowControlBehavior.WARM_UP)
+public OrderResponse createOrder(...) { ... }
+
+// 程序化规则（启动时或动态下发）
+@Autowired SentinelRuleManager ruleManager;
+ruleManager.addFlowRule("createOrder", 100, RuleConstant.CONTROL_BEHAVIOR_DEFAULT);
+ruleManager.addSlowCallDegradeRule("payOrder", 1000, 0.5, 10);
+```
+
+---
+
+### eagle-seata-starter — 分布式事务
+
+```java
+// AT 模式：在 @GlobalTransactional 方法上自动开启全局事务（Seata 原生注解）
+
+// 编程式全局事务
+@Autowired GlobalTransactionTemplate txTemplate;
+OrderResult result = txTemplate.execute("createOrder", () -> {
+    inventoryService.deduct(req.getProductId(), req.getQuantity());
+    return orderService.create(req);
+});
+
+// TCC 模式：实现 TccAction 接口，配合 @TwoPhaseBusinessAction
+```
+
+---
+
+### eagle-elasticsearch-starter — 全文搜索
+
+```java
+// 流式 DSL 构建查询
+NativeQuery query = EsQueryBuilder.<ProductDoc>builder()
+    .multiMatch("手机", List.of("name", "description"))
+    .term("category", "digital")
+    .range("price", BigDecimal.valueOf(1000), BigDecimal.valueOf(5000))
+    .highlight(List.of("name", "description"))
+    .page(1, 20)
+    .build();
+
+// 通用 Repository
+public class ProductRepository extends BaseElasticSearchRepository<ProductDoc> {
+    public SearchHits<ProductDoc> searchProducts(String keyword) {
+        return search(EsQueryBuilder.<ProductDoc>builder()
+            .multiMatch(keyword, List.of("name")).build());
+    }
+}
+```
+
+---
+
+### eagle-mybatis-starter — MyBatis-Plus 增强
+
+```java
+// 统一分页查询
+public EaglePageResult<UserVO> listUsers(UserQuery req) {
+    LambdaQueryWrapper<UserDO> wrapper = new LambdaQueryWrapper<>();
+    QueryHelper.likeAny(req.getKeyword(), UserDO::getName, UserDO::getPhone);
+    QueryHelper.dateBetween(wrapper, UserDO::getCreateTime, req.getStart(), req.getEnd());
+    QueryHelper.conditionEq(wrapper, req.getStatus() != null, UserDO::getStatus, req.getStatus());
+
+    EaglePageQuery page = new EaglePageQuery();
+    page.setPageNum(req.getPageNum()).setPageSize(req.getPageSize()).addOrderDesc("create_time");
+    return EaglePageResult.of(userMapper.selectPage(page.toPage(), wrapper));
+}
+
+// 继承基础 Service
+@Service
+public class UserServiceImpl extends EagleServiceImpl<UserMapper, UserDO> implements UserService {
+    public UserDO getOrThrow(Long id) { return getByIdOrThrow(id); }
+}
+```
+
+---
+
+### eagle-payment-starter — 支付集成
+
+```java
+// 统一支付接口，渠道透明
+@Autowired
+@Qualifier("alipayPaymentGateway")  // 或 wechatPaymentGateway
+private PaymentGateway paymentGateway;
+
+PayResult result = paymentGateway.pay(PayRequest.builder()
+    .outTradeNo(orderNo).amount(new BigDecimal("99.00"))
+    .subject("商品名称").notifyUrl("https://example.com/notify").build());
+
+// 统一回调：配置 eagle.payment.alipay.notify-path / wechat.notify-path 即可
+// 回调成功后发布 PaymentNotifyEvent，业务方监听处理
+@EventListener
+public void onPayment(PaymentNotifyEvent event) { ... }
+```
+
+---
+
+### eagle-websocket-starter — 实时推送
+
+```java
+// WebSocket 点对点推送
+@Autowired WebSocketSessionManager wsManager;
+wsManager.sendToUser(userId, "/queue/order-status", orderStatusDto);
+
+// SSE 服务端推送
+@Autowired SseEmitterManager sseManager;
+
+@GetMapping(value = "/sse/{userId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+public SseEmitter subscribe(@PathVariable String userId) {
+    return sseManager.connect(userId);
+}
+// 主动推送
+sseManager.sendToUser(userId, "ORDER_UPDATE", orderDto);
+sseManager.broadcast("ANNOUNCEMENT", announcementDto);
+```
+
+客户端 JS 示例：
+```javascript
+// WebSocket（STOMP）
+const client = new Client({ brokerURL: 'ws://localhost/ws' });
+client.subscribe('/user/queue/order-status', msg => { ... });
+
+// SSE
+const es = new EventSource('/sse/' + userId);
+es.addEventListener('ORDER_UPDATE', e => console.log(JSON.parse(e.data)));
+```
+
+---
 
 ## 快速开始
 

@@ -4,7 +4,7 @@ dependencies {
     implementation project(':eagle-starter:eagle-data-permission-starter')
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
-    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation project(':eagle-starter:eagle-websocket-starter')
     implementation 'org.springframework.boot:spring-boot-starter-flyway'
     implementation 'org.flywaydb:flyway-mysql'
 

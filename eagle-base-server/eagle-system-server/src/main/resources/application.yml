@@ -27,6 +27,13 @@ eagle:
     keystore-location: ${EAGLE_JWT_KEYSTORE_LOCATION:classpath:jwt-keystore.p12}
     keystore-password: ${EAGLE_JWT_KEYSTORE_PASSWORD:eagle-jwt-dev-2026}
     key-alias: eagle-jwt
+  # WebSocket 配置（对齐原有端点和消息前缀）
+  websocket:
+    endpoint: /ws-stomp      # STOMP 握手端点（客户端连接地址）
+    app-prefix: /message     # 客户端发送消息前缀（@MessageMapping 路径前缀）
+    topic-prefix: /topic     # 广播消息前缀
+    user-prefix: /user       # 用户专属消息前缀
+
   # 初始管理员账户配置
   # 注意：生产环境务必通过环境变量 EAGLE_ADMIN_PASSWORD 设置强密码
   admin:
