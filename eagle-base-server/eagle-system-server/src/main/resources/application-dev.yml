@@ -5,6 +5,10 @@
 # ===========================================
 
 spring:
+  # Flyway 数据库迁移
+  flyway:
+    enabled: true
+    baseline-on-migrate: true  # 兼容已有数据库，首次运行自动 baseline
   # 数据源配置 - MySQL 数据库
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver  # MySQL 8.x 驱动
@@ -25,7 +29,7 @@ spring:
     database-platform: org.hibernate.dialect.MySQLDialect  # MySQL 方言
     show-sql: true  # 显示 SQL 语句，便于调试
     hibernate:
-      ddl-auto: update  # 自动更新数据库结构
+      ddl-auto: validate  # 仅校验表结构与实体一致性，DDL 变更由 Flyway 管理
       # 注意：生产环境建议改为 "validate" 以避免意外修改表结构
   # 缓存配置 - Redis 分布式缓存
   cache:

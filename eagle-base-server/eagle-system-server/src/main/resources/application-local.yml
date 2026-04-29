@@ -5,6 +5,10 @@
 # ===========================================
 
 spring:
+  # Flyway 数据库迁移
+  flyway:
+    enabled: true
+    baseline-on-migrate: true  # 兼容已有数据库，首次运行自动 baseline
   # 数据源配置 - H2 数据库
   datasource:
     driver-class-name: org.h2.Driver  # H2 数据库驱动

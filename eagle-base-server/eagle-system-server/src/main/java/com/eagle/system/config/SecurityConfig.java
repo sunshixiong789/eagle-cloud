@@ -36,8 +36,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.OAuth2Token;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
-import org.springframework.security.oauth2.server.authorization.InMemoryOAuth2AuthorizationService;
+import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService;
+import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.token.DelegatingOAuth2TokenGenerator;
@@ -60,6 +63,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.util.List;
+import org.springframework.jdbc.core.JdbcOperations;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -88,9 +92,26 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * OAuth2 授权持久化 — JDBC 实现
+     * <p>
+     * 替代 {@code InMemoryOAuth2AuthorizationService}，
+     * 授权码、访问令牌、刷新令牌等数据持久化到数据库，
+     * 服务重启不丢失活跃授权，多实例部署共享授权状态。
+     */
     @Bean
-    public OAuth2AuthorizationService authorizationService() {
-        return new InMemoryOAuth2AuthorizationService();
+    public OAuth2AuthorizationService authorizationService(JdbcOperations jdbcOperations,
+                                                            RegisteredClientRepository registeredClientRepository) {
+        return new JdbcOAuth2AuthorizationService(jdbcOperations, registeredClientRepository);
+    }
+
+    /**
+     * OAuth2 授权同意持久化 — JDBC 实现
+     */
+    @Bean
+    public OAuth2AuthorizationConsentService authorizationConsentService(JdbcOperations jdbcOperations,
+                                                                         RegisteredClientRepository registeredClientRepository) {
+        return new JdbcOAuth2AuthorizationConsentService(jdbcOperations, registeredClientRepository);
     }
 
     @Bean
