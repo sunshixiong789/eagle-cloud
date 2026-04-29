@@ -41,7 +41,7 @@ public class EagleAuthentication extends AbstractAuthenticationToken {
         super(authorities);
         this.credentials = credentials;
         this.principal = principal;
-        setAuthenticated(true);
+        super.setAuthenticated(true);
     }
 
     /**

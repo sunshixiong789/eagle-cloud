@@ -1,9 +1,10 @@
 package com.eagle.gateway.filter;
 
 import io.micrometer.tracing.Tracer;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -25,10 +26,14 @@ import java.time.Instant;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class RequestLoggingGlobalFilter implements GlobalFilter, Ordered {
 
+    @Nullable
     private final Tracer tracer;
+
+    public RequestLoggingGlobalFilter(ObjectProvider<Tracer> tracerProvider) {
+        this.tracer = tracerProvider.getIfAvailable();
+    }
 
     @Override
     public @NonNull Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {

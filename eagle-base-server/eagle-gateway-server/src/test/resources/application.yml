@@ -1,0 +1,15 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+    sentinel:
+      enabled: false
+
+seata:
+  enabled: false
+
+eagle:
+  gateway:
+    openapi:
+      discovery-enabled: false

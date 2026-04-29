@@ -9,7 +9,6 @@ import org.springframework.security.core.userdetails.User;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Map;
 
 
 /**
@@ -28,7 +27,7 @@ public class EagleUser extends User {
     /**
      * 扩展属性，方便存放 OAuth2 上下文相关信息
      */
-    private final Map<String, Serializable> attributes = new HashMap<>();
+    private final HashMap<String, Serializable> attributes = new HashMap<>();
 
     /**
      * 用户 ID（序列化为 String 防止前端精度丢失）
