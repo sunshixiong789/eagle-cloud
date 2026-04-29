@@ -22,5 +22,8 @@
       "Bash(gradle :eagle-starter:eagle-xxl-job-starter:compileJava)",
       "Bash(gradle :eagle-starter:eagle-feign-starter:compileJava :eagle-base-server:eagle-gateway-server:compileJava)"
     ]
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": false
   }
 }

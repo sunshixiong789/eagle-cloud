@@ -2,7 +2,7 @@
   "enabledPlugins": {
     "superpowers@superpowers-marketplace": true,
     "everything-claude-code@everything-claude-code": true,
-    "context-mode@context-mode": true,
-    "superpowers@claude-plugins-official": true
+    "superpowers@claude-plugins-official": true,
+    "claude-mem@thedotmack": true
   }
 }
