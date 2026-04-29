@@ -1,0 +1,10 @@
+dependencies {
+    api project(':eagle-starter:eagle-common-starter')
+    api 'org.springframework.boot:spring-boot-starter-websocket'
+    api 'org.springframework.boot:spring-boot-starter-security'
+    compileOnly project(':eagle-starter:eagle-redis-starter')
+    compileOnly 'org.springframework.boot:spring-boot-starter-actuator'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}

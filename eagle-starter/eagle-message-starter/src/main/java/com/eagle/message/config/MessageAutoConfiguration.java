@@ -17,7 +17,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.List;
@@ -31,26 +30,36 @@ import java.util.stream.Collectors;
  * @author 孙士雄
  */
 @Slf4j
-@EnableAsync
 @AutoConfiguration
 @EnableConfigurationProperties(MessageProperties.class)
 @ConditionalOnProperty(prefix = "eagle.message", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class MessageAutoConfiguration {
 
-    @Bean
+    /**
+     * 消息发送专用线程池。
+     *
+     * <p>不使用 common-starter 的通用线程池，避免消息发送（高延迟 IO）占用领域事件处理线程。
+     * 配置优雅关闭，防止应用下线时消息丢失。
+     */
+    @Bean(name = "messageTaskExecutor")
     @ConditionalOnMissingBean(name = "messageTaskExecutor")
     public Executor messageTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(2);
         executor.setMaxPoolSize(10);
         executor.setQueueCapacity(200);
+        executor.setKeepAliveSeconds(60);
         executor.setThreadNamePrefix("message-");
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        // 等待发送中的消息完成后再关闭，防止应用下线时丢失消息
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(30);
         executor.initialize();
         return executor;
     }
 
     @Bean
+    @ConditionalOnMissingBean
     public MessageTemplateEngine messageTemplateEngine(MessageProperties properties) {
         return new MessageTemplateEngine(properties);
     }
@@ -69,9 +78,10 @@ public class MessageAutoConfiguration {
     static class SmsChannelConfiguration {
 
         @Bean
-        public SmsMessageChannel smsMessageChannel(MessageProperties properties) {
+        public SmsMessageChannel smsMessageChannel(MessageProperties properties,
+                                                    MessageTemplateEngine templateEngine) {
             log.info("SMS message channel enabled, signName: {}", properties.getSms().getSignName());
-            return new SmsMessageChannel(properties);
+            return new SmsMessageChannel(properties, templateEngine);
         }
     }
 
@@ -82,9 +92,10 @@ public class MessageAutoConfiguration {
 
         @Bean
         public EmailMessageChannel emailMessageChannel(JavaMailSender mailSender,
-                                                        MessageProperties properties) {
+                                                        MessageProperties properties,
+                                                        MessageTemplateEngine templateEngine) {
             log.info("Email message channel enabled, from: {}", properties.getEmail().getFrom());
-            return new EmailMessageChannel(mailSender, properties);
+            return new EmailMessageChannel(mailSender, properties, templateEngine);
         }
     }
 }

@@ -43,7 +43,7 @@ public class UserEventHandler {
     /**
      * 处理用户创建事件
      */
-    @Async
+    @Async("taskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleUserCreated(UserCreatedEvent event) {
         log.info("用户创建事件: username={}, phone={}, email={}",
@@ -53,7 +53,7 @@ public class UserEventHandler {
     /**
      * 处理密码修改事件
      */
-    @Async
+    @Async("taskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePasswordChanged(UserPasswordChangedEvent event) {
         log.info("密码修改事件: userId={}, username={}",
@@ -64,7 +64,7 @@ public class UserEventHandler {
     /**
      * 处理用户锁定事件
      */
-    @Async
+    @Async("taskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleUserLocked(UserLockedEvent event) {
         log.info("用户锁定事件: userId={}, username={}, reason={}",
@@ -75,7 +75,7 @@ public class UserEventHandler {
     /**
      * 处理用户信息变更事件 -- 驱动缓存失效
      */
-    @Async
+    @Async("taskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleUserUpdated(UserUpdatedEvent event) {
         log.info("用户信息变更事件: userId={}, username={}",

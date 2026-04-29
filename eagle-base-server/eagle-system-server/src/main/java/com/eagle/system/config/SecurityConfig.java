@@ -295,8 +295,8 @@ public class SecurityConfig {
                             .claim(SecurityConstants.DETAILS_USER_ID, user.getId())
                             .claim(SecurityConstants.DETAILS_USERNAME, user.getUsername())
                             .claim(SecurityConstants.DETAILS_USER_NAME, Objects.requireNonNullElse(user.getName(), ""))
-                            .claim(SecurityConstants.DETAILS_DEP_ID, Objects.requireNonNullElse(user.getDeptId(), 0L))
-                            .claim(SecurityConstants.DETAILS_DEP_NAME, Objects.requireNonNullElse(user.getDeptName(), ""))
+                            .claim(SecurityConstants.DETAILS_DEPT_ID, Objects.requireNonNullElse(user.getDeptId(), 0L))
+                            .claim(SecurityConstants.DETAILS_DEPT_NAME, Objects.requireNonNullElse(user.getDeptName(), ""))
                             .claim(SecurityConstants.DETAILS_PHONE, Objects.requireNonNullElse(user.getPhone(), ""));
                 }
             }

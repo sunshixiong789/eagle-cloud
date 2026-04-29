@@ -54,6 +54,13 @@ ext {
     // Seata 分布式事务
     set('seataVersion', '2.2.0')
 
+    // MyBatis-Plus（Spring Boot 3/4 兼容）
+    set('mybatisPlusVersion', '3.5.11')
+
+    // 支付 SDK
+    set('alipayVersion', '4.39.221.ALL')
+    set('wechatpayVersion', '0.2.14')
+
     // 序列化
     set('fastjson2Version', '2.0.61')
 
@@ -226,6 +233,13 @@ subprojects {
 
             // Seata 分布式事务
             dependency "org.apache.seata:seata-spring-boot-starter:${seataVersion}"
+
+            // MyBatis-Plus
+            dependency "com.baomidou:mybatis-plus-spring-boot3-starter:${mybatisPlusVersion}"
+
+            // 支付 SDK
+            dependency "com.alipay.sdk:alipay-sdk-java:${alipayVersion}"
+            dependency "com.github.wechatpay-apiv3:wechatpay-java:${wechatpayVersion}"
         }
     }
 

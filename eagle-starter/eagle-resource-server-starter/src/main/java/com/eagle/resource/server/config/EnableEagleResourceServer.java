@@ -9,9 +9,16 @@ import org.springframework.context.annotation.Import;
 
 /**
  * 启用 Eagle 资源服务器安全配置。
- * <p>
- * 将此注解添加到应用主类（或任意 {@code @Configuration} 类）上，
- * 即可启用 OAuth2 JWT 资源服务器过滤链及 {@link EagleJwtAuthenticationConverter}。
+ *
+ * <p>将此注解添加到应用主类（或任意 {@code @Configuration} 类）上，即可激活：
+ * <ul>
+ *   <li>OAuth2 JWT 资源服务器过滤链（无状态，支持可配置放行路径）</li>
+ *   <li>{@link EagleJwtAuthenticationConverter}（{@link com.eagle.common.dto.EagleUser} 作为 Principal）</li>
+ *   <li>缓存配置 {@link CacheConfig}</li>
+ *   <li>Swagger / OpenAPI 配置 {@link OpenApiConfig}</li>
+ * </ul>
+ *
+ * <p>与 Spring Boot 自动配置等效，两者不会重复注册（所有 Bean 均有 {@code @ConditionalOnMissingBean} 保护）：
  *
  * <pre>{@code
  * @SpringBootApplication
@@ -20,11 +27,11 @@ import org.springframework.context.annotation.Import;
  * }</pre>
  *
  * @author 孙士雄
- * @see ResourceServerSecurityConfig
+ * @see ResourceServerAutoConfiguration
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Import({ResourceServerSecurityConfig.class, EagleJwtAuthenticationConverter.class})
+@Import(ResourceServerAutoConfiguration.class)
 public @interface EnableEagleResourceServer {
 }

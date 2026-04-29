@@ -20,4 +20,14 @@ include 'eagle-starter:eagle-message-starter'
 include 'eagle-starter:eagle-xxl-job-starter'
 include 'eagle-starter:eagle-tenant-starter'
 
+// 高并发电商扩展 Starter
+include 'eagle-starter:eagle-idempotency-starter'
+include 'eagle-starter:eagle-id-generator-starter'
+include 'eagle-starter:eagle-sentinel-starter'
+include 'eagle-starter:eagle-seata-starter'
+include 'eagle-starter:eagle-elasticsearch-starter'
+include 'eagle-starter:eagle-mybatis-starter'
+include 'eagle-starter:eagle-payment-starter'
+include 'eagle-starter:eagle-websocket-starter'
+
 

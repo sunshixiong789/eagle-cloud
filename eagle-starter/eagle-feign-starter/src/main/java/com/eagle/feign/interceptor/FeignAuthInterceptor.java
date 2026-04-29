@@ -1,18 +1,23 @@
 package com.eagle.feign.interceptor;
 
+import com.eagle.common.pressuretest.PressureTestContext;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
-import io.micrometer.tracing.Span;
-import io.micrometer.tracing.Tracer;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
- * Feign 请求拦截器：从当前 HTTP 请求中透传 Authorization Header 和链路追踪信息。
+ * Feign 请求拦截器：透传 Authorization、语言偏好和全链路压测标记 Header。
  *
- * <p>确保下游服务能拿到当前用户的 JWT Token 进行鉴权，并维持分布式链路追踪上下文。
+ * <p>保证下游服务能获取当前用户的 JWT Token 进行鉴权，以及保持 i18n 语言环境一致性。
+ * 同时透传压测标记 {@code X-Eagle-Gray}，确保压测流量在整条调用链上始终被识别。
+ *
+ * <p>B3 链路追踪头由 Spring Cloud OpenFeign + Micrometer Tracing 自动注入，无需手动处理。
+ *
+ * <p>在异步上下文（定时任务、异步线程）中无 HTTP 请求，此拦截器会跳过 Header 透传——
+ * 这些场景通常使用 Client Credentials 认证，无需透传用户 Token。
  *
  * @author 孙士雄
  */
@@ -20,59 +25,36 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 public class FeignAuthInterceptor implements RequestInterceptor {
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
-
-    private final Tracer tracer;
-
-    public FeignAuthInterceptor() {
-        this(null);
-    }
-
-    public FeignAuthInterceptor(Tracer tracer) {
-        this.tracer = tracer;
-    }
+    private static final String ACCEPT_LANGUAGE_HEADER = "Accept-Language";
 
     @Override
     public void apply(RequestTemplate template) {
-        String token = extractTokenFromCurrentRequest();
-        if (token != null) {
-            template.header(AUTHORIZATION_HEADER, token);
-            log.debug("Feign request intercepted, Authorization header forwarded to {}", template.url());
+        // 全链路压测标记透传（不依赖 HTTP 请求，从 ThreadLocal 读取）
+        if (PressureTestContext.isPressureTest()) {
+            template.header(PressureTestContext.PRESSURE_TEST_HEADER, "true");
         }
 
-        propagateTraceContext(template);
-    }
-
-    /**
-     * 透传链路追踪上下文（B3 Propagation）。
-     */
-    private void propagateTraceContext(RequestTemplate template) {
-        if (tracer == null || tracer.currentSpan() == null) {
+        HttpServletRequest request = getCurrentRequest();
+        if (request == null) {
+            // 异步/定时任务上下文，无 HTTP 请求可透传
             return;
         }
-        Span span = tracer.currentSpan();
-        template.header("X-B3-TraceId", span.context().traceId());
-        template.header("X-B3-SpanId", span.context().spanId());
-        if (span.context().parentId() != null) {
-            template.header("X-B3-ParentSpanId", span.context().parentId());
+
+        String token = request.getHeader(AUTHORIZATION_HEADER);
+        if (token != null) {
+            template.header(AUTHORIZATION_HEADER, token);
+            log.debug("Authorization forwarded to {}", template.url());
         }
-        template.header("X-B3-Sampled", span.context().sampled() ? "1" : "0");
-        log.debug("Trace context propagated: traceId={}, spanId={}",
-                span.context().traceId(), span.context().spanId());
+
+        String acceptLanguage = request.getHeader(ACCEPT_LANGUAGE_HEADER);
+        if (acceptLanguage != null) {
+            template.header(ACCEPT_LANGUAGE_HEADER, acceptLanguage);
+        }
     }
 
-    /**
-     * 从当前请求上下文中提取 Authorization Header。
-     *
-     * @return Bearer token 或 null
-     */
-    private String extractTokenFromCurrentRequest() {
-        ServletRequestAttributes attributes =
+    private HttpServletRequest getCurrentRequest() {
+        ServletRequestAttributes attrs =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (attributes == null) {
-            return null;
-        }
-
-        HttpServletRequest request = attributes.getRequest();
-        return request.getHeader(AUTHORIZATION_HEADER);
+        return attrs != null ? attrs.getRequest() : null;
     }
 }

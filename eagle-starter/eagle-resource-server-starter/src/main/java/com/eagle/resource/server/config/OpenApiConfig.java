@@ -1,6 +1,7 @@
 package com.eagle.resource.server.config;
 
 import com.eagle.common.constant.SecurityConstants;
+import com.eagle.resource.server.properties.ResourceServerProperties;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.models.security.OAuthFlows;
 import io.swagger.v3.oas.models.security.Scopes;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import lombok.RequiredArgsConstructor;
 import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,9 +22,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * OpenAPI / Swagger 配置
- * <p>
- * 功能：
+ * OpenAPI / Swagger 配置。
+ *
+ * <p>功能：
  * <ul>
  *   <li>Bearer Token 直接输入（适合已有 Token 的调试场景）</li>
  *   <li>OAuth2 授权码流程（Swagger UI 内置授权按钮）</li>
@@ -30,23 +32,31 @@ import java.util.regex.Pattern;
  *   <li>公开端点（permitAll）自动去掉锁图标</li>
  * </ul>
  *
- * @author sunshixiong
+ * <p>API 标题、版本、描述通过 {@code eagle.resource-server.api.*} 配置。
+ * OAuth2 授权服务器地址通过 {@code eagle.resource-server.auth-server-url} 配置。
+ *
+ * @author 孙士雄
  */
 @Configuration
+@RequiredArgsConstructor
 public class OpenApiConfig {
 
     private static final String BEARER_AUTH = "BearerAuth";
     private static final String OAUTH2 = "OAuth2";
-
     private static final Pattern HAS_ROLE_PATTERN = Pattern.compile("hasRole\\('(\\w+)'\\)");
+
+    private final ResourceServerProperties properties;
 
     @Bean
     public OpenAPI customOpenApi() {
+        ResourceServerProperties.Api api = properties.getApi();
+        String description = api.getDescription().isBlank() ? defaultApiDescription() : api.getDescription();
+
         return new OpenAPI()
                 .info(new Info()
-                        .title("Eagle API")
-                        .version("v1.0.0")
-                        .description(apiDescription())
+                        .title(api.getTitle())
+                        .version(api.getVersion())
+                        .description(description)
                         .license(new License().name("Apache 2.0").url("https://springdoc.org")))
                 .components(new Components()
                         .addSecuritySchemes(BEARER_AUTH, bearerScheme())
@@ -57,7 +67,7 @@ public class OpenApiConfig {
     }
 
     /**
-     * 自动解析 @PreAuthorize 注解，将角色要求写入文档描述，公开端点去掉锁图标
+     * 自动解析 {@code @PreAuthorize} 注解，将角色要求写入文档描述，公开端点去掉锁图标。
      */
     @Bean
     public OperationCustomizer preAuthorizeOperationCustomizer() {
@@ -99,13 +109,22 @@ public class OpenApiConfig {
     }
 
     private SecurityScheme oauth2Scheme() {
+        // 直连调试时需要绝对 URL；通过网关聚合 Swagger 时相对路径即可
+        String base = properties.getAuthServerUrl();
+        String authorizationUrl = base.isBlank()
+                ? SecurityConstants.AUTH_AUTHORIZE
+                : base + SecurityConstants.AUTH_AUTHORIZE;
+        String tokenUrl = base.isBlank()
+                ? SecurityConstants.AUTH_TOKEN
+                : base + SecurityConstants.AUTH_TOKEN;
+
         return new SecurityScheme()
                 .type(SecurityScheme.Type.OAUTH2)
                 .description("OAuth2 授权码流程（PKCE），适用于用户名密码登录")
                 .flows(new OAuthFlows()
                         .authorizationCode(new OAuthFlow()
-                                .authorizationUrl(SecurityConstants.AUTH_AUTHORIZE)
-                                .tokenUrl(SecurityConstants.AUTH_TOKEN)
+                                .authorizationUrl(authorizationUrl)
+                                .tokenUrl(tokenUrl)
                                 .scopes(new Scopes()
                                         .addString("openid", "OpenID 身份标识")
                                         .addString("profile", "用户基本信息"))));
@@ -114,7 +133,6 @@ public class OpenApiConfig {
     private String extractRoleDescription(String preAuthorizeValue) {
         if (preAuthorizeValue.contains("isAuthenticated()")) {
             if (preAuthorizeValue.contains("hasRole")) {
-                // 组合表达式：hasRole('admin') or isAuthenticated()
                 Matcher matcher = HAS_ROLE_PATTERN.matcher(preAuthorizeValue);
                 StringBuilder sb = new StringBuilder("需要角色 ");
                 while (matcher.find()) {
@@ -155,7 +173,7 @@ public class OpenApiConfig {
         }
     }
 
-    private String apiDescription() {
+    private String defaultApiDescription() {
         return """
                 Eagle 企业级应用接口文档
 

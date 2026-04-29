@@ -1,58 +1,47 @@
 package com.eagle.common.constant;
 
 /**
- * 权限相关通用常量
+ * 安全相关通用常量。
  *
- * @author sunshixoing
+ * <p>统一定义 OAuth2 端点路径和 JWT Claims 字段名，供授权服务器与资源服务器共享使用。
+ *
+ * @author sunshixiong
  */
-public class SecurityConstants {
-    /**
-     * oauth 认证端点
-     */
+public final class SecurityConstants {
+
+    private SecurityConstants() {
+    }
+
+    /** OAuth2 授权端点 */
     public static final String AUTH_AUTHORIZE = "/oauth2/authorize";
-    /**
-     * 授权token url
-     */
+
+    /** OAuth2 Token 端点 */
     public static final String AUTH_TOKEN = "/oauth2/token";
-    /**
-     * 注销token url
-     */
+
+    /** 注销端点 */
     public static final String TOKEN_LOGOUT = "/login?logout";
 
-    /**
-     * 权限开始
-     */
+    /** Spring Security 角色前缀 */
     public static final String ROLE_START = "ROLE_";
 
-    /**
-     * 用户ID字段
-     */
+    /** JWT Claim：用户 ID */
     public static final String DETAILS_USER_ID = "id";
 
-    /**
-     * 权限
-     */
+    /** JWT Claim：角色列表 */
     public static final String DETAILS_ROLES = "roles";
 
-    /**
-     * 登录名
-     */
+    /** JWT Claim：登录名 */
     public static final String DETAILS_USERNAME = "loginName";
-    /**
-     * 用户名称
-     */
+
+    /** JWT Claim：用户姓名 */
     public static final String DETAILS_USER_NAME = "userName";
 
-    /**
-     * 电话
-     */
+    /** JWT Claim：手机号 */
     public static final String DETAILS_PHONE = "phone";
-    /**
-     * 部门ID
-     */
-    public static final String DETAILS_DEP_ID = "depId";
-    /**
-     * 部门名称
-     */
-    public static final String DETAILS_DEP_NAME = "depName";
+
+    /** JWT Claim：部门 ID */
+    public static final String DETAILS_DEPT_ID = "depId";
+
+    /** JWT Claim：部门名称 */
+    public static final String DETAILS_DEPT_NAME = "depName";
 }

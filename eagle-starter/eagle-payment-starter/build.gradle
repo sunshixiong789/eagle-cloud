@@ -1,0 +1,9 @@
+dependencies {
+    api project(':eagle-starter:eagle-common-starter')
+    compileOnly 'com.alipay.sdk:alipay-sdk-java:4.39.221.ALL'
+    compileOnly 'com.github.wechatpay-apiv3:wechatpay-java:0.2.14'
+    api 'org.springframework.boot:spring-boot-starter-web'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+}

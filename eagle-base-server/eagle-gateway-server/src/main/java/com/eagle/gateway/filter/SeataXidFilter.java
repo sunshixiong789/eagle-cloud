@@ -37,6 +37,7 @@ public class SeataXidFilter implements GlobalFilter, Ordered {
 
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 100;
+        // 必须在 JwtAuthenticationGlobalFilter（HIGHEST_PRECEDENCE + 100）之前执行，确保 XID 先就位
+        return Ordered.HIGHEST_PRECEDENCE + 99;
     }
 }

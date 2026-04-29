@@ -69,7 +69,7 @@ public class MessageProperties {
     @Data
     public static class Template {
         /**
-         * 主题（用于邮件）。
+         * 主题（用于邮件），支持 ${key} 占位符。
          */
         private String subject = "";
 
@@ -77,5 +77,12 @@ public class MessageProperties {
          * 模板内容，支持 ${key} 占位符。
          */
         private String content = "";
+
+        /**
+         * 阿里云 SMS 模板 ID（如 {@code SMS_123456789}）。
+         * <p>仅 SMS 渠道使用。阿里云在服务端完成渲染，应用层只需传递参数，
+         * 该字段与应用层 templateCode 不同，需与阿里云控制台保持一致。
+         */
+        private String smsTemplateId = "";
     }
 }

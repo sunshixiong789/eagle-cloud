@@ -53,19 +53,24 @@ public class LoginAttemptService {
     /**
      * 判断该 IP 是否已被封锁
      *
+     * <p>使用 {@code compute} 保证读-判-删三步原子执行，避免并发场景下的 TOCTOU 竞态。
+     *
      * @param ip 客户端 IP 地址
      * @return true 表示已超过失败阈值，应拒绝请求
      */
     public boolean isBlocked(String ip) {
-        long[] entry = cache.get(ip);
-        if (entry == null) {
-            return false;
-        }
-        // 过期则自动清除
-        if (System.currentTimeMillis() > entry[1]) {
-            cache.remove(ip);
-            return false;
-        }
-        return entry[0] >= MAX_ATTEMPTS;
+        long[] result = new long[]{0};
+        cache.compute(ip, (key, entry) -> {
+            if (entry == null) {
+                return null;
+            }
+            // 已过期则原子清除，返回 null 触发移除
+            if (System.currentTimeMillis() > entry[1]) {
+                return null;
+            }
+            result[0] = entry[0];
+            return entry;
+        });
+        return result[0] >= MAX_ATTEMPTS;
     }
 }

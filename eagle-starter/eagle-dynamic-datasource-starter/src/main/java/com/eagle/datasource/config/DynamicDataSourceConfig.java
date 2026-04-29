@@ -37,6 +37,7 @@ public class DynamicDataSourceConfig {
     @Bean
     @Primary
     public DataSource dataSource() {
+        validateDataSourceProperties();
         DataSource master = buildDataSource(properties.getMaster(), "master");
         DataSource slave = buildDataSource(properties.getSlave(), "slave");
 
@@ -50,6 +51,22 @@ public class DynamicDataSourceConfig {
         log.info("Dynamic datasource initialized, master: {}, slave: {}",
                 properties.getMaster().getUrl(), properties.getSlave().getUrl());
         return dynamicDataSource;
+    }
+
+    /**
+     * 启动时快速失败：配置不完整时立即抛出异常，而非在运行时随机 NPE。
+     */
+    private void validateDataSourceProperties() {
+        DataSourceProperties.SingleDataSource master = properties.getMaster();
+        DataSourceProperties.SingleDataSource slave = properties.getSlave();
+        if (master == null || master.getUrl() == null || master.getUrl().isBlank()) {
+            throw new IllegalStateException(
+                    "Dynamic datasource master URL must be configured (eagle.datasource.master.url)");
+        }
+        if (slave == null || slave.getUrl() == null || slave.getUrl().isBlank()) {
+            throw new IllegalStateException(
+                    "Dynamic datasource slave URL must be configured (eagle.datasource.slave.url)");
+        }
     }
 
     private DataSource buildDataSource(DataSourceProperties.SingleDataSource config, String name) {

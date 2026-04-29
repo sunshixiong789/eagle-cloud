@@ -3,55 +3,39 @@ package com.eagle.common.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.LocaleResolver;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
-import org.springframework.web.servlet.i18n.SessionLocaleResolver;
+import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 
+import java.util.List;
 import java.util.Locale;
 
 /**
- * 国际化配置
- * <p>
- * 配置国际化消息源和语言切换拦截器。
- * 支持通过请求参数（lang）动态切换语言。
+ * 国际化配置。
  *
- * @author 孙士雄（sunshix@seeyon.com）
+ * <p>使用 {@link AcceptHeaderLocaleResolver}，从请求头 {@code Accept-Language} 中解析语言环境。
+ * 无状态、无 Session 依赖，适合 REST API 和无状态微服务架构。
+ *
+ * <p>支持中文（简体/繁体）和英语，未匹配时默认使用简体中文。
+ *
+ * @author 孙士雄
  */
 @Configuration
-public class I18nConfig implements WebMvcConfigurer {
+public class I18nConfig {
 
     /**
-     * 配置语言解析器
-     * <p>
-     * 使用 Session 存储用户选择的语言
+     * 无状态 Accept-Language 语言解析器。
+     *
+     * <p>客户端通过请求头 {@code Accept-Language: zh-CN} 或 {@code en-US} 切换语言。
+     * 未携带或未匹配时，回退到 {@link Locale#SIMPLIFIED_CHINESE}。
      */
     @Bean
     public LocaleResolver localeResolver() {
-        SessionLocaleResolver localeResolver = new SessionLocaleResolver();
-        // 设置默认语言为中文
+        AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver();
         localeResolver.setDefaultLocale(Locale.SIMPLIFIED_CHINESE);
+        localeResolver.setSupportedLocales(List.of(
+                Locale.SIMPLIFIED_CHINESE,
+                Locale.TRADITIONAL_CHINESE,
+                Locale.ENGLISH
+        ));
         return localeResolver;
-    }
-
-    /**
-     * 配置语言切换拦截器
-     * <p>
-     * 通过请求参数 lang 切换语言，例如：?lang=zh_CN 或 ?lang=en
-     */
-    @Bean
-    public LocaleChangeInterceptor localeChangeInterceptor() {
-        LocaleChangeInterceptor interceptor = new LocaleChangeInterceptor();
-        // 设置请求参数名
-        interceptor.setParamName("lang");
-        return interceptor;
-    }
-
-    /**
-     * 注册拦截器
-     */
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(localeChangeInterceptor());
     }
 }

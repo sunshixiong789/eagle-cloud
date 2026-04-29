@@ -3,6 +3,7 @@ package com.eagle.message.channel;
 import com.eagle.message.dto.MessageDTO;
 import com.eagle.message.enums.MessageChannelType;
 import com.eagle.message.properties.MessageProperties;
+import com.eagle.message.template.MessageTemplateEngine;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,9 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 /**
  * 邮件发送渠道。
  *
+ * <p>使用 {@link MessageTemplateEngine} 渲染邮件正文和主题，
+ * 主题中的 {@code ${key}} 占位符同样会被替换。
+ *
  * @author 孙士雄
  */
 @Slf4j
@@ -20,6 +24,7 @@ public class EmailMessageChannel implements MessageChannel {
 
     private final JavaMailSender mailSender;
     private final MessageProperties properties;
+    private final MessageTemplateEngine templateEngine;
 
     @Override
     public boolean supports(MessageChannelType channelType) {
@@ -28,8 +33,8 @@ public class EmailMessageChannel implements MessageChannel {
 
     @Override
     public void send(MessageDTO message, String renderedContent) {
-        MessageProperties.Template template = properties.getTemplates().get(message.templateCode());
-        String subject = template != null ? template.getSubject() : "";
+        // 主题同样需要走模板引擎渲染，支持 ${key} 占位符
+        String subject = templateEngine.renderSubject(message.templateCode(), message.params());
 
         for (String to : message.recipients()) {
             try {
@@ -42,7 +47,7 @@ public class EmailMessageChannel implements MessageChannel {
                 mailSender.send(mimeMessage);
                 log.info("Email sent to {}", to);
             } catch (Exception e) {
-                log.error("Email send error: to={}, error={}", to, e.getMessage(), e);
+                log.error("Email send error: to={}", to, e);
             }
         }
     }

@@ -39,6 +39,7 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
     private static final String USER_ID_HEADER = "X-User-Id";
     private static final String USERNAME_HEADER = "X-Username";
     private static final String ROLES_HEADER = "X-Roles";
+    private static final String TENANT_ID_HEADER = "X-Tenant-Id";
 
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
@@ -98,12 +99,11 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
     private ServerHttpRequest buildRequestWithUserInfo(
             ServerHttpRequest request,
             org.springframework.security.oauth2.jwt.Jwt jwt) {
-        Long userId = jwt.getClaimAsString("id") != null
-                ? Long.valueOf(jwt.getClaimAsString("id"))
-                : null;
+        Long userId = parseUserId(jwt.getClaimAsString("id"));
         String username = jwt.getClaimAsString("userName");
         @SuppressWarnings("unchecked")
         List<String> roles = jwt.getClaimAsStringList("roles");
+        String tenantId = jwt.getClaimAsString("tenantId");
 
         ServerHttpRequest.Builder builder = request.mutate();
         if (userId != null) {
@@ -115,7 +115,31 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
         if (!CollectionUtils.isEmpty(roles)) {
             builder.header(ROLES_HEADER, String.join(",", roles));
         }
+        // 优先从 JWT claim 提取租户 ID，其次透传请求头（内网服务间调用场景）
+        if (StringUtils.hasText(tenantId)) {
+            builder.header(TENANT_ID_HEADER, tenantId);
+        } else {
+            String requestTenantId = request.getHeaders().getFirst(TENANT_ID_HEADER);
+            if (StringUtils.hasText(requestTenantId)) {
+                builder.header(TENANT_ID_HEADER, requestTenantId);
+            }
+        }
         return builder.build();
+    }
+
+    /**
+     * 安全解析 JWT 中的用户 ID，避免格式非法时抛出 NumberFormatException。
+     */
+    private Long parseUserId(String userIdStr) {
+        if (!StringUtils.hasText(userIdStr)) {
+            return null;
+        }
+        try {
+            return Long.valueOf(userIdStr);
+        } catch (NumberFormatException e) {
+            log.warn("Invalid user id claim in JWT: {}", userIdStr);
+            return null;
+        }
     }
 
     /**

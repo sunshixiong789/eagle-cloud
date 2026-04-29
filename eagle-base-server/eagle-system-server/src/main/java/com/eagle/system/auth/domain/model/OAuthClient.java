@@ -1,6 +1,6 @@
 package com.eagle.system.auth.domain.model;
 
-import com.eagle.common.base.BaseEntity;
+import com.eagle.common.base.BaseAggregateRoot;
 import com.eagle.system.common.exception.AuthErrorCode;
 import com.eagle.common.exception.DomainException;
 import jakarta.persistence.Column;
@@ -33,7 +33,7 @@ import java.time.Instant;
 @Table(name = "oauth2_client", comment = "OAuth2 客户端表", indexes = {
         @Index(name = "idx_client_id", columnList = "client_id", unique = true)
 })
-public class OAuthClient extends BaseEntity {
+public class OAuthClient extends BaseAggregateRoot<OAuthClient> {
 
     @Column(name = "client_id", nullable = false, unique = true, length = 100, comment = "客户端 ID")
     private String clientId;
