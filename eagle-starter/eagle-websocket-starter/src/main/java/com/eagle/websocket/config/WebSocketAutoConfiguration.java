@@ -2,6 +2,7 @@ package com.eagle.websocket.config;
 
 import com.eagle.websocket.interceptor.WebSocketAuthHandshakeInterceptor;
 import com.eagle.websocket.interceptor.WebSocketChannelInterceptor;
+import com.eagle.websocket.listener.WebSocketEventListener;
 import com.eagle.websocket.metrics.WebSocketMetrics;
 import com.eagle.websocket.offline.OfflineMessageStore;
 import com.eagle.websocket.offline.RedisOfflineMessageStore;
@@ -147,6 +148,22 @@ public class WebSocketAutoConfiguration {
         @ConditionalOnMissingBean
         public WebSocketMetrics webSocketMetrics(MeterRegistry registry) {
             return new WebSocketMetrics(registry);
+        }
+    }
+
+    /**
+     * WebSocket 会话生命周期事件监听器配置。
+     *
+     * <p>监听 STOMP 连接 / 断开事件，记录日志并更新指标（指标可选）。
+     */
+    @Configuration(proxyBeanMethods = false)
+    static class EventListenerConfiguration {
+
+        @Bean
+        @ConditionalOnMissingBean
+        public WebSocketEventListener webSocketEventListener(
+                ObjectProvider<WebSocketMetrics> metricsProvider) {
+            return new WebSocketEventListener(metricsProvider.getIfAvailable());
         }
     }
 }

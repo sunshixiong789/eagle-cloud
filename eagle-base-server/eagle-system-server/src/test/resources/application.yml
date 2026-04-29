@@ -1,0 +1,15 @@
+spring:
+  profiles:
+    active: local
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+
+eagle:
+  jwt:
+    keystore-location: classpath:jwt-keystore.p12
+    keystore-password: eagle-jwt-test-2026
+    key-alias: eagle-jwt

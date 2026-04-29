@@ -1,4 +1,4 @@
-package com.eagle.system.config;
+package com.eagle.system.auth.infrastructure.config;
 
 import com.eagle.common.constant.SecurityConstants;
 import com.eagle.common.dto.EagleUser;

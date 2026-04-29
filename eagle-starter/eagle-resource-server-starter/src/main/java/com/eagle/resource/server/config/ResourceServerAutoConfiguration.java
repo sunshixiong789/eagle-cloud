@@ -1,5 +1,6 @@
 package com.eagle.resource.server.config;
 
+import com.eagle.openapi.config.EagleOpenApiAutoConfiguration;
 import com.eagle.resource.server.properties.ResourceServerProperties;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -24,7 +25,7 @@ import org.springframework.security.web.SecurityFilterChain;
  *
  * @author 孙士雄
  */
-@AutoConfiguration
+@AutoConfiguration(before = EagleOpenApiAutoConfiguration.class)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnClass(SecurityFilterChain.class)
 @EnableConfigurationProperties(ResourceServerProperties.class)

@@ -1,13 +1,10 @@
-package com.eagle.system.config;
+package com.eagle.websocket.listener;
 
 import com.eagle.websocket.metrics.WebSocketMetrics;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
-import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
@@ -20,28 +17,22 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
  *   <li>驱动 {@link WebSocketMetrics} 更新在线连接数指标（可选，Micrometer 不存在时自动跳过）</li>
  * </ul>
  *
- * <p>将会话事件从 {@link com.eagle.system.base.web.controller.ChatController} 中剥离，
- * 遵循单一职责原则——消息控制器只处理业务消息，连接管理由本类负责。
+ * <p>由 {@code eagle-websocket-starter} 自动注册，消费方无需手动声明。
  *
  * @author 孙士雄
  */
 @Slf4j
-@Component
 public class WebSocketEventListener {
 
-    /** 可选，未引入 Micrometer 时为 null */
     @Nullable
     private final WebSocketMetrics webSocketMetrics;
 
-    @Autowired
     public WebSocketEventListener(@Nullable WebSocketMetrics webSocketMetrics) {
         this.webSocketMetrics = webSocketMetrics;
     }
 
     /**
      * 处理 STOMP 连接建立事件。
-     *
-     * @param event 连接事件
      */
     @EventListener
     public void onSessionConnected(SessionConnectedEvent event) {
@@ -54,8 +45,6 @@ public class WebSocketEventListener {
 
     /**
      * 处理 STOMP 连接断开事件。
-     *
-     * @param event 断开事件
      */
     @EventListener
     public void onSessionDisconnected(SessionDisconnectEvent event) {
