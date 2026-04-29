@@ -1,10 +1,9 @@
 package com.eagle.gateway.handler;
 
 import com.eagle.common.dto.ErrorResult;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
@@ -59,7 +58,7 @@ public class GatewayWebExceptionHandler implements WebExceptionHandler {
         byte[] bytes;
         try {
             bytes = objectMapper.writeValueAsBytes(body);
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             bytes = "{}".getBytes(StandardCharsets.UTF_8);
         }
 

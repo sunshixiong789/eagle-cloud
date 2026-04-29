@@ -23,7 +23,7 @@ import java.util.Collection;
  * @author 孙士雄
  * @see EagleJwtAuthenticationConverter
  */
-public class EagleAuthentication extends AbstractAuthenticationToken {
+public final class EagleAuthentication extends AbstractAuthenticationToken {
 
     @Serial
     private static final long serialVersionUID = 1L;

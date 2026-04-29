@@ -59,7 +59,7 @@ ext {
     set('mybatisPlusVersion', '3.5.16')
 
     // 支付 SDK
-    set('alipayVersion', '4.39.221.ALL')
+    set('alipayVersion', '4.40.771.ALL')
     set('wechatpayVersion', '0.2.14')
 
     // 序列化
