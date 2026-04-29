@@ -2,6 +2,7 @@ package com.eagle.resource.server.config;
 
 import com.eagle.resource.server.properties.ResourceServerProperties;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -57,6 +58,7 @@ public class ResourceServerSecurityConfig {
      * @return SecurityFilterChain
      */
     @Bean
+    @ConditionalOnMissingBean(SecurityFilterChain.class)
     public SecurityFilterChain resourceServerSecurityFilterChain(
             HttpSecurity http,
             EagleJwtAuthenticationConverter eagleJwtAuthenticationConverter) throws Exception {

@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -21,6 +22,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
@@ -48,6 +50,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @EnableConfigurationProperties(WebSocketProperties.class)
 @ConditionalOnProperty(name = "eagle.websocket.enabled", havingValue = "true", matchIfMissing = true)
+@Import(EagleWebSocketConfig.class)
 public class WebSocketAutoConfiguration {
 
     /**
@@ -57,17 +60,6 @@ public class WebSocketAutoConfiguration {
     @ConditionalOnMissingBean
     public WebSocketAuthHandshakeInterceptor webSocketAuthHandshakeInterceptor() {
         return new WebSocketAuthHandshakeInterceptor();
-    }
-
-    /**
-     * STOMP WebSocket 消息代理配置（端点注册 + 代理前缀 + 心跳）。
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public EagleWebSocketConfig eagleWebSocketConfig(WebSocketProperties properties,
-                                                     WebSocketAuthHandshakeInterceptor interceptor) {
-        log.info("[Eagle WebSocket] STOMP endpoint: {}", properties.getEndpoint());
-        return new EagleWebSocketConfig(properties, interceptor);
     }
 
     /**
@@ -112,6 +104,7 @@ public class WebSocketAutoConfiguration {
      */
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(RedissonClient.class)
+    @ConditionalOnBean(RedissonClient.class)
     static class OfflineMessageConfiguration {
 
         /**

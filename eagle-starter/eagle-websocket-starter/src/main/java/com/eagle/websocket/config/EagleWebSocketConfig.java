@@ -3,6 +3,7 @@ package com.eagle.websocket.config;
 import com.eagle.websocket.interceptor.WebSocketAuthHandshakeInterceptor;
 import com.eagle.websocket.properties.WebSocketProperties;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -12,10 +13,11 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
  * STOMP WebSocket 消息代理配置。
  *
  * <p>注册 STOMP 端点、配置消息代理前缀和心跳间隔。
- * 由 {@link WebSocketAutoConfiguration} 实例化，属性来自 {@link WebSocketProperties}。
+ * 由 {@link WebSocketAutoConfiguration} 导入，属性来自 {@link WebSocketProperties}。
  *
  * @author 孙士雄
  */
+@Configuration
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
 public class EagleWebSocketConfig implements WebSocketMessageBrokerConfigurer {
