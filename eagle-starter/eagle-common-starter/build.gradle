@@ -11,4 +11,8 @@ dependencies {
     api 'org.apache.tomcat.embed:tomcat-embed-core'
     api 'com.google.guava:guava'
     api "com.alibaba.fastjson2:fastjson2"
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'io.micrometer:micrometer-core'
 }

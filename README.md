@@ -2,7 +2,7 @@
 
 基于 **DDD（领域驱动设计）+ 六边形架构 + Spring Modulith** 构建的 Spring Boot 模块化单体平台，为微服务拆分就绪。
 
-内置完整的 **OAuth2 授权服务器**、**RBAC 权限管理**、**多种第三方登录**（微信小程序 / PC 扫码 / H5 / 短信验证码），以及面向**互联网高并发电商**的全套基础设施，开箱即用。
+内置完整的 **OAuth2 授权服务器**、**RBAC 权限管理**、**多种第三方登录**（微信小程序 / PC 扫码 / H5 / 短信验证码），以及面向**互联网高并发**的全套基础设施，开箱即用。
 
 ## 特性
 
@@ -81,7 +81,7 @@ eagle-cloud/
     ├── eagle-xxl-job-starter/              # 分布式定时任务（XXL-JOB）
     ├── eagle-message-starter/              # 多渠道消息推送（阿里云 SMS / Spring Mail）
     │
-    │   # ── 高并发电商 ────────────────────────────────────────────────
+    │   # ── 高并发 ────────────────────────────────────────────────
     ├── eagle-idempotency-starter/          # 接口幂等（TOKEN / BUSINESS_KEY / RESULT_CACHE 三模式）
     ├── eagle-id-generator-starter/         # 分布式 ID（Snowflake / UUID / 号段 + 订单号语义生成）
     ├── eagle-sentinel-starter/             # 流量治理（@RateLimit 注解 + 规则动态管理）
@@ -122,7 +122,7 @@ eagle-cloud/
 
 依赖方向（单向）：`web → application → domain ← infrastructure`
 
-## 高并发电商 Starter 使用说明
+## 高并发 Starter 使用说明
 
 ### eagle-idempotency-starter — 接口幂等
 
