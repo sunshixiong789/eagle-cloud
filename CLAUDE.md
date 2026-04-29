@@ -85,48 +85,16 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 - auth → base 通过领域事件（`AccountRegisteredEvent` 等，放在 `auth/domain/event/`，通过 `@NamedInterface("event")` 暴露）异步解耦
 - config 通过 Named Interface `auth::security` 引用安全组件装配过滤链
 
-## DDD 分层架构（当前实现）
+## DDD 分层架构
 
-每个业务模块（auth、base）内部结构：
+每个业务模块内部遵循 `web / application / domain / infrastructure` 四层，依赖方向：`web → application → domain ← infrastructure`。完整分层结构和规范见 `.claude/rules/02-architecture.md`。
 
-```
-{module}/
-├── web/                    # 表现层
-│   ├── controller/         # REST 控制器（@PreAuthorize 必须显式声明）
-│   └── dto/                # 请求/响应 DTO（Bean Validation）
-├── application/            # 应用层
-│   ├── service/            # 应用服务（用例编排、事务边界）
-│   └── mapper/             # MapStruct DTO ↔ 领域对象
-├── domain/                 # 领域层（纯业务，无框架依赖）
-│   ├── model/              # 聚合根(aggregate/)、子实体(entity/)、值对象(valueobject/)、枚举(enums/)
-│   ├── repository/         # Repository 接口 + 投影接口（CQRS）
-│   ├── service/            # 领域服务接口
-│   ├── port/               # Driven Port 接口（六边形出站端口）
-│   └── event/              # 领域事件
-└── infrastructure/         # 基础设施层
-    ├── persistence/        # Repository 实现
-    ├── adapter/            # Driven Port 适配器实现
-    ├── security/           # 安全适配器（Named Interface 暴露给 config）
-    ├── service/            # 领域服务实现
-    ├── event/              # 事件分发器（domain → integration）
-    ├── config/             # 技术配置（Properties）
-    └── schedule/           # 定时任务
-```
+## 关键基类
 
-**分层依赖方向（单向）：** `web → application → domain ← infrastructure`
-
-## 关键基类与异常体系
-
-**基类（eagle-common-starter）：**
-- `BaseAggregateRoot<T>` — 聚合根基类：ID (IDENTITY)、审计字段、`@Version` 乐观锁、`registerEvent()` 事件能力
-- `BaseEntity` — 非聚合子实体基类：相同审计字段和乐观锁，无事件能力
-- `BaseEvent` — 领域事件基类：time-ordered UUID `eventId` + `occurredOn` 时间戳
-
-**异常体系：** `ErrorCode` 接口 → 各域枚举实现（`toNotFoundException()` / `toDomainException()` / `toConflictException()` / `toServiceException()`）
-
-ErrorCode 枚举位置：
-- 通用：`com.eagle.common.exception.codes/` — CommonErrorCode、DataErrorCode、FileErrorCode、OperationErrorCode、ExternalErrorCode
-- 系统域：`com.eagle.system.common.exception/` — UserErrorCode、SystemErrorCode、AuthErrorCode
+- `BaseAggregateRoot<T>` — 聚合根：ID (IDENTITY)、审计字段、`@Version` 乐观锁、`registerEvent()` 事件能力
+- `BaseEntity` — 子实体：审计字段 + 乐观锁，无事件能力
+- `BaseEvent` — 领域事件：time-ordered UUID `eventId` + `occurredOn`
+- `ErrorCode` 接口 → 各域枚举实现（`toNotFoundException()` / `toDomainException()` / `toConflictException()` / `toServiceException()`）
 
 ## Gradle 配置要点
 

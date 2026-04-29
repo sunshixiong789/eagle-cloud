@@ -30,6 +30,11 @@
 
 - 新增模块的 `package-info.java` 必须添加 JSpecify `@NullMarked` 注解，声明包级空安全
 
+**配置注入：**
+
+- **禁止 `@Value`**，统一使用 `@ConfigurationProperties(prefix = "eagle.xxx")` 类型安全绑定
+- Properties 类放在 `infrastructure/config/` 下，通过 `@RequiredArgsConstructor` 构造器注入
+
 **其他：**
 
 - 禁止使用原始类型（Raw Types），如 `List` 应写 `List<String>`

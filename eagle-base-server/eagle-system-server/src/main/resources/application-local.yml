@@ -49,6 +49,8 @@ management:
 # 以下配置可通过环境变量覆盖，本地开发时可为空
 # ===========================================
 eagle:
+  admin:
+    password: ${EAGLE_ADMIN_PASSWORD:localDev@2026}  # 本地开发默认密码
   # 微信小程序配置（可选）
   wechat:
     mini-program:

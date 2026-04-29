@@ -2,6 +2,7 @@ package com.eagle.system.config;
 
 import com.eagle.common.constant.SecurityConstants;
 import com.eagle.common.dto.EagleUser;
+import com.eagle.system.auth.infrastructure.config.JwtKeyProperties;
 import com.eagle.system.auth.infrastructure.security.BlacklistAwareJwtDecoder;
 import com.eagle.system.auth.infrastructure.security.EagleUserAuthenticationToken;
 import com.eagle.system.auth.infrastructure.security.LoginRateLimitFilter;
@@ -16,6 +17,7 @@ import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,14 +57,10 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
+import java.io.InputStream;
+import java.security.KeyStore;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.eagle.common.constant.SecurityConstants.DETAILS_ROLES;
@@ -70,6 +68,7 @@ import static com.eagle.common.constant.SecurityConstants.DETAILS_ROLES;
 /**
  * @author 孙士雄 15:24
  */
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true)
@@ -77,6 +76,7 @@ import static com.eagle.common.constant.SecurityConstants.DETAILS_ROLES;
 public class SecurityConfig {
 
     private final LoginRateLimitFilter loginRateLimitFilter;
+    private final JwtKeyProperties jwtKeyProperties;
 
     @Bean
     public SecurityContextRepository securityContextRepository() {
@@ -220,19 +220,24 @@ public class SecurityConfig {
         return source;
     }
 
+    /**
+     * 从 PKCS12 密钥库加载 RSA 密钥对
+     * <p>
+     * 密钥持久化后，服务重启不会导致已签发的 JWT 失效；
+     * 多实例部署时所有实例共享同一密钥对，Token 互相认可。
+     *
+     * @return JWKSource
+     */
     @Bean
-    public JWKSource<SecurityContext> jwkSource() throws NoSuchAlgorithmException {
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-        keyPairGenerator.initialize(2048);
-        KeyPair keyPair = keyPairGenerator.generateKeyPair();
-        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
-        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-        RSAKey rsaKey = new RSAKey.Builder(publicKey)
-                .privateKey(privateKey)
-                .keyID(UUID.randomUUID().toString())
-                .build();
-        JWKSet jwkSet = new JWKSet(rsaKey);
-        return new ImmutableJWKSet<>(jwkSet);
+    public JWKSource<SecurityContext> jwkSource() throws Exception {
+        KeyStore keyStore = KeyStore.getInstance("PKCS12");
+        char[] password = jwtKeyProperties.getKeystorePassword().toCharArray();
+        try (InputStream is = jwtKeyProperties.getKeystoreLocation().getInputStream()) {
+            keyStore.load(is, password);
+        }
+        RSAKey rsaKey = RSAKey.load(keyStore, jwtKeyProperties.getKeyAlias(), password);
+        log.info("JWT 签名密钥加载完成，alias: {}", jwtKeyProperties.getKeyAlias());
+        return new ImmutableJWKSet<>(new JWKSet(rsaKey));
     }
 
     @Bean
