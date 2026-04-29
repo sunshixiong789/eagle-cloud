@@ -6,8 +6,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,7 +18,10 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 /**
- * DTO for {@link BaseEntity}
+ * 聚合内子实体基类。
+ *
+ * <p>提供审计字段（创建人/更新人/时间）和乐观锁，无领域事件能力。
+ * 子实体没有独立的 Repository，必须通过聚合根的业务方法进行增删改，由聚合根级联管理。
  *
  * @author sunshixiong
  */
@@ -54,14 +55,4 @@ public abstract class BaseEntity {
     @Version
     @Column(comment = "乐观锁版本号")
     private Long version;
-
-    @PrePersist
-    @PreUpdate
-    protected void onUpdateTimestamp() {
-        if (createTime == null) {
-            createTime = LocalDateTime.now();
-        }
-        updateTime = LocalDateTime.now();
-    }
-
 }

@@ -1,58 +1,54 @@
 package com.eagle.tenant.aspect;
 
 import com.eagle.tenant.TenantContextHolder;
-import com.eagle.tenant.annotation.TenantFilter;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.hibernate.Filter;
 import org.hibernate.Session;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 /**
  * COLUMN 模式租户过滤器切面。
  *
- * <p>拦截 {@link TenantFilter} 注解的方法，在 Hibernate Session 中启用 {@code tenantFilter}。
+ * <p>拦截被 {@link com.eagle.tenant.annotation.TenantFilter} 注解标记的方法或类，
+ * 在 Hibernate Session 中启用 {@code tenantFilter} 过滤器。
+ *
+ * <p>若实体未定义 {@code @FilterDef(name = "tenantFilter")}，Hibernate 将抛出异常并快速失败，
+ * 避免在无租户隔离的情况下静默执行查询。
  *
  * @author 孙士雄
  */
 @Slf4j
 @Aspect
-@Component
-@ConditionalOnProperty(prefix = "eagle.tenant", name = "mode", havingValue = "column")
+@RequiredArgsConstructor
 public class TenantFilterAspect {
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
 
-    @Around("@annotation(tenantFilter)")
-    public Object around(ProceedingJoinPoint point, TenantFilter tenantFilter) throws Throwable {
+    /**
+     * 同时支持方法级和类级 {@code @TenantFilter} 注解。
+     */
+    @Around("@annotation(com.eagle.tenant.annotation.TenantFilter)"
+            + " || @within(com.eagle.tenant.annotation.TenantFilter)")
+    public Object around(ProceedingJoinPoint point) throws Throwable {
         String tenantId = TenantContextHolder.getTenantId();
-        if (tenantId == null || tenantId.isEmpty()) {
+        if (tenantId == null || tenantId.isBlank()) {
             return point.proceed();
         }
 
         Session session = entityManager.unwrap(Session.class);
-        Filter filter = null;
-        try {
-            filter = session.enableFilter("tenantFilter");
-            filter.setParameter("tenantId", tenantId);
-            log.debug("Tenant filter enabled: tenantId={}", tenantId);
-        } catch (Exception e) {
-            log.warn("Failed to enable tenant filter, ensure @FilterDef(name=\"tenantFilter\") is defined on entity", e);
-        }
-
+        // 若实体未定义 @FilterDef，Hibernate 会抛出 HibernateException，快速暴露配置错误
+        Filter filter = session.enableFilter("tenantFilter");
+        filter.setParameter("tenantId", tenantId);
+        log.debug("Tenant filter enabled: tenantId={}", tenantId);
         try {
             return point.proceed();
         } finally {
-            if (filter != null) {
-                session.disableFilter("tenantFilter");
-                log.debug("Tenant filter disabled");
-            }
+            session.disableFilter("tenantFilter");
+            log.debug("Tenant filter disabled");
         }
     }
 }

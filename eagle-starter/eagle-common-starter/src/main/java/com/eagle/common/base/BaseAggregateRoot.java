@@ -6,8 +6,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.Setter;
@@ -57,13 +55,4 @@ public abstract class BaseAggregateRoot<T extends AbstractAggregateRoot<T>> exte
     @Version
     @Column(comment = "乐观锁版本号")
     private Long version;
-
-    @PrePersist
-    @PreUpdate
-    protected void onUpdateTimestamp() {
-        if (createTime == null) {
-            createTime = LocalDateTime.now();
-        }
-        updateTime = LocalDateTime.now();
-    }
 }

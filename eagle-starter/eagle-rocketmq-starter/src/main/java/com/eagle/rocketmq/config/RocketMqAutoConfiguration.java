@@ -3,7 +3,11 @@ package com.eagle.rocketmq.config;
 import com.eagle.rocketmq.properties.RocketMqProperties;
 import com.eagle.rocketmq.publisher.DomainEventPublisher;
 import com.eagle.rocketmq.publisher.RocketMqDomainEventPublisher;
+import com.eagle.rocketmq.transaction.AbstractRocketMqTransactionChecker;
+import com.eagle.rocketmq.transaction.RocketMqTransactionalEventPublisher;
+import com.eagle.rocketmq.transaction.TransactionalEventPublisher;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -11,10 +15,17 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
+import java.util.List;
+
 /**
  * RocketMQ 自动配置。
  *
- * <p>提供领域事件发布能力，基于 RocketMQ 5.x 轻量客户端。
+ * <p>提供领域事件发布能力，基于 RocketMQ 5.x 轻量客户端（gRPC）。
+ * 自动注册：
+ * <ul>
+ *   <li>{@link DomainEventPublisher} — 同步、异步、延迟、顺序消息</li>
+ *   <li>{@link TransactionalEventPublisher} — 事务消息（Outbox Pattern），需要容器内有 {@link AbstractRocketMqTransactionChecker} Bean</li>
+ * </ul>
  *
  * @author 孙士雄
  */
@@ -28,7 +39,23 @@ public class RocketMqAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public DomainEventPublisher domainEventPublisher(RocketMqProperties properties) {
-        log.info("RocketMQ domain event publisher initialized, endpoints: {}", properties.getEndpoints());
+        log.info("Initializing RocketMQ domain event publisher, endpoints: {}", properties.getEndpoints());
         return new RocketMqDomainEventPublisher(properties);
+    }
+
+    /**
+     * 事务消息发布器：容器中存在 {@link AbstractRocketMqTransactionChecker} 时自动注册。
+     *
+     * <p>使用事务消息时，业务服务需继承 {@link AbstractRocketMqTransactionChecker} 并声明为 Bean，
+     * 用于 Broker 回查本地事务状态。
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public TransactionalEventPublisher transactionalEventPublisher(
+            RocketMqProperties properties,
+            ObjectProvider<AbstractRocketMqTransactionChecker> checkerProvider) {
+        List<AbstractRocketMqTransactionChecker> checkers = checkerProvider.stream().toList();
+        log.info("Initializing RocketMQ transactional event publisher, checkers: {}", checkers.size());
+        return new RocketMqTransactionalEventPublisher(properties, checkers);
     }
 }

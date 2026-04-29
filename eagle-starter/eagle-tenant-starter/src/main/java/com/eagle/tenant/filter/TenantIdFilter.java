@@ -10,10 +10,6 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
@@ -25,9 +21,6 @@ import java.io.IOException;
  * @author 孙士雄
  */
 @Slf4j
-@Component
-@Order(Ordered.HIGHEST_PRECEDENCE + 50)
-@ConditionalOnWebApplication
 @RequiredArgsConstructor
 public class TenantIdFilter implements Filter {
 
@@ -38,7 +31,7 @@ public class TenantIdFilter implements Filter {
             throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         String tenantId = httpRequest.getHeader(properties.getHeaderName());
-        if (tenantId == null || tenantId.isEmpty()) {
+        if (tenantId == null || tenantId.isBlank()) {
             tenantId = properties.getDefaultTenantId();
         }
         TenantContextHolder.setTenantId(tenantId);
