@@ -149,10 +149,10 @@ docker compose up -d
 cp .env.example .env
 ```
 
-2. 编辑 `.env` 填入实际配置：
+2. 编辑 `.env` 填入实际配置（`.env` 已在 `.gitignore` 中，不会提交）：
 
 ```properties
-# MySQL
+# MySQL（dev profile）
 DB_HOST=localhost
 DB_PORT=3306
 DB_NAME=eagle
@@ -164,11 +164,20 @@ REDIS_HOST=127.0.0.1
 REDIS_PORT=6379
 REDIS_PASSWORD=
 
-# 第三方服务（可选）
+# Nacos
+NACOS_SERVER_ADDR=localhost:8848
+NACOS_NAMESPACE=
+NACOS_GROUP=DEFAULT_GROUP
+
+# 微信小程序（可选）
 WECHAT_MINI_APP_ID=
 WECHAT_MINI_APP_SECRET=
+
+# 阿里云短信（可选）
 ALIYUN_SMS_ACCESS_KEY_ID=
 ALIYUN_SMS_ACCESS_KEY_SECRET=
+ALIYUN_SMS_SIGN_NAME=
+ALIYUN_SMS_TEMPLATE_CODE=
 ```
 
 3. 以 dev profile 启动：
@@ -189,6 +198,75 @@ gradle :eagle-base-server:eagle-gateway-server:bootRun
 网关地址：http://localhost:8080
 
 ## 配置说明
+
+### 环境变量（.env）
+
+项目使用 `.env` 文件管理本地敏感配置，避免将密码、密钥等信息提交到版本库。
+
+**文件说明：**
+
+| 文件 | 用途 | 是否提交 Git |
+|------|------|------------|
+| `.env.example` | 变量模板，列出所有可用变量及默认值 | ✅ 提交（安全占位值）|
+| `.env` | 本地实际配置，填入真实密码/密钥 | ❌ 已在 `.gitignore` 中忽略 |
+
+**初始化步骤：**
+
+```bash
+cp .env.example .env   # 首次克隆后执行一次
+```
+
+**完整变量列表：**
+
+```properties
+# ── MySQL（dev profile 使用）────────────────────────
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=eagle
+DB_USERNAME=root
+DB_PASSWORD=
+
+# ── Redis ────────────────────────────────────────────
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+REDIS_PASSWORD=
+
+# ── H2（local profile 使用）─────────────────────────
+H2_DB_PATH=./db/eagle
+H2_DB_USERNAME=root
+H2_DB_PASSWORD=123456
+
+# ── 微信小程序（可选）────────────────────────────────
+WECHAT_MINI_APP_ID=
+WECHAT_MINI_APP_SECRET=
+
+# ── 微信 PC 扫码登录（可选）──────────────────────────
+WECHAT_WEB_APP_ID=
+WECHAT_WEB_APP_SECRET=
+WECHAT_WEB_REDIRECT_URI=http://localhost/login/wechat/pc/callback
+
+# ── 微信 H5 公众号登录（可选）────────────────────────
+WECHAT_MP_APP_ID=
+WECHAT_MP_APP_SECRET=
+WECHAT_MP_REDIRECT_URI=http://localhost/login/wechat/h5/callback
+
+# ── 阿里云短信服务（可选）────────────────────────────
+ALIYUN_SMS_ACCESS_KEY_ID=
+ALIYUN_SMS_ACCESS_KEY_SECRET=
+ALIYUN_SMS_SIGN_NAME=
+ALIYUN_SMS_TEMPLATE_CODE=
+
+# ── 管理员账户（可选，默认 admin/123456）──────────────
+EAGLE_ADMIN_PASSWORD=123456
+
+# ── 基础设施服务（可选）──────────────────────────────
+NACOS_SERVER_ADDR=localhost:8848
+NACOS_NAMESPACE=
+NACOS_GROUP=DEFAULT_GROUP
+SENTINEL_DASHBOARD=localhost:8858
+```
+
+> **注意：** `.env` 仅在本地开发时由 IDE / IntelliJ 的 [EnvFile 插件](https://plugins.jetbrains.com/plugin/7861-envfile) 或 `--env-file` 参数加载。Docker Compose 会自动读取同目录下的 `.env` 文件。生产环境通过 Kubernetes Secret / 容器编排平台的环境变量注入，**不使用** `.env` 文件。
 
 ### Profile 配置
 

@@ -4,10 +4,16 @@
 
 server:
   port: 8080
+  # 优雅关闭：等待正在处理的请求完成后再退出（配合 spring.lifecycle.timeout-per-shutdown-phase）
+  shutdown: graceful
 
 spring:
   application:
     name: eagle-gateway-server
+
+  lifecycle:
+    # 优雅关闭最长等待时间，超时后强制退出
+    timeout-per-shutdown-phase: 30s
 
   cloud:
     nacos:
@@ -35,17 +41,16 @@ spring:
             allowCredentials: true
             maxAge: 3600
 
+      # HTTP 客户端超时配置（全局）
+      httpclient:
+        connect-timeout: 3000       # 连接超时 3s，下游不可达时快速失败
+        response-timeout: 30s       # 响应超时 30s，防止慢请求拖垮网关
+
       # 路由配置（使用服务发现 lb://）
       routes:
-        # 系统服务（认证授权 + 用户权限管理）
-        - id: system-server
-          uri: lb://eagle-system-server
-          predicates:
-            - Path=/api/system/**,/oauth2/**,/login,/logout,/swagger-ui/**,/v3/api-docs/**
-          filters:
-            - StripPrefix=0
-
-        # API Docs 聚合路由（每个服务独立访问其文档）
+        # API Docs 聚合代理路由（必须在 system-server 之前，避免被 /** 兜底）
+        # 网关 Swagger UI 通过此路由代理各服务 /v3/api-docs，路径如 /v3/api-docs/eagle-system-server
+        # 注：/swagger-ui/** 和 /v3/api-docs 由网关自身 SpringDoc 处理，无需在此配置
         - id: system-server-api-docs
           uri: lb://eagle-system-server
           predicates:
@@ -53,18 +58,19 @@ spring:
           filters:
             - SetPath=/v3/api-docs
 
+        # 系统服务（认证授权 + 用户权限管理）
+        - id: system-server
+          uri: lb://eagle-system-server
+          predicates:
+            - Path=/api/system/**,/oauth2/**,/login,/logout
+          filters:
+            - StripPrefix=0
+
         # 默认兜底路由
         - id: default
           uri: lb://eagle-system-server
           predicates:
             - Path=/**
-
-  # JWT 解码器配置（授权服务器 JWK Set 地址）
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: http://localhost:80/oauth2/jwks
 
 # SpringDoc 聚合配置（Nacos 动态发现由 GatewayOpenApiConfig 自动注册）
 springdoc:
@@ -92,3 +98,25 @@ management:
   endpoint:
     health:
       show-details: when_authorized
+
+# Eagle Gateway 配置
+eagle:
+  gateway:
+    security:
+      # OAuth2 授权服务器根地址，JWK Set URI = auth-server-url + /oauth2/jwks
+      auth-server-url: ${AUTH_SERVER_URL:http://localhost:80}
+      # 无需 JWT 认证的公开路径（可在此追加，支持 Ant 风格）
+      public-paths:
+        - /public/**
+        - /actuator/health
+        - /actuator/info
+        - /swagger-ui.html
+        - /swagger-ui/**
+        - /v3/api-docs/**
+        - /swagger-resources/**
+        - /webjars/**
+        - /oauth2/**
+        - /login
+        - /error
+    openapi:
+      discovery-enabled: true

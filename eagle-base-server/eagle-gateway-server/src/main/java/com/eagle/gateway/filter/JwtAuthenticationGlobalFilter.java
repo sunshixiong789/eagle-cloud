@@ -1,5 +1,6 @@
 package com.eagle.gateway.filter;
 
+import com.eagle.gateway.config.GatewayProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -8,10 +9,6 @@ import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.security.oauth2.core.OAuth2TokenValidator;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtException;
-import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
@@ -26,6 +23,7 @@ import java.util.List;
  * JWT 鉴权全局过滤器。
  *
  * <p>校验请求中的 Authorization Header，解析 JWT Token 并将用户信息透传到下游。
+ * 公开路径列表通过 {@code eagle.gateway.security.public-paths} 配置，支持外部化扩展。
  *
  * @author 孙士雄
  */
@@ -35,6 +33,7 @@ import java.util.List;
 public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
 
     private final ReactiveJwtDecoder reactiveJwtDecoder;
+    private final GatewayProperties gatewayProperties;
 
     private static final String AUTHORIZATION_PREFIX = "Bearer ";
     private static final String USER_ID_HEADER = "X-User-Id";
@@ -42,20 +41,6 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
     private static final String ROLES_HEADER = "X-Roles";
 
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
-
-    private final List<String> publicPaths = List.of(
-            "/public/**",
-            "/actuator/health",
-            "/actuator/info",
-            "/swagger-ui.html",
-            "/swagger-ui/**",
-            "/v3/api-docs/**",
-            "/swagger-resources/**",
-            "/webjars/**",
-            "/oauth2/**",
-            "/login",
-            "/error"
-    );
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -73,7 +58,7 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
             return exchange.getResponse().setComplete();
         }
 
-        return validateToken(token)
+        return reactiveJwtDecoder.decode(token)
                 .flatMap(jwt -> {
                     ServerHttpRequest mutatedRequest = buildRequestWithUserInfo(request, jwt);
                     return chain.filter(exchange.mutate().request(mutatedRequest).build());
@@ -83,16 +68,6 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
                     exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                     return exchange.getResponse().setComplete();
                 });
-    }
-
-    /**
-     * 校验 JWT Token。
-     *
-     * @param token JWT Token
-     * @return Mono<Jwt>
-     */
-    private Mono<Jwt> validateToken(String token) {
-        return reactiveJwtDecoder.decode(token);
     }
 
     /**
@@ -120,7 +95,9 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
      * @param jwt     解析后的 JWT
      * @return 新请求
      */
-    private ServerHttpRequest buildRequestWithUserInfo(ServerHttpRequest request, Jwt jwt) {
+    private ServerHttpRequest buildRequestWithUserInfo(
+            ServerHttpRequest request,
+            org.springframework.security.oauth2.jwt.Jwt jwt) {
         Long userId = jwt.getClaimAsString("id") != null
                 ? Long.valueOf(jwt.getClaimAsString("id"))
                 : null;
@@ -142,13 +119,15 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
     }
 
     /**
-     * 判断是否为公开路径。
+     * 判断是否为公开路径（从配置读取，支持外部化扩展）。
      *
      * @param path 请求路径
      * @return true 表示无需鉴权
      */
     private boolean isPublicPath(String path) {
-        return publicPaths.stream().anyMatch(p -> pathMatcher.match(p, path));
+        return gatewayProperties.getSecurity().getPublicPaths()
+                .stream()
+                .anyMatch(p -> pathMatcher.match(p, path));
     }
 
     @Override

@@ -49,7 +49,13 @@ eagle:
       # - sms_code: 短信验证码登录
       authorization-grant-types: authorization_code,refresh_token,wechat_mini_program,sms_code
       # 回调地址，多个用逗号分隔
-      redirect-uris: http://localhost:8080/auth/oauth2/callback,/swagger-ui/oauth2-redirect.html
+      # Swagger UI 发送的 redirect_uri 是绝对 URL（如 http://host/swagger-ui/oauth2-redirect.html），
+      # Spring Authorization Server 做精确字符串匹配，相对路径永远不匹配，因此必须注册绝对 URL。
+      # 同时注册系统服务直连地址和网关地址，支持两种访问方式的 Swagger OAuth2 流程。
+      redirect-uris: >
+        http://localhost:8080/auth/oauth2/callback,
+        ${SYSTEM_SERVER_URL:http://localhost:80}/swagger-ui/oauth2-redirect.html,
+        ${GATEWAY_URL:http://localhost:8080}/swagger-ui/oauth2-redirect.html
       # 权限范围
       scopes: openid,profile,email,address,phone
       require-proof-key: true  # 启用 PKCE（公开客户端必须启用）

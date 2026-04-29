@@ -18,6 +18,9 @@ dependencies {
     implementation "com.github.ben-manes.caffeine:caffeine"
     implementation "org.apache.poi:poi-ooxml"
 
+    // 本地开发：自动加载项目根目录的 .env 文件到 Spring Environment
+    runtimeOnly 'me.paulschwarz:spring-dotenv:4.0.0'
+
 
     // Spring Modulith
     // compileOnly：仅编译期可见，@Modulithic/@ApplicationModule/@NamedInterface 注解使用
