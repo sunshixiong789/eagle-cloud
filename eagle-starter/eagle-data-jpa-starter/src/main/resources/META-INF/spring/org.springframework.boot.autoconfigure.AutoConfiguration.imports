@@ -1,1 +1,2 @@
 com.eagle.datajpa.config.JpaConfig
+com.eagle.datajpa.config.SecurityAuditorAutoConfiguration
