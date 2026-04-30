@@ -1,5 +1,9 @@
 package com.eagle.rocketmq.config;
 
+import com.eagle.common.lock.DistributedLock;
+import com.eagle.common.lock.LockProperties;
+import com.eagle.rocketmq.lock.LockTokenInitializer;
+import com.eagle.rocketmq.lock.RocketMqDistributedLock;
 import com.eagle.rocketmq.properties.RocketMqProperties;
 import com.eagle.rocketmq.publisher.DomainEventPublisher;
 import com.eagle.rocketmq.publisher.RocketMqDomainEventPublisher;
@@ -57,5 +61,30 @@ public class RocketMqAutoConfiguration {
         List<AbstractRocketMqTransactionChecker> checkers = checkerProvider.stream().toList();
         log.info("Initializing RocketMQ transactional event publisher, checkers: {}", checkers.size());
         return new RocketMqTransactionalEventPublisher(properties, checkers);
+    }
+
+    /**
+     * 基于 RocketMQ SimpleConsumer 的分布式锁实现。
+     *
+     * <p>仅在 {@code eagle.lock.type=mq} 时注册，与 redis-starter 提供的
+     * {@code RedisDistributedLock} 互斥。
+     */
+    @Bean
+    @ConditionalOnMissingBean(DistributedLock.class)
+    @ConditionalOnProperty(name = "eagle.lock.type", havingValue = "mq")
+    public DistributedLock rocketMqDistributedLock(RocketMqProperties mqProps, LockProperties lockProps) {
+        log.info("Initializing RocketMQ distributed lock, granularity: {}", lockProps.getGranularity());
+        return new RocketMqDistributedLock(mqProps, lockProps);
+    }
+
+    /**
+     * MQ 锁 token 初始化器：仅在 {@code eagle.lock.type=mq} 且
+     * {@code eagle.lock.auto-init-token=true} 时注册。
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(name = "eagle.lock.type", havingValue = "mq")
+    public LockTokenInitializer lockTokenInitializer(RocketMqProperties mqProps, LockProperties lockProps) {
+        return new LockTokenInitializer(mqProps, lockProps);
     }
 }
