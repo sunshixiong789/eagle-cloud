@@ -15,8 +15,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -76,7 +78,9 @@ public class UserController {
     @Operation(summary = "查询用户列表", description = "分页查询所有用户")
     @GetMapping
     @PreAuthorize("hasRole('admin')")
-    public Page<UserResponse> queryUsers(Pageable pageable) {
+    public Page<UserResponse> queryUsers(@ParameterObject
+                                         @Parameter(description = "分页参数（page=页码从0开始, size=每页条数, sort=排序字段）")
+                                         @PageableDefault Pageable pageable) {
         return userApplicationService.queryUsers(pageable);
     }
 
@@ -90,7 +94,10 @@ public class UserController {
     @Operation(summary = "条件查询用户", description = "根据条件分页查询用户")
     @GetMapping("/query")
     @PreAuthorize("hasRole('admin')")
-    public Page<UserResponse> queryUsers(UserQueryRequest request, Pageable pageable) {
+    public Page<UserResponse> queryUsers(UserQueryRequest request,
+                                         @ParameterObject
+                                         @Parameter(description = "分页参数（page=页码从0开始, size=每页条数, sort=排序字段）")
+                                         @PageableDefault Pageable pageable) {
         return userApplicationService.queryUsers(request, pageable);
     }
 

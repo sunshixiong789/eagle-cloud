@@ -90,6 +90,23 @@ public record OrderResponse(
 - `example` 必填，便于 Swagger UI 一键填表
 - 敏感字段（密码、Token）**禁止** `example` 暴露
 
+## 分页参数
+
+Controller 方法使用 Spring Data `Pageable` 时，必须显式标注为查询参数对象，避免 Swagger UI 将分页参数展示为 JSON 请求体：
+
+```java
+@GetMapping
+public Page<UserResponse> queryUsers(@ParameterObject
+                                     @Parameter(description = "分页参数（page=页码从0开始, size=每页条数, sort=排序字段）")
+                                     @PageableDefault Pageable pageable) {
+    return userApplicationService.queryUsers(pageable);
+}
+```
+
+- 必须同时使用 `@ParameterObject`、`@Parameter(description = "...")`、`@PageableDefault`
+- `@ParameterObject` 负责让 SpringDoc 将 `page`、`size`、`sort` 展开为 query 参数
+- `@PageableDefault` 明确这是 Spring MVC 分页绑定参数，后续可按接口需要设置默认 `size` 或 `sort`
+
 ## 接口分组
 
 通过 `GroupedOpenApi` 拆分成多组（管理后台 / OpenAPI / 内部）：
@@ -178,3 +195,4 @@ curl http://localhost:8081/v3/api-docs > docs/openapi/system-server.json
 - 禁止把领域模型（聚合根 / Entity）直接作为请求/响应（必须用 DTO）
 - 禁止 `@Schema(example = "<密码明文>")`
 - 禁止接口路径出现动词（用 HTTP 方法 + 名词资源）
+- 禁止 Controller 中的 `Pageable` 参数缺少 `@ParameterObject`、`@Parameter`、`@PageableDefault`

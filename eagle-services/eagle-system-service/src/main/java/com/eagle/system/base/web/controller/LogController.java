@@ -8,8 +8,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -56,7 +58,9 @@ public class LogController {
     @Operation(summary = "查询日志列表", description = "分页查询所有系统日志")
     @GetMapping
     @PreAuthorize("hasRole('admin')")
-    public Page<LogResponse> queryLogs(Pageable pageable) {
+    public Page<LogResponse> queryLogs(@ParameterObject
+                                       @Parameter(description = "分页参数（page=页码从0开始, size=每页条数, sort=排序字段）")
+                                       @PageableDefault Pageable pageable) {
         return logApplicationService.queryLogs(pageable);
     }
 
@@ -72,7 +76,10 @@ public class LogController {
     @Operation(summary = "条件查询日志", description = "根据条件分页查询系统日志")
     @GetMapping("/query")
     @PreAuthorize("hasRole('admin')")
-    public Page<LogResponse> queryLogs(LogQueryRequest request, Pageable pageable) {
+    public Page<LogResponse> queryLogs(LogQueryRequest request,
+                                       @ParameterObject
+                                       @Parameter(description = "分页参数（page=页码从0开始, size=每页条数, sort=排序字段）")
+                                       @PageableDefault Pageable pageable) {
         return logApplicationService.queryLogs(request, pageable);
     }
 

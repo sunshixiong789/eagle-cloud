@@ -45,3 +45,4 @@ bin/
 ### Security ###
 *.p12
 *.jks
+/eagle-services/eagle-system-service/db/

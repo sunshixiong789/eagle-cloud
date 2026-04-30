@@ -11,8 +11,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -72,21 +74,29 @@ public class RoleController {
     @Operation(summary = "查询角色列表", description = "分页查询所有角色")
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public Page<RoleResponse> listRoles(Pageable pageable) {
+    public Page<RoleResponse> listRoles(@ParameterObject
+                                        @Parameter(description = "分页参数（page=页码从0开始, size=每页条数, sort=排序字段）")
+                                        @PageableDefault Pageable pageable) {
         return roleApplicationService.listRoles(pageable);
     }
 
     @Operation(summary = "条件查询角色", description = "按名称、标识、状态条件查询角色")
     @GetMapping("/query")
     @PreAuthorize("hasRole('admin')")
-    public Page<RoleResponse> queryRoles(RoleQueryRequest request, Pageable pageable) {
+    public Page<RoleResponse> queryRoles(RoleQueryRequest request,
+                                         @ParameterObject
+                                         @Parameter(description = "分页参数（page=页码从0开始, size=每页条数, sort=排序字段）")
+                                         @PageableDefault Pageable pageable) {
         return roleApplicationService.queryRoles(request, pageable);
     }
 
     @Operation(summary = "查询拥有该角色的用户列表", description = "分页查询拥有指定角色的用户")
     @GetMapping("/{id}/users")
     @PreAuthorize("hasRole('admin')")
-    public Page<UserResponse> getUsersByRole(@Parameter(description = "角色ID") @PathVariable Long id, Pageable pageable) {
+    public Page<UserResponse> getUsersByRole(@Parameter(description = "角色ID") @PathVariable Long id,
+                                             @ParameterObject
+                                             @Parameter(description = "分页参数（page=页码从0开始, size=每页条数, sort=排序字段）")
+                                             @PageableDefault Pageable pageable) {
         return roleApplicationService.getUsersByRoleId(id, pageable);
     }
 

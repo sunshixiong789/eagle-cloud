@@ -9,8 +9,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -73,7 +75,9 @@ public class DeptController {
     @Operation(summary = "查询部门列表", description = "分页查询所有部门")
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public Page<DeptResponse> queryDepts(Pageable pageable) {
+    public Page<DeptResponse> queryDepts(@ParameterObject
+                                         @Parameter(description = "分页参数（page=页码从0开始, size=每页条数, sort=排序字段）")
+                                         @PageableDefault Pageable pageable) {
         return deptApplicationService.queryDepts(pageable);
     }
 
