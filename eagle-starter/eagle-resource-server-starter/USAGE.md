@@ -1,15 +1,15 @@
-# eagle-resource-server-starter — OAuth2 资源服务器（JWT 鉴权）
+# eagle-resource-server-starter — OAuth2 资源服务器（JWT 鉴权 + EagleUser 注入）
 
 ## 何时使用
 
-- 业务服务接收 JWT Token 进行鉴权（不是签发 Token）
-- 默认所有接口需登录，配合 `@PreAuthorize` 做角色 / 权限控制
+- 业务服务接收 JWT 鉴权（不签发 Token）
+- 需要 `EagleUser` 作为 Spring Security `Authentication.principal`
 - 与 `eagle-system-server`（Authorization Server）配合
 
 ## 何时不要使用
 
 - Authorization Server（用 OAuth2 Authorization Server）
-- 服务间无需用户上下文的纯内部调用（仍建议用 mTLS / API Key）
+- 无用户上下文的纯内部 RPC（用 mTLS / API Key）
 
 ## 依赖与启用
 
@@ -18,18 +18,20 @@ implementation project(':eagle-starter:eagle-resource-server-starter')
 ```
 
 ```yaml
+# JWT 解码走 Spring Boot 标准配置
 spring.security.oauth2.resourceserver.jwt:
   issuer-uri: ${OAUTH2_ISSUER:http://eagle-system-server:8081}
 
-eagle.security.oauth2.resource-server:
-  enabled: true
-  issuer-uri: ${OAUTH2_ISSUER:http://eagle-system-server:8081}
-  public-paths:
-    - /actuator/health
-    - /actuator/info
-    - /v3/api-docs/**
-    - /swagger-ui/**
-  enable-swagger: true
+# starter 自身配置
+eagle.resource-server:
+  permit-paths:                          # 额外放行（合并默认白名单）
+    - /sms/code
+    - /auth/refresh
+  auth-server-url: http://localhost:8080  # Swagger OAuth2 流程显示用
+  api:
+    title: 订单服务 API
+    version: v1.0.0
+    description: ""
 ```
 
 主应用类加 `@EnableEagleResourceServer`：
@@ -37,19 +39,21 @@ eagle.security.oauth2.resource-server:
 ```java
 @EnableEagleResourceServer
 @SpringBootApplication
-public class MyServerApplication { }
+public class OrderServerApplication { }
 ```
+
+**默认放行**（无需配置）：`/public/**` / `/actuator/health` / `/actuator/info` / `/swagger-ui/**` / `/v3/api-docs/**` 等。
 
 ## 核心 API
 
-| 类 / 注解 | 用途 |
+| 类 / 注解 | 说明 |
 |---|---|
-| `@EnableEagleResourceServer` | 启用资源服务器（默认所有接口需鉴权）|
-| `EagleAuthentication` | 自定义 `Authentication`（含 `userId / tenantId / roles / permissions`）|
+| `@EnableEagleResourceServer` | 启用资源服务器（与 Spring Boot 自动配置等效，二选一）|
+| `EagleAuthentication` | 自定义 `Authentication`，`getPrincipal()` 返回 `EagleUser` |
 | `EagleJwtAuthenticationConverter` | JWT → `EagleAuthentication` 转换器 |
-| `SecurityUtils` | `getCurrentUser() / getCurrentUserId() / getCurrentUsername() / getCurrentDeptId() / hasRole() / hasAnyRole()` |
-| `ResourceServerSecurityConfig` | 默认 SecurityFilterChain（业务可覆盖） |
-| `EagleUser`（来自 common-starter） | 用户上下文 DTO |
+| `SecurityUtils` | 静态：`getAuthentication() / getCurrentUser() / getCurrentUserId() / getCurrentUsername() / getCurrentDeptId() / hasRole(role) / hasAnyRole(roles...)` |
+| `ResourceServerSecurityConfig` | 默认 SecurityFilterChain（业务可覆盖更高优先级 Bean） |
+| `OpenApiConfig` / `CacheConfig` | 由 `@EnableEagleResourceServer` 自动 Import |
 
 ## 最小示例
 
@@ -58,58 +62,58 @@ public class MyServerApplication { }
 @SpringBootApplication
 public class OrderServerApplication { }
 
+@Tag(name = "订单管理")
 @RestController
 @RequestMapping("/api/v1/orders")
+@RequiredArgsConstructor
 public class OrderController {
 
-    @GetMapping("/me")
+    private final OrderService orderService;
+
+    @Operation(summary = "我的订单")
     @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me")
     public List<OrderResponse> mine() {
         Long userId = SecurityUtils.getCurrentUserId();
         return orderService.findByUserId(userId);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/all")
+    public Page<OrderResponse> adminAll(@SpringQueryMap Pageable pageable) {
+        return orderService.findAll(pageable);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping
-    @PreAuthorize("hasAuthority('order:create')")
+    @ResponseStatus(HttpStatus.CREATED)
     public OrderResponse create(@Valid @RequestBody CreateOrderRequest req) {
         return orderService.create(req);
     }
-
-    @GetMapping("/admin/all")
-    @PreAuthorize("hasRole('ADMIN')")
-    public Page<OrderResponse> all(@SpringQueryMap Pageable p) {
-        return orderService.findAll(p);
-    }
 }
 
-// 编程式权限检查
+// 编程式
 if (!SecurityUtils.hasRole("ADMIN")) {
     throw CommonErrorCode.ACCESS_DENIED.toDomainException();
 }
+
+EagleUser user = SecurityUtils.getCurrentUser();
+String name = user.getName();
+Long deptId = user.getDeptId();
 ```
-
-## 配置项
-
-| key | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `eagle.security.oauth2.resource-server.enabled` | boolean | `true` | 总开关 |
-| `eagle.security.oauth2.resource-server.issuer-uri` | String | — | 授权服务器地址 |
-| `eagle.security.oauth2.resource-server.public-paths` | List | actuator/health 等 | 公开路径白名单 |
-| `eagle.security.oauth2.resource-server.enable-swagger` | boolean | `true` | 自动放行 swagger 路径 |
 
 ## 自定义 SecurityFilterChain
 
-需要更复杂规则时，业务方可定义优先级更高的 Bean：
+需要更复杂规则时定义优先级更高的 Bean：
 
 ```java
 @Configuration
 public class CustomSecurityConfig {
     @Bean
-    @Order(0)   // 早于 starter 默认链
+    @Order(0)
     public SecurityFilterChain customChain(HttpSecurity http) throws Exception {
         return http.securityMatcher("/api/custom/**")
             .authorizeHttpRequests(a -> a
-                .requestMatchers("/api/custom/public/**").permitAll()
                 .requestMatchers("/api/custom/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated())
             .build();
@@ -117,33 +121,30 @@ public class CustomSecurityConfig {
 }
 ```
 
-## 测试
+## 配置项
 
-```java
-@SpringBootTest
-@AutoConfigureMockMvc
-class OrderControllerTest {
-    @Autowired private MockMvc mockMvc;
+| key | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `eagle.resource-server.permit-paths` | List | `[]` | 额外放行路径（合并默认白名单） |
+| `eagle.resource-server.auth-server-url` | String | `""` | Swagger OAuth2 流程绝对 URL |
+| `eagle.resource-server.api.title` | String | `Eagle API` | OpenAPI 标题 |
+| `eagle.resource-server.api.version` | String | `v1.0.0` | OpenAPI 版本 |
+| `eagle.resource-server.api.description` | String | `""` | OpenAPI 描述（空则用内置默认） |
 
-    @Test @WithMockUser(roles = {"ADMIN"})
-    void admin_can_access() throws Exception {
-        mockMvc.perform(get("/api/v1/orders/admin/all"))
-               .andExpect(status().isOk());
-    }
-}
-```
+JWT 解码走 `spring.security.oauth2.resourceserver.jwt.issuer-uri` 或 `jwk-set-uri`。
 
 ## 常见错误
 
-- ❌ Controller 没加 `@PreAuthorize` → ✅ 必须显式声明（详见 `05-api.md`）
-- ❌ 自己解析 Token 拿 userId → ✅ 用 `SecurityUtils.getCurrentUserId()`
-- ❌ Token 放到 URL 中 → ✅ 仅 `Authorization: Bearer xxx`
-- ❌ 公开接口在代码中判断放行 → ✅ 配 `public-paths`
-- ❌ Feign 调用 Token 不透传 → ✅ 用 `http-client-starter` 的 `FeignAuthInterceptor`
+- ❌ Controller 漏 `@PreAuthorize` → ✅ 必须显式声明
+- ❌ 自己 `request.getHeader("Authorization")` 解析 → ✅ `SecurityUtils.getCurrentUser()`
+- ❌ Token 放 URL → ✅ 仅 `Authorization: Bearer xxx`
+- ❌ Feign 调用 Token 不透传 → ✅ 引入 `http-client-starter`
+- ❌ 配置写 `eagle.security.oauth2.resource-server.*` → ✅ 真实是 **`eagle.resource-server.*`**
+- ❌ 配置写 `public-paths` → ✅ 真实是 **`permit-paths`**
+- ❌ 配置写 `enable-swagger` → ✅ 没有此字段，Swagger 默认放行
 
 ## 关联规则
 
-- `.claude/rules/12-security.md` — JWT、密码、敏感字段、CORS
-- `.claude/rules/05-api.md` — `@PreAuthorize` 强制要求
-- `.claude/rules/17-tenant-permission.md` — 租户 ID 透传
-- `.claude/rules/11-feign.md` — Feign Token 自动透传
+- `.claude/rules/12-security.md`
+- `.claude/rules/05-api.md`
+- `.claude/rules/17-tenant-permission.md`

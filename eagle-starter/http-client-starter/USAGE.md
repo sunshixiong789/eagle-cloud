@@ -1,21 +1,27 @@
-# http-client-starter（eagle-feign-starter）— Feign 客户端（自动 Token / 租户 / XID 透传）
+# http-client-starter — Feign 客户端（自动透传 Token / 租户 / XID + 错误码转换）
 
 ## 何时使用
 
-- 服务间 RPC 调用（声明式 HTTP 客户端）
-- 跨服务需要透传当前用户 / 租户 / 分布式事务 XID
-- 统一错误码转换（下游 HTTP 错误自动转为本地异常）
+- 服务间 RPC（Feign 声明式 HTTP）
+- 需要透传当前用户 JWT、Accept-Language、压测标记、租户 ID、Seata XID
+- 下游错误自动转 `AppException`
 
 ## 何时不要使用
 
-- 客户端 → 服务端通信（用普通 RestClient / 浏览器 fetch）
-- 简单一次性 HTTP 调用（用 `RestClient`）
-- 文件上传 / 下载等流式场景（Feign 不适合）
+- 客户端 → 服务端通信（用普通 RestClient）
+- 文件上传 / 流式下载（Feign 不适合）
 
 ## 依赖与启用
 
 ```gradle
 implementation project(':eagle-starter:http-client-starter')
+```
+
+```yaml
+eagle.feign:
+  log-level: BASIC                # NONE / BASIC / HEADERS / FULL
+  connect-timeout: 2000            # ms
+  read-timeout: 5000                # ms
 ```
 
 主应用加 `@EnableFeignClients`：
@@ -26,28 +32,33 @@ implementation project(':eagle-starter:http-client-starter')
 public class MyApplication { }
 ```
 
-```yaml
-eagle.feign:
-  enabled: true
-  connect-timeout: 2s
-  read-timeout: 5s
-  log-level: BASIC                     # NONE / BASIC / HEADERS / FULL
-```
+## 核心拦截器（自动注册）
 
-## 核心 API
+| 拦截器 | 透传内容 | 触发条件 |
+|--------|---------|---------|
+| `FeignAuthInterceptor` | `Authorization` JWT、`Accept-Language`、`X-Eagle-Gray`（压测） | 始终启用，HTTP 上下文存在时 |
+| `FeignTenantInterceptor` | `X-Tenant-Id`（来自 `TenantContextHolder`） | `eagle-tenant-starter` 在类路径时 |
+| `SeataXidRequestInterceptor` | `TX_XID`（来自 `RootContext.getXID()`） | `seata-spring-boot-starter` 在类路径时 |
 
-| 类 | 用途 |
-|---|---|
-| `FeignAuthInterceptor` | 自动透传 `Authorization` JWT Token + B3 链路追踪头 |
-| `FeignTenantInterceptor` | 自动透传 `X-Tenant-Id` |
-| `SeataXidRequestInterceptor` | 自动透传 Seata XID（条件加载，存在 Seata 依赖时生效） |
-| `FeignErrorDecoder` | 下游 HTTP 错误 → 本地异常体系（404→NotFoundException 等） |
-| `FeignProperties` | 配置项 |
+B3 链路追踪头由 Spring Cloud OpenFeign + Micrometer Tracing **自动**注入，无需手动处理。
+
+## 错误转换（FeignErrorDecoder 自动注册）
+
+下游返回 `ErrorResult` JSON 时，自动提取 `message` 字段透传：
+
+| 下游 HTTP | 抛出 | 错误码 |
+|-----------|------|--------|
+| 404 | `NotFoundException` | `ExternalErrorCode.EXTERNAL_SERVICE_DETAIL` |
+| 409 | `ConflictException` | 同上 |
+| 400 | `DomainException` | 同上 |
+| 403 / 429 / 5xx / 其他 | `ServiceException` | 同上 |
+
+调用方**无需 try-catch**，全局异常处理器统一返回。
 
 ## 最小示例
 
 ```java
-// 1) 定义 FeignClient（位于 infrastructure/remote/）
+// FeignClient 定义在 infrastructure/remote/
 @FeignClient(name = "eagle-inventory-server", path = "/api/v1/inventory")
 public interface InventoryFeignClient {
 
@@ -57,63 +68,49 @@ public interface InventoryFeignClient {
     @PostMapping("/lock")
     void lockStock(@RequestBody LockStockRequest request);
 
-    /** 分页：必须用 @SpringQueryMap 让 Pageable 展开为查询参数 */
+    /** 分页：必须用 @SpringQueryMap */
     @GetMapping("/items")
     Page<ItemResponse> findItems(@SpringQueryMap Pageable pageable);
 }
 
-// 2) 注入使用
+// 业务调用
 @Service
 @RequiredArgsConstructor
 public class OrderApplicationService {
+
     private final InventoryFeignClient inventoryClient;
 
-    public void createOrder(CreateOrderRequest req) {
-        // Token / 租户 / XID 自动透传，无需手动设置
+    public void create(CreateOrderRequest req) {
+        // Token / 租户 / XID 自动透传
         StockResponse stock = inventoryClient.getStock(req.getProductId());
-
-        // 异常已被 FeignErrorDecoder 转换：
-        // 404 → NotFoundException, 409 → DomainException, 500 → ServiceException
-        // 无需 try-catch
+        // 异常已转换为 AppException 体系，无需 try-catch
     }
 }
 ```
-
-## 错误转换映射
-
-| 下游 HTTP | 抛出 | 触发场景 |
-|-----------|------|---------|
-| 404 | `NotFoundException` | 资源不存在 |
-| 400 / 409 | `DomainException` | 业务规则冲突 |
-| 401 / 403 | `ServiceException`（认证失败）| Token 失效或越权 |
-| 429 | `ServiceException` | 限流 |
-| 5xx | `ServiceException` | 下游异常 |
-
-调用方**无需 try-catch**，全局异常处理器统一返回。
 
 ## 配置项
 
 | key | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `eagle.feign.enabled` | boolean | `true` | 总开关 |
-| `eagle.feign.connect-timeout` | Duration | `2s` | 连接超时 |
-| `eagle.feign.read-timeout` | Duration | `5s` | 读超时 |
-| `eagle.feign.log-level` | enum | `BASIC` | Feign 日志级别 |
-| `eagle.feign.retry.max-attempts` | int | `0` | 失败重试次数 |
-| `eagle.feign.tenant.enabled` | boolean | `true` | 启用租户透传 |
+| `eagle.feign.log-level` | enum | `BASIC` | NONE / BASIC / HEADERS / FULL |
+| `eagle.feign.connect-timeout` | int | `2000` | 连接超时（**ms**，整数） |
+| `eagle.feign.read-timeout` | int | `5000` | 读超时（**ms**，整数） |
+
+⚠️ **starter 仅 3 个配置项**，没有 `enabled` / `retry` / `tenant.enabled` 等。
 
 ## 常见错误
 
-- ❌ FeignClient 定义在 `application/` 包 → ✅ 必须在 `infrastructure/remote/`
+- ❌ FeignClient 在 `application/` 包 → ✅ 必须在 `infrastructure/remote/`
 - ❌ 加 fallback 默认实现 → ✅ 失败应上抛，由调用方决定降级
-- ❌ `Pageable` 不加 `@SpringQueryMap` → ✅ 必须加（不加分页参数静默丢失）
-- ❌ FeignClient 上加 `@Transactional` → ✅ 远程调用不应参与本地事务
-- ❌ 在 `@Transactional` 内同步远程调用 → ✅ 用领域事件 AFTER_COMMIT 异步触发
-- ❌ 手动 `request.getHeader("Authorization")` 转发 → ✅ 自动透传，不要手写
+- ❌ `Pageable` 不加 `@SpringQueryMap` → ✅ 必须加（不加会静默丢失分页参数）
+- ❌ FeignClient 上加 `@Transactional` → ✅ 远程调用不参与本地事务
+- ❌ 在 `@Transactional` 内同步远程调用 → ✅ 用领域事件 AFTER_COMMIT
+- ❌ 手动转发 Token / 租户 ID → ✅ 自动透传
+- ❌ 配置写 `connect-timeout: 2s` Duration → ✅ 真实类型是 **`int` 毫秒**
 
 ## 关联规则
 
-- `.claude/rules/11-feign.md` — FeignClient 完整规范
-- `.claude/rules/16-transaction-distributed.md` — Seata XID 透传
+- `.claude/rules/11-feign.md`
+- `.claude/rules/16-transaction-distributed.md` — XID 透传
 - `.claude/rules/12-security.md` — JWT 透传
-- `.claude/rules/17-tenant-permission.md` — 租户 ID 透传
+- `.claude/rules/17-tenant-permission.md` — 租户透传

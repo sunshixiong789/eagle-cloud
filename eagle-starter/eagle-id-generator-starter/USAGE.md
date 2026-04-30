@@ -1,15 +1,14 @@
-# eagle-id-generator-starter — 分布式 ID 生成（雪花 / 号段 / TSID / NanoID / 业务单号）
+# eagle-id-generator-starter — Snowflake / UUID v7 / TSID / NanoId / 业务订单号
 
 ## 何时使用
 
-- 聚合根主键（替代数据库自增 ID，方便分库分表）
-- 业务单号（订单号、流水号、合同号）
-- 全局唯一标识（消息 ID、请求 ID）
+- 聚合根主键（替代数据库自增 ID，便于分库分表）
+- 业务单号（订单 / 支付 / 退款流水）
+- 全局唯一短码（邀请码、分享码）
 
 ## 何时不要使用
 
-- 单体应用 + 单库（`@GeneratedValue(IDENTITY)` 即够）
-- 仅需可读简单 ID（用 UUID）
+- 单库自增 ID 已够用 → 保持 `@GeneratedValue(IDENTITY)`
 
 ## 依赖与启用
 
@@ -20,57 +19,95 @@ implementation project(':eagle-starter:eagle-id-generator-starter')
 ```yaml
 eagle.id-generator:
   enabled: true
-  default-type: snowflake             # snowflake / segment / tsid / uuid / nanoid
-  snowflake:
-    worker-id: ${WORKER_ID:1}         # 0–31，集群内唯一
-    datacenter-id: ${DC_ID:1}         # 0–31
-  segment:
-    business-key: order               # 号段业务标识
-    step: 1000                        # 单次申请号段大小
+  type: SNOWFLAKE                # 默认 IdGenerator 实现：SNOWFLAKE / UUID / TSID
+  worker-id: ${WORKER_ID:1}      # Snowflake workerId，0–31，集群内唯一
+  datacenter-id: ${DC_ID:1}      # Snowflake dataCenterId，0–31
+  enable-facade: true            # 同时注册 IdGeneratorFacade 和 OrderNoGenerator
+  tsid:
+    node-id: 1                   # TSID 节点 ID（依 nodeBits 决定）
+    node-bits: 10                # 8/10/12 → 256/1024/4096 节点
+  nano-id:
+    default-size: 21             # 默认 21 字符（≈ UUID v4 碰撞概率）
 ```
 
 ## 核心 API
 
-| 类 / 接口 | 用途 |
-|---|---|
-| `IdGenerator` | 生成器接口（`nextId()` / `nextIdStr()`） |
-| `SnowflakeIdGenerator` | 雪花算法（64-bit Long） |
-| `SegmentIdGenerator` | 号段模式（依赖 DB 单调递增） |
-| `TsidIdGenerator` | TSID（time-sorted）|
-| `UuidIdGenerator` | UUID |
-| `NanoIdGenerator` | NanoID（短随机） |
-| `OrderNoGenerator` | 业务单号生成器（前缀 + 时间 + 序号） |
-| `IdGeneratorFacade` | 统一门面（按 type 分发） |
-| `IdGeneratorUtil` | 静态工具（无依赖注入即可用） |
+### 默认 `IdGenerator` Bean
+
+由 `eagle.id-generator.type` 决定具体实现（SNOWFLAKE / UUID / TSID）：
+
+```java
+public interface IdGenerator {
+    long nextId();
+    String nextIdStr();
+}
+```
+
+### `IdGeneratorFacade`（注入使用，推荐）
+
+```java
+// 默认实现
+long pk = facade.nextId();              long
+String s = facade.nextIdStr();
+
+// Snowflake
+long sf = facade.snowflakeId();
+
+// UUID v7（time-ordered Unix Epoch）
+long uuidLong = facade.uuidLong();      // 高 64 位
+String uuidStr = facade.uuid();         // 32 位无连字符
+UUID uuid = facade.uuidV7();            // 36 位标准格式
+
+// TSID
+long tsidLong = facade.tsidLong();
+String tsidStr = facade.tsidStr();      // 13 位 Crockford Base32
+
+// NanoId
+String n = facade.nanoId();             // 21 字符
+String n8 = facade.nanoId(8);           // 8 字符短码
+
+// 业务单号（前缀 + 时间戳 + 随机）
+String orderNo = facade.orderNo("ORD"); // ORD20260430123456789
+String payNo = facade.payNo();          // 前缀 PAY
+String refundNo = facade.refundNo();    // 前缀 RFD
+```
+
+### `IdGeneratorUtil`（静态，无注入场景）
+
+```java
+long id = IdGeneratorUtil.nextId();
+String uuid = IdGeneratorUtil.uuid();
+String tsid = IdGeneratorUtil.tsidStr();
+String code = IdGeneratorUtil.nanoId(8);
+```
+
+⚠️ 静态工具依赖 Spring 启动后初始化（`InitializingBean`），不要在 Spring 加载完成前调用。
 
 ## 最小示例
 
 ```java
-// 注入使用
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class OrderApplicationService {
-    private final IdGeneratorFacade idGenerator;
-    private final OrderNoGenerator orderNoGen;
 
-    public Order create() {
-        long id = idGenerator.nextId();                       // 雪花 ID
-        String orderNo = orderNoGen.generate("ORD");          // ORD202604301035001
-        return Order.create(id, orderNo);
+    private final IdGeneratorFacade idFacade;
+    private final OrderRepository orderRepository;
+
+    public Order create(CreateOrderRequest req) {
+        String orderNo = idFacade.orderNo("ORD");
+        Order order = Order.create(orderNo);
+        return orderRepository.save(order);   // ID 由 JPA IDENTITY 生成（DB 端）
+    }
+
+    public PaymentRecord pay(Order order) {
+        String payNo = idFacade.payNo();
+        return paymentRepository.save(PaymentRecord.of(order, payNo));
     }
 }
 
-// 静态工具（特殊场景，工具类内）
-long id = IdGeneratorUtil.snowflake();
-String orderNo = IdGeneratorUtil.orderNo("ORD");
-
-// 实体主键（替代 IDENTITY）
-@Entity
-public class Order {
-    @Id
-    @GenericGenerator(name = "snowflake", strategy = "com.eagle.idgenerator.SnowflakeStrategy")
-    @GeneratedValue(generator = "snowflake")
-    private Long id;
+// 邀请码（短 NanoId）
+public String generateInviteCode() {
+    return idFacade.nanoId(8);   // 例 V1StGXR8
 }
 ```
 
@@ -79,19 +116,22 @@ public class Order {
 | key | 类型 | 默认 | 说明 |
 |---|---|---|---|
 | `eagle.id-generator.enabled` | boolean | `true` | 总开关 |
-| `eagle.id-generator.default-type` | String | `snowflake` | 默认类型 |
-| `eagle.id-generator.snowflake.worker-id` | long | `1` | 集群内唯一 |
-| `eagle.id-generator.snowflake.datacenter-id` | long | `1` | 数据中心 |
-| `eagle.id-generator.segment.business-key` | String | — | 号段业务标识 |
-| `eagle.id-generator.segment.step` | int | `1000` | 号段步长 |
+| `eagle.id-generator.type` | enum | `SNOWFLAKE` | 默认 IdGenerator：`SNOWFLAKE / UUID / TSID` |
+| `eagle.id-generator.worker-id` | long | `1` | Snowflake workerId（集群唯一） |
+| `eagle.id-generator.datacenter-id` | long | `1` | Snowflake dataCenterId |
+| `eagle.id-generator.sequence` | long | `0` | 序列起始（兼容字段） |
+| `eagle.id-generator.enable-facade` | boolean | `true` | 同时注册 Facade + OrderNoGenerator |
+| `eagle.id-generator.tsid.node-id` | int | `1` | TSID 节点 ID |
+| `eagle.id-generator.tsid.node-bits` | int | `10` | TSID 节点位数 |
+| `eagle.id-generator.nano-id.default-size` | int | `21` | NanoId 默认长度 |
 
 ## 常见错误
 
-- ❌ 多实例 `worker-id` 重复 → ✅ K8s 用 StatefulSet 序号 / Nacos 注册分配
-- ❌ 时钟回拨未处理 → ✅ Snowflake 实现自带回拨保护
-- ❌ 业务单号用 `UUID` → ✅ 用 `OrderNoGenerator`（含前缀 + 时间，可读）
-- ❌ 高并发 `IdGeneratorUtil.snowflake()` → ✅ 注入 Facade（同步开销小，但更规范）
-- ❌ 号段表无单调约束 → ✅ DB schema 建表加唯一索引
+- ❌ 多实例 `worker-id` 重复 → ✅ K8s StatefulSet 序号 / 启动脚本注入
+- ❌ 业务单号用 UUID → ✅ 用 `orderNo(prefix)`（含时间，可读）
+- ❌ Spring 启动前用 `IdGeneratorUtil.xxx()` → ✅ 静态工具需等 Spring 初始化完成
+- ❌ 期望默认是 UUID → ✅ 默认 **`SNOWFLAKE`**
+- ❌ 把 `IdGeneratorFacade.nextId()` 用作前端可见 ID → ✅ Snowflake long 在前端可能精度丢失，用 `nextIdStr()` 或 JSON 序列化为 String
 
 ## 关联规则
 

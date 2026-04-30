@@ -1,0 +1,68 @@
+# ===========================================
+# 生产环境配置
+# MySQL + Redis；DDL 由 Flyway 管理（禁止 ddl-auto: update）
+# 启动方式：java -jar app.jar --spring.profiles.active=prod
+# 必须通过环境变量注入：DB_HOST / DB_NAME / DB_USERNAME / DB_PASSWORD
+#                     REDIS_HOST / REDIS_PASSWORD / EAGLE_ADMIN_PASSWORD / EAGLE_JWT_KEYSTORE_*
+# ===========================================
+
+spring:
+  flyway:
+    enabled: true
+    baseline-on-migrate: false   # 生产禁止自动 baseline，避免误操作
+    validate-on-migrate: true
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT:3306}/${DB_NAME}?useSSL=true&serverTimezone=UTC&characterEncoding=utf8&allowPublicKeyRetrieval=false
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 50
+      minimum-idle: 10
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      auto-commit: true
+  jpa:
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQLDialect
+    show-sql: false
+    hibernate:
+      ddl-auto: validate   # 生产仅校验，所有 DDL 走 Flyway
+  cache:
+    type: redis
+    redis:
+      time-to-live: 30m
+      key-prefix: "eagle:"
+      cache-null-values: true
+  data:
+    redis:
+      url: redis://${REDIS_PASSWORD:}@${REDIS_HOST}:${REDIS_PORT:6379}/0
+      connect-timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+          max-wait: 2000ms
+
+management:
+  endpoint:
+    health:
+      show-details: never        # 生产不暴露 health 详情
+  health:
+    redis:
+      enabled: true
+
+# 生产关闭 Swagger / API 文档（参见 .claude/rules/18-openapi.md）
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+logging:
+  level:
+    root: INFO
+    com.eagle: INFO
+    org.hibernate.SQL: WARN

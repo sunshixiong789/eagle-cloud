@@ -1,3 +1,8 @@
+// 单体启动模块：复用 eagle-system-service 全部业务代码（认证 / 用户 / 角色 / 菜单 / 权限 等），
+// 排除 Nacos / 微服务专属传递依赖，下游用户拿到即可作为单体应用启动。
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation(project(':eagle-services:eagle-system-service')) {
+        // Nacos 服务发现：单体不需要注册中心
+        exclude group: 'com.alibaba.cloud', module: 'spring-cloud-starter-alibaba-nacos-discovery'
+    }
 }

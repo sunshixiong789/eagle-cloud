@@ -1,8 +1,117 @@
+# ===========================================
+# Eagle 单体应用 - 基础配置
+# 单体启动模块，无 Nacos / 网关 / 注册中心 / Sentinel 等微服务相关配置
+# 默认 profile = local（H2 + Caffeine），生产请用 -Dspring.profiles.active=prod
+# ===========================================
+
 server:
-  port: 8080
+  port: 80
 
 spring:
   application:
     name: eagle-monolith
-  main:
-    banner-mode: console
+  profiles:
+    active: local
+  jpa:
+    open-in-view: false   # 关闭 OSIV，避免视图层延迟加载（参考 .claude/rules/23-performance.md）
+
+# ===========================================
+# Eagle 业务配置
+# ===========================================
+eagle:
+  # JWT 签名密钥（复用 system-service 内置 keystore，生产请挂载外部 keystore）
+  jwt:
+    keystore-location: ${EAGLE_JWT_KEYSTORE_LOCATION:classpath:jwt-keystore.p12}
+    keystore-password: ${EAGLE_JWT_KEYSTORE_PASSWORD:eagle-jwt-dev-2026}
+    key-alias: eagle-jwt
+  # WebSocket 配置
+  websocket:
+    endpoint: /ws-stomp
+    app-prefix: /message
+    topic-prefix: /topic
+    user-prefix: /user
+  # 初始管理员账户
+  admin:
+    username: admin
+    password: ${EAGLE_ADMIN_PASSWORD:localDev@2026}
+    name: 系统管理员
+    email: admin@eagle.com
+  # OAuth2 默认客户端
+  oauth:
+    default-client:
+      enabled: true
+      client-id: eagleWeb
+      client-name: Eagle Web 前端应用
+      client-authentication-methods: none   # PKCE 公开客户端
+      authorization-grant-types: authorization_code,refresh_token,wechat_mini_program,sms_code
+      redirect-uris: >
+        http://localhost:8080/auth/oauth2/callback,
+        ${EAGLE_SERVER_URL:http://localhost:80}/swagger-ui/oauth2-redirect.html
+      scopes: openid,profile,email,address,phone
+      require-proof-key: true
+      require-authorization-consent: false
+      access-token-ttl-seconds: 3600
+      refresh-token-ttl-seconds: 2592000
+  # 微信集成（可选；不填则相关登录方式不可用）
+  wechat:
+    mini-program:
+      app-id: ${WECHAT_MINI_APP_ID:}
+      app-secret: ${WECHAT_MINI_APP_SECRET:}
+    web:
+      pc:
+        app-id: ${WECHAT_WEB_APP_ID:}
+        app-secret: ${WECHAT_WEB_APP_SECRET:}
+        redirect-uri: ${WECHAT_WEB_REDIRECT_URI:http://localhost/login/wechat/pc/callback}
+      h5:
+        app-id: ${WECHAT_MP_APP_ID:}
+        app-secret: ${WECHAT_MP_APP_SECRET:}
+        redirect-uri: ${WECHAT_MP_REDIRECT_URI:http://localhost/login/wechat/h5/callback}
+  # 审计日志清理任务
+  log:
+    cleanup:
+      enabled: true
+      retention-days: 90
+      cron: "0 0 2 * * ?"
+  # 阿里云短信（可选）
+  sms:
+    aliyun:
+      access-key-id: ${ALIYUN_SMS_ACCESS_KEY_ID:}
+      access-key-secret: ${ALIYUN_SMS_ACCESS_KEY_SECRET:}
+      sign-name: ${ALIYUN_SMS_SIGN_NAME:}
+      template-code: ${ALIYUN_SMS_TEMPLATE_CODE:}
+
+# ===========================================
+# Actuator
+# ===========================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,loggers
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+    metrics:
+      enabled: true
+  info:
+    env:
+      enabled: true
+
+# ===========================================
+# Swagger / OpenAPI
+# ===========================================
+springdoc:
+  show-oauth2-endpoints: true
+  swagger-ui:
+    oauth:
+      app-name: Eagle
+      client-id: eagleWeb
+      use-pkce-with-authorization-code-grant: true
+      scopes:
+        - "openid"
+        - "profile"
+    csrf:
+      enabled: true
+    doc-expansion: none
+    persist-authorization: true
