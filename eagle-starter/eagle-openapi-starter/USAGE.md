@@ -1,15 +1,14 @@
-# eagle-openapi-starter — Swagger / OpenAPI 3.0 文档（SpringDoc）
+# eagle-openapi-starter — Swagger / OpenAPI 3.0（SpringDoc）
 
 ## 何时使用
 
-- 所有对外提供 REST API 的服务
-- 需要 Swagger UI 调试 / Apifox 同步
-- OpenAPI Generator 客户端代码生成
+- 对外提供 REST API 的服务
+- Swagger UI 调试 / Apifox 同步 / OpenAPI Generator
 
 ## 何时不要使用
 
-- 纯内部 RPC（已用 Feign 接口契约）
-- WebFlux 网关（Gateway 不暴露业务 API）
+- 纯内部 RPC（已有 Feign 接口契约）
+- WebFlux 网关（不暴露业务 API）
 
 ## 依赖与启用
 
@@ -19,42 +18,30 @@ implementation project(':eagle-starter:eagle-openapi-starter')
 
 ```yaml
 eagle.openapi:
-  enabled: true
-  title: ${spring.application.name} API
-  version: v1.0
-  description: 业务接口文档
-  contact:
-    name: Eagle Team
-    email: dev@eagle.com
-  servers:
-    - url: http://localhost:${server.port}
-      description: Local
-  groups:
-    - name: admin
-      paths-to-match: /api/admin/**
-    - name: public
-      paths-to-match: /api/v1/**
+  title: 订单服务 API
+  version: v1.0.0
+  description: 订单创建、查询、取消
+  auth-server-url: http://localhost:8080      # OAuth2 流程显示
 
+# 生产关闭 Swagger UI / api-docs
 springdoc:
   swagger-ui:
-    enabled: true                      # 生产必须 false
+    enabled: true
   api-docs:
-    enabled: true                      # 生产必须 false
+    enabled: true
 ```
 
-## 核心 API
+`EagleOpenApiAutoConfiguration` 自动注入 `OpenAPI` Bean、JWT Security Scheme，业务方只需用 SpringDoc 注解。
 
-由 SpringDoc 提供，starter 已预配置：
+## 核心注解（来自 SpringDoc）
 
 | 注解 | 用途 |
 |---|---|
-| `@Tag` | Controller 类级 — 资源域分组 |
-| `@Operation` | 方法级 — 接口说明 |
+| `@Tag(name, description)` | Controller 类级 — 资源域分组 |
+| `@Operation(summary, description, responses)` | 方法级 — 接口说明 |
 | `@ApiResponses` / `@ApiResponse` | 响应码说明 |
-| `@Schema` | DTO 字段说明（含 `requiredMode` / `example` / `description`） |
-| `@Parameter` | 参数说明 |
-
-`EagleOpenApiAutoConfiguration` 自动注入 `OpenAPI` Bean、JWT Security Scheme、分组 Bean。
+| `@Schema(description, example, requiredMode)` | DTO 字段说明 |
+| `@Parameter(description)` | 单参数说明 |
 
 ## 最小示例
 
@@ -74,8 +61,8 @@ public class OrderController {
     @PreAuthorize("isAuthenticated()")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderResponse create(@Valid @RequestBody CreateOrderRequest request) {
-        return orderService.create(request);
+    public OrderResponse create(@Valid @RequestBody CreateOrderRequest req) {
+        return orderService.create(req);
     }
 }
 
@@ -89,41 +76,79 @@ public class CreateOrderRequest {
     @Schema(description = "收货地址 ID", requiredMode = REQUIRED, example = "9527")
     @NotNull
     private Long addressId;
+
+    @Schema(description = "备注", maxLength = 200, example = "请尽快发货")
+    @Size(max = 200)
+    private String remark;
 }
+
+@Schema(description = "订单详情")
+public record OrderResponse(
+    @Schema(description = "订单 ID", example = "10086") Long id,
+    @Schema(description = "订单号", example = "ORD20260430123456") String orderNo,
+    @Schema(description = "金额", example = "199.00") BigDecimal totalAmount
+) {}
 ```
 
-访问 `http://localhost:port/swagger-ui.html` 查看。
+访问：`http://localhost:port/swagger-ui.html`、`http://localhost:port/v3/api-docs`
 
 ## 配置项
 
 | key | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `eagle.openapi.enabled` | boolean | `true` | 总开关 |
-| `eagle.openapi.title` | String | 应用名 | 文档标题 |
-| `eagle.openapi.version` | String | `v1.0` | 版本 |
-| `eagle.openapi.groups` | List | — | API 分组 |
-| `springdoc.swagger-ui.enabled` | boolean | `true` | UI 开关（生产必须 false）|
-| `springdoc.api-docs.enabled` | boolean | `true` | api-docs 开关（生产必须 false） |
+| `eagle.openapi.title` | String | `Eagle API` | 文档标题 |
+| `eagle.openapi.version` | String | `v1.0.0` | 版本 |
+| `eagle.openapi.description` | String | — | 描述 |
+| `eagle.openapi.auth-server-url` | String | `http://localhost:80` | OAuth2 授权服务器地址（authorizeUrl/tokenUrl） |
 
-## 生产环境关闭
+⚠️ **starter 仅 4 个字段**，没有 `enabled` / `groups` 等。
+
+## 生产关闭文档暴露
 
 ```yaml
 # application-prod.yml
 springdoc:
-  api-docs.enabled: false
-  swagger-ui.enabled: false
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+```
+
+## 接口分组（用 SpringDoc 原生 GroupedOpenApi）
+
+```java
+@Configuration
+public class OpenApiGroupConfig {
+
+    @Bean
+    public GroupedOpenApi adminApi() {
+        return GroupedOpenApi.builder()
+            .group("admin")
+            .pathsToMatch("/api/admin/**")
+            .build();
+    }
+
+    @Bean
+    public GroupedOpenApi publicApi() {
+        return GroupedOpenApi.builder()
+            .group("public")
+            .pathsToMatch("/api/v1/**")
+            .build();
+    }
+}
 ```
 
 ## 常见错误
 
-- ❌ 生产暴露 `/v3/api-docs` → ✅ `enabled: false`
-- ❌ `@Schema(example = "<密码>")` → ✅ 敏感字段不写 example
-- ❌ 直接把 JPA 实体当响应 DTO → ✅ 必须用 Response DTO
-- ❌ `@Schema(requiredMode = REQUIRED)` 但代码 `@NotNull` 缺失 → ✅ 两者必须配套
+- ❌ 生产暴露 `/v3/api-docs` → ✅ `springdoc.api-docs.enabled: false`
+- ❌ `@Schema(example = "<密码>")` → ✅ 敏感字段不放 example
+- ❌ 直接把 JPA 实体当响应 → ✅ 必须用 Response DTO
+- ❌ `@Schema(requiredMode = REQUIRED)` 但 `@NotNull` 缺失 → ✅ 两者必须配套
 - ❌ Controller 无 `@Tag` → ✅ 类级必须有
+- ❌ 配置写 `eagle.openapi.servers/groups` → ✅ 没有这些字段
 
 ## 关联规则
 
-- `.claude/rules/18-openapi.md` — 完整 OpenAPI 规范
-- `.claude/rules/05-api.md` — RESTful 约定
-- `.claude/rules/12-security.md` — 生产关闭文档暴露
+- `.claude/rules/18-openapi.md`
+- `.claude/rules/05-api.md`
+- `.claude/rules/12-security.md` — 生产关闭文档

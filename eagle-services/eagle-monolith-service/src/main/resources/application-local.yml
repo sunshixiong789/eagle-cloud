@@ -9,7 +9,7 @@ spring:
     baseline-on-migrate: true   # 兼容已有数据库
   datasource:
     driver-class-name: org.h2.Driver
-    url: jdbc:h2:file:${H2_DB_PATH:./db/eagle}
+    url: jdbc:h2:mem:${H2_DB_NAME:eagle};DB_CLOSE_DELAY=-1;MODE=MySQL
     username: ${H2_DB_USERNAME:root}
     password: ${H2_DB_PASSWORD:123456}
     hikari:

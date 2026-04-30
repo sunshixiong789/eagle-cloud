@@ -18,8 +18,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "sys_role_dept", comment = "角色部门关联表",
         indexes = {
-                @Index(name = "idx_role_id", columnList = "role_id"),
-                @Index(name = "idx_dept_id", columnList = "dept_id")
+                @Index(name = "idx_role_dept_role_id", columnList = "role_id"),
+                @Index(name = "idx_role_dept_dept_id", columnList = "dept_id")
         },
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_role_dept", columnNames = {"role_id", "dept_id"})

@@ -25,10 +25,10 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "sys_dict_item", comment = "字典项表", indexes = {
-        @Index(name = "idx_dict_id", columnList = "dict_id"),
-        @Index(name = "idx_dict_type", columnList = "dict_type"),
-        @Index(name = "idx_item_value", columnList = "item_value"),
-        @Index(name = "idx_parent_id", columnList = "parent_id")
+        @Index(name = "idx_dict_item_dict_id", columnList = "dict_id"),
+        @Index(name = "idx_dict_item_dict_type", columnList = "dict_type"),
+        @Index(name = "idx_dict_item_value", columnList = "item_value"),
+        @Index(name = "idx_dict_item_parent_id", columnList = "parent_id")
 })
 public class DictItemEntity extends BaseEntity {
 

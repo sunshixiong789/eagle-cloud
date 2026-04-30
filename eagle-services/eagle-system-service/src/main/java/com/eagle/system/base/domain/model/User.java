@@ -48,7 +48,7 @@ import java.util.Set;
         @Index(name = "idx_account_id", columnList = "account_id", unique = true),
         @Index(name = "idx_username", columnList = "username"),
         @Index(name = "idx_email", columnList = "email"),
-        @Index(name = "idx_dept_id", columnList = "dept_id")
+        @Index(name = "idx_user_dept_id", columnList = "dept_id")
 })
 public class User extends BaseAggregateRoot<User> {
 

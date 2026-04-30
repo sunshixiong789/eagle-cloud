@@ -1,16 +1,15 @@
-# eagle-sentinel-starter — 限流 / 熔断 / 降级（Alibaba Sentinel）
+# eagle-sentinel-starter — 限流 / 熔断（Alibaba Sentinel）
 
 ## 何时使用
 
 - 接口限流（防刷、保护后端）
-- 服务熔断（下游故障时快速失败）
-- 流量整形（突发流量削峰）
-- 系统过载保护（CPU / Load 自适应限流）
+- 服务熔断（下游故障快速失败）
+- 流量整形 / 系统过载保护
 
 ## 何时不要使用
 
-- 业务级幂等（用 `eagle-idempotency-starter`）
-- 单 IP / 单用户限流（用 `eagle-redis-starter` 的 `RedisRateLimiter`）
+- 业务级幂等 → 用 `eagle-idempotency-starter`
+- 单 IP / 单用户限流 → 用 `eagle-redis-starter` 的 `RedisRateLimiter`
 
 ## 依赖与启用
 
@@ -19,35 +18,31 @@ implementation project(':eagle-starter:eagle-sentinel-starter')
 ```
 
 ```yaml
-spring.cloud.sentinel:
+spring.cloud.sentinel:                        # Sentinel Spring Cloud 标准配置
   transport:
     dashboard: ${SENTINEL_DASHBOARD:127.0.0.1:8858}
     port: 8719
-  datasource:
-    nacos:
-      server-addr: ${NACOS_SERVER:127.0.0.1:8848}
-      data-id: ${spring.application.name}-sentinel-rules.json
-      group-id: SENTINEL_GROUP
-      rule-type: flow
   eager: true
 
 eagle.sentinel:
-  enabled: true
-  default-rate-limit: 100               # 默认 QPS
+  dashboard: 127.0.0.1:8858
+  heartbeat-interval-ms: 10000
+  origin-parser-enabled: true
+  url-cleaner: true
 ```
 
 ## 核心 API
 
-| 类 / 注解 | 用途 |
+| 注解 / 类 | 说明 |
 |---|---|
-| `@RateLimit` | 方法级限流注解（含 QPS、阈值、降级方法） |
-| `FlowControlBehavior` | 流控行为：`REJECT` / `WARM_UP` / `RATE_LIMITER` |
-| `RateLimitAspect` | 切面（注解处理） |
-| `SentinelRuleManager` | 编程式规则管理（动态推送） |
-| `EagleSentinelBlockExceptionHandler` | 限流异常 → HTTP 429 + 错误码 |
-| `EagleSentinelRequestOriginParser` | 请求来源解析（按 IP / 用户 / 租户限流） |
+| `@RateLimit(resource, qps, threads, behavior, warmUpPeriodSec, maxQueueingTimeMs)` | 限流注解，标在方法/类上 |
+| `FlowControlBehavior` | 行为枚举：**`FAST_FAIL / WARM_UP / RATE_LIMITER`** |
+| `RateLimitAspect` | 切面（自动注册流控规则） |
+| `EagleSentinelBlockExceptionHandler` | 限流异常 → 统一 HTTP 响应 |
+| `EagleSentinelRequestOriginParser` | 请求来源解析（`X-Application-Name`），用于授权规则 |
+| `SentinelRuleManager` | 编程式规则管理（动态推送场景） |
 
-或用 Sentinel 原生 `@SentinelResource`。
+也可用 Sentinel 原生 `@SentinelResource` 注解。
 
 ## 最小示例
 
@@ -56,86 +51,81 @@ eagle.sentinel:
 @RequestMapping("/api/v1/orders")
 public class OrderController {
 
-    /** 注解式：100 QPS，超限拒绝 */
-    @RateLimit(qps = 100, behavior = FlowControlBehavior.REJECT)
+    /** 默认 FAST_FAIL：超 100 QPS 直接拒绝 */
+    @RateLimit(qps = 100)
     @PostMapping
     public OrderResponse create(@Valid @RequestBody CreateOrderRequest req) {
         return orderService.create(req);
     }
 
-    /** 含降级：限流时走 fallback */
-    @RateLimit(qps = 50, fallback = "createFallback")
+    /** 预热：启动 20s 内阈值从低到 50 QPS 渐进 */
+    @RateLimit(qps = 50, behavior = FlowControlBehavior.WARM_UP, warmUpPeriodSec = 20)
     @PostMapping("/express")
     public OrderResponse expressCreate(@Valid @RequestBody CreateOrderRequest req) {
         return orderService.expressCreate(req);
     }
 
-    public OrderResponse createFallback(CreateOrderRequest req, Throwable ex) {
-        // 降级逻辑：返回提示 / 走简化流程
-        return OrderResponse.placeholder();
-    }
+    /** 匀速排队：超出 10/s 排队，最长等 1000ms */
+    @RateLimit(qps = 10,
+        behavior = FlowControlBehavior.RATE_LIMITER,
+        maxQueueingTimeMs = 1000)
+    @PostMapping("/sms")
+    public void sendSms(String phone) { ... }
 
-    /** Sentinel 原生：更细粒度控制 */
-    @SentinelResource(value = "orderQuery",
-        blockHandler = "blockHandler",
-        fallback = "queryFallback")
+    /** QPS + 并发线程数双重限制 */
+    @RateLimit(qps = 200, threads = 50)
     @GetMapping("/{id}")
     public OrderResponse get(@PathVariable Long id) {
         return orderService.findById(id);
     }
+
+    /** 类级：所有方法共享 */
+    @RateLimit(resource = "OrderController", qps = 500)
+    @RestController
+    public static class Group { /* ... */ }
 }
 ```
-
-## 规则配置（推荐 Nacos 动态推送）
-
-```json
-[
-  {
-    "resource": "POST:/api/v1/orders",
-    "count": 100,
-    "grade": 1,
-    "controlBehavior": 0
-  },
-  {
-    "resource": "orderQuery",
-    "count": 500,
-    "grade": 1
-  }
-]
-```
-
-`SentinelRuleManager` 启动时拉取，Nacos 推送变更实时生效。
 
 ## 配置项
 
 | key | 类型 | 默认 | 说明 |
 |---|---|---|---|
-| `eagle.sentinel.enabled` | boolean | `true` | 总开关 |
-| `eagle.sentinel.default-rate-limit` | int | `100` | 默认 QPS |
-| `spring.cloud.sentinel.transport.dashboard` | String | — | Sentinel 控制台 |
-| `spring.cloud.sentinel.eager` | boolean | `false` | 启动即上报 |
+| `eagle.sentinel.dashboard` | String | `localhost:8858` | Dashboard 地址 |
+| `eagle.sentinel.heartbeat-interval-ms` | int | `10000` | 心跳间隔 |
+| `eagle.sentinel.origin-parser-enabled` | boolean | `true` | 解析 `X-Application-Name` 识别调用方 |
+| `eagle.sentinel.url-cleaner` | boolean | `true` | URL 路径变量合并（`/users/1` 与 `/users/2` 合并为 `/users/{id}`） |
 
-## 限流维度对比
+⚠️ Sentinel 完整配置走 `spring.cloud.sentinel.*`。
 
-| 工具 | 维度 | 场景 |
-|------|------|------|
-| Sentinel `@RateLimit` | 接口级总 QPS | 全局保护 |
-| `RedisRateLimiter`（redis-starter）| IP / 用户 / 手机号 | 防刷 |
-| 网关 Sentinel 规则 | 入口流量 | 边缘保护 |
-| 数据库连接池 | 连接数 | 资源保护 |
+## @RateLimit 字段
 
-通常**网关层 + 接口层**双重保护。
+| 字段 | 类型 | 默认 | 说明 |
+|------|------|------|------|
+| `resource` | String | `""`（自动取类名.方法名）| 资源名 |
+| `qps` | double | `100` | QPS 阈值 |
+| `threads` | int | `0`（不限） | 并发线程数 |
+| `behavior` | enum | `FAST_FAIL` | 流控行为 |
+| `warmUpPeriodSec` | int | `10` | WARM_UP 预热时长 |
+| `maxQueueingTimeMs` | int | `500` | RATE_LIMITER 最长排队时间 |
+
+## FlowControlBehavior
+
+| 值 | 行为 |
+|----|------|
+| `FAST_FAIL` | 默认，超阈值直接拒绝 |
+| `WARM_UP` | 启动期阈值从低到高渐进 |
+| `RATE_LIMITER` | 漏桶 / 匀速排队 |
 
 ## 常见错误
 
+- ❌ 行为名 `REJECT` → ✅ **`FAST_FAIL`**
 - ❌ 限流后无降级 → ✅ 提供 fallback 或友好错误响应
-- ❌ 用 Sentinel 做用户级限流 → ✅ 用 Redis 限流器
-- ❌ 阈值拍脑袋 → ✅ 压测后根据 P95/P99 + 容量推导
-- ❌ 仅生产开启 → ✅ staging 也开（提前发现规则错误）
-- ❌ 业务异常被 Sentinel 计入熔断 → ✅ 通过 `exceptionsToIgnore` 排除业务异常
+- ❌ 用 Sentinel 做用户级限流 → ✅ 用 `RedisRateLimiter`
+- ❌ 阈值拍脑袋 → ✅ 压测后根据 P95/P99 推导
+- ❌ 业务异常被计入熔断 → ✅ 用 `exceptionsToIgnore` 排除
 
 ## 关联规则
 
-- `.claude/rules/12-security.md` — 防刷限流
+- `.claude/rules/12-security.md` — 防刷
 - `.claude/rules/23-performance.md` — 容量规划
-- `.claude/rules/24-deployment.md` — 网关 Sentinel 接入
+- `.claude/rules/24-deployment.md` — 网关 Sentinel
