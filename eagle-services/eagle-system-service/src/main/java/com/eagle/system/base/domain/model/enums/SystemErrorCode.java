@@ -1,4 +1,4 @@
-package com.eagle.system.common.exception;
+package com.eagle.system.base.domain.model.enums;
 
 import com.eagle.common.exception.ErrorCode;
 

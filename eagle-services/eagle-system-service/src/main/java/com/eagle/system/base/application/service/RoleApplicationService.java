@@ -11,7 +11,7 @@ import com.eagle.system.base.web.dto.request.RoleQueryRequest;
 import com.eagle.system.base.web.dto.request.UpdateRoleRequest;
 import com.eagle.system.base.web.dto.response.RoleResponse;
 import com.eagle.system.base.web.dto.response.UserResponse;
-import com.eagle.system.common.exception.SystemErrorCode;
+import com.eagle.system.base.domain.model.enums.SystemErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

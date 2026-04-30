@@ -3,7 +3,7 @@ package com.eagle.system.base.infrastructure.service;
 import com.eagle.system.base.domain.model.Role;
 import com.eagle.system.base.domain.repository.RoleRepository;
 import com.eagle.system.base.domain.service.RoleValidationService;
-import com.eagle.system.common.exception.SystemErrorCode;
+import com.eagle.system.base.domain.model.enums.SystemErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

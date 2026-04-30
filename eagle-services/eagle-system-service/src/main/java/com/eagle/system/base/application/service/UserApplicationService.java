@@ -17,7 +17,7 @@ import com.eagle.system.base.web.dto.response.AssignedDeptResponse;
 import com.eagle.system.base.web.dto.response.AssignedPostResponse;
 import com.eagle.system.base.web.dto.response.AssignedRoleResponse;
 import com.eagle.system.base.web.dto.response.UserResponse;
-import com.eagle.system.common.exception.UserErrorCode;
+import com.eagle.system.base.domain.model.enums.UserErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

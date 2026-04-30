@@ -1,5 +1,7 @@
 package com.eagle.common.exception;
 
+import java.io.Serial;
+
 /**
  * 资源不存在异常 — HTTP 404 Not Found
  * <p>
@@ -11,6 +13,7 @@ package com.eagle.common.exception;
  * @author sunshixiong
  */
 public class NotFoundException extends AppException {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     public NotFoundException(ErrorCode code, Object... args) {

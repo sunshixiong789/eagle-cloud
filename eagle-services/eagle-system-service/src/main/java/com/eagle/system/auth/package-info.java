@@ -18,10 +18,7 @@
  *
  * @author sunshixiong
  */
-@ApplicationModule(
-        displayName = "认证授权模块",
-        allowedDependencies = {"common"}
-)
+@ApplicationModule(displayName = "认证授权模块")
 @NullMarked
 package com.eagle.system.auth;
 

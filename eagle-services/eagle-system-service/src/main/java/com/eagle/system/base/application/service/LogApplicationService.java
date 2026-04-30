@@ -7,7 +7,7 @@ import com.eagle.system.base.domain.repository.LogRepository;
 import com.eagle.system.base.domain.repository.LogSpecification;
 import com.eagle.system.base.web.dto.request.LogQueryRequest;
 import com.eagle.system.base.web.dto.response.LogResponse;
-import com.eagle.system.common.exception.SystemErrorCode;
+import com.eagle.system.base.domain.model.enums.SystemErrorCode;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Row;

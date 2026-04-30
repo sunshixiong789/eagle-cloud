@@ -6,7 +6,7 @@ import com.eagle.system.base.domain.repository.PostRepository;
 import com.eagle.system.base.web.dto.request.CreatePostRequest;
 import com.eagle.system.base.web.dto.request.UpdatePostRequest;
 import com.eagle.system.base.web.dto.response.PostResponse;
-import com.eagle.system.common.exception.SystemErrorCode;
+import com.eagle.system.base.domain.model.enums.SystemErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

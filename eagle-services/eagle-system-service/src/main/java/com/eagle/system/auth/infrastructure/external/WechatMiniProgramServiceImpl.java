@@ -3,7 +3,7 @@ package com.eagle.system.auth.infrastructure.external;
 import cn.binarywang.wx.miniapp.api.WxMaService;
 import cn.binarywang.wx.miniapp.bean.WxMaJscode2SessionResult;
 import com.eagle.system.auth.domain.service.WechatService;
-import com.eagle.system.common.exception.AuthErrorCode;
+import com.eagle.system.auth.domain.AuthErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.error.WxErrorException;

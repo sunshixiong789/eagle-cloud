@@ -6,7 +6,7 @@ import com.eagle.system.auth.domain.repository.OAuthClientRepository;
 import com.eagle.system.auth.web.dto.request.CreateOAuthClientRequest;
 import com.eagle.system.auth.web.dto.request.UpdateOAuthClientRequest;
 import com.eagle.system.auth.web.dto.response.OAuthClientResponse;
-import com.eagle.system.common.exception.AuthErrorCode;
+import com.eagle.system.auth.domain.AuthErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

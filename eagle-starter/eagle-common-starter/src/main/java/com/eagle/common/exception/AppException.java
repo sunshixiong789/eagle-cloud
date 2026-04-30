@@ -3,6 +3,7 @@ package com.eagle.common.exception;
 import lombok.Getter;
 import org.springframework.context.MessageSource;
 
+import java.io.Serial;
 import java.util.Locale;
 
 /**
@@ -23,6 +24,8 @@ import java.util.Locale;
  */
 @Getter
 public abstract class AppException extends RuntimeException {
+
+    @Serial
     private static final long serialVersionUID = 1L;
     /**
      * -- GETTER --

@@ -1,5 +1,7 @@
 package com.eagle.common.exception;
 
+import java.io.Serial;
+
 /**
  * 资源冲突异常 — HTTP 409 Conflict
  * <p>
@@ -11,6 +13,7 @@ package com.eagle.common.exception;
  * @author sunshixiong
  */
 public class ConflictException extends AppException {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     public ConflictException(ErrorCode code, Object... args) {

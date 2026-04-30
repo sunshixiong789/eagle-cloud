@@ -1,5 +1,7 @@
 package com.eagle.common.exception;
 
+import java.io.Serial;
+
 /**
  * 领域异常 — HTTP 400 Bad Request
  * <p>
@@ -17,6 +19,7 @@ package com.eagle.common.exception;
  * @author sunshixiong
  */
 public class DomainException extends AppException {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     public DomainException(ErrorCode code, Object... args) {

@@ -28,10 +28,7 @@ import java.util.Optional;
  * @author sunshixiong
  */
 // @Modulithic 仅供 Modulith 静态分析读取（compileOnly），Spring Boot 启动时不处理
-@Modulithic(
-        systemName = "Eagle",
-        sharedModules = "common"  // common 是共享内核，所有模块无需在 allowedDependencies 中声明即可访问
-)
+@Modulithic(systemName = "Eagle")
 @SpringBootApplication
 @ConfigurationPropertiesScan
 @EnableCaching

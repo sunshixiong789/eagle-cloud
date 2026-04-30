@@ -6,7 +6,7 @@ import com.eagle.system.base.domain.repository.DeptRepository;
 import com.eagle.system.base.web.dto.request.CreateDeptRequest;
 import com.eagle.system.base.web.dto.request.UpdateDeptRequest;
 import com.eagle.system.base.web.dto.response.DeptResponse;
-import com.eagle.system.common.exception.SystemErrorCode;
+import com.eagle.system.base.domain.model.enums.SystemErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;

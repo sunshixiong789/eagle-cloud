@@ -4,7 +4,7 @@ import com.eagle.system.auth.domain.model.Account;
 import com.eagle.system.auth.domain.model.valueobject.ProfileHints;
 import com.eagle.system.auth.domain.repository.AccountRepository;
 import com.eagle.system.auth.domain.service.SmsService;
-import com.eagle.system.common.exception.AuthErrorCode;
+import com.eagle.system.auth.domain.AuthErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

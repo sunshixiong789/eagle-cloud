@@ -22,7 +22,7 @@
  */
 @ApplicationModule(
         displayName = "系统管理模块",
-        allowedDependencies = {"auth::port", "auth::event", "common"}
+        allowedDependencies = {"auth::port", "auth::event"}
 )
 @NullMarked
 package com.eagle.system.base;

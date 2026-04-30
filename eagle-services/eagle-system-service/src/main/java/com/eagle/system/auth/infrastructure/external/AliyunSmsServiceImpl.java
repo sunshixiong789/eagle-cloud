@@ -6,7 +6,7 @@ import com.aliyun.dysmsapi20170525.models.SendSmsResponse;
 import com.aliyun.teaopenapi.models.Config;
 import com.eagle.system.auth.domain.service.SmsService;
 import com.eagle.system.auth.infrastructure.config.AliyunSmsProperties;
-import com.eagle.system.common.exception.AuthErrorCode;
+import com.eagle.system.auth.domain.AuthErrorCode;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import jakarta.annotation.PostConstruct;

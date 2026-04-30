@@ -6,7 +6,7 @@ import com.eagle.system.base.domain.event.UserCreatedEvent;
 import com.eagle.system.base.domain.event.UserUpdatedEvent;
 import com.eagle.system.base.domain.model.valueobject.Address;
 import com.eagle.system.base.domain.model.valueobject.UserProfile;
-import com.eagle.system.common.exception.UserErrorCode;
+import com.eagle.system.base.domain.model.enums.UserErrorCode;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;

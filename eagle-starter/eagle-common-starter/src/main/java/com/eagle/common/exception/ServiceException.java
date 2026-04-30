@@ -1,5 +1,7 @@
 package com.eagle.common.exception;
 
+import java.io.Serial;
+
 /**
  * 服务异常 — HTTP 500 Internal Server Error
  * <p>
@@ -18,6 +20,7 @@ package com.eagle.common.exception;
  * @author sunshixiong
  */
 public class ServiceException extends AppException {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     public ServiceException(ErrorCode code, Object... args) {

@@ -1,9 +1,9 @@
-package com.eagle.system.common.exception;
+package com.eagle.system.auth.domain;
 
 import com.eagle.common.exception.ErrorCode;
 
 /**
- * 认证领域错误码（11001–11028）
+ * 认证领域错误码（11001–11033）
  */
 public enum AuthErrorCode implements ErrorCode {
 
@@ -34,7 +34,7 @@ public enum AuthErrorCode implements ErrorCode {
     CLIENT_GRANT_TYPE_REQ(11020, "error.client.grant_type_required", "授权类型不能为空"),
     CLIENT_DISABLED(11021, "error.client.disabled", "客户端已被禁用"),
 
-    // ==================== 账号管理（11022–11028）====================
+    // ==================== 账号管理（11022–11029）====================
 
     ACCOUNT_NOT_FOUND(11022, "error.account.not_found", "账号不存在"),
     ACCOUNT_ALREADY_EXISTS(11023, "error.account.already_exists", "账号已存在"),
