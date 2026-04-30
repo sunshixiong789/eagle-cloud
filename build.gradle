@@ -1,3 +1,5 @@
+import java.time.Duration
+
 plugins {
     id 'java'
     id 'java-library'
@@ -91,7 +93,8 @@ configure(subprojects.findAll { it.name != 'eagle-bom' }) {
 
     publishing {
         publications {
-            mavenJava(MavenPublication) {
+            // 用 register 替代 mavenJava(MavenPublication) {} 命名块语法，让 IDEA 识别签名
+            register('mavenJava', MavenPublication) {
                 from components.java
                 groupId = 'com.eagle'
             }
@@ -113,7 +116,7 @@ configure(subprojects.findAll { it.name != 'eagle-bom' }) {
         // javaagent 会向 bootstrap classpath 追加内容，关闭 CDS 以消除 "Sharing is only supported..." 警告
         jvmArgs "-Xshare:off"
         // 设置测试超时时间，防止测试卡住（5分钟）
-        timeout.set(java.time.Duration.ofMinutes(5))
+        timeout.set(Duration.ofMinutes(5))
         // 显示测试执行信息
         testLogging {
             events "passed", "skipped", "failed"
@@ -166,13 +169,11 @@ configure(subprojects.findAll { it.name != 'eagle-bom' }) {
     }
 
     graalvmNative {
-        binaries {
-            main {
-                javaLauncher = javaToolchains.launcherFor {
-                    languageVersion = JavaLanguageVersion.of(25)
-                    vendor = JvmVendorSpec.GRAAL_VM
-                }
-            }
+        binaries.named('main') {
+            javaLauncher.set(javaToolchains.launcherFor {
+                languageVersion = JavaLanguageVersion.of(25)
+                vendor = JvmVendorSpec.GRAAL_VM
+            })
         }
     }
 }

@@ -79,70 +79,72 @@ dependencies {
     api platform("org.springframework.modulith:spring-modulith-bom:${springModulithVersion}")
 
     // 项目自管的版本约束（消费方无需写版本即可使用）
+    // 用 add('api', ...) 显式调用 DependencyConstraintHandler.add，避免 IDEA 对动态 DSL 误报
     constraints {
         // 数据库驱动
-        api "com.mysql:mysql-connector-j:${mysqlConnectorVersion}"
-        api "org.postgresql:postgresql:${postgresqlVersion}"
+        add('api', "com.mysql:mysql-connector-j:${mysqlConnectorVersion}")
+        add('api', "org.postgresql:postgresql:${postgresqlVersion}")
 
         // 连接池
-        api "com.alibaba:druid-spring-boot-3-starter:${druidVersion}"
+        add('api', "com.alibaba:druid-spring-boot-3-starter:${druidVersion}")
 
         // Redis
-        api "org.redisson:redisson-spring-boot-starter:${redissonVersion}"
+        add('api', "org.redisson:redisson-spring-boot-starter:${redissonVersion}")
 
         // 工具类
-        api "cn.hutool:hutool-all:${hutoolVersion}"
-        api "com.google.guava:guava:${guavaVersion}"
-        api "org.apache.commons:commons-lang3:${commonsLang3Version}"
-        api "org.apache.commons:commons-collections4:${commonsCollections4Version}"
-        api "commons-io:commons-io:${commonsIoVersion}"
-        api "com.github.f4b6a3:uuid-creator:${uuidCreatorVersion}"
-        api "com.github.ben-manes.caffeine:caffeine:${caffeineVersion}"
+        add('api', "cn.hutool:hutool-all:${hutoolVersion}")
+        add('api', "com.google.guava:guava:${guavaVersion}")
+        add('api', "org.apache.commons:commons-lang3:${commonsLang3Version}")
+        add('api', "org.apache.commons:commons-collections4:${commonsCollections4Version}")
+        add('api', "commons-io:commons-io:${commonsIoVersion}")
+        add('api', "com.github.f4b6a3:uuid-creator:${uuidCreatorVersion}")
+        add('api', "com.github.ben-manes.caffeine:caffeine:${caffeineVersion}")
 
         // 微信/第三方 SDK
-        api "com.github.binarywang:weixin-java-miniapp:${wxJavaVersion}"
-        api "com.aliyun:dysmsapi20170525:${aliyunSmsVersion}"
+        add('api', "com.github.binarywang:weixin-java-miniapp:${wxJavaVersion}")
+        add('api', "com.aliyun:dysmsapi20170525:${aliyunSmsVersion}")
 
         // API 文档
-        api "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
-        api "org.springdoc:springdoc-openapi-starter-webflux-ui:${springdocVersion}"
+        add('api', "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}")
+        add('api', "org.springdoc:springdoc-openapi-starter-webflux-ui:${springdocVersion}")
 
         // 序列化
-        api "com.alibaba.fastjson2:fastjson2:${fastjson2Version}"
+        add('api', "com.alibaba.fastjson2:fastjson2:${fastjson2Version}")
 
         // Office 文档
-        api "org.apache.poi:poi-ooxml:${poiVersion}"
+        add('api', "org.apache.poi:poi-ooxml:${poiVersion}")
 
         // MapStruct
-        api "org.projectlombok:lombok-mapstruct-binding:${lombokMapstructVersion}"
-        api "org.mapstruct:mapstruct:${mapstructVersion}"
-        api "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+        add('api', "org.projectlombok:lombok-mapstruct-binding:${lombokMapstructVersion}")
+        add('api', "org.mapstruct:mapstruct:${mapstructVersion}")
+        add('api', "org.mapstruct:mapstruct-processor:${mapstructVersion}")
 
         // RocketMQ
-        api "org.apache.rocketmq:rocketmq-spring-boot-starter:${rocketMqVersion}"
-        api "org.apache.rocketmq:rocketmq-v5-client-spring-boot-starter:${rocketMqVersion}"
+        add('api', "org.apache.rocketmq:rocketmq-spring-boot-starter:${rocketMqVersion}")
+        add('api', "org.apache.rocketmq:rocketmq-v5-client-spring-boot-starter:${rocketMqVersion}")
 
         // 对象存储
-        api "io.minio:minio:${minioVersion}"
+        add('api', "io.minio:minio:${minioVersion}")
 
         // 分布式定时任务
-        api "com.xuxueli:xxl-job-core:${xxlJobVersion}"
+        add('api', "com.xuxueli:xxl-job-core:${xxlJobVersion}")
 
         // 分布式事务
-        api "org.apache.seata:seata-spring-boot-starter:${seataVersion}"
+        add('api', "org.apache.seata:seata-spring-boot-starter:${seataVersion}")
 
         // MyBatis-Plus
-        api "com.baomidou:mybatis-plus-spring-boot4-starter:${mybatisPlusVersion}"
+        add('api', "com.baomidou:mybatis-plus-spring-boot4-starter:${mybatisPlusVersion}")
 
         // 支付 SDK
-        api "com.alipay.sdk:alipay-sdk-java:${alipayVersion}"
-        api "com.github.wechatpay-apiv3:wechatpay-java:${wechatpayVersion}"
+        add('api', "com.alipay.sdk:alipay-sdk-java:${alipayVersion}")
+        add('api', "com.github.wechatpay-apiv3:wechatpay-java:${wechatpayVersion}")
     }
 }
 
 publishing {
     publications {
-        bom(MavenPublication) {
+        // 用 register 替代 bom(MavenPublication) {} 命名块语法，让 IDEA 识别签名
+        register('bom', MavenPublication) {
             from components.javaPlatform
         }
     }
