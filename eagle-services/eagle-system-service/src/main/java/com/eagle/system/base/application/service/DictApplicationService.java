@@ -1,6 +1,5 @@
 package com.eagle.system.base.application.service;
 
-import com.eagle.system.common.exception.SystemErrorCode;
 import com.eagle.system.base.application.mapper.DictItemMapper;
 import com.eagle.system.base.application.mapper.DictMapper;
 import com.eagle.system.base.domain.model.Dict;
@@ -13,6 +12,7 @@ import com.eagle.system.base.web.dto.request.UpdateDictItemRequest;
 import com.eagle.system.base.web.dto.request.UpdateDictRequest;
 import com.eagle.system.base.web.dto.response.DictItemResponse;
 import com.eagle.system.base.web.dto.response.DictResponse;
+import com.eagle.system.common.exception.SystemErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;

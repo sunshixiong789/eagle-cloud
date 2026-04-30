@@ -14,11 +14,9 @@ import java.util.Map;
  */
 @Getter
 public class WechatMiniProgramAuthenticationToken extends OAuth2AuthorizationGrantAuthenticationToken {
-    private static final long serialVersionUID = 1L;
-
     public static final AuthorizationGrantType WECHAT_MINI_PROGRAM =
             new AuthorizationGrantType("wechat_mini_program");
-
+    private static final long serialVersionUID = 1L;
     private final String code;
 
     public WechatMiniProgramAuthenticationToken(String code,

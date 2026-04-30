@@ -38,37 +38,43 @@ eagle.rocketmq:
     retry-alert-threshold: 3
 ```
 
-⚠️ 此 starter 用 **RocketMQ 5.x 原生客户端 API**（`ClientServiceProvider` / `MessageView` / `PushConsumer`），**不**使用 Spring Cloud Alibaba 的 `@RocketMQMessageListener` 注解和 `MessageExt`。
+⚠️ 此 starter 用 **RocketMQ 5.x 原生客户端 API**（`ClientServiceProvider` / `MessageView` / `PushConsumer`），**不**使用
+Spring Cloud Alibaba 的 `@RocketMQMessageListener` 注解和 `MessageExt`。
 
 ## 核心 API
 
-| 类 / 接口 | 用途 |
-|---|---|
-| `DomainEventPublisher` | 同步/异步/延迟/顺序发布抽象 |
-| `RocketMqDomainEventPublisher` | 默认实现 |
-| `TransactionalEventPublisher` | 事务消息发布抽象 |
-| `RocketMqTransactionalEventPublisher` | 默认实现 |
-| `TransactionCallback` | 函数式：`boolean execute()`（true 提交 / false 回滚）|
-| `AbstractRocketMqTransactionChecker` | 事务回查模板：实现 `boolean isTransactionCommitted(MessageView)` |
-| `AbstractRocketMqListener<T extends BaseEvent>` | 消费者基类，实现 `getTopic() / getEventClass() / handle(T event)` |
-| `AbstractDlqListener<T>` | 死信消费者，实现 `getOriginalConsumerGroup() / getEventClass() / handleDeadLetter(T, totalAttempts)` |
-| `RocketMqDistributedLock` | `DistributedLock` 的 MQ 实现（`eagle.lock.type=mq` 时启用）|
-| `RocketMqErrorCode` | 错误码 |
+| 类 / 接口                                          | 用途                                                                                           |
+|-------------------------------------------------|----------------------------------------------------------------------------------------------|
+| `DomainEventPublisher`                          | 同步/异步/延迟/顺序发布抽象                                                                              |
+| `RocketMqDomainEventPublisher`                  | 默认实现                                                                                         |
+| `TransactionalEventPublisher`                   | 事务消息发布抽象                                                                                     |
+| `RocketMqTransactionalEventPublisher`           | 默认实现                                                                                         |
+| `TransactionCallback`                           | 函数式：`boolean execute()`（true 提交 / false 回滚）                                                  |
+| `AbstractRocketMqTransactionChecker`            | 事务回查模板：实现 `boolean isTransactionCommitted(MessageView)`                                      |
+| `AbstractRocketMqListener<T extends BaseEvent>` | 消费者基类，实现 `getTopic() / getEventClass() / handle(T event)`                                    |
+| `AbstractDlqListener<T>`                        | 死信消费者，实现 `getOriginalConsumerGroup() / getEventClass() / handleDeadLetter(T, totalAttempts)` |
+| `RocketMqDistributedLock`                       | `DistributedLock` 的 MQ 实现（`eagle.lock.type=mq` 时启用）                                          |
+| `RocketMqErrorCode`                             | 错误码                                                                                          |
 
 ### `DomainEventPublisher` 方法签名
 
 ```java
 <T extends BaseEvent> void publish(T event);                     // Topic 自动推导
+
 <T extends BaseEvent> void publish(String topic, T event);
+
 <T extends BaseEvent> void publish(String topic, String tag, T event);
 
 <T extends BaseEvent> CompletableFuture<Void> publishAsync(T event);
+
 <T extends BaseEvent> CompletableFuture<Void> publishAsync(String topic, T event);
 
 <T extends BaseEvent> void publishDelayed(T event, Duration delay);
+
 <T extends BaseEvent> void publishDelayed(String topic, T event, Duration delay);
 
 <T extends BaseEvent> void publishOrdered(T event, String messageGroup);     // 顺序消息
+
 <T extends BaseEvent> void publishOrdered(String topic, T event, String messageGroup);
 ```
 
@@ -76,6 +82,7 @@ eagle.rocketmq:
 
 ```java
 <T extends BaseEvent> void publishInTransaction(T event, TransactionCallback callback);
+
 <T extends BaseEvent> void publishInTransaction(String topic, T event, TransactionCallback callback);
 ```
 
@@ -104,12 +111,12 @@ public class PaymentService {
     public void pay(Long orderId) {
         Order order = orderRepository.findById(orderId).orElseThrow();
         txPublisher.publishInTransaction(
-            new OrderPaidEvent(orderId, ...),
-            () -> {
-                order.markPaid();
-                orderRepository.save(order);
-                return true;     // 本地事务成功
-            }
+                new OrderPaidEvent(orderId, ...),
+        () -> {
+            order.markPaid();
+            orderRepository.save(order);
+            return true;     // 本地事务成功
+        }
         );
     }
 }
@@ -125,10 +132,14 @@ public class OrderCreatedConsumer extends AbstractRocketMqListener<OrderCreatedE
     }
 
     @Override
-    protected String getTopic() { return "eagle-OrderCreatedEvent"; }
+    protected String getTopic() {
+        return "eagle-OrderCreatedEvent";
+    }
 
     @Override
-    protected Class<OrderCreatedEvent> getEventClass() { return OrderCreatedEvent.class; }
+    protected Class<OrderCreatedEvent> getEventClass() {
+        return OrderCreatedEvent.class;
+    }
 
     @Override
     protected void handle(OrderCreatedEvent event) {
@@ -138,7 +149,9 @@ public class OrderCreatedConsumer extends AbstractRocketMqListener<OrderCreatedE
 
     // 可选覆盖
     @Override
-    protected String getConsumerGroup() { return "stock-service-order-created"; }
+    protected String getConsumerGroup() {
+        return "stock-service-order-created";
+    }
 }
 
 // 4) 死信（继承 AbstractDlqListener）
@@ -152,10 +165,14 @@ public class OrderCreatedDlqListener extends AbstractDlqListener<OrderCreatedEve
     }
 
     @Override
-    protected String getOriginalConsumerGroup() { return "stock-service-order-created"; }
+    protected String getOriginalConsumerGroup() {
+        return "stock-service-order-created";
+    }
 
     @Override
-    protected Class<OrderCreatedEvent> getEventClass() { return OrderCreatedEvent.class; }
+    protected Class<OrderCreatedEvent> getEventClass() {
+        return OrderCreatedEvent.class;
+    }
 
     @Override
     protected void handleDeadLetter(OrderCreatedEvent event, int totalAttempts) {
@@ -179,18 +196,18 @@ public class OrderTxChecker extends AbstractRocketMqTransactionChecker {
 
 ## 配置项
 
-| key | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `eagle.rocketmq.enabled` | boolean | `true` | 总开关 |
-| `eagle.rocketmq.endpoints` | String | `localhost:8081` | 接入点 |
-| `eagle.rocketmq.producer-group` | String | `eagle-producer-group` | 生产者组 |
-| `eagle.rocketmq.consumer-group` | String | `eagle-consumer-group` | 默认消费者组 |
-| `eagle.rocketmq.topic-prefix` | String | `eagle-` | Topic 自动推导前缀 |
-| `eagle.rocketmq.request-timeout-millis` | int | `3000` | 客户端请求超时 |
-| `eagle.rocketmq.max-attempts` | int | `2` | 同步发送最大重试 |
-| `eagle.rocketmq.consumer.max-cached-message-count` | int | `1024` | 本地缓存条数上限 |
-| `eagle.rocketmq.consumer.max-cached-message-size-in-bytes` | int | `64MB` | 本地缓存字节上限 |
-| `eagle.rocketmq.consumer.retry-alert-threshold` | int | `3` | 重试告警阈值 |
+| key                                                        | 类型      | 默认                     | 说明           |
+|------------------------------------------------------------|---------|------------------------|--------------|
+| `eagle.rocketmq.enabled`                                   | boolean | `true`                 | 总开关          |
+| `eagle.rocketmq.endpoints`                                 | String  | `localhost:8081`       | 接入点          |
+| `eagle.rocketmq.producer-group`                            | String  | `eagle-producer-group` | 生产者组         |
+| `eagle.rocketmq.consumer-group`                            | String  | `eagle-consumer-group` | 默认消费者组       |
+| `eagle.rocketmq.topic-prefix`                              | String  | `eagle-`               | Topic 自动推导前缀 |
+| `eagle.rocketmq.request-timeout-millis`                    | int     | `3000`                 | 客户端请求超时      |
+| `eagle.rocketmq.max-attempts`                              | int     | `2`                    | 同步发送最大重试     |
+| `eagle.rocketmq.consumer.max-cached-message-count`         | int     | `1024`                 | 本地缓存条数上限     |
+| `eagle.rocketmq.consumer.max-cached-message-size-in-bytes` | int     | `64MB`                 | 本地缓存字节上限     |
+| `eagle.rocketmq.consumer.retry-alert-threshold`            | int     | `3`                    | 重试告警阈值       |
 
 ## 常见错误
 

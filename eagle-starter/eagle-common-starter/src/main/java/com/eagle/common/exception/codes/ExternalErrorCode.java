@@ -2,7 +2,9 @@ package com.eagle.common.exception.codes;
 
 import com.eagle.common.exception.ErrorCode;
 
-/** 外部服务错误码（15001–15003） */
+/**
+ * 外部服务错误码（15001–15003）
+ */
 public enum ExternalErrorCode implements ErrorCode {
     EXTERNAL_SERVICE_ERROR(15001, "error.external.service_error", "外部服务调用失败"),
     EXTERNAL_SERVICE_TIMEOUT(15002, "error.external.service_timeout", "外部服务调用超时"),

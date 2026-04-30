@@ -1,5 +1,6 @@
 package com.eagle.seata.properties;
 
+import com.eagle.seata.config.SeataEnvironmentPostProcessor;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

@@ -9,9 +9,13 @@ import com.eagle.system.base.domain.model.enums.LogType;
  */
 public interface LogTypeSummaryProjection {
 
-    /** 日志类型 */
+    /**
+     * 日志类型
+     */
     LogType getLogType();
 
-    /** 该类型日志数量 */
+    /**
+     * 该类型日志数量
+     */
     Long getCount();
 }

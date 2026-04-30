@@ -11,13 +11,15 @@
 所有 Controller 方法**必须**显式声明 `@PreAuthorize`，即使全局已配置 `anyRequest().authenticated()`：
 
 ```java
+
 @PreAuthorize("hasRole('admin')")       // 管理员操作
 @PreAuthorize("isAuthenticated()")      // 登录即可
 @PreAuthorize("hasRole('admin') or #id == authentication.principal.id")  // 本人或管理员
 
 // ❌ 禁止：缺少权限注解
 @GetMapping("/{id}")
-public OrderResponse getOrderById(@PathVariable Long id) { }
+public OrderResponse getOrderById(@PathVariable Long id) {
+}
 ```
 
 ## CORS 配置

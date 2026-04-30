@@ -39,21 +39,27 @@ import org.springframework.context.annotation.Bean;
 @ConditionalOnProperty(name = "eagle.id-generator.enabled", havingValue = "true", matchIfMissing = true)
 public class IdGeneratorAutoConfiguration {
 
-    /** 雪花算法生成器（始终注册，可被业务直接注入） */
+    /**
+     * 雪花算法生成器（始终注册，可被业务直接注入）
+     */
     @Bean
     @ConditionalOnMissingBean
     public SnowflakeIdGenerator snowflakeIdGenerator(IdGeneratorProperties properties) {
         return new SnowflakeIdGenerator(properties);
     }
 
-    /** UUID v7 生成器（始终注册，可被业务直接注入） */
+    /**
+     * UUID v7 生成器（始终注册，可被业务直接注入）
+     */
     @Bean
     @ConditionalOnMissingBean
     public UuidIdGenerator uuidIdGenerator() {
         return new UuidIdGenerator();
     }
 
-    /** TSID 生成器（始终注册，可被业务直接注入） */
+    /**
+     * TSID 生成器（始终注册，可被业务直接注入）
+     */
     @Bean
     @ConditionalOnMissingBean
     public TsidIdGenerator tsidIdGenerator(IdGeneratorProperties properties) {
@@ -61,7 +67,9 @@ public class IdGeneratorAutoConfiguration {
         return new TsidIdGenerator(tsid.getNodeId(), tsid.getNodeBits());
     }
 
-    /** NanoId 生成器（始终注册，可被业务直接注入） */
+    /**
+     * NanoId 生成器（始终注册，可被业务直接注入）
+     */
     @Bean
     @ConditionalOnMissingBean
     public NanoIdGenerator nanoIdGenerator(IdGeneratorProperties properties) {

@@ -2,9 +2,9 @@ package com.eagle.system.auth.infrastructure.config;
 
 import com.eagle.common.constant.SecurityConstants;
 import com.eagle.common.dto.EagleUser;
-import com.eagle.system.auth.infrastructure.security.JwtKeyProperties;
 import com.eagle.system.auth.infrastructure.security.BlacklistAwareJwtDecoder;
 import com.eagle.system.auth.infrastructure.security.EagleUserAuthenticationToken;
+import com.eagle.system.auth.infrastructure.security.JwtKeyProperties;
 import com.eagle.system.auth.infrastructure.security.LoginRateLimitFilter;
 import com.eagle.system.auth.infrastructure.security.SmsCodeAuthenticationConverter;
 import com.eagle.system.auth.infrastructure.security.SmsCodeAuthenticationProvider;
@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -40,8 +41,8 @@ import org.springframework.security.oauth2.server.authorization.JdbcOAuth2Author
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.token.DelegatingOAuth2TokenGenerator;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
@@ -63,7 +64,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.util.List;
-import org.springframework.jdbc.core.JdbcOperations;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -101,7 +101,7 @@ public class SecurityConfig {
      */
     @Bean
     public OAuth2AuthorizationService authorizationService(JdbcOperations jdbcOperations,
-                                                            RegisteredClientRepository registeredClientRepository) {
+                                                           RegisteredClientRepository registeredClientRepository) {
         return new JdbcOAuth2AuthorizationService(jdbcOperations, registeredClientRepository);
     }
 

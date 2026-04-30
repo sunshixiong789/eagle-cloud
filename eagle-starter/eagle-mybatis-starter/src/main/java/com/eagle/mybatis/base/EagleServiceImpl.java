@@ -107,13 +107,19 @@ public class EagleServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M,
      */
     private static final class SimpleErrorCode implements com.eagle.common.exception.ErrorCode {
 
-        /** 固定错误码，复用 NOT_FOUND 语义 */
+        /**
+         * 固定错误码，复用 NOT_FOUND 语义
+         */
         private static final int CODE = CommonErrorCode.NOT_FOUND.getCode();
 
-        /** 固定 i18n key，复用通用 NOT_FOUND key */
+        /**
+         * 固定 i18n key，复用通用 NOT_FOUND key
+         */
         private static final String MESSAGE_KEY = CommonErrorCode.NOT_FOUND.getMessageKey();
 
-        /** 业务层传入的实际错误描述文本 */
+        /**
+         * 业务层传入的实际错误描述文本
+         */
         private final String defaultMessage;
 
         private SimpleErrorCode(String defaultMessage) {

@@ -1,25 +1,27 @@
 # OpenAPI / Swagger 文档规范
 
-技术栈：`eagle-openapi-starter`（基于 SpringDoc OpenAPI 3.0.2）。所有对外接口**必须**有完整 OpenAPI 注解，`/swagger-ui.html` 自动生成。
+技术栈：`eagle-openapi-starter`（基于 SpringDoc OpenAPI 3.0.2）。所有对外接口**必须**有完整 OpenAPI 注解，`/swagger-ui.html`
+自动生成。
 
 ## 项目级配置
 
 每个可执行服务在 `infrastructure/config/` 提供 `OpenApiConfig`：
 
 ```java
+
 @Configuration
 public class OpenApiConfig {
     @Bean
     public OpenAPI eagleOpenAPI() {
         return new OpenAPI()
-            .info(new Info()
-                .title("Eagle System Server API")
-                .version("v1.0")
-                .description("系统管理服务接口"))
-            .components(new Components()
-                .addSecuritySchemes("bearer-jwt",
-                    new SecurityScheme().type(HTTP).scheme("bearer").bearerFormat("JWT")))
-            .addSecurityItem(new SecurityRequirement().addList("bearer-jwt"));
+                .info(new Info()
+                        .title("Eagle System Server API")
+                        .version("v1.0")
+                        .description("系统管理服务接口"))
+                .components(new Components()
+                        .addSecuritySchemes("bearer-jwt",
+                                new SecurityScheme().type(HTTP).scheme("bearer").bearerFormat("JWT")))
+                .addSecurityItem(new SecurityRequirement().addList("bearer-jwt"));
     }
 }
 ```
@@ -27,6 +29,7 @@ public class OpenApiConfig {
 ## Controller 注解
 
 每个 Controller 必须有：
+
 - 类级 `@Tag` — 描述资源域
 - 方法级 `@Operation` — 描述用例
 - 必要时 `@ApiResponses` 描述错误码
@@ -40,15 +43,15 @@ public class OpenApiConfig {
 public class OrderController {
 
     @Operation(summary = "创建订单", description = "支持普通订单与团购订单",
-        responses = {
-            @ApiResponse(responseCode = "201", description = "创建成功"),
-            @ApiResponse(responseCode = "400", description = "参数校验失败"),
-            @ApiResponse(responseCode = "409", description = "库存不足或重复订单号")
-        })
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "创建成功"),
+                    @ApiResponse(responseCode = "400", description = "参数校验失败"),
+                    @ApiResponse(responseCode = "409", description = "库存不足或重复订单号")
+            })
     @PreAuthorize("isAuthenticated()")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderResponse create(@Valid @RequestBody CreateOrderRequest request) { ... }
+    public OrderResponse create(@Valid @RequestBody CreateOrderRequest request) { ...}
 }
 ```
 
@@ -76,10 +79,11 @@ public class CreateOrderRequest {
 // ✅ 响应 DTO
 @Schema(description = "订单详情")
 public record OrderResponse(
-    @Schema(description = "订单 ID", example = "10086") Long id,
-    @Schema(description = "订单号", example = "ORD20260430123456") String orderNo,
-    @Schema(description = "金额（元）", example = "199.00") BigDecimal totalAmount
-) {}
+        @Schema(description = "订单 ID", example = "10086") Long id,
+        @Schema(description = "订单号", example = "ORD20260430123456") String orderNo,
+        @Schema(description = "金额（元）", example = "199.00") BigDecimal totalAmount
+) {
+}
 ```
 
 - `requiredMode = REQUIRED` 与 Bean Validation `@NotNull/@NotBlank` **必须配套**
@@ -91,20 +95,21 @@ public record OrderResponse(
 通过 `GroupedOpenApi` 拆分成多组（管理后台 / OpenAPI / 内部）：
 
 ```java
+
 @Bean
 public GroupedOpenApi adminApi() {
     return GroupedOpenApi.builder()
-        .group("admin")
-        .pathsToMatch("/api/admin/**")
-        .build();
+            .group("admin")
+            .pathsToMatch("/api/admin/**")
+            .build();
 }
 
 @Bean
 public GroupedOpenApi publicApi() {
     return GroupedOpenApi.builder()
-        .group("public")
-        .pathsToMatch("/api/v1/**")
-        .build();
+            .group("public")
+            .pathsToMatch("/api/v1/**")
+            .build();
 }
 ```
 
@@ -120,7 +125,7 @@ URL 路径携带版本：`/api/v1/orders` → `/api/v2/orders`。
 @Operation(deprecated = true, summary = "[已废弃] 改用 GET /api/v2/orders")
 @Deprecated(since = "2026-04-01", forRemoval = true)
 @GetMapping("/api/v1/orders")
-public ... { ... }
+public ...{...}
 ```
 
 ## 错误码文档化
@@ -129,9 +134,9 @@ public ... { ... }
 
 ```java
 @ApiResponses({
-    @ApiResponse(responseCode = "404", description = "ORDER_NOT_FOUND (30001)"),
-    @ApiResponse(responseCode = "409", description = "ORDER_ALREADY_PAID (30002)"),
-    @ApiResponse(responseCode = "400", description = "INSUFFICIENT_STOCK (30005)")
+        @ApiResponse(responseCode = "404", description = "ORDER_NOT_FOUND (30001)"),
+        @ApiResponse(responseCode = "409", description = "ORDER_ALREADY_PAID (30002)"),
+        @ApiResponse(responseCode = "400", description = "INSUFFICIENT_STOCK (30005)")
 })
 ```
 
@@ -155,6 +160,7 @@ springdoc:
 ## 文档导出
 
 CI 流水线导出 OpenAPI JSON 用于：
+
 - Apifox / Postman 同步
 - 客户端代码生成（OpenAPI Generator）
 - 契约测试（Pact）

@@ -31,29 +31,30 @@ eagle.redis:
   cache-null-values: true       # 缓存 null 防穿透
   key-prefix: "eagle:"          # 多服务共享 Redis 时防 key 冲突
   transaction-aware: true       # 事务提交后再写缓存
-  cache-ttls:                   # 各 cacheName 独立 TTL
+  cache-ttls: # 各 cacheName 独立 TTL
     USER_CACHE: 10m
     PERMISSION_CACHE: 60m
 ```
 
 ## 核心 API
 
-| 类 | 主要方法 |
-|---|---|
-| `CacheProtectionUtil` | `getWithMutex(key, ttl, loader, type)` 防击穿；`jitter(base, ratio)` 防雪崩；`evict(key)` |
-| `RedissonBloomFilterUtil` | `init(name, expected, falseProb)` / `add` / `contains` / `addAll` / `count` / `delete` |
-| `RedisRateLimiter`（Lua）| `tryAcquire(key, capacity, rate)` 令牌桶 / `tryAcquireWindow(key, max, window)` 滑动窗口 |
-| `RedissonRateLimiterUtil` | `tryAcquire(key, rate, interval)` / 全参版含 `RateType.OVERALL/PER_CLIENT` 与 permits |
-| `RedissonAtomicUtil` | `initIfAbsent` / `increment` / `decrement` / `addAndGet` / **`decrementIfSufficient`（CAS 防超扣）** / `compareAndSet` / `get` / `delete` |
-| `RedissonDelayedQueueUtil` | `offer(name, item, delay, unit)` / `take(name)` 阻塞 / `poll(name [, timeout, unit])` / `cancel` / `size` |
-| `RedissonTopicUtil` | `publish(topic, msg)` / `subscribe(topic, type, listenerKey, listener)` / `unsubscribe` / `countSubscribers` |
-| `RedisDistributedLock` | `DistributedLock` 默认实现（Bean 自动注册，业务注入 `DistributedLock` 即可）|
+| 类                          | 主要方法                                                                                                                                 |
+|----------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| `CacheProtectionUtil`      | `getWithMutex(key, ttl, loader, type)` 防击穿；`jitter(base, ratio)` 防雪崩；`evict(key)`                                                    |
+| `RedissonBloomFilterUtil`  | `init(name, expected, falseProb)` / `add` / `contains` / `addAll` / `count` / `delete`                                               |
+| `RedisRateLimiter`（Lua）    | `tryAcquire(key, capacity, rate)` 令牌桶 / `tryAcquireWindow(key, max, window)` 滑动窗口                                                    |
+| `RedissonRateLimiterUtil`  | `tryAcquire(key, rate, interval)` / 全参版含 `RateType.OVERALL/PER_CLIENT` 与 permits                                                     |
+| `RedissonAtomicUtil`       | `initIfAbsent` / `increment` / `decrement` / `addAndGet` / **`decrementIfSufficient`（CAS 防超扣）** / `compareAndSet` / `get` / `delete` |
+| `RedissonDelayedQueueUtil` | `offer(name, item, delay, unit)` / `take(name)` 阻塞 / `poll(name [, timeout, unit])` / `cancel` / `size`                              |
+| `RedissonTopicUtil`        | `publish(topic, msg)` / `subscribe(topic, type, listenerKey, listener)` / `unsubscribe` / `countSubscribers`                         |
+| `RedisDistributedLock`     | `DistributedLock` 默认实现（Bean 自动注册，业务注入 `DistributedLock` 即可）                                                                          |
 
 Spring 缓存：`@Cacheable / @CacheEvict / @Caching` 直接用。
 
 ## 最小示例
 
 ```java
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -67,10 +68,10 @@ public class UserService {
     /** 防击穿：单飞回源 + 空值占位防穿透 */
     public User findById(Long id) {
         return cacheProtection.getWithMutex(
-            "eagle:user:" + id,
-            cacheProtection.jitter(Duration.ofMinutes(30), 0.2),  // ±20% 抖动
-            () -> repository.findById(id).orElse(null),
-            User.class
+                "eagle:user:" + id,
+                cacheProtection.jitter(Duration.ofMinutes(30), 0.2),  // ±20% 抖动
+                () -> repository.findById(id).orElse(null),
+                User.class
         );
     }
 
@@ -109,13 +110,13 @@ public class UserService {
 
 ## 配置项
 
-| key | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `eagle.redis.default-ttl` | Duration | `30m` | 默认 TTL |
-| `eagle.redis.cache-null-values` | boolean | `true` | 缓存 null（防穿透） |
-| `eagle.redis.key-prefix` | String | `""` | Key 前缀 |
-| `eagle.redis.transaction-aware` | boolean | `true` | 事务提交后才写缓存 |
-| `eagle.redis.cache-ttls` | Map | `{}` | 按 cacheName 独立 TTL |
+| key                             | 类型       | 默认     | 说明                 |
+|---------------------------------|----------|--------|--------------------|
+| `eagle.redis.default-ttl`       | Duration | `30m`  | 默认 TTL             |
+| `eagle.redis.cache-null-values` | boolean  | `true` | 缓存 null（防穿透）       |
+| `eagle.redis.key-prefix`        | String   | `""`   | Key 前缀             |
+| `eagle.redis.transaction-aware` | boolean  | `true` | 事务提交后才写缓存          |
+| `eagle.redis.cache-ttls`        | Map      | `{}`   | 按 cacheName 独立 TTL |
 
 Redis 连接走 Spring Boot 标准 `spring.data.redis.*`。
 

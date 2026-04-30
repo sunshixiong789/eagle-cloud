@@ -24,7 +24,9 @@ public record ProfileHints(
         Set<Long> roleIds
 ) {
 
-    /** 空画像提示（社交/短信登录自动注册时使用） */
+    /**
+     * 空画像提示（社交/短信登录自动注册时使用）
+     */
     public static final ProfileHints EMPTY = new ProfileHints(null, null, null, null, Set.of());
 
     /**

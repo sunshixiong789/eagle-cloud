@@ -1,13 +1,13 @@
 package com.eagle.system.base.application.service;
 
 import com.eagle.common.exception.codes.DataErrorCode;
-import com.eagle.system.common.exception.SystemErrorCode;
 import com.eagle.system.base.application.mapper.LogMapper;
 import com.eagle.system.base.domain.model.SysLog;
 import com.eagle.system.base.domain.repository.LogRepository;
 import com.eagle.system.base.domain.repository.LogSpecification;
 import com.eagle.system.base.web.dto.request.LogQueryRequest;
 import com.eagle.system.base.web.dto.response.LogResponse;
+import com.eagle.system.common.exception.SystemErrorCode;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Row;
@@ -199,12 +199,16 @@ public class LogApplicationService {
         }
     }
 
-    /** 安全转字符串，null 返回空串 */
+    /**
+     * 安全转字符串，null 返回空串
+     */
     private String safeStr(Object obj) {
         return obj != null ? obj.toString() : "";
     }
 
-    /** CSV 字段转义：含逗号、双引号或换行时包裹双引号 */
+    /**
+     * CSV 字段转义：含逗号、双引号或换行时包裹双引号
+     */
     private String escapeCsv(String s) {
         if (s == null) {
             return "";

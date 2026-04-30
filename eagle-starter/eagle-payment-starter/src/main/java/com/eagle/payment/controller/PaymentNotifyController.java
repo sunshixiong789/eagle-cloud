@@ -43,9 +43,9 @@ public class PaymentNotifyController {
      * <p>通过 {@link com.eagle.payment.config.PaymentAutoConfiguration} 工厂方法注入，
      * 由自动配置层传入带 {@code @Qualifier} 的 Provider，避免控制器层直接依赖 Bean 名称。
      *
-     * @param alipayGatewayProvider  支付宝网关 Provider（可选，未配置时 getIfAvailable 返回 null）
-     * @param wechatGatewayProvider  微信支付网关 Provider（可选，未配置时 getIfAvailable 返回 null）
-     * @param eventPublisher         Spring 事件发布器
+     * @param alipayGatewayProvider 支付宝网关 Provider（可选，未配置时 getIfAvailable 返回 null）
+     * @param wechatGatewayProvider 微信支付网关 Provider（可选，未配置时 getIfAvailable 返回 null）
+     * @param eventPublisher        Spring 事件发布器
      */
     public PaymentNotifyController(
             ObjectProvider<PaymentGateway> alipayGatewayProvider,

@@ -12,9 +12,13 @@ import lombok.Data;
 @AllArgsConstructor
 public class LoginTrendItem {
 
-    /** 日期（yyyy-MM-dd） */
+    /**
+     * 日期（yyyy-MM-dd）
+     */
     private String date;
 
-    /** 登录次数 */
+    /**
+     * 登录次数
+     */
     private long count;
 }

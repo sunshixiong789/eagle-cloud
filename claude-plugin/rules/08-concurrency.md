@@ -60,7 +60,8 @@ public void updateProfile(UserProfile newProfile) {
 
 // ❌ 错误：应用服务手动维护缓存（与业务耦合）
 @CacheEvict(value = "USER_CACHE", allEntries = true)
-public void updateProfile(...) { }
+public void updateProfile(...) {
+}
 ```
 
 **例外**：`delete` 等不通过聚合根方法的操作，仍可使用 `@CacheEvict`。
@@ -72,8 +73,8 @@ public void updateProfile(...) { }
 ```java
 // ✅ 正确
 @Caching(evict = {
-    @CacheEvict(value = "CACHE_A", allEntries = true),
-    @CacheEvict(value = "CACHE_B", allEntries = true)
+        @CacheEvict(value = "CACHE_A", allEntries = true),
+        @CacheEvict(value = "CACHE_B", allEntries = true)
 })
 
 // ❌ 错误：编译失败，@CacheEvict 不是可重复注解

@@ -17,25 +17,39 @@ import java.math.BigDecimal;
 @Builder
 public class PayRequest {
 
-    /** 商户订单号（全局唯一，不超过 64 字符） */
+    /**
+     * 商户订单号（全局唯一，不超过 64 字符）
+     */
     private String outTradeNo;
 
-    /** 订单标题 */
+    /**
+     * 订单标题
+     */
     private String subject;
 
-    /** 支付金额（元，精确到分） */
+    /**
+     * 支付金额（元，精确到分）
+     */
     private BigDecimal amount;
 
-    /** 订单描述 */
+    /**
+     * 订单描述
+     */
     private String description;
 
-    /** 过期时间（分钟，默认 30 分钟） */
+    /**
+     * 过期时间（分钟，默认 30 分钟）
+     */
     @Builder.Default
     private int expireMinutes = 30;
 
-    /** 扩展参数（透传给第三方，回调时原样返回） */
+    /**
+     * 扩展参数（透传给第三方，回调时原样返回）
+     */
     private String passbackParams;
 
-    /** 买家 openId（微信小程序/公众号支付必填） */
+    /**
+     * 买家 openId（微信小程序/公众号支付必填）
+     */
     private String openId;
 }

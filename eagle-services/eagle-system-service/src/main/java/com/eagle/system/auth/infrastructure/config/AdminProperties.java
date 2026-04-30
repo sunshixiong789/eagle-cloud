@@ -26,20 +26,30 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "eagle.admin")
 public class AdminProperties {
 
-    /** 管理员用户名 */
+    /**
+     * 管理员用户名
+     */
     private String username = "admin";
 
-    /** 管理员密码（无默认值，必须通过环境变量或配置文件显式设置） */
+    /**
+     * 管理员密码（无默认值，必须通过环境变量或配置文件显式设置）
+     */
     @NotBlank(message = "管理员密码不能为空，请设置环境变量 EAGLE_ADMIN_PASSWORD")
     @Size(min = 8, message = "管理员密码长度不能少于 8 位")
     private String password;
 
-    /** 管理员姓名 */
+    /**
+     * 管理员姓名
+     */
     private String name = "系统管理员";
 
-    /** 管理员手机号 */
+    /**
+     * 管理员手机号
+     */
     private String phone = "";
 
-    /** 管理员邮箱 */
+    /**
+     * 管理员邮箱
+     */
     private String email = "admin@eagle.com";
 }

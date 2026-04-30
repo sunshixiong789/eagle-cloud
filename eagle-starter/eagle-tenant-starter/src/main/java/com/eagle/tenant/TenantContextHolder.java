@@ -15,21 +15,21 @@ public class TenantContextHolder {
     }
 
     /**
-     * 设置当前租户 ID。
-     *
-     * @param tenantId 租户 ID
-     */
-    public static void setTenantId(String tenantId) {
-        CURRENT_TENANT.set(tenantId);
-    }
-
-    /**
      * 获取当前租户 ID。
      *
      * @return 租户 ID，可能为 null
      */
     public static String getTenantId() {
         return CURRENT_TENANT.get();
+    }
+
+    /**
+     * 设置当前租户 ID。
+     *
+     * @param tenantId 租户 ID
+     */
+    public static void setTenantId(String tenantId) {
+        CURRENT_TENANT.set(tenantId);
     }
 
     /**

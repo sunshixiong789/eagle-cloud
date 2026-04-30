@@ -135,7 +135,7 @@ springdoc:
       app-name: Eagle  # OAuth2 应用名称
       client-id: eagleWeb  # OAuth2 客户端 ID
       use-pkce-with-authorization-code-grant: true  # 启用 PKCE
-      scopes:  # 默认请求的权限范围
+      scopes: # 默认请求的权限范围
         - "openid"
         - "profile"
     csrf:

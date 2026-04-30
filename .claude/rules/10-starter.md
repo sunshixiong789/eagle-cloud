@@ -34,6 +34,7 @@ public class FeatureAutoConfiguration {
 **命名**：`{Feature}AutoConfiguration`
 
 **常用条件注解：**
+
 - `@ConditionalOnClass` — 类路径存在时生效（必加，防止缺少依赖报错）
 - `@ConditionalOnProperty(name = "eagle.xxx.enabled", havingValue = "true", matchIfMissing = true)` — 配置开关
 - `@ConditionalOnMissingBean` — 允许使用方覆盖默认实现
@@ -62,7 +63,8 @@ public class FeatureProperties {
 
 **命名**：`{Feature}Properties`，prefix 统一使用 `eagle.{feature}` 前缀
 
-**注册方式**：在 `@AutoConfiguration` 类上加 `@EnableConfigurationProperties(FeatureProperties.class)`，不使用 `@ConfigurationPropertiesScan`
+**注册方式**：在 `@AutoConfiguration` 类上加 `@EnableConfigurationProperties(FeatureProperties.class)`，不使用
+`@ConfigurationPropertiesScan`
 
 ## build.gradle 依赖范围
 

@@ -18,21 +18,33 @@ import java.util.List;
 @ConfigurationProperties(prefix = "eagle.elasticsearch")
 public class ElasticSearchProperties {
 
-    /** Elasticsearch 节点地址列表，如 http://localhost:9200 */
+    /**
+     * Elasticsearch 节点地址列表，如 http://localhost:9200
+     */
     private List<String> uris = List.of("http://localhost:9200");
 
-    /** 用户名（可选） */
+    /**
+     * 用户名（可选）
+     */
     private String username;
 
-    /** 密码（可选） */
+    /**
+     * 密码（可选）
+     */
     private String password;
 
-    /** 连接超时（ms） */
+    /**
+     * 连接超时（ms）
+     */
     private int connectTimeout = 5000;
 
-    /** Socket 超时（ms） */
+    /**
+     * Socket 超时（ms）
+     */
     private int socketTimeout = 30000;
 
-    /** 是否启用 SSL */
+    /**
+     * 是否启用 SSL
+     */
     private boolean sslEnabled = false;
 }

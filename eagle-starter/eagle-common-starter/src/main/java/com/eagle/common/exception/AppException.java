@@ -26,12 +26,12 @@ public abstract class AppException extends RuntimeException {
     private static final long serialVersionUID = 1L;
     /**
      * -- GETTER --
-     *  获取错误码
+     * 获取错误码
      */
     private final transient ErrorCode errorCode;
     /**
      * -- GETTER --
-     *  获取消息参数（供扩展使用）
+     * 获取消息参数（供扩展使用）
      */
     private final transient Object[] messageArgs;
 

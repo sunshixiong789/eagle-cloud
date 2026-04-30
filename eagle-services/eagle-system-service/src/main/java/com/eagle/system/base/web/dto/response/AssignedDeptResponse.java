@@ -16,21 +16,33 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AssignedDeptResponse {
 
-    /** 部门 ID */
+    /**
+     * 部门 ID
+     */
     private Long id;
 
-    /** 父级部门 ID */
+    /**
+     * 父级部门 ID
+     */
     private Long parentId;
 
-    /** 部门名称 */
+    /**
+     * 部门名称
+     */
     private String name;
 
-    /** 部门层级路径 */
+    /**
+     * 部门层级路径
+     */
     private String deptPath;
 
-    /** 部门层级 */
+    /**
+     * 部门层级
+     */
     private Integer level;
 
-    /** 部门状态：DeptStatus 枚举名称 */
+    /**
+     * 部门状态：DeptStatus 枚举名称
+     */
     private String status;
 }

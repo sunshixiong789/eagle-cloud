@@ -7,8 +7,13 @@
 ```java
 // ❌ N+1：循环内查询关联数据
 List<Order> orders = orderRepository.findAll();
-for (Order o : orders) {
-    o.getItems().size();   // 每个订单触发一次 SELECT
+for(
+Order o :orders){
+        o.
+
+getItems().
+
+size();   // 每个订单触发一次 SELECT
 }
 
 // ✅ 方案一：@EntityGraph（推荐）
@@ -23,7 +28,9 @@ Optional<Order> findByIdWithItems(Long id);
 // ✅ 方案三：投影接口（不需要完整聚合）
 public interface OrderListView {
     Long getId();
+
     String getOrderNo();
+
     int getItemCount();   // 通过 JPQL 子查询
 }
 ```
@@ -40,9 +47,9 @@ public interface OrderListView {
 
 ```java
 @Table(name = "t_order", indexes = {
-    @Index(name = "idx_tenant_status_created",
-           columnList = "tenant_id, status, created_at"),
-    @Index(name = "uk_order_no", columnList = "order_no", unique = true)
+        @Index(name = "idx_tenant_status_created",
+                columnList = "tenant_id, status, created_at"),
+        @Index(name = "uk_order_no", columnList = "order_no", unique = true)
 })
 ```
 
@@ -103,23 +110,23 @@ spring.datasource.druid:
 
 `eagle-common-starter` 的 `AsyncConfig` 已注册默认 `@Bean("taskExecutor")`，参数：
 
-| 参数 | 值 |
-|---|---|
-| corePoolSize | CPU 核心数 |
-| maxPoolSize | CPU × 2 |
-| queueCapacity | 200（有界） |
-| keepAlive | 60s |
-| 拒绝策略 | `CallerRunsPolicy`（背压） |
-| 优雅关闭 | `waitForTasksToComplete=true`，`awaitTermination=30s` |
+| 参数            | 值                                                    |
+|---------------|------------------------------------------------------|
+| corePoolSize  | CPU 核心数                                              |
+| maxPoolSize   | CPU × 2                                              |
+| queueCapacity | 200（有界）                                              |
+| keepAlive     | 60s                                                  |
+| 拒绝策略          | `CallerRunsPolicy`（背压）                               |
+| 优雅关闭          | `waitForTasksToComplete=true`，`awaitTermination=30s` |
 
 ```java
 // ✅ 默认池（不指定 = 用 "taskExecutor"）
 @Async
-public void processNotification(...) { ... }
+public void processNotification(...) { ...}
 
 // ✅ 显式指定（推荐——便于排查 / 隔离）
 @Async("taskExecutor")
-public void processNotification(...) { ... }
+public void processNotification(...) { ...}
 
 // ✅ 高频独立池：业务关键路径配独立池避免互相阻塞
 @Bean("messageTaskExecutor")
@@ -138,7 +145,7 @@ public TaskExecutor messageTaskExecutor() {
 }
 
 @Async("messageTaskExecutor")
-public void sendNotification(...) { ... }
+public void sendNotification(...) { ...}
 ```
 
 - **禁止**用 `@Async` 默认 `SimpleAsyncTaskExecutor`（每次 new 线程）— `eagle-common-starter` 已替换
@@ -150,8 +157,12 @@ public void sendNotification(...) { ... }
 WebFlux 服务（`eagle-gateway-server`）中**禁止**调用阻塞 API（JDBC、JPA、Feign）。如必需用 `Schedulers.boundedElastic()`：
 
 ```java
-return Mono.fromCallable(() -> blockingDbCall())
-    .subscribeOn(Schedulers.boundedElastic());
+return Mono.fromCallable(() ->
+
+blockingDbCall())
+        .
+
+subscribeOn(Schedulers.boundedElastic());
 ```
 
 ## 大对象与流式处理
@@ -164,17 +175,25 @@ List<Order> all = orderRepository.findAll();   // 几十万行 → OOM
 @QueryHints(@QueryHint(name = HINT_FETCH_SIZE, value = "1000"))
 Stream<Order> streamAll();
 
-try (Stream<Order> stream = orderRepository.streamAll()) {
-    stream.forEach(this::process);
+try(
+Stream<Order> stream = orderRepository.streamAll()){
+        stream.
+
+forEach(this::process);
 }
 
 // ✅ 分批
 int page = 0;
 Slice<Order> slice;
-do {
-    slice = orderRepository.findAll(PageRequest.of(page++, 1000));
-    process(slice.getContent());
-} while (slice.hasNext());
+do{
+slice =orderRepository.
+
+findAll(PageRequest.of(page++, 1000));
+
+process(slice.getContent());
+        }while(slice.
+
+hasNext());
 ```
 
 ## HTTP 调用
@@ -193,13 +212,13 @@ do {
 
 每个服务必须暴露 Micrometer 指标到 Prometheus：
 
-| 指标 | 用途 |
-|------|------|
-| `http_server_requests_seconds` | API 响应时间 |
-| `hikaricp_connections_active` / `druid.*` | 连接池压力 |
-| `cache_gets_total` / `cache_puts_total` | 缓存命中率 |
-| `jvm_gc_pause_seconds` | GC 停顿 |
-| `executor_queue_remaining` | 异步线程池队列 |
+| 指标                                        | 用途       |
+|-------------------------------------------|----------|
+| `http_server_requests_seconds`            | API 响应时间 |
+| `hikaricp_connections_active` / `druid.*` | 连接池压力    |
+| `cache_gets_total` / `cache_puts_total`   | 缓存命中率    |
+| `jvm_gc_pause_seconds`                    | GC 停顿    |
+| `executor_queue_remaining`                | 异步线程池队列  |
 
 报警阈值：P99 响应 > 1s / 错误率 > 1% / GC 暂停 > 500ms。
 

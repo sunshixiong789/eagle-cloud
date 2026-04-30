@@ -1,9 +1,9 @@
 package com.eagle.system.auth.infrastructure.security;
 
+import com.eagle.common.dto.EagleUser;
 import com.eagle.system.auth.application.service.AccountApplicationService;
 import com.eagle.system.auth.domain.model.Account;
 import com.eagle.system.auth.domain.service.SmsService;
-import com.eagle.common.dto.EagleUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -115,9 +115,9 @@ public class SmsCodeAuthenticationProvider implements AuthenticationProvider {
      * 使用 Spring Authorization Server 的 TokenGenerator 生成标准 OAuth2 Token,
      * 并保存授权信息到 OAuth2AuthorizationService 以支持后续的 token 验证和刷新。
      *
-     * @param eagleUser         认证用户
-     * @param registeredClient  OAuth2 客户端信息
-     * @param clientPrincipal   客户端认证信息
+     * @param eagleUser            认证用户
+     * @param registeredClient     OAuth2 客户端信息
+     * @param clientPrincipal      客户端认证信息
      * @param additionalParameters 额外参数
      * @return OAuth2AccessTokenAuthenticationToken 包含 access_token 和 refresh_token
      */

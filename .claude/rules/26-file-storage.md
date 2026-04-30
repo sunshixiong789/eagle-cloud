@@ -4,14 +4,14 @@
 
 ## 何时存 OSS、何时存 DB
 
-| 数据 | 位置 |
-|------|------|
-| 用户上传文件（图片/视频/附件）| OSS |
-| 临时大对象（导出 Excel、PDF）| OSS（短 TTL） |
-| 头像、Logo、产品图 | OSS |
-| 富文本中嵌入的图片 | OSS |
-| 业务消息体（短文本）| DB |
-| 配置 / 字典 | DB |
+| 数据                  | 位置         |
+|---------------------|------------|
+| 用户上传文件（图片/视频/附件）    | OSS        |
+| 临时大对象（导出 Excel、PDF） | OSS（短 TTL） |
+| 头像、Logo、产品图         | OSS        |
+| 富文本中嵌入的图片           | OSS        |
+| 业务消息体（短文本）          | DB         |
+| 配置 / 字典             | DB         |
 
 **禁止**把图片 / 文件 base64 存进 DB（性能灾难）。
 
@@ -62,12 +62,12 @@ public UploadResponse upload(MultipartFile file) {
 }
 ```
 
-| 校验项 | 默认值 |
-|--------|--------|
-| 大小 | 图片 ≤ 5MB；附件 ≤ 50MB；视频 ≤ 500MB |
-| 后缀白名单 | 图片：`.jpg .jpeg .png .gif .webp`；文档：`.pdf .docx .xlsx` |
-| MIME 真实性 | 用 Apache Tika 检测魔数，**不**信任前端传的 `Content-Type` |
-| 文件名 | 拒绝 `..` / `/` / 空字符 / 控制字符 |
+| 校验项      | 默认值                                                   |
+|----------|-------------------------------------------------------|
+| 大小       | 图片 ≤ 5MB；附件 ≤ 50MB；视频 ≤ 500MB                         |
+| 后缀白名单    | 图片：`.jpg .jpeg .png .gif .webp`；文档：`.pdf .docx .xlsx` |
+| MIME 真实性 | 用 Apache Tika 检测魔数，**不**信任前端传的 `Content-Type`         |
+| 文件名      | 拒绝 `..` / `/` / 空字符 / 控制字符                            |
 
 **禁止**：可执行文件（`.exe .sh .bat .jsp .php`）即使白名单也不接受。
 
@@ -77,7 +77,7 @@ public UploadResponse upload(MultipartFile file) {
 
 ```java
 // 上传后异步触发
-publisher.publish("prod_oss_uploaded", new FileUploadedEvent(bucket, key));
+publisher.publish("prod_oss_uploaded",new FileUploadedEvent(bucket, key));
 
 // 扫描消费者
 @Override
@@ -112,16 +112,18 @@ public-read 仅用于：CDN 加速的静态资源（产品图、Logo）
 
 ## 上传方式
 
-| 场景 | 方式 |
-|------|------|
-| 小文件（< 5MB）| 直接 multipart 上传到后端 → 后端转存 OSS |
-| 大文件（> 5MB）| **直传 OSS**：后端签名 URL，浏览器 PUT 直传 |
-| 超大文件（> 100MB）| 分片上传（MinIO `Multipart Upload`）|
+| 场景            | 方式                             |
+|---------------|--------------------------------|
+| 小文件（< 5MB）    | 直接 multipart 上传到后端 → 后端转存 OSS  |
+| 大文件（> 5MB）    | **直传 OSS**：后端签名 URL，浏览器 PUT 直传 |
+| 超大文件（> 100MB） | 分片上传（MinIO `Multipart Upload`） |
 
 ```java
 // ✅ 直传签名（推荐大文件）
 String uploadUrl = ossService.presignedPutUrl(bucket, key, Duration.ofMinutes(10));
-return new UploadTicket(uploadUrl, key);
+return new
+
+UploadTicket(uploadUrl, key);
 ```
 
 **禁止**：用户文件经过应用服务器转发（带宽 / 内存 / CPU 浪费）。
@@ -133,8 +135,8 @@ return new UploadTicket(uploadUrl, key);
 @Bean
 public LifecycleConfiguration exportBucketLifecycle() {
     return LifecycleConfiguration.builder()
-        .addRule(rule -> rule.id("auto-expire-7d").expiration(7))
-        .build();
+            .addRule(rule -> rule.id("auto-expire-7d").expiration(7))
+            .build();
 }
 ```
 
@@ -147,20 +149,21 @@ public LifecycleConfiguration exportBucketLifecycle() {
 业务表存储文件元数据：
 
 ```sql
-CREATE TABLE t_file (
-    id          BIGINT       PRIMARY KEY,
-    tenant_id   VARCHAR(64)  NOT NULL,
-    bucket      VARCHAR(64)  NOT NULL,
-    object_key  VARCHAR(512) NOT NULL,
+CREATE TABLE t_file
+(
+    id            BIGINT PRIMARY KEY,
+    tenant_id     VARCHAR(64)  NOT NULL,
+    bucket        VARCHAR(64)  NOT NULL,
+    object_key    VARCHAR(512) NOT NULL,
     original_name VARCHAR(255),
-    size        BIGINT       NOT NULL,
-    content_type VARCHAR(128),
-    md5         CHAR(32),
-    uploaded_by VARCHAR(64),
-    uploaded_at TIMESTAMP,
-    deleted     TINYINT(1)   DEFAULT 0,
+    size          BIGINT       NOT NULL,
+    content_type  VARCHAR(128),
+    md5           CHAR(32),
+    uploaded_by   VARCHAR(64),
+    uploaded_at   TIMESTAMP,
+    deleted       TINYINT(1)   DEFAULT 0,
     UNIQUE KEY uk_bucket_key (bucket, object_key),
-    KEY idx_tenant_uploader (tenant_id, uploaded_by)
+    KEY           idx_tenant_uploader (tenant_id, uploaded_by)
 );
 ```
 

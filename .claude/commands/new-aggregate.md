@@ -6,6 +6,7 @@ argument-hint: "<service>:<module>:<AggregateName>，例 eagle-system-server:ord
 # /new-aggregate — 创建聚合根全栈骨架
 
 为指定模块创建一个完整的聚合根，含：
+
 - Domain：聚合根 + Repository + ErrorCode + 领域事件
 - Application：ApplicationService + Mapper（MapStruct）
 - Infrastructure：JPA Repository 实现
@@ -30,47 +31,47 @@ argument-hint: "<service>:<module>:<AggregateName>，例 eagle-system-server:ord
 ```java
 package com.eagle.{service}.{module}.domain.model.aggregate;
 
-@Entity
-@Table(name = "t_{module}_{aggregate_snake}", indexes = {
-    @Index(name = "idx_tenant_status", columnList = "tenant_id, status")
-})
-@Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class {Aggregate} extends BaseAggregateRoot<{Aggregate}> {
+        @Entity
+        @Table(name="t_{module}_{aggregate_snake}",indexes={
+        @Index(name="idx_tenant_status",columnList="tenant_id, status")
+        })
+        @Getter
+        @NoArgsConstructor(access=AccessLevel.PROTECTED)
+        public class{Aggregate}extends BaseAggregateRoot<{Aggregate}>{
 
-    @Column(nullable = false, length = 64)
-    private String tenantId;
+        @Column(nullable=false,length=64)
+        private String tenantId;
 
-    @Column(nullable = false, length = 32, unique = true)
-    private String {aggregate}No;
+        @Column(nullable=false,length=32,unique=true)
+        private String{aggregate}No;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private {Aggregate}Status status = {Aggregate}Status.CREATED;
+        @Enumerated(EnumType.STRING)
+        @Column(nullable=false,length=20)
+        private{Aggregate}Status status={Aggregate}Status.CREATED;
 
-    /** 静态工厂方法 */
-    public static {Aggregate} create(String {aggregate}No /*, ProfileHints hints*/) {
-        {Aggregate} agg = new {Aggregate}();
-        agg.{aggregate}No = {aggregate}No;
-        agg.tenantId = TenantContextHolder.getCurrentTenantId();
+        /** 静态工厂方法 */
+        public static{Aggregate}create(String{aggregate}No /*, ProfileHints hints*/){
+        {Aggregate}agg=new{Aggregate}();
+        agg.{aggregate}No={aggregate}No;
+        agg.tenantId=TenantContextHolder.getCurrentTenantId();
         // agg.profileHints = hints;  // @Transient 用于 @PostPersist
         return agg;
-    }
-
-    @PostPersist
-    void onPostPersist() {
-        // registerEvent(new {Aggregate}CreatedEvent(getId(), {aggregate}No, ...));
-    }
-
-    /** 业务方法（替代 setter）*/
-    public void cancel() {
-        if (status != {Aggregate}Status.CREATED) {
-            throw {Aggregate}ErrorCode.INVALID_STATUS_TRANSITION.toDomainException();
         }
-        this.status = {Aggregate}Status.CANCELLED;
-        registerEvent(new {Aggregate}CancelledEvent(getId()));
-    }
-}
+
+        @PostPersist
+        void onPostPersist(){
+        // registerEvent(new {Aggregate}CreatedEvent(getId(), {aggregate}No, ...));
+        }
+
+        /** 业务方法（替代 setter）*/
+        public void cancel(){
+        if(status!={Aggregate}Status.CREATED){
+        throw{Aggregate}ErrorCode.INVALID_STATUS_TRANSITION.toDomainException();
+        }
+        this.status={Aggregate}Status.CANCELLED;
+        registerEvent(new{Aggregate}CancelledEvent(getId()));
+        }
+        }
 ```
 
 ### 2. 状态枚举
@@ -78,9 +79,9 @@ public class {Aggregate} extends BaseAggregateRoot<{Aggregate}> {
 ```java
 package com.eagle.{service}.{module}.domain.model.enums;
 
-public enum {Aggregate}Status {
-    CREATED, CONFIRMED, CANCELLED, COMPLETED
-}
+        public enum{Aggregate}Status{
+        CREATED,CONFIRMED,CANCELLED,COMPLETED
+        }
 ```
 
 ### 3. ErrorCode
@@ -88,16 +89,16 @@ public enum {Aggregate}Status {
 ```java
 package com.eagle.{service}.{module}.web.exception;
 
-@Getter
-@RequiredArgsConstructor
-public enum {Aggregate}ErrorCode implements ErrorCode {
-    {AGG}_NOT_FOUND(/* 起始码 */, "error.{module}.{aggregate}.not_found", "{Aggregate} 不存在"),
-    INVALID_STATUS_TRANSITION(..., "error.{module}.{aggregate}.invalid_status", "状态变更不合法");
+        @Getter
+        @RequiredArgsConstructor
+        public enum{Aggregate}ErrorCode implements ErrorCode{
+        {AGG}_NOT_FOUND(/* 起始码 */,"error.{module}.{aggregate}.not_found","{Aggregate} 不存在"),
+        INVALID_STATUS_TRANSITION(...,"error.{module}.{aggregate}.invalid_status","状态变更不合法");
 
-    private final int code;
-    private final String i18nKey;
-    private final String defaultMessage;
-}
+        private final int code;
+        private final String i18nKey;
+        private final String defaultMessage;
+        }
 ```
 
 并提示用户在 `i18n/messages_*.properties` 中加翻译（`/add-error-code` 可批量添加）。
@@ -107,13 +108,13 @@ public enum {Aggregate}ErrorCode implements ErrorCode {
 ```java
 package com.eagle.{service}.{module}.domain.repository;
 
-public interface {Aggregate}Repository extends JpaRepository<{Aggregate}, Long> {
+        public interface{Aggregate}Repository extends JpaRepository<{Aggregate},Long>{
 
-    Optional<{Aggregate}> findBy{Aggregate}No(String {aggregate}No);
+        Optional<{Aggregate}>findBy{Aggregate}No(String{aggregate}No);
 
-    @EntityGraph(attributePaths = {/* 关联子实体 */})
-    Optional<{Aggregate}> findFullById(Long id);
-}
+        @EntityGraph(attributePaths={/* 关联子实体 */})
+        Optional<{Aggregate}>findFullById(Long id);
+        }
 ```
 
 ### 5. 领域事件
@@ -121,10 +122,10 @@ public interface {Aggregate}Repository extends JpaRepository<{Aggregate}, Long> 
 ```java
 package com.eagle.{service}.{module}.domain.event;
 
-public record {Aggregate}CreatedEvent(Long {aggregate}Id, String {aggregate}No)
-    extends BaseEvent { }
+        public record{Aggregate}CreatedEvent(Long{aggregate}Id,String{aggregate}No)
+        extends BaseEvent{}
 
-public record {Aggregate}CancelledEvent(Long {aggregate}Id) extends BaseEvent { }
+        public record{Aggregate}CancelledEvent(Long{aggregate}Id)extends BaseEvent{}
 ```
 
 ### 6. ApplicationService
@@ -132,42 +133,46 @@ public record {Aggregate}CancelledEvent(Long {aggregate}Id) extends BaseEvent { 
 ```java
 package com.eagle.{service}.{module}.application.service;
 
-@Service
-@RequiredArgsConstructor
-@Transactional(rollbackFor = Exception.class)
-public class {Aggregate}ApplicationService {
+        @Service
+        @RequiredArgsConstructor
+        @Transactional(rollbackFor=Exception.class)
+        public class{Aggregate}ApplicationService{
 
-    private final {Aggregate}Repository repository;
-    private final {Aggregate}Mapper mapper;
+        private final{Aggregate}Repository repository;
+        private final{Aggregate}Mapper mapper;
 
-    public {Aggregate}Response create(Create{Aggregate}Request request) {
-        {Aggregate} agg = {Aggregate}.create(generateNo());
+        public{Aggregate}Response create(Create{Aggregate}Request request){
+        {Aggregate}agg={Aggregate}.create(generateNo());
         repository.save(agg);
         return mapper.toResponse(agg);
-    }
+        }
 
-    @Transactional(readOnly = true)
-    public {Aggregate}Response findById(Long id) {
+        @Transactional(readOnly=true)
+        public{Aggregate}Response findById(Long id){
         return repository.findById(id)
-            .map(mapper::toResponse)
-            .orElseThrow({Aggregate}ErrorCode.{AGG}_NOT_FOUND::toNotFoundException);
-    }
+        .map(mapper::toResponse)
+        .orElseThrow({Aggregate}ErrorCode.{AGG}_NOT_FOUND::toNotFoundException);
+        }
 
-    public void cancel(Long id) {
-        {Aggregate} agg = repository.findById(id)
-            .orElseThrow({Aggregate}ErrorCode.{AGG}_NOT_FOUND::toNotFoundException);
+        public void cancel(Long id){
+        {Aggregate}agg=repository.findById(id)
+        .orElseThrow({Aggregate}ErrorCode.{AGG}_NOT_FOUND::toNotFoundException);
         agg.cancel();
-    }
-}
+        }
+        }
 ```
 
 ### 7. Mapper（MapStruct）
 
 ```java
 @Mapper
-public interface {Aggregate}Mapper {
-    {Aggregate}Response toResponse({Aggregate} agg);
-    List<{Aggregate}Response> toResponseList(List<{Aggregate}> list);
+public interface {Aggregate}
+
+Mapper {
+    {
+        Aggregate
+    } Response toResponse ({Aggregate} agg);
+    List < {Aggregate} Response > toResponseList(List < {Aggregate} > list);
 }
 ```
 
@@ -178,29 +183,39 @@ public interface {Aggregate}Mapper {
 @RestController
 @RequestMapping("/api/v1/{aggregates}")
 @RequiredArgsConstructor
-public class {Aggregate}Controller {
+public class {Aggregate}
 
-    private final {Aggregate}ApplicationService service;
+Controller {
+
+    private final {
+        Aggregate
+    } ApplicationService service;
 
     @Operation(summary = "创建 {aggregate}")
     @PreAuthorize("isAuthenticated()")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public {Aggregate}Response create(@Valid @RequestBody Create{Aggregate}Request request) {
+    public {
+        Aggregate
+    } Response create (@Valid @RequestBody Create {
+        Aggregate
+    } Request request){
         return service.create(request);
     }
 
     @Operation(summary = "查询 {aggregate}")
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/{id}")
-    public {Aggregate}Response get(@PathVariable Long id) {
+    public {
+        Aggregate
+    } Response get (@PathVariable Long id){
         return service.findById(id);
     }
 
     @Operation(summary = "取消 {aggregate}")
     @PreAuthorize("hasRole('admin') or @{aggregate}AccessChecker.canModify(#id, authentication)")
     @PostMapping("/{id}/cancel")
-    public void cancel(@PathVariable Long id) {
+    public void cancel (@PathVariable Long id){
         service.cancel(id);
     }
 }
@@ -209,17 +224,28 @@ public class {Aggregate}Controller {
 ### 9. 单元测试骨架
 
 ```java
-@ExtendWith(MockitoExtension.class)
-class {Aggregate}ApplicationServiceTest {
-    @Mock private {Aggregate}Repository repository;
-    @Mock private {Aggregate}Mapper mapper;
-    @InjectMocks private {Aggregate}ApplicationService service;
+@ExtendWith(MockitoExtension.class) class {Aggregate}
 
-    @Nested @DisplayName("create")
-    class Create { /* ... */ }
+ApplicationServiceTest {
+    @Mock private {
+        Aggregate
+    } Repository repository;
+    @Mock private {
+        Aggregate
+    } Mapper mapper;
+    @InjectMocks private {
+        Aggregate
+    } ApplicationService service;
 
-    @Nested @DisplayName("cancel")
-    class Cancel { /* ... */ }
+    @Nested
+    @DisplayName("create")
+    class Create { /* ... */
+    }
+
+    @Nested
+    @DisplayName("cancel")
+    class Cancel { /* ... */
+    }
 }
 ```
 
@@ -229,9 +255,9 @@ class {Aggregate}ApplicationServiceTest {
 
 1. 已生成文件列表
 2. 提示用户：
-   - 用 `/add-error-code` 添加 i18n 翻译
-   - 写 Flyway 建表脚本（`28-migration.md` 模板）
-   - 跑 `/check-arch` 确保架构验证通过
+    - 用 `/add-error-code` 添加 i18n 翻译
+    - 写 Flyway 建表脚本（`28-migration.md` 模板）
+    - 跑 `/check-arch` 确保架构验证通过
 3. 关键 TODO 占位：JPA 字段 / 业务方法 / 事件载荷 / 单元测试覆盖
 
 ## 参考规则

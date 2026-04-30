@@ -33,7 +33,9 @@ import java.util.Map;
  */
 public class SeataEnvironmentPostProcessor implements ApplicationListener<ApplicationEnvironmentPreparedEvent> {
 
-    /** 合并属性源的名称，用于标识本处理器注入的属性。 */
+    /**
+     * 合并属性源的名称，用于标识本处理器注入的属性。
+     */
     private static final String PROPERTY_SOURCE_NAME = "eagleSeataProperties";
 
     /**

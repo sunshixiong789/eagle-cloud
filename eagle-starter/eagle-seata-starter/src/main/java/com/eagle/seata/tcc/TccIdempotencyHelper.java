@@ -52,10 +52,14 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class TccIdempotencyHelper {
 
-    /** TCC 分支事务状态：已确认提交。 */
+    /**
+     * TCC 分支事务状态：已确认提交。
+     */
     private static final String STATE_CONFIRMED = "CONFIRMED";
 
-    /** TCC 分支事务状态：已取消回滚。 */
+    /**
+     * TCC 分支事务状态：已取消回滚。
+     */
     private static final String STATE_CANCELLED = "CANCELLED";
 
     /**

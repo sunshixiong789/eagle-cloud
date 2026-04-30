@@ -47,6 +47,15 @@ public final class DataPermissionContext {
     }
 
     /**
+     * 获取当前线程显式设置的权限范围。未设置时返回 {@code null}，切面将回退到 Provider 的返回值。
+     *
+     * @return 当前线程设置的权限范围，或 {@code null}
+     */
+    public static DataScope getScope() {
+        return SCOPE_HOLDER.get();
+    }
+
+    /**
      * 在当前线程设置权限范围，覆盖 {@code DataPermissionProvider} 的返回值。
      *
      * <p><b>注意：</b>使用完毕必须在 finally 块中调用 {@link #clear()}，防止内存泄漏。
@@ -55,15 +64,6 @@ public final class DataPermissionContext {
      */
     public static void setScope(DataScope scope) {
         SCOPE_HOLDER.set(scope);
-    }
-
-    /**
-     * 获取当前线程显式设置的权限范围。未设置时返回 {@code null}，切面将回退到 Provider 的返回值。
-     *
-     * @return 当前线程设置的权限范围，或 {@code null}
-     */
-    public static DataScope getScope() {
-        return SCOPE_HOLDER.get();
     }
 
     /**

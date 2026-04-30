@@ -8,7 +8,11 @@
       "source": "./",
       "version": "1.0.0",
       "description": "Eagle Cloud 开发规范 + Starter 使用指南 + 脚手架命令",
-      "tags": ["spring-boot", "ddd", "modulith"]
+      "tags": [
+        "spring-boot",
+        "ddd",
+        "modulith"
+      ]
     }
   ]
 }

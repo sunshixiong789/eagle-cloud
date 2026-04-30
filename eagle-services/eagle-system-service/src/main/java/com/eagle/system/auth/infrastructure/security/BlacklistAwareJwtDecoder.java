@@ -27,7 +27,9 @@ public class BlacklistAwareJwtDecoder implements JwtDecoder {
     private final JWKSource<SecurityContext> jwkSource;
     private final OnlineUserPort onlineUserPort;
 
-    /** delegate 延迟初始化，避免循环依赖。 */
+    /**
+     * delegate 延迟初始化，避免循环依赖。
+     */
     private volatile JwtDecoder delegate;
 
     @Override

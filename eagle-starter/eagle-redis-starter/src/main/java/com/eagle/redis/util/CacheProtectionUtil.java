@@ -48,13 +48,21 @@ import java.util.function.Supplier;
 public class CacheProtectionUtil {
 
     private static final String MUTEX_KEY_PREFIX = "eagle:mutex:";
-    /** 空值占位符，用于缓存穿透防护（防止 DB 不存在的数据被反复查询） */
+    /**
+     * 空值占位符，用于缓存穿透防护（防止 DB 不存在的数据被反复查询）
+     */
     private static final String NULL_PLACEHOLDER = "__NULL__";
-    /** Mutex 锁等待超时（秒） */
+    /**
+     * Mutex 锁等待超时（秒）
+     */
     private static final int MUTEX_WAIT_SECONDS = 3;
-    /** Mutex 锁持有时长（秒） */
+    /**
+     * Mutex 锁持有时长（秒）
+     */
     private static final int MUTEX_LEASE_SECONDS = 10;
-    /** 空值缓存时长 */
+    /**
+     * 空值缓存时长
+     */
     private static final Duration NULL_VALUE_TTL = Duration.ofMinutes(5);
 
     private final RedissonClient redissonClient;

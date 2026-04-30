@@ -9,10 +9,9 @@ package com.eagle.datasource.routing;
  */
 public class DataSourceContextHolder {
 
-    private static final ThreadLocal<String> CONTEXT = new ThreadLocal<>();
-
     public static final String MASTER = "master";
     public static final String SLAVE = "slave";
+    private static final ThreadLocal<String> CONTEXT = new ThreadLocal<>();
 
     private DataSourceContextHolder() {
     }

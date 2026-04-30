@@ -18,16 +18,24 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EsPageResult<T> {
 
-    /** 数据列表 */
+    /**
+     * 数据列表
+     */
     private final List<T> content;
 
-    /** 总数 */
+    /**
+     * 总数
+     */
     private final long total;
 
-    /** 当前页（从 1 开始） */
+    /**
+     * 当前页（从 1 开始）
+     */
     private final int page;
 
-    /** 每页大小 */
+    /**
+     * 每页大小
+     */
     private final int size;
 
     /**

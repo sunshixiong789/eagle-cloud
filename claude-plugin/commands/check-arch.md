@@ -10,8 +10,8 @@ argument-hint: "[模块路径，可选；默认 eagle-base-server:eagle-system-s
 ## 执行步骤
 
 1. **解析目标模块**
-   - 若用户传入 `$ARGUMENTS`，使用该模块路径
-   - 否则默认 `eagle-base-server:eagle-system-server`
+    - 若用户传入 `$ARGUMENTS`，使用该模块路径
+    - 否则默认 `eagle-base-server:eagle-system-server`
 
 2. **跑 Modulith 架构验证**
 
@@ -20,11 +20,11 @@ argument-hint: "[模块路径，可选；默认 eagle-base-server:eagle-system-s
    ```
 
    失败时：
-   - 解析输出找出违规依赖（"Module X depends on non-exposed type Y"）
-   - 按 `04-modulith.md` 规范判断是否需要：
-     a) 给被依赖包加 `@NamedInterface`
-     b) 在依赖方 `allowedDependencies` 中声明
-     c) 重构通过 Port/Adapter 解耦
+    - 解析输出找出违规依赖（"Module X depends on non-exposed type Y"）
+    - 按 `04-modulith.md` 规范判断是否需要：
+      a) 给被依赖包加 `@NamedInterface`
+      b) 在依赖方 `allowedDependencies` 中声明
+      c) 重构通过 Port/Adapter 解耦
 
 3. **跑模块单元测试**
 
@@ -41,9 +41,9 @@ argument-hint: "[模块路径，可选；默认 eagle-base-server:eagle-system-s
    （仅校验编译 + 静态检查；测试已在第 3 步跑过）
 
 5. **总结输出**
-   - ✅ 通过项
-   - ❌ 失败项（含原因 + 修复建议）
-   - 📊 测试覆盖率（如果配置了 JaCoCo）
+    - ✅ 通过项
+    - ❌ 失败项（含原因 + 修复建议）
+    - 📊 测试覆盖率（如果配置了 JaCoCo）
 
 ## 输出格式
 

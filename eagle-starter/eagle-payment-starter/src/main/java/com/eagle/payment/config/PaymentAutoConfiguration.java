@@ -38,6 +38,28 @@ import org.springframework.context.annotation.Configuration;
 public class PaymentAutoConfiguration {
 
     /**
+     * 注册支付回调接收控制器。
+     *
+     * <p>提供 {@code POST /payment/alipay/notify} 和 {@code POST /payment/wechat/notify}
+     * 两个端点，验签后发布 {@link com.eagle.payment.event.PaymentNotifyEvent}。
+     * 仅在 Servlet 环境下激活。
+     *
+     * @param alipayGatewayProvider 支付宝网关 Provider（可选）
+     * @param wechatGatewayProvider 微信支付网关 Provider（可选）
+     * @param eventPublisher        Spring 事件发布器
+     * @return 支付回调控制器
+     */
+    @Bean
+    @ConditionalOnMissingBean(PaymentNotifyController.class)
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+    public PaymentNotifyController paymentNotifyController(
+            @Qualifier("alipayPaymentGateway") ObjectProvider<PaymentGateway> alipayGatewayProvider,
+            @Qualifier("wechatPaymentGateway") ObjectProvider<PaymentGateway> wechatGatewayProvider,
+            ApplicationEventPublisher eventPublisher) {
+        return new PaymentNotifyController(alipayGatewayProvider, wechatGatewayProvider, eventPublisher);
+    }
+
+    /**
      * 支付宝配置内部类。
      *
      * <p>需要 {@code com.alipay.api.AlipayClient} 在类路径（即引入 alipay-sdk-java 依赖），
@@ -85,27 +107,5 @@ public class PaymentAutoConfiguration {
             log.info("WechatPaymentGateway enabled, mchId: {}", properties.getWechat().getMchId());
             return new WechatPaymentGateway(properties.getWechat());
         }
-    }
-
-    /**
-     * 注册支付回调接收控制器。
-     *
-     * <p>提供 {@code POST /payment/alipay/notify} 和 {@code POST /payment/wechat/notify}
-     * 两个端点，验签后发布 {@link com.eagle.payment.event.PaymentNotifyEvent}。
-     * 仅在 Servlet 环境下激活。
-     *
-     * @param alipayGatewayProvider 支付宝网关 Provider（可选）
-     * @param wechatGatewayProvider 微信支付网关 Provider（可选）
-     * @param eventPublisher        Spring 事件发布器
-     * @return 支付回调控制器
-     */
-    @Bean
-    @ConditionalOnMissingBean(PaymentNotifyController.class)
-    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-    public PaymentNotifyController paymentNotifyController(
-            @Qualifier("alipayPaymentGateway") ObjectProvider<PaymentGateway> alipayGatewayProvider,
-            @Qualifier("wechatPaymentGateway") ObjectProvider<PaymentGateway> wechatGatewayProvider,
-            ApplicationEventPublisher eventPublisher) {
-        return new PaymentNotifyController(alipayGatewayProvider, wechatGatewayProvider, eventPublisher);
     }
 }

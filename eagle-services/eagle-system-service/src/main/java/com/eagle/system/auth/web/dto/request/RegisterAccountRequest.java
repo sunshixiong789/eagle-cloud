@@ -28,11 +28,15 @@ public class RegisterAccountRequest {
     @Schema(description = "手机号", example = "13800138000")
     private String phone;
 
-    /** 邮箱（可选，传给 system 创建 User） */
+    /**
+     * 邮箱（可选，传给 system 创建 User）
+     */
     @Schema(description = "邮箱", example = "zhangsan@example.com")
     private String email;
 
-    /** 昵称（可选） */
+    /**
+     * 昵称（可选）
+     */
     @Schema(description = "昵称", example = "小张")
     private String nickname;
 }

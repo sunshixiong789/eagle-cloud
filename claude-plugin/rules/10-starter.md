@@ -18,6 +18,7 @@ eagle-starter/eagle-{feature}-starter/
 使用 `@AutoConfiguration`（Spring Boot 3.x+），禁止使用旧的 `@Configuration` + `spring.factories`：
 
 ```java
+
 @AutoConfiguration
 @ConditionalOnClass(SomeLibrary.class)
 @EnableConfigurationProperties(FeatureProperties.class)
@@ -34,6 +35,7 @@ public class FeatureAutoConfiguration {
 **命名**：`{Feature}AutoConfiguration`
 
 **常用条件注解：**
+
 - `@ConditionalOnClass` — 类路径存在时生效（必加，防止缺少依赖报错）
 - `@ConditionalOnProperty(name = "eagle.xxx.enabled", havingValue = "true", matchIfMissing = true)` — 配置开关
 - `@ConditionalOnMissingBean` — 允许使用方覆盖默认实现
@@ -52,6 +54,7 @@ com.eagle.feature.config.FeatureAutoConfiguration
 ## Properties 类
 
 ```java
+
 @Data
 @ConfigurationProperties(prefix = "eagle.{feature}")
 public class FeatureProperties {
@@ -62,7 +65,8 @@ public class FeatureProperties {
 
 **命名**：`{Feature}Properties`，prefix 统一使用 `eagle.{feature}` 前缀
 
-**注册方式**：在 `@AutoConfiguration` 类上加 `@EnableConfigurationProperties(FeatureProperties.class)`，不使用 `@ConfigurationPropertiesScan`
+**注册方式**：在 `@AutoConfiguration` 类上加 `@EnableConfigurationProperties(FeatureProperties.class)`，不使用
+`@ConfigurationPropertiesScan`
 
 ## build.gradle 依赖范围
 
@@ -83,6 +87,7 @@ dependencies {
 对可选依赖使用 `ObjectProvider` 注入，避免硬依赖：
 
 ```java
+
 @Bean
 public SomeInterceptor interceptor(ObjectProvider<Tracer> tracerProvider) {
     return new SomeInterceptor(tracerProvider.getIfAvailable());

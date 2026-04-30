@@ -1,9 +1,9 @@
 package com.eagle.idempotency;
 
 import com.eagle.common.exception.DomainException;
-import com.eagle.idempotency.annotation.Idempotent;
 import com.eagle.idempotency.annotation.IdempotencyKey;
 import com.eagle.idempotency.annotation.IdempotencyMode;
+import com.eagle.idempotency.annotation.Idempotent;
 import com.eagle.idempotency.aspect.IdempotencyAspect;
 import com.eagle.idempotency.properties.IdempotencyProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -86,6 +85,58 @@ class IdempotencyAspectTest {
 
     // ==================== TOKEN 模式 ====================
 
+    /**
+     * 构建 {@link Idempotent} mock 注解。
+     *
+     * @param mode        幂等模式
+     * @param key         SpEL 表达式（BUSINESS_KEY 模式）
+     * @param tokenHeader Token Header 名称
+     * @param extractor   keyExtractor Bean 名称
+     * @return mock 后的 {@link Idempotent} 实例
+     */
+    private Idempotent buildAnnotation(IdempotencyMode mode, String key,
+                                       String tokenHeader, String extractor) {
+        Idempotent annotation = mock(Idempotent.class, withSettings().lenient());
+        when(annotation.mode()).thenReturn(mode);
+        when(annotation.key()).thenReturn(key);
+        when(annotation.tokenHeader()).thenReturn(tokenHeader);
+        when(annotation.keyExtractor()).thenReturn(extractor);
+        return annotation;
+    }
+
+    // ==================== BUSINESS_KEY 模式 ====================
+
+    /**
+     * 用于反射获取方法签名。
+     */
+    @SuppressWarnings("unused")
+    static class SampleService {
+        public String doWork() {
+            return "work";
+        }
+    }
+
+    // ==================== RESULT_CACHE 模式 ====================
+
+    /**
+     * 带 @IdempotencyKey 注解的测试 DTO。
+     */
+    static class SampleRequest {
+
+        @IdempotencyKey
+        private final String orderNo;
+
+        @IdempotencyKey
+        private final Long userId;
+
+        SampleRequest(String orderNo, Long userId) {
+            this.orderNo = orderNo;
+            this.userId = userId;
+        }
+    }
+
+    // ==================== @IdempotencyKey 字段扫描 ====================
+
     @Nested
     @DisplayName("TOKEN 模式")
     class TokenMode {
@@ -132,7 +183,7 @@ class IdempotencyAspectTest {
         }
     }
 
-    // ==================== BUSINESS_KEY 模式 ====================
+    // ==================== 辅助类型 ====================
 
     @Nested
     @DisplayName("BUSINESS_KEY 模式")
@@ -186,8 +237,6 @@ class IdempotencyAspectTest {
             assertThrows(DomainException.class, () -> aspect.around(joinPoint, annotation));
         }
     }
-
-    // ==================== RESULT_CACHE 模式 ====================
 
     @Nested
     @DisplayName("RESULT_CACHE 模式")
@@ -286,8 +335,6 @@ class IdempotencyAspectTest {
         }
     }
 
-    // ==================== @IdempotencyKey 字段扫描 ====================
-
     @Nested
     @DisplayName("@IdempotencyKey 字段扫描")
     class FieldAnnotationMode {
@@ -311,49 +358,5 @@ class IdempotencyAspectTest {
             // 验证 redis key 包含字段值，格式：eagle:idempotency:biz:orderNo:ORD-999|userId:42
             verify(redissonClient).getBucket(KEY_PREFIX + "biz:orderNo:ORD-999|userId:42");
         }
-    }
-
-    // ==================== 辅助类型 ====================
-
-    /** 用于反射获取方法签名。 */
-    @SuppressWarnings("unused")
-    static class SampleService {
-        public String doWork() {
-            return "work";
-        }
-    }
-
-    /** 带 @IdempotencyKey 注解的测试 DTO。 */
-    static class SampleRequest {
-
-        @IdempotencyKey
-        private final String orderNo;
-
-        @IdempotencyKey
-        private final Long userId;
-
-        SampleRequest(String orderNo, Long userId) {
-            this.orderNo = orderNo;
-            this.userId = userId;
-        }
-    }
-
-    /**
-     * 构建 {@link Idempotent} mock 注解。
-     *
-     * @param mode        幂等模式
-     * @param key         SpEL 表达式（BUSINESS_KEY 模式）
-     * @param tokenHeader Token Header 名称
-     * @param extractor   keyExtractor Bean 名称
-     * @return mock 后的 {@link Idempotent} 实例
-     */
-    private Idempotent buildAnnotation(IdempotencyMode mode, String key,
-                                       String tokenHeader, String extractor) {
-        Idempotent annotation = mock(Idempotent.class, withSettings().lenient());
-        when(annotation.mode()).thenReturn(mode);
-        when(annotation.key()).thenReturn(key);
-        when(annotation.tokenHeader()).thenReturn(tokenHeader);
-        when(annotation.keyExtractor()).thenReturn(extractor);
-        return annotation;
     }
 }

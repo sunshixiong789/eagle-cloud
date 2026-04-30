@@ -18,21 +18,33 @@ import java.math.BigDecimal;
 @Builder
 public class NotifyResult {
 
-    /** 支付是否成功 */
+    /**
+     * 支付是否成功
+     */
     private boolean success;
 
-    /** 商户订单号 */
+    /**
+     * 商户订单号
+     */
     private String outTradeNo;
 
-    /** 第三方交易号 */
+    /**
+     * 第三方交易号
+     */
     private String tradeNo;
 
-    /** 实际支付金额（元） */
+    /**
+     * 实际支付金额（元）
+     */
     private BigDecimal amount;
 
-    /** 买家 ID（支付宝为买家 uid，微信为 openId） */
+    /**
+     * 买家 ID（支付宝为买家 uid，微信为 openId）
+     */
     private String buyerId;
 
-    /** 附加参数（下单时传入的 passbackParams） */
+    /**
+     * 附加参数（下单时传入的 passbackParams）
+     */
     private String passbackParams;
 }

@@ -8,15 +8,15 @@
 
 ## Gradle 依赖范围
 
-| 范围 | 含义 | 何时使用 |
-|------|------|---------|
-| `api` | 编译期 + 运行期 + **暴露给消费方** | starter 公开 API；BOM 入口 |
-| `implementation` | 编译期 + 运行期，**不暴露** | 业务服务依赖；私有实现细节 |
-| `compileOnly` | 仅编译期 | 注解处理器、可选依赖（`@ConditionalOnClass`）|
-| `runtimeOnly` | 仅运行期 | JDBC 驱动、Logback 实现 |
-| `annotationProcessor` | 注解处理 | Lombok、MapStruct、Spring Configuration Processor |
-| `testImplementation` | 测试编译 + 运行 | JUnit、Mockito |
-| `testCompileOnly` | 仅测试编译 | 测试用 Lombok |
+| 范围                    | 含义                     | 何时使用                                            |
+|-----------------------|------------------------|-------------------------------------------------|
+| `api`                 | 编译期 + 运行期 + **暴露给消费方** | starter 公开 API；BOM 入口                           |
+| `implementation`      | 编译期 + 运行期，**不暴露**      | 业务服务依赖；私有实现细节                                   |
+| `compileOnly`         | 仅编译期                   | 注解处理器、可选依赖（`@ConditionalOnClass`）               |
+| `runtimeOnly`         | 仅运行期                   | JDBC 驱动、Logback 实现                              |
+| `annotationProcessor` | 注解处理                   | Lombok、MapStruct、Spring Configuration Processor |
+| `testImplementation`  | 测试编译 + 运行              | JUnit、Mockito                                   |
+| `testCompileOnly`     | 仅测试编译                  | 测试用 Lombok                                      |
 
 ## 典型 starter 依赖（详见 `10-starter.md`）
 
@@ -90,12 +90,12 @@ dependencies {
 
 ## 版本升级策略
 
-| 类型 | 触发 | 流程 |
-|------|------|------|
-| **Patch（x.y.Z）** | 月度例行 | BOM 升级 → 跑 CI → 合并 |
-| **Minor（x.Y.0）** | 季度评估 | 阅读 release notes → 评估破坏性 → 灰度环境跑 1 周 |
-| **Major（X.0.0）** | 半年/年度评估 | 立项 + 兼容性测试 + 分阶段上线 |
-| **安全补丁** | CVE 公告后 24h 内 | 紧急 PR → CI → 上线 |
+| 类型               | 触发            | 流程                                   |
+|------------------|---------------|--------------------------------------|
+| **Patch（x.y.Z）** | 月度例行          | BOM 升级 → 跑 CI → 合并                   |
+| **Minor（x.Y.0）** | 季度评估          | 阅读 release notes → 评估破坏性 → 灰度环境跑 1 周 |
+| **Major（X.0.0）** | 半年/年度评估       | 立项 + 兼容性测试 + 分阶段上线                   |
+| **安全补丁**         | CVE 公告后 24h 内 | 紧急 PR → CI → 上线                      |
 
 **禁止**：业务 PR 中夹带依赖升级（独立 PR + 独立评审）。
 
@@ -152,29 +152,29 @@ implementation('com.example:lib') {
 
 ## 禁止依赖
 
-| 类型 | 替代 |
-|------|------|
+| 类型                   | 替代                           |
+|----------------------|------------------------------|
 | Apache HttpClient 旧版 | Spring `RestClient` / OkHttp |
-| Joda Time | `java.time` |
-| Apache Commons Lang2 | Lang3 |
-| `log4j 1.x` | Logback / Log4j2 |
-| `xstream` 旧版 | Jackson |
-| 任何带未修复 CVE 的版本 | 升级或替换 |
+| Joda Time            | `java.time`                  |
+| Apache Commons Lang2 | Lang3                        |
+| `log4j 1.x`          | Logback / Log4j2             |
+| `xstream` 旧版         | Jackson                      |
+| 任何带未修复 CVE 的版本       | 升级或替换                        |
 
 ## 内部 starter 复用
 
 业务服务**优先使用** `eagle-starter` 提供的能力，避免自行实现：
 
-| 需求 | 使用 |
-|------|------|
-| 缓存 | `eagle-redis-starter` |
-| MQ | `eagle-rocketmq-starter` |
-| 分布式锁 | `eagle-common-starter` 的 `DistributedLock` |
-| OSS | `eagle-oss-minio-starter` |
-| 多租户 | `eagle-tenant-starter` |
-| 数据权限 | `eagle-row-security-starter` |
-| 链路追踪 | `eagle-tracing-starter` |
-| OpenAPI | `eagle-openapi-starter` |
+| 需求      | 使用                                         |
+|---------|--------------------------------------------|
+| 缓存      | `eagle-redis-starter`                      |
+| MQ      | `eagle-rocketmq-starter`                   |
+| 分布式锁    | `eagle-common-starter` 的 `DistributedLock` |
+| OSS     | `eagle-oss-minio-starter`                  |
+| 多租户     | `eagle-tenant-starter`                     |
+| 数据权限    | `eagle-row-security-starter`               |
+| 链路追踪    | `eagle-tracing-starter`                    |
+| OpenAPI | `eagle-openapi-starter`                    |
 
 **禁止**业务模块自行集成 Redisson、RocketMQ Client、MinIO Client（应统一收敛到 starter）。
 

@@ -13,7 +13,6 @@ import com.wechat.pay.java.core.notification.NotificationConfig;
 import com.wechat.pay.java.core.notification.NotificationParser;
 import com.wechat.pay.java.core.notification.RequestParam;
 import com.wechat.pay.java.service.payments.jsapi.JsapiServiceExtension;
-import com.wechat.pay.java.service.payments.jsapi.model.CloseOrderRequest;
 import com.wechat.pay.java.service.payments.jsapi.model.PrepayRequest;
 import com.wechat.pay.java.service.payments.jsapi.model.PrepayWithRequestPaymentResponse;
 import com.wechat.pay.java.service.payments.jsapi.model.QueryOrderByOutTradeNoRequest;
@@ -42,7 +41,9 @@ import java.util.Map;
 @Slf4j
 public class WechatPaymentGateway implements PaymentGateway {
 
-    /** 元转分系数 */
+    /**
+     * 元转分系数
+     */
     private static final int YUAN_TO_FEN = 100;
 
     private final PaymentProperties.Wechat wechatProps;

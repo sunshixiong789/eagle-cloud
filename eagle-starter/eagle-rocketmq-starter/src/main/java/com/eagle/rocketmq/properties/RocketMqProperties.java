@@ -12,19 +12,29 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "eagle.rocketmq")
 public class RocketMqProperties {
 
-    /** 是否启用 RocketMQ。 */
+    /**
+     * 是否启用 RocketMQ。
+     */
     private boolean enabled = true;
 
-    /** 接入点地址，如 {@code localhost:8081}。 */
+    /**
+     * 接入点地址，如 {@code localhost:8081}。
+     */
     private String endpoints = "localhost:8081";
 
-    /** 默认生产者组。 */
+    /**
+     * 默认生产者组。
+     */
     private String producerGroup = "eagle-producer-group";
 
-    /** 消费者组（未在监听器中显式覆盖时使用此默认值）。 */
+    /**
+     * 消费者组（未在监听器中显式覆盖时使用此默认值）。
+     */
     private String consumerGroup = "eagle-consumer-group";
 
-    /** 默认 Topic 前缀，自动推导 Topic 时使用。 */
+    /**
+     * 默认 Topic 前缀，自动推导 Topic 时使用。
+     */
     private String topicPrefix = "eagle-";
 
     /**
@@ -39,7 +49,9 @@ public class RocketMqProperties {
      */
     private int maxAttempts = 2;
 
-    /** 消费者配置。 */
+    /**
+     * 消费者配置。
+     */
     private Consumer consumer = new Consumer();
 
     /**

@@ -1,9 +1,9 @@
 package com.eagle.rocketmq.transaction;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.rocketmq.client.apis.producer.TransactionResolution;
 import org.apache.rocketmq.client.apis.message.MessageView;
 import org.apache.rocketmq.client.apis.producer.TransactionChecker;
+import org.apache.rocketmq.client.apis.producer.TransactionResolution;
 
 /**
  * RocketMQ 事务消息回查基类。

@@ -3,7 +3,6 @@ package com.eagle.gateway.handler;
 import com.eagle.common.dto.ErrorResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import tools.jackson.databind.ObjectMapper;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
@@ -14,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebExceptionHandler;
 import reactor.core.publisher.Mono;
+import tools.jackson.databind.ObjectMapper;
 
 import java.net.ConnectException;
 import java.nio.charset.StandardCharsets;
@@ -96,7 +96,9 @@ public class GatewayWebExceptionHandler implements WebExceptionHandler {
         return HttpStatus.INTERNAL_SERVER_ERROR;
     }
 
-    /** 根据状态码返回面向用户的中文消息。 */
+    /**
+     * 根据状态码返回面向用户的中文消息。
+     */
     private String resolveMessage(HttpStatus status) {
         return switch (status.value()) {
             case 502 -> "上游服务异常中断";

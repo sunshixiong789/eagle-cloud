@@ -18,12 +18,18 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "eagle.log.cleanup")
 public class LogCleanupProperties {
 
-    /** 是否启用自动清理 */
+    /**
+     * 是否启用自动清理
+     */
     private boolean enabled = true;
 
-    /** 日志保留天数（超过此天数的日志将被删除） */
+    /**
+     * 日志保留天数（超过此天数的日志将被删除）
+     */
     private int retentionDays = 90;
 
-    /** cron 表达式（默认每天凌晨 2 点执行） */
+    /**
+     * cron 表达式（默认每天凌晨 2 点执行）
+     */
     private String cron = "0 0 2 * * ?";
 }

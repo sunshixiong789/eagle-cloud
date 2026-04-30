@@ -52,14 +52,14 @@ argument-hint: "<服务名>:<模块名>，例 eagle-system-server:order"
 
 ```java
 @ApplicationModule(
-    displayName = "{显示名}模块",
-    allowedDependencies = {"common", "auth::port", "auth::event"}
+        displayName = "{显示名}模块",
+        allowedDependencies = {"common", "auth::port", "auth::event"}
 )
 @NullMarked
 package com.eagle.{service-short}.{module};
 
-import org.jspecify.annotations.NullMarked;
-import org.springframework.modulith.ApplicationModule;
+        import org.jspecify.annotations.NullMarked;
+        import org.springframework.modulith.ApplicationModule;
 ```
 
 ### 3. 生成事件包 `package-info.java`
@@ -69,8 +69,8 @@ import org.springframework.modulith.ApplicationModule;
 @NullMarked
 package com.eagle.{service-short}.{module}.domain.event;
 
-import org.jspecify.annotations.NullMarked;
-import org.springframework.modulith.NamedInterface;
+        import org.jspecify.annotations.NullMarked;
+        import org.springframework.modulith.NamedInterface;
 ```
 
 ### 4. 生成 ErrorCode 枚举骨架
@@ -78,8 +78,8 @@ import org.springframework.modulith.NamedInterface;
 ```java
 package com.eagle.{service-short}.{module}.web.exception;
 
-import com.eagle.common.exception.ErrorCode;
-import com.eagle.common.exception.AppException;
+        import com.eagle.common.exception.ErrorCode;
+        import com.eagle.common.exception.AppException;
 // ... 模板代码
 ```
 

@@ -67,7 +67,7 @@ public class MessageAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public NotificationService notificationService(MessageTemplateEngine templateEngine,
-                                                    ObjectProvider<MessageChannel> channelProvider) {
+                                                   ObjectProvider<MessageChannel> channelProvider) {
         List<MessageChannel> channels = channelProvider.orderedStream().collect(Collectors.toList());
         return new NotificationService(templateEngine, channels);
     }
@@ -79,7 +79,7 @@ public class MessageAutoConfiguration {
 
         @Bean
         public SmsMessageChannel smsMessageChannel(MessageProperties properties,
-                                                    MessageTemplateEngine templateEngine) {
+                                                   MessageTemplateEngine templateEngine) {
             log.info("SMS message channel enabled, signName: {}", properties.getSms().getSignName());
             return new SmsMessageChannel(properties, templateEngine);
         }
@@ -92,8 +92,8 @@ public class MessageAutoConfiguration {
 
         @Bean
         public EmailMessageChannel emailMessageChannel(JavaMailSender mailSender,
-                                                        MessageProperties properties,
-                                                        MessageTemplateEngine templateEngine) {
+                                                       MessageProperties properties,
+                                                       MessageTemplateEngine templateEngine) {
             log.info("Email message channel enabled, from: {}", properties.getEmail().getFrom());
             return new EmailMessageChannel(mailSender, properties, templateEngine);
         }

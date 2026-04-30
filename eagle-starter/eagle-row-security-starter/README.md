@@ -11,10 +11,10 @@
 - [实现 DataPermissionProvider](#实现-datapermissionprovider)
 - [权限范围说明](#权限范围说明)
 - [功能使用说明](#功能使用说明)
-  - [@DataPermission 注解](#datapermission-注解)
-  - [@DataPermissionIgnore 跳过权限](#datapermissionignore-跳过权限)
-  - [DataPermissionContext 编程式控制](#datapermissioncontext-编程式控制)
-  - [DataPermissionHelper 手动构建](#datapermissionhelper-手动构建)
+    - [@DataPermission 注解](#datapermission-注解)
+    - [@DataPermissionIgnore 跳过权限](#datapermissionignore-跳过权限)
+    - [DataPermissionContext 编程式控制](#datapermissioncontext-编程式控制)
+    - [DataPermissionHelper 手动构建](#datapermissionhelper-手动构建)
 - [与 DDD 架构集成](#与-ddd-架构集成)
 - [常见问题](#常见问题)
 
@@ -24,13 +24,13 @@
 
 ### 提供的能力
 
-| 分类 | 组件 | 说明 |
-|------|------|------|
-| 注解过滤 | `@DataPermission` | 标记方法，AOP 自动追加 Specification 条件 |
-| 跳过权限 | `@DataPermissionIgnore` | 标记方法，绕过数据权限过滤 |
-| 编程式 | `DataPermissionContext` | ThreadLocal 覆盖，优先级高于 Provider |
-| 手动构建 | `DataPermissionHelper` | 直接生成 Specification，不依赖 AOP |
-| 权限提供 | `DataPermissionProvider` | 业务方实现的接口，提供当前用户权限信息 |
+| 分类   | 组件                       | 说明                             |
+|------|--------------------------|--------------------------------|
+| 注解过滤 | `@DataPermission`        | 标记方法，AOP 自动追加 Specification 条件 |
+| 跳过权限 | `@DataPermissionIgnore`  | 标记方法，绕过数据权限过滤                  |
+| 编程式  | `DataPermissionContext`  | ThreadLocal 覆盖，优先级高于 Provider  |
+| 手动构建 | `DataPermissionHelper`   | 直接生成 Specification，不依赖 AOP     |
+| 权限提供 | `DataPermissionProvider` | 业务方实现的接口，提供当前用户权限信息            |
 
 ### 工作原理
 
@@ -84,17 +84,18 @@ dependencies {
 
 `DataPermissionAutoConfiguration` 生效条件（同时满足）：
 
-| 条件 | 说明 |
-|------|------|
-| `eagle.data-permission.enabled=true` | 配置开关，默认 `true` |
-| 容器中存在 `DataPermissionProvider` Bean | **业务方必须自行实现并注册** |
+| 条件                                   | 说明               |
+|--------------------------------------|------------------|
+| `eagle.data-permission.enabled=true` | 配置开关，默认 `true`   |
+| 容器中存在 `DataPermissionProvider` Bean  | **业务方必须自行实现并注册** |
 
 满足条件后自动注册 `DataPermissionAspect` Bean。若需替换默认切面，声明同类型 Bean 即可覆盖：
 
 ```java
+
 @Bean
 public DataPermissionAspect dataPermissionAspect(DataPermissionProvider provider,
-        DataPermissionProperties properties) {
+                                                 DataPermissionProperties properties) {
     return new MyCustomDataPermissionAspect(provider, properties);
 }
 ```
@@ -113,11 +114,11 @@ eagle:
 
 ### 配置项说明
 
-| 配置项 | 默认值 | 说明 |
-|--------|--------|------|
-| `eagle.data-permission.enabled` | `true` | 设为 `false` 时切面不生效，所有查询不追加权限条件 |
+| 配置项                                        | 默认值      | 说明                                     |
+|--------------------------------------------|----------|----------------------------------------|
+| `eagle.data-permission.enabled`            | `true`   | 设为 `false` 时切面不生效，所有查询不追加权限条件          |
 | `eagle.data-permission.default-dept-field` | `deptId` | 全局默认部门字段名，`@DataPermission` 注解未指定时使用此值 |
-| `eagle.data-permission.default-user-field` | `id` | 全局默认用户字段名，`@DataPermission` 注解未指定时使用此值 |
+| `eagle.data-permission.default-user-field` | `id`     | 全局默认用户字段名，`@DataPermission` 注解未指定时使用此值 |
 
 > **字段名优先级：** `@DataPermission(deptField = "xxx")` 显式设置 > `eagle.data-permission.default-dept-field` 全局配置
 
@@ -193,13 +194,13 @@ public class SecurityDataPermissionProvider implements DataPermissionProvider {
 
 ## 权限范围说明
 
-| 枚举值 | 含义 | 生成的 SQL 条件 |
-|--------|------|----------------|
-| `ALL` | 全部数据（不过滤）| 无 WHERE 条件 |
-| `CUSTOM` | 自定义授权部门 | `deptId IN (自定义部门 ID 列表)` |
-| `DEPT_AND_CHILD` | 本部门及子部门 | `deptId IN (本部门 ID, 子部门 ID...)` |
-| `DEPT` | 仅本部门 | `deptId = 当前用户部门 ID` |
-| `SELF` | 仅本人 | `id = 当前用户 ID` |
+| 枚举值              | 含义        | 生成的 SQL 条件                      |
+|------------------|-----------|---------------------------------|
+| `ALL`            | 全部数据（不过滤） | 无 WHERE 条件                      |
+| `CUSTOM`         | 自定义授权部门   | `deptId IN (自定义部门 ID 列表)`       |
+| `DEPT_AND_CHILD` | 本部门及子部门   | `deptId IN (本部门 ID, 子部门 ID...)` |
+| `DEPT`           | 仅本部门      | `deptId = 当前用户部门 ID`            |
+| `SELF`           | 仅本人       | `id = 当前用户 ID`                  |
 
 **降级规则（字段为空时自动降级）：**
 
@@ -220,6 +221,7 @@ SELF → userId 为 null → 不追加过滤（相当于不限制，并输出 WA
 **基本用法：**
 
 ```java
+
 @Service
 @RequiredArgsConstructor
 public class UserApplicationService {
@@ -265,7 +267,7 @@ eagle:
 ```java
 // 此时无需每个方法都写 deptField
 @DataPermission
-public Page<OrderResponse> findOrders(...) { ... }
+public Page<OrderResponse> findOrders(...) { ...}
 ```
 
 > **注意：** `@DataPermission` 方法必须有 `Specification<T>` 类型参数，否则权限过滤**不会生效**并输出 `WARN` 日志。
@@ -277,11 +279,13 @@ public Page<OrderResponse> findOrders(...) { ... }
 在方法上添加 `@DataPermissionIgnore`，该方法将以全量数据执行，绕过数据权限过滤。
 
 **适用场景：**
+
 - 超级管理员专属操作
 - 全局统计、汇总报表
 - 系统内部调用（权限检查无意义）
 
 ```java
+
 @Service
 @RequiredArgsConstructor
 public class ReportApplicationService {
@@ -322,6 +326,7 @@ public class ReportApplicationService {
 #### 忽略权限（推荐 Lambda 版）
 
 ```java
+
 @Scheduled(cron = "0 0 2 * * ?")
 public void nightlyDataSync() {
     // 定时任务需要处理全量数据，忽略权限过滤
@@ -392,6 +397,7 @@ public void batchProcess() {
 在不便使用 AOP（如 `@Query` 方法、动态构建 Specification 的场景），直接调用工具类手动构建权限条件。
 
 ```java
+
 @Service
 @RequiredArgsConstructor
 public class UserApplicationService {
@@ -401,7 +407,7 @@ public class UserApplicationService {
 
     @Transactional(readOnly = true)
     public Page<UserResponse> findUsersWithManualPermission(UserQueryRequest request,
-            Pageable pageable) {
+                                                            Pageable pageable) {
         Specification<User> businessSpec = UserSpecification.build(request);
 
         // 手动构建并合并权限条件（内部会读 DataPermissionContext 或 Provider）
@@ -441,6 +447,7 @@ eagle-system-server/
 **实体（领域层）：**
 
 ```java
+
 @Entity
 @Table(name = "t_user")
 @Getter
@@ -497,6 +504,7 @@ public class UserSpecification {
 **应用服务（应用层）—— @DataPermission 加在这里：**
 
 ```java
+
 @Service
 @RequiredArgsConstructor
 public class UserApplicationService {
@@ -539,6 +547,7 @@ public class UserApplicationService {
 **Controller（表现层）—— 不加 @DataPermission：**
 
 ```java
+
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -562,6 +571,7 @@ public class UserController {
 **Q: 加了 `@DataPermission` 但查询结果没有过滤，数据还是全量的？**
 
 A: 依次检查：
+
 1. 容器中是否注册了 `DataPermissionProvider` Bean（缺少会导致切面不创建）
 2. `DataPermissionProvider.getCurrentUserDataScope()` 是否返回了 `ALL`（ALL 范围不过滤）
 3. 方法参数中是否有 `Specification<T>` 类型的参数（缺少时切面无法注入条件，会打 WARN 日志）
@@ -572,6 +582,7 @@ A: 依次检查：
 **Q: 日志里出现 `@DataPermission on method [...] but no Specification parameter found`？**
 
 A: 方法上有 `@DataPermission` 注解，但方法参数中没有 `Specification<T>` 类型的参数，切面无法注入权限条件。解决方案：
+
 1. 在方法签名中增加 `Specification<T>` 参数
 2. 如果不便修改签名，改用 `DataPermissionHelper` 手动构建
 
@@ -582,6 +593,7 @@ A: 方法上有 `@DataPermission` 注解，但方法参数中没有 `Specificati
 A: 定时任务没有用户登录的 Security Context，`DataPermissionProvider` 可能返回 `SELF` 范围，导致只查到部分数据。解决方案：
 
 ```java
+
 @Scheduled(cron = "0 0 2 * * ?")
 public void scheduledTask() {
     // 方式一：@DataPermissionIgnore 注解
@@ -614,6 +626,7 @@ t_role ─── t_role_dept_scope ─── t_dept
 A: `getChildDeptIds()` 默认每次都递归查询部门树。务必在实现类中加 `@Cacheable`：
 
 ```java
+
 @Override
 @Cacheable(value = "DEPT_CHILDREN_CACHE", key = "#deptId")
 public Set<Long> getChildDeptIds(Long deptId) {
@@ -624,17 +637,20 @@ public Set<Long> getChildDeptIds(Long deptId) {
 部门结构变更时失效缓存：
 
 ```java
+
 @CacheEvict(value = "DEPT_CHILDREN_CACHE", allEntries = true)
-public void updateDept(Long deptId, UpdateDeptRequest request) { ... }
+public void updateDept(Long deptId, UpdateDeptRequest request) { ...}
 ```
 
 ---
 
 **Q: `DataPermissionContext` 在 `@Async` 方法中不生效？**
 
-A: `ThreadLocal` 不会自动传递到子线程。`@Async` 方法运行在独立线程中，父线程的 `DataPermissionContext` 设置不可见。解决方案：在异步方法内部重新设置：
+A: `ThreadLocal` 不会自动传递到子线程。`@Async` 方法运行在独立线程中，父线程的 `DataPermissionContext`
+设置不可见。解决方案：在异步方法内部重新设置：
 
 ```java
+
 @Async
 public void asyncExport() {
     // 在子线程内显式忽略权限
@@ -651,6 +667,7 @@ public void asyncExport() {
 A: **不需要**。`@DataPermission` 仅用于控制**查询范围**（读操作）。写操作的权限控制通过 `@PreAuthorize` 完成，例如：
 
 ```java
+
 @PreAuthorize("hasRole('admin') or #userId == authentication.principal.id")
-public void updateUser(Long userId, UpdateUserRequest request) { ... }
+public void updateUser(Long userId, UpdateUserRequest request) { ...}
 ```

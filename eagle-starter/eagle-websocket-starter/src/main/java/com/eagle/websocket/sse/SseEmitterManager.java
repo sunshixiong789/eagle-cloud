@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -33,7 +32,9 @@ public class SseEmitterManager {
 
     private static final long DEFAULT_TIMEOUT_MS = 60_000L;
 
-    /** userId → 该用户的所有 SSE 连接列表 */
+    /**
+     * userId → 该用户的所有 SSE 连接列表
+     */
     private final ConcurrentHashMap<String, CopyOnWriteArrayList<SseEmitter>> emitters =
             new ConcurrentHashMap<>();
 

@@ -13,15 +13,21 @@ import lombok.Data;
 @Schema(description = "角色条件查询请求")
 public class RoleQueryRequest {
 
-    /** 角色名称（模糊匹配） */
+    /**
+     * 角色名称（模糊匹配）
+     */
     @Schema(description = "角色名称（模糊匹配）")
     private String roleName;
 
-    /** 角色标识（精确匹配） */
+    /**
+     * 角色标识（精确匹配）
+     */
     @Schema(description = "角色标识（精确匹配）")
     private String roleCode;
 
-    /** 状态 */
+    /**
+     * 状态
+     */
     @Schema(description = "状态")
     private RoleStatus status;
 }

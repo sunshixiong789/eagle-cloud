@@ -1,8 +1,8 @@
 package com.eagle.system.auth.domain.model;
 
 import com.eagle.common.base.BaseAggregateRoot;
-import com.eagle.system.common.exception.AuthErrorCode;
 import com.eagle.common.exception.DomainException;
+import com.eagle.system.common.exception.AuthErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
@@ -176,8 +176,8 @@ public class OAuthClient extends BaseAggregateRoot<OAuthClient> {
     /**
      * 更新 PKCE 和授权同意设置
      *
-     * @param requireProofKey              是否要求 PKCE
-     * @param requireAuthorizationConsent  是否要求授权同意
+     * @param requireProofKey             是否要求 PKCE
+     * @param requireAuthorizationConsent 是否要求授权同意
      */
     public void updateClientSettings(Boolean requireProofKey, Boolean requireAuthorizationConsent) {
         if (requireProofKey != null) {

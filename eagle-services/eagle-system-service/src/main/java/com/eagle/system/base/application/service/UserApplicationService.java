@@ -1,6 +1,5 @@
 package com.eagle.system.base.application.service;
 
-import com.eagle.system.common.exception.UserErrorCode;
 import com.eagle.system.base.application.mapper.UserMapper;
 import com.eagle.system.base.domain.model.User;
 import com.eagle.system.base.domain.model.enums.RoleStatus;
@@ -18,6 +17,7 @@ import com.eagle.system.base.web.dto.response.AssignedDeptResponse;
 import com.eagle.system.base.web.dto.response.AssignedPostResponse;
 import com.eagle.system.base.web.dto.response.AssignedRoleResponse;
 import com.eagle.system.base.web.dto.response.UserResponse;
+import com.eagle.system.common.exception.UserErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -65,10 +65,10 @@ public class UserApplicationService {
                 || request.getName() != null) {
             UserProfile newProfile = user.getProfile() != null
                     ? user.getProfile().update(
-                            request.getName(), request.getNickname(), request.getAvatar())
+                    request.getName(), request.getNickname(), request.getAvatar())
                     : new UserProfile(
-                            request.getAvatar(), request.getNickname(),
-                            request.getName(), null, null);
+                    request.getAvatar(), request.getNickname(),
+                    request.getName(), null, null);
             user.updateProfile(newProfile);
         }
 

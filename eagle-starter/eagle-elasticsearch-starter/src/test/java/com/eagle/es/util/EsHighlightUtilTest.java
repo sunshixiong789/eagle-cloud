@@ -4,15 +4,17 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.elasticsearch.core.SearchHit;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link EsHighlightUtil}.
@@ -26,6 +28,44 @@ class EsHighlightUtilTest {
 
     // -----------------------------------------------------------------------
     // Utility class instantiation guard
+    // -----------------------------------------------------------------------
+
+    /**
+     * Minimal document used as a reflection target for highlight application.
+     */
+    static class TestDocument {
+        private String title;
+
+        TestDocument(String title) {
+            this.title = title;
+        }
+
+        String getTitle() {
+            return title;
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // applyHighlight() — null / empty guard cases
+    // -----------------------------------------------------------------------
+
+    /**
+     * Document with a non-String field to verify the type-check guard.
+     */
+    static class DocumentWithIntField {
+        private int count;
+
+        DocumentWithIntField(int count) {
+            this.count = count;
+        }
+
+        int getCount() {
+            return count;
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // applyHighlight() — successful replacement
     // -----------------------------------------------------------------------
 
     @Nested
@@ -43,7 +83,7 @@ class EsHighlightUtilTest {
     }
 
     // -----------------------------------------------------------------------
-    // applyHighlight() — null / empty guard cases
+    // Helper document classes for testing
     // -----------------------------------------------------------------------
 
     @Nested
@@ -95,10 +135,6 @@ class EsHighlightUtilTest {
             assertEquals("original title", doc.getTitle());
         }
     }
-
-    // -----------------------------------------------------------------------
-    // applyHighlight() — successful replacement
-    // -----------------------------------------------------------------------
 
     @Nested
     @DisplayName("applyHighlight() — highlight replacement")
@@ -187,36 +223,6 @@ class EsHighlightUtilTest {
             // Must not throw; non-String fields should be silently skipped
             assertDoesNotThrow(() -> EsHighlightUtil.applyHighlight(hit));
             assertEquals(42, doc.getCount(), "Integer field must not be modified");
-        }
-    }
-
-    // -----------------------------------------------------------------------
-    // Helper document classes for testing
-    // -----------------------------------------------------------------------
-
-    /** Minimal document used as a reflection target for highlight application. */
-    static class TestDocument {
-        private String title;
-
-        TestDocument(String title) {
-            this.title = title;
-        }
-
-        String getTitle() {
-            return title;
-        }
-    }
-
-    /** Document with a non-String field to verify the type-check guard. */
-    static class DocumentWithIntField {
-        private int count;
-
-        DocumentWithIntField(int count) {
-            this.count = count;
-        }
-
-        int getCount() {
-            return count;
         }
     }
 }

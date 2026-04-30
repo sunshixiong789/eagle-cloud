@@ -64,6 +64,7 @@ public class TestUserService {
 ```
 
 **预期**：AI 应：
+
 - 自动加载 `eagle-redis` skill
 - 使用 **`cacheProtectionUtil.getWithMutex(key, ttl, loader, User.class)`**（4 参数含 Class）
 - 不会编造 `getWithLock` 等不存在的方法
@@ -86,9 +87,9 @@ public class TestUserService {
 **预期 ✅**：
 
 ```java
-return lock.tryLock("biz:key:" + id, 5L, 30L, () -> {
-    // ...
-});
+return lock.tryLock("biz:key:"+id, 5L,30L,() ->{
+        // ...
+        });
 ```
 
 **反例 ❌**：`lock.executeWithLock(key, Duration.ofSeconds(5), () -> {})`
@@ -120,11 +121,21 @@ return lock.tryLock("biz:key:" + id, 5L, 30L, () -> {
 **预期 ✅**：
 
 ```java
+
 @Component
 public class OrderCreatedConsumer extends AbstractRocketMqListener<OrderCreatedEvent> {
-    @Override protected String getTopic() { return "..."; }
-    @Override protected Class<OrderCreatedEvent> getEventClass() { return OrderCreatedEvent.class; }
-    @Override protected void handle(OrderCreatedEvent event) { ... }
+    @Override
+    protected String getTopic() {
+        return "...";
+    }
+
+    @Override
+    protected Class<OrderCreatedEvent> getEventClass() {
+        return OrderCreatedEvent.class;
+    }
+
+    @Override
+    protected void handle(OrderCreatedEvent event) { ...}
 }
 ```
 
@@ -189,6 +200,7 @@ JPA 实体的审计字段叫什么名字？
 ```
 
 **预期 ✅**：
+
 - 继承 `BaseAggregateRoot<Order>`
 - `@Getter @NoArgsConstructor(access = AccessLevel.PROTECTED)`
 - 静态工厂方法
@@ -275,12 +287,12 @@ order 模块需要调用 user 模块的查询能力，怎么写？
 
 ## 失败排查
 
-| 现象 | 可能原因 | 排查 |
-|------|---------|------|
-| `/help` 看不到命令 | plugin 未加载 | 检查 `.claude/settings.json` 中 `enabledPlugins` 配置 |
-| AI 用编造的 API | skill 未触发 | 在询问中明确说"用 eagle-cloud 的 X starter" |
-| 全部失败 | marketplace 配置错 | 检查 marketplace `path` 指向是否正确 |
-| 部分 skill 缺失 | sync.sh 未跑 | `./claude-plugin/sync.sh` 后重启会话 |
+| 现象            | 可能原因            | 排查                                               |
+|---------------|-----------------|--------------------------------------------------|
+| `/help` 看不到命令 | plugin 未加载      | 检查 `.claude/settings.json` 中 `enabledPlugins` 配置 |
+| AI 用编造的 API   | skill 未触发       | 在询问中明确说"用 eagle-cloud 的 X starter"               |
+| 全部失败          | marketplace 配置错 | 检查 marketplace `path` 指向是否正确                     |
+| 部分 skill 缺失   | sync.sh 未跑      | `./claude-plugin/sync.sh` 后重启会话                  |
 
 ## 报告模板
 

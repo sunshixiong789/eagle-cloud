@@ -12,9 +12,13 @@ import lombok.Data;
 @AllArgsConstructor
 public class LogSummaryItem {
 
-    /** 日志类型名称 */
+    /**
+     * 日志类型名称
+     */
     private String logType;
 
-    /** 该类型日志数量 */
+    /**
+     * 该类型日志数量
+     */
     private long count;
 }

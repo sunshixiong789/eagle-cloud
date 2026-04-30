@@ -5,6 +5,7 @@
 ## 作用
 
 Spring Modulith 在**测试阶段**静态扫描所有类文件，当检测到以下情况时测试失败：
+
 - 模块间循环依赖
 - 访问其他模块的内部包（未通过命名接口暴露）
 - 违反 `allowedDependencies` 声明的依赖规则
@@ -22,11 +23,11 @@ gradle test --tests "*.ModulithArchitectureTest"
 
 ```java
 @ApplicationModule(
-    displayName = "订单模块",
-    allowedDependencies = {
-        "inventory::application-port",  // 只允许访问库存的应用层端口
-        "common"
-    }
+        displayName = "订单模块",
+        allowedDependencies = {
+                "inventory::application-port",  // 只允许访问库存的应用层端口
+                "common"
+        }
 )
 package com.example.order;
 ```
@@ -49,12 +50,14 @@ package com.example.common;
 ### `@Modulithic` 声明共享模块
 
 ```java
+
 @Modulithic(
-    systemName = "MyApp",
-    sharedModules = "common"  // 共享内核，所有模块隐式允许访问
+        systemName = "MyApp",
+        sharedModules = "common"  // 共享内核，所有模块隐式允许访问
 )
 @SpringBootApplication
-public class MyApplication { }
+public class MyApplication {
+}
 ```
 
 ## 新增模块的步骤
@@ -67,6 +70,7 @@ public class MyApplication { }
 ## 当测试失败时
 
 **错误示例：**
+
 ```
 Violations:
 - Module 'order' depends on non-exposed type com.example.inventory.infrastructure.WarehouseClient
@@ -74,10 +78,11 @@ Violations:
 ```
 
 **排查步骤：**
+
 1. 找到违规的 import 或方法调用
 2. 判断是否是合理的跨模块依赖：
-   - 如果合理 → 在被依赖包加 `@NamedInterface`，在依赖方 `allowedDependencies` 中声明
-   - 如果是错误依赖 → 重构，通过 Port/Adapter 解耦
+    - 如果合理 → 在被依赖包加 `@NamedInterface`，在依赖方 `allowedDependencies` 中声明
+    - 如果是错误依赖 → 重构，通过 Port/Adapter 解耦
 
 ## 特性
 

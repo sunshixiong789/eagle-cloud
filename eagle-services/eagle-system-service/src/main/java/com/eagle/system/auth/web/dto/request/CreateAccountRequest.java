@@ -35,23 +35,33 @@ public class CreateAccountRequest {
 
     // ==================== Profile Hints（system 域使用）====================
 
-    /** 邮箱（可选） */
+    /**
+     * 邮箱（可选）
+     */
     @Schema(description = "邮箱", example = "zhangsan@example.com")
     private String email;
 
-    /** 昵称（可选） */
+    /**
+     * 昵称（可选）
+     */
     @Schema(description = "昵称", example = "小张")
     private String nickname;
 
-    /** 真实姓名（可选） */
+    /**
+     * 真实姓名（可选）
+     */
     @Schema(description = "真实姓名", example = "张三")
     private String name;
 
-    /** 部门 ID（可选，system 域自动分配） */
+    /**
+     * 部门 ID（可选，system 域自动分配）
+     */
     @Schema(description = "部门ID", example = "1")
     private Long deptId;
 
-    /** 角色 ID 集合（可选，system 域自动分配） */
+    /**
+     * 角色 ID 集合（可选，system 域自动分配）
+     */
     @Schema(description = "角色ID集合", example = "[1, 2]")
     private Set<Long> roleIds;
 }

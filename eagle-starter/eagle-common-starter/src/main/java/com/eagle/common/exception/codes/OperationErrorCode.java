@@ -2,7 +2,9 @@ package com.eagle.common.exception.codes;
 
 import com.eagle.common.exception.ErrorCode;
 
-/** 业务操作错误码（13001–13006） */
+/**
+ * 业务操作错误码（13001–13006）
+ */
 public enum OperationErrorCode implements ErrorCode {
     OPERATION_FAILED(13001, "error.operation.failed", "操作失败"),
     DUPLICATE_OPERATION(13002, "error.operation.duplicate", "请勿重复操作"),

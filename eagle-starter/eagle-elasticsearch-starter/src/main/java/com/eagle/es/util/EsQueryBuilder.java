@@ -41,19 +41,29 @@ import java.util.stream.Collectors;
  */
 public class EsQueryBuilder {
 
-    /** 布尔查询构建器，所有条件均追加到 must / filter / should 子句 */
+    /**
+     * 布尔查询构建器，所有条件均追加到 must / filter / should 子句
+     */
     private final BoolQuery.Builder boolBuilder = new BoolQuery.Builder();
 
-    /** 排序选项列表，顺序即优先级 */
+    /**
+     * 排序选项列表，顺序即优先级
+     */
     private final List<SortOptions> sorts = new ArrayList<>();
 
-    /** 高亮字段列表 */
+    /**
+     * 高亮字段列表
+     */
     private final List<HighlightField> highlights = new ArrayList<>();
 
-    /** 分页起始偏移量（from），默认第 1 页 */
+    /**
+     * 分页起始偏移量（from），默认第 1 页
+     */
     private int from = 0;
 
-    /** 每页大小 */
+    /**
+     * 每页大小
+     */
     private int size = 20;
 
     /**

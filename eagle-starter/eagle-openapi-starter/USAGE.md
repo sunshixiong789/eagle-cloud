@@ -35,17 +35,18 @@ springdoc:
 
 ## 核心注解（来自 SpringDoc）
 
-| 注解 | 用途 |
-|---|---|
-| `@Tag(name, description)` | Controller 类级 — 资源域分组 |
-| `@Operation(summary, description, responses)` | 方法级 — 接口说明 |
-| `@ApiResponses` / `@ApiResponse` | 响应码说明 |
-| `@Schema(description, example, requiredMode)` | DTO 字段说明 |
-| `@Parameter(description)` | 单参数说明 |
+| 注解                                            | 用途                    |
+|-----------------------------------------------|-----------------------|
+| `@Tag(name, description)`                     | Controller 类级 — 资源域分组 |
+| `@Operation(summary, description, responses)` | 方法级 — 接口说明            |
+| `@ApiResponses` / `@ApiResponse`              | 响应码说明                 |
+| `@Schema(description, example, requiredMode)` | DTO 字段说明              |
+| `@Parameter(description)`                     | 单参数说明                 |
 
 ## 最小示例
 
 ```java
+
 @Tag(name = "订单管理", description = "订单 CRUD")
 @RestController
 @RequestMapping("/api/v1/orders")
@@ -53,11 +54,11 @@ springdoc:
 public class OrderController {
 
     @Operation(summary = "创建订单",
-        responses = {
-            @ApiResponse(responseCode = "201", description = "创建成功"),
-            @ApiResponse(responseCode = "400", description = "参数错误"),
-            @ApiResponse(responseCode = "409", description = "重复订单号")
-        })
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "创建成功"),
+                    @ApiResponse(responseCode = "400", description = "参数错误"),
+                    @ApiResponse(responseCode = "409", description = "重复订单号")
+            })
     @PreAuthorize("isAuthenticated()")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -84,21 +85,22 @@ public class CreateOrderRequest {
 
 @Schema(description = "订单详情")
 public record OrderResponse(
-    @Schema(description = "订单 ID", example = "10086") Long id,
-    @Schema(description = "订单号", example = "ORD20260430123456") String orderNo,
-    @Schema(description = "金额", example = "199.00") BigDecimal totalAmount
-) {}
+        @Schema(description = "订单 ID", example = "10086") Long id,
+        @Schema(description = "订单号", example = "ORD20260430123456") String orderNo,
+        @Schema(description = "金额", example = "199.00") BigDecimal totalAmount
+) {
+}
 ```
 
 访问：`http://localhost:port/swagger-ui.html`、`http://localhost:port/v3/api-docs`
 
 ## 配置项
 
-| key | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `eagle.openapi.title` | String | `Eagle API` | 文档标题 |
-| `eagle.openapi.version` | String | `v1.0.0` | 版本 |
-| `eagle.openapi.description` | String | — | 描述 |
+| key                             | 类型     | 默认                    | 说明                                    |
+|---------------------------------|--------|-----------------------|---------------------------------------|
+| `eagle.openapi.title`           | String | `Eagle API`           | 文档标题                                  |
+| `eagle.openapi.version`         | String | `v1.0.0`              | 版本                                    |
+| `eagle.openapi.description`     | String | —                     | 描述                                    |
 | `eagle.openapi.auth-server-url` | String | `http://localhost:80` | OAuth2 授权服务器地址（authorizeUrl/tokenUrl） |
 
 ⚠️ **starter 仅 4 个字段**，没有 `enabled` / `groups` 等。
@@ -117,23 +119,24 @@ springdoc:
 ## 接口分组（用 SpringDoc 原生 GroupedOpenApi）
 
 ```java
+
 @Configuration
 public class OpenApiGroupConfig {
 
     @Bean
     public GroupedOpenApi adminApi() {
         return GroupedOpenApi.builder()
-            .group("admin")
-            .pathsToMatch("/api/admin/**")
-            .build();
+                .group("admin")
+                .pathsToMatch("/api/admin/**")
+                .build();
     }
 
     @Bean
     public GroupedOpenApi publicApi() {
         return GroupedOpenApi.builder()
-            .group("public")
-            .pathsToMatch("/api/v1/**")
-            .build();
+                .group("public")
+                .pathsToMatch("/api/v1/**")
+                .build();
     }
 }
 ```

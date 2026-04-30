@@ -85,7 +85,7 @@ public class SmsMessageChannel implements MessageChannel {
             }
             first = false;
             sb.append("\"").append(escapeJson(entry.getKey()))
-              .append("\":\"").append(escapeJson(entry.getValue())).append("\"");
+                    .append("\":\"").append(escapeJson(entry.getValue())).append("\"");
         }
         sb.append("}");
         return sb.toString();

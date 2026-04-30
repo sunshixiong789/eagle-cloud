@@ -45,8 +45,8 @@ public class TsidIdGenerator implements IdGenerator {
     /**
      * 使用自定义节点容量构造 TSID 生成器。
      *
-     * @param nodeId        节点 ID
-     * @param nodeBits      节点位数（8=256 节点 / 10=1024 节点 / 12=4096 节点）
+     * @param nodeId   节点 ID
+     * @param nodeBits 节点位数（8=256 节点 / 10=1024 节点 / 12=4096 节点）
      */
     public TsidIdGenerator(int nodeId, int nodeBits) {
         this.tsidFactory = TsidFactory.builder()

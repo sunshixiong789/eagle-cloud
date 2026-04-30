@@ -19,18 +19,28 @@ import lombok.Data;
 @Builder
 public class PayResult {
 
-    /** 是否成功 */
+    /**
+     * 是否成功
+     */
     private boolean success;
 
-    /** 第三方交易号 */
+    /**
+     * 第三方交易号
+     */
     private String tradeNo;
 
-    /** 商户订单号 */
+    /**
+     * 商户订单号
+     */
     private String outTradeNo;
 
-    /** 支付凭证/prepayId/二维码链接等（各支付方式含义不同） */
+    /**
+     * 支付凭证/prepayId/二维码链接等（各支付方式含义不同）
+     */
     private String payInfo;
 
-    /** 错误信息（success = false 时有值） */
+    /**
+     * 错误信息（success = false 时有值）
+     */
     private String errorMessage;
 }

@@ -21,40 +21,64 @@ import java.util.Set;
 @ConfigurationProperties(prefix = "eagle.oauth.default-client")
 public class OAuthClientProperties {
 
-    /** 是否启用默认客户端初始化 */
+    /**
+     * 是否启用默认客户端初始化
+     */
     private boolean enabled = true;
 
-    /** 客户端 ID */
+    /**
+     * 客户端 ID
+     */
     private String clientId = "eagleWeb";
 
-    /** 客户端名称 */
+    /**
+     * 客户端名称
+     */
     private String clientName = "Eagle Web 前端应用";
 
-    /** 客户端密钥（留空表示公开客户端） */
+    /**
+     * 客户端密钥（留空表示公开客户端）
+     */
     private String clientSecret = "";
 
-    /** 认证方式 */
+    /**
+     * 认证方式
+     */
     private Set<String> clientAuthenticationMethods = Set.of("none");
 
-    /** 授权类型 */
+    /**
+     * 授权类型
+     */
     private Set<String> authorizationGrantTypes = Set.of(
             "authorization_code", "refresh_token", "wechat_mini_program", "sms_code");
 
-    /** 重定向 URI */
+    /**
+     * 重定向 URI
+     */
     private Set<String> redirectUris = Set.of("http://localhost:8080/auth/auth0/sign-in");
 
-    /** 授权范围 */
+    /**
+     * 授权范围
+     */
     private Set<String> scopes = Set.of("openid", "profile", "email", "address", "phone");
 
-    /** 是否要求 PKCE */
+    /**
+     * 是否要求 PKCE
+     */
     private boolean requireProofKey = true;
 
-    /** 是否要求授权同意 */
+    /**
+     * 是否要求授权同意
+     */
     private boolean requireAuthorizationConsent = false;
 
-    /** Access Token 有效期（秒） */
+    /**
+     * Access Token 有效期（秒）
+     */
     private long accessTokenTtlSeconds = 3600L;
 
-    /** Refresh Token 有效期（秒） */
+    /**
+     * Refresh Token 有效期（秒）
+     */
     private long refreshTokenTtlSeconds = 2592000L;
 }

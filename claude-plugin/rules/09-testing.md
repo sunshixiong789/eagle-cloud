@@ -5,6 +5,7 @@
 ## 架构测试
 
 使用 Spring Modulith 的项目，PR 前必须运行架构验证测试，确保：
+
 - 模块间无循环依赖
 - 无非法跨模块访问（访问其他模块内部包）
 - 模块依赖符合 `allowedDependencies` 声明
@@ -18,12 +19,16 @@
 ## 测试结构（AAA 模式）
 
 ```java
+
 @ExtendWith(MockitoExtension.class)
 class OrderApplicationServiceTest {
 
-    @Mock private OrderRepository orderRepository;
-    @Mock private InventoryValidationService inventoryService;
-    @InjectMocks private OrderApplicationService orderApplicationService;
+    @Mock
+    private OrderRepository orderRepository;
+    @Mock
+    private InventoryValidationService inventoryService;
+    @InjectMocks
+    private OrderApplicationService orderApplicationService;
 
     @Nested
     @DisplayName("createOrder")
@@ -48,10 +53,10 @@ class OrderApplicationServiceTest {
         @DisplayName("should throw DomainException when stock is insufficient")
         void shouldThrowWhenStockInsufficient() {
             doThrow(OrderErrorCode.INSUFFICIENT_STOCK.toDomainException())
-                .when(inventoryService).validateStock(anyLong(), anyInt());
+                    .when(inventoryService).validateStock(anyLong(), anyInt());
 
             assertThrows(DomainException.class,
-                () -> orderApplicationService.createOrder(request));
+                    () -> orderApplicationService.createOrder(request));
         }
     }
 }

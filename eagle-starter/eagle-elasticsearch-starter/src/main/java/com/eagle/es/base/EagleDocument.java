@@ -21,15 +21,21 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public abstract class EagleDocument {
 
-    /** 文档 ID */
+    /**
+     * 文档 ID
+     */
     @Id
     private String id;
 
-    /** 创建时间 */
+    /**
+     * 创建时间
+     */
     @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second)
     private LocalDateTime createTime;
 
-    /** 更新时间 */
+    /**
+     * 更新时间
+     */
     @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second)
     private LocalDateTime updateTime;
 }

@@ -2,7 +2,9 @@ package com.eagle.system.common.exception;
 
 import com.eagle.common.exception.ErrorCode;
 
-/** 系统管理资源错误码（20001–20008） */
+/**
+ * 系统管理资源错误码（20001–20008）
+ */
 public enum SystemErrorCode implements ErrorCode {
 
     DEPT_NOT_FOUND(20001, "error.dept.not_found", "部门不存在"),

@@ -5,7 +5,8 @@ argument-hint: "<ErrorCodeEnum>:<CONSTANT_NAME>:<中文消息>"
 
 # /add-error-code — 添加错误码并同步 i18n
 
-在指定的 ErrorCode 枚举中追加新常量，同时在 `messages_zh_CN.properties` / `messages_en_US.properties` / `messages_zh_TW.properties` 三种语言文件中插入翻译占位。
+在指定的 ErrorCode 枚举中追加新常量，同时在 `messages_zh_CN.properties` / `messages_en_US.properties` /
+`messages_zh_TW.properties` 三种语言文件中插入翻译占位。
 
 ## 输入
 
@@ -33,6 +34,7 @@ find . -name "{ErrorCodeEnum}.java"
 ```
 
 读取现有枚举：
+
 - 当前最大数值（推断所属域的码段）
 - i18n key 命名习惯
 - 已有常量列表（避免重名）
@@ -41,7 +43,7 @@ find . -name "{ErrorCodeEnum}.java"
 
 ```java
 // 插入到枚举常量列表末尾（最后一个 ; 前）
-{NEW_CONSTANT}({code}, "error.{module}.{action}", "{默认消息}"),
+{NEW_CONSTANT}({code},"error.{module}.{action}","{默认消息}"),
 ```
 
 `code` 取所属枚举段位的下一个值（如 `30001-30099` 段，取最后一个 +1）。
@@ -52,13 +54,11 @@ find . -name "{ErrorCodeEnum}.java"
 
 ```properties
 # messages_zh_CN.properties
-error.{module}.{action}={中文消息}
-
+error.{module}.{action} = {中文消息}
 # messages_en_US.properties
-error.{module}.{action}={English message}
-
+error.{module}.{action} = {English message}
 # messages_zh_TW.properties
-error.{module}.{action}={繁體中文}
+error.{module}.{action} = {繁體中文}
 ```
 
 按字母排序插入，保持文件整洁。
@@ -75,13 +75,19 @@ error.{module}.{action}={繁體中文}
 
 ```java
 // ✅ 在领域层抛异常的示例
-throw {ErrorCodeEnum}.{NEW_CONSTANT}.toDomainException();
+throw{ErrorCodeEnum}.{NEW_CONSTANT}.
+
+toDomainException();
 
 // ✅ 在仓储层（NotFound）
-throw {ErrorCodeEnum}.{NEW_CONSTANT}.toNotFoundException();
+throw{ErrorCodeEnum}.{NEW_CONSTANT}.
+
+toNotFoundException();
 
 // ✅ 基础设施失败
-throw {ErrorCodeEnum}.{NEW_CONSTANT}.toServiceException(cause);
+throw{ErrorCodeEnum}.{NEW_CONSTANT}.
+
+toServiceException(cause);
 ```
 
 ## 输出

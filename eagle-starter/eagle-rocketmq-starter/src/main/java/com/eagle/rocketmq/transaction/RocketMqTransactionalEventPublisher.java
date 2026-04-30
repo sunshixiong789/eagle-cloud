@@ -38,14 +38,16 @@ public class RocketMqTransactionalEventPublisher implements TransactionalEventPu
         InitializingBean, DisposableBean {
 
     private final RocketMqProperties properties;
-    /** 可选的回查检查器，注入时才启用事务消息，否则退化为普通消息 */
+    /**
+     * 可选的回查检查器，注入时才启用事务消息，否则退化为普通消息
+     */
     private final List<AbstractRocketMqTransactionChecker> checkers;
 
     private ClientServiceProvider provider;
     private Producer transactionProducer;
 
     public RocketMqTransactionalEventPublisher(RocketMqProperties properties,
-            List<AbstractRocketMqTransactionChecker> checkers) {
+                                               List<AbstractRocketMqTransactionChecker> checkers) {
         this.properties = properties;
         this.checkers = checkers;
     }

@@ -2,7 +2,8 @@
 
 基于 **DDD（领域驱动设计）+ 六边形架构 + Spring Modulith** 构建的 Spring Boot 模块化单体平台，为微服务拆分就绪。
 
-内置完整的 **OAuth2 授权服务器**、**RBAC 权限管理**、**多种第三方登录**（微信小程序 / PC 扫码 / H5 / 短信验证码），以及面向**互联网高并发**的全套基础设施，开箱即用。
+内置完整的 **OAuth2 授权服务器**、**RBAC 权限管理**、**多种第三方登录**（微信小程序 / PC 扫码 / H5 / 短信验证码），以及面向*
+*互联网高并发**的全套基础设施，开箱即用。
 
 ## 特性
 
@@ -28,28 +29,28 @@
 
 ## 技术栈
 
-| 类别 | 技术 | 版本 |
-|------|------|------|
-| 语言 | Java | 25 |
-| 框架 | Spring Boot | 4.0.3 |
-| 微服务 | Spring Cloud / Spring Cloud Alibaba | 2025.1.1 / 2025.1.0.0 |
-| 模块治理 | Spring Modulith | 2.0.5 |
-| ORM (JPA) | Hibernate | 7.2.6 |
-| ORM (MyBatis) | MyBatis-Plus | 3.5.11 |
-| 数据库 | MySQL / PostgreSQL / H2 | 9.x / 42.7 / - |
-| 搜索引擎 | Elasticsearch | 9.x |
-| 缓存 | Redis (Redisson) + Caffeine | 4.3.0 / 3.2.0 |
-| 安全 | Spring Security + OAuth2 Authorization Server | - |
-| 网关 | Spring Cloud Gateway + Sentinel | - |
-| 注册中心 | Nacos | v3 |
-| 消息队列 | Apache RocketMQ | 2.3.5 |
-| 分布式事务 | Seata | 2.2.0 |
-| 定时任务 | XXL-JOB | 2.4.2 |
-| 对象存储 | MinIO | 8.5.17 |
-| 支付 | 支付宝 SDK / 微信支付 APIv3 | 4.39 / 0.2.14 |
-| 实时推送 | STOMP WebSocket + SSE | - |
-| API 文档 | SpringDoc OpenAPI | 3.0.2 |
-| 构建工具 | Gradle (Groovy DSL) | 9.x |
+| 类别            | 技术                                            | 版本                    |
+|---------------|-----------------------------------------------|-----------------------|
+| 语言            | Java                                          | 25                    |
+| 框架            | Spring Boot                                   | 4.0.3                 |
+| 微服务           | Spring Cloud / Spring Cloud Alibaba           | 2025.1.1 / 2025.1.0.0 |
+| 模块治理          | Spring Modulith                               | 2.0.5                 |
+| ORM (JPA)     | Hibernate                                     | 7.2.6                 |
+| ORM (MyBatis) | MyBatis-Plus                                  | 3.5.11                |
+| 数据库           | MySQL / PostgreSQL / H2                       | 9.x / 42.7 / -        |
+| 搜索引擎          | Elasticsearch                                 | 9.x                   |
+| 缓存            | Redis (Redisson) + Caffeine                   | 4.3.0 / 3.2.0         |
+| 安全            | Spring Security + OAuth2 Authorization Server | -                     |
+| 网关            | Spring Cloud Gateway + Sentinel               | -                     |
+| 注册中心          | Nacos                                         | v3                    |
+| 消息队列          | Apache RocketMQ                               | 2.3.5                 |
+| 分布式事务         | Seata                                         | 2.2.0                 |
+| 定时任务          | XXL-JOB                                       | 2.4.2                 |
+| 对象存储          | MinIO                                         | 8.5.17                |
+| 支付            | 支付宝 SDK / 微信支付 APIv3                          | 4.39 / 0.2.14         |
+| 实时推送          | STOMP WebSocket + SSE                         | -                     |
+| API 文档        | SpringDoc OpenAPI                             | 3.0.2                 |
+| 构建工具          | Gradle (Groovy DSL)                           | 9.x                   |
 
 ## 项目结构
 
@@ -99,12 +100,12 @@ eagle-cloud/
 
 `eagle-system-server` 内按有界上下文划分为 4 个模块：
 
-| 模块 | 职责 |
-|------|------|
-| **auth** | 认证授权 — OAuth2 授权服务器、微信 / 短信第三方登录、账号管理 |
-| **base** | 系统管理 — 用户、角色、权限、部门、菜单、岗位、字典、审计日志 |
+| 模块         | 职责                                                        |
+|------------|-----------------------------------------------------------|
+| **auth**   | 认证授权 — OAuth2 授权服务器、微信 / 短信第三方登录、账号管理                     |
+| **base**   | 系统管理 — 用户、角色、权限、部门、菜单、岗位、字典、审计日志                          |
 | **config** | 全局配置 — Security、Cache、Async、i18n、OpenAPI、WebSocket、全局异常处理 |
-| **common** | 共享内核 — 跨域事件契约、ErrorCode 枚举、通用 DTO |
+| **common** | 共享内核 — 跨域事件契约、ErrorCode 枚举、通用 DTO                         |
 
 模块间通过 **领域事件** 异步解耦，跨域依赖通过 **六边形 Port 接口** 隔离。
 
@@ -280,6 +281,7 @@ sseManager.broadcast("ANNOUNCEMENT", announcementDto);
 ```
 
 客户端 JS 示例：
+
 ```javascript
 // WebSocket（STOMP）
 const client = new Client({ brokerURL: 'ws://localhost/ws' });
@@ -317,6 +319,7 @@ gradle :eagle-base-server:eagle-system-server:bootRun
 ```
 
 服务启动后访问：
+
 - **Swagger UI** — http://localhost/swagger-ui.html
 - **OAuth2 Token 端点** — http://localhost/oauth2/token
 - **API 文档** — http://localhost/v3/api-docs
@@ -334,13 +337,13 @@ cd eagle-base-server
 docker compose up -d
 ```
 
-| 服务 | 端口 | 说明 |
-|------|------|------|
-| MySQL | 3306 | 数据库 |
-| Redis | 6379 | 缓存 |
-| Nacos | 8848 | 注册中心 / 配置中心 |
-| Gateway | 8080 | API 网关入口 |
-| System Server | 8082 | 系统服务 |
+| 服务            | 端口   | 说明          |
+|---------------|------|-------------|
+| MySQL         | 3306 | 数据库         |
+| Redis         | 6379 | 缓存          |
+| Nacos         | 8848 | 注册中心 / 配置中心 |
+| Gateway       | 8080 | API 网关入口    |
+| System Server | 8082 | 系统服务        |
 
 ### 方式三：连接外部 MySQL + Redis
 
@@ -406,10 +409,10 @@ gradle :eagle-base-server:eagle-gateway-server:bootRun
 
 **文件说明：**
 
-| 文件 | 用途 | 是否提交 Git |
-|------|------|------------|
-| `.env.example` | 变量模板，列出所有可用变量及默认值 | ✅ 提交（安全占位值）|
-| `.env` | 本地实际配置，填入真实密码/密钥 | ❌ 已在 `.gitignore` 中忽略 |
+| 文件             | 用途                | 是否提交 Git              |
+|----------------|-------------------|-----------------------|
+| `.env.example` | 变量模板，列出所有可用变量及默认值 | ✅ 提交（安全占位值）           |
+| `.env`         | 本地实际配置，填入真实密码/密钥  | ❌ 已在 `.gitignore` 中忽略 |
 
 **初始化步骤：**
 
@@ -467,29 +470,31 @@ NACOS_GROUP=DEFAULT_GROUP
 SENTINEL_DASHBOARD=localhost:8858
 ```
 
-> **注意：** `.env` 仅在本地开发时由 IDE / IntelliJ 的 [EnvFile 插件](https://plugins.jetbrains.com/plugin/7861-envfile) 或 `--env-file` 参数加载。Docker Compose 会自动读取同目录下的 `.env` 文件。生产环境通过 Kubernetes Secret / 容器编排平台的环境变量注入，**不使用** `.env` 文件。
+> **注意：** `.env` 仅在本地开发时由 IDE / IntelliJ 的 [EnvFile 插件](https://plugins.jetbrains.com/plugin/7861-envfile)
+> 或 `--env-file` 参数加载。Docker Compose 会自动读取同目录下的 `.env` 文件。生产环境通过 Kubernetes Secret / 容器编排平台的环境变量注入，
+**不使用** `.env` 文件。
 
 ### Profile 配置
 
-| Profile | 数据库 | 缓存 | 注册中心 | 适用场景 |
-|---------|--------|------|---------|---------|
-| `local`（默认） | H2 文件数据库 | Caffeine 本地缓存 | 禁用 | 本地开发、调试 |
-| `dev` | MySQL + HikariCP | Redis (Redisson) | Nacos | 开发环境 |
-| `docker` | MySQL (容器) | Redis (容器) | Nacos (容器) | Docker Compose |
-| `prod` | MySQL | Redis | Nacos | 生产环境 |
+| Profile     | 数据库              | 缓存               | 注册中心       | 适用场景           |
+|-------------|------------------|------------------|------------|----------------|
+| `local`（默认） | H2 文件数据库         | Caffeine 本地缓存    | 禁用         | 本地开发、调试        |
+| `dev`       | MySQL + HikariCP | Redis (Redisson) | Nacos      | 开发环境           |
+| `docker`    | MySQL (容器)       | Redis (容器)       | Nacos (容器) | Docker Compose |
+| `prod`      | MySQL            | Redis            | Nacos      | 生产环境           |
 
 ### OAuth2 认证
 
 项目内置 OAuth2 授权服务器，默认注册客户端：
 
-| 配置项 | 值 |
-|--------|-----|
-| Client ID | `eagleWeb` |
-| 授权类型 | `authorization_code` (PKCE), `refresh_token`, `wechat_mini_program`, `sms_code` |
-| PKCE | 必须启用（公开客户端） |
-| Access Token 有效期 | 1 小时 |
-| Refresh Token 有效期 | 30 天 |
-| Scopes | `openid`, `profile`, `email`, `address`, `phone` |
+| 配置项               | 值                                                                               |
+|-------------------|---------------------------------------------------------------------------------|
+| Client ID         | `eagleWeb`                                                                      |
+| 授权类型              | `authorization_code` (PKCE), `refresh_token`, `wechat_mini_program`, `sms_code` |
+| PKCE              | 必须启用（公开客户端）                                                                     |
+| Access Token 有效期  | 1 小时                                                                            |
+| Refresh Token 有效期 | 30 天                                                                            |
+| Scopes            | `openid`, `profile`, `email`, `address`, `phone`                                |
 
 ### 第三方登录（可选配置）
 
@@ -498,7 +503,8 @@ SENTINEL_DASHBOARD=localhost:8858
 - **微信小程序** — `WECHAT_MINI_APP_ID` / `WECHAT_MINI_APP_SECRET`
 - **微信 PC 扫码** — `WECHAT_WEB_APP_ID` / `WECHAT_WEB_APP_SECRET`
 - **微信 H5 公众号** — `WECHAT_MP_APP_ID` / `WECHAT_MP_APP_SECRET`
-- **阿里云短信** — `ALIYUN_SMS_ACCESS_KEY_ID` / `ALIYUN_SMS_ACCESS_KEY_SECRET` / `ALIYUN_SMS_SIGN_NAME` / `ALIYUN_SMS_TEMPLATE_CODE`
+- **阿里云短信** — `ALIYUN_SMS_ACCESS_KEY_ID` / `ALIYUN_SMS_ACCESS_KEY_SECRET` / `ALIYUN_SMS_SIGN_NAME` /
+  `ALIYUN_SMS_TEMPLATE_CODE`
 
 ## 常用命令
 
@@ -564,7 +570,8 @@ throw PaymentErrorCode.GATEWAY_ERROR.toServiceException(cause);        // → 50
 
 ### 编码规范
 
-项目编码规范定义在 `.claude/rules/` 目录下，涵盖命名、架构分层、RESTful API、日志、安全、并发、测试、代码风格、异常处理、数据库、配置注入、模块治理等 12 项规范。
+项目编码规范定义在 `.claude/rules/` 目录下，涵盖命名、架构分层、RESTful API、日志、安全、并发、测试、代码风格、异常处理、数据库、配置注入、模块治理等
+12 项规范。
 
 ## License
 

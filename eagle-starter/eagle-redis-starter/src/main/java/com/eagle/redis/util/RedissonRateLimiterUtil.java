@@ -5,9 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RRateLimiter;
 import org.redisson.api.RateType;
 import org.redisson.api.RedissonClient;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
-import org.springframework.stereotype.Component;
 
 /**
  * Redisson 分布式限流工具类。
@@ -75,7 +75,7 @@ public class RedissonRateLimiterUtil {
      * @return {@code true} 获取令牌成功；{@code false} 已达速率上限
      */
     public boolean tryAcquire(String key, long rate, Duration rateInterval,
-                               RateType rateType, long permits) {
+                              RateType rateType, long permits) {
         RRateLimiter rateLimiter = redissonClient.getRateLimiter(key);
         // trySetRate 仅在 key 不存在时初始化，已存在的限流器不会被重置
         rateLimiter.trySetRate(rateType, rate, rateInterval);

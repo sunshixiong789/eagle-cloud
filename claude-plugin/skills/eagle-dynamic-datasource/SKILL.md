@@ -40,12 +40,12 @@ eagle.datasource:
 
 ## 核心 API
 
-| 类 / 注解 | 用途 |
-|---|---|
-| `@ReadOnly` | 方法注解：路由到 slave |
-| `ReadOnlyAspect` | `@ReadOnly` + `@Transactional(readOnly=true)` 切面 |
-| `DataSourceContextHolder` | 编程式：`set(MASTER / SLAVE)` / `get()` / `clear()` |
-| `DynamicDataSource` | `AbstractRoutingDataSource` 子类 |
+| 类 / 注解                    | 用途                                               |
+|---------------------------|--------------------------------------------------|
+| `@ReadOnly`               | 方法注解：路由到 slave                                   |
+| `ReadOnlyAspect`          | `@ReadOnly` + `@Transactional(readOnly=true)` 切面 |
+| `DataSourceContextHolder` | 编程式：`set(MASTER / SLAVE)` / `get()` / `clear()`  |
+| `DynamicDataSource`       | `AbstractRoutingDataSource` 子类                   |
 
 `DataSourceContextHolder.MASTER = "master"` / `SLAVE = "slave"`，默认返回 `MASTER`。
 
@@ -81,14 +81,14 @@ public List<Stat> stats() {
 
 ## 配置项
 
-| key | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `eagle.datasource.enabled` | boolean | **`false`** | 总开关 |
-| `eagle.datasource.master.url` | String | — | 主库 URL |
-| `eagle.datasource.master.username` | String | — | 主库用户名 |
-| `eagle.datasource.master.password` | String | — | 主库密码 |
-| `eagle.datasource.master.driver-class-name` | String | — | 可省略，自动推断 |
-| `eagle.datasource.slave.*` | — | — | 同上结构 |
+| key                                         | 类型      | 默认          | 说明       |
+|---------------------------------------------|---------|-------------|----------|
+| `eagle.datasource.enabled`                  | boolean | **`false`** | 总开关      |
+| `eagle.datasource.master.url`               | String  | —           | 主库 URL   |
+| `eagle.datasource.master.username`          | String  | —           | 主库用户名    |
+| `eagle.datasource.master.password`          | String  | —           | 主库密码     |
+| `eagle.datasource.master.driver-class-name` | String  | —           | 可省略，自动推断 |
+| `eagle.datasource.slave.*`                  | —       | —           | 同上结构     |
 
 ## 常见错误
 

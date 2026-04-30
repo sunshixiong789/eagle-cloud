@@ -48,16 +48,24 @@ public class SegmentIdGenerator implements IdGenerator {
     private static final String SELECT_SQL =
             "SELECT max_id, step FROM t_id_segment WHERE biz_tag = ?";
 
-    /** 数据源，用于 JDBC 操作 */
+    /**
+     * 数据源，用于 JDBC 操作
+     */
     private final DataSource dataSource;
 
-    /** 业务标签，对应 t_id_segment 中的 biz_tag 列，用于多业务隔离 */
+    /**
+     * 业务标签，对应 t_id_segment 中的 biz_tag 列，用于多业务隔离
+     */
     private final String bizTag;
 
-    /** 当前号段已分配到的位置（原子自增，无需加锁） */
+    /**
+     * 当前号段已分配到的位置（原子自增，无需加锁）
+     */
     private final AtomicLong current = new AtomicLong(0L);
 
-    /** 当前号段的上限（exclusive），超过此值需申请新号段 */
+    /**
+     * 当前号段的上限（exclusive），超过此值需申请新号段
+     */
     private volatile long maxId = 0L;
 
     /**

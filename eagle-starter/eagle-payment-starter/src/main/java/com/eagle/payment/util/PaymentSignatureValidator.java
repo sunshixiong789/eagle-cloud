@@ -27,7 +27,9 @@ import java.util.Map;
 @Slf4j
 public final class PaymentSignatureValidator {
 
-    /** 工具类，禁止实例化 */
+    /**
+     * 工具类，禁止实例化
+     */
     private PaymentSignatureValidator() {
         throw new UnsupportedOperationException("Utility class");
     }

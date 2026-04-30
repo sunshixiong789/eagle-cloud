@@ -27,6 +27,19 @@ import java.util.List;
  */
 public class EagleJwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
+    /**
+     * 从 JWT Claims 中提取角色列表，添加 {@code ROLE_} 前缀后转为 {@link GrantedAuthority}。
+     */
+    static Collection<GrantedAuthority> extractAuthorities(Jwt jwt) {
+        List<String> roles = jwt.getClaim(SecurityConstants.DETAILS_ROLES);
+        if (roles == null || roles.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return roles.stream()
+                .<GrantedAuthority>map(role -> new SimpleGrantedAuthority(SecurityConstants.ROLE_START + role))
+                .toList();
+    }
+
     @Override
     public AbstractAuthenticationToken convert(@NonNull Jwt jwt) {
         Collection<GrantedAuthority> authorities = extractAuthorities(jwt);
@@ -40,18 +53,5 @@ public class EagleJwtAuthenticationConverter implements Converter<Jwt, AbstractA
 
         EagleUser user = new EagleUser(userId, username, "", name, deptId, deptName, phone, authorities);
         return new EagleAuthentication(jwt, user, authorities);
-    }
-
-    /**
-     * 从 JWT Claims 中提取角色列表，添加 {@code ROLE_} 前缀后转为 {@link GrantedAuthority}。
-     */
-    static Collection<GrantedAuthority> extractAuthorities(Jwt jwt) {
-        List<String> roles = jwt.getClaim(SecurityConstants.DETAILS_ROLES);
-        if (roles == null || roles.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return roles.stream()
-                .<GrantedAuthority>map(role -> new SimpleGrantedAuthority(SecurityConstants.ROLE_START + role))
-                .toList();
     }
 }

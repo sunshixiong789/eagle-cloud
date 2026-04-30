@@ -22,13 +22,19 @@ import java.util.Map;
  */
 public class ElasticSearchEnvironmentPostProcessor implements ApplicationListener<ApplicationEnvironmentPreparedEvent> {
 
-    /** 桥接属性源名称 */
+    /**
+     * 桥接属性源名称
+     */
     private static final String PROPERTY_SOURCE_NAME = "eagleElasticsearchBridge";
 
-    /** Eagle ES 属性前缀 */
+    /**
+     * Eagle ES 属性前缀
+     */
     private static final String EAGLE_PREFIX = "eagle.elasticsearch.";
 
-    /** Spring ES 属性前缀 */
+    /**
+     * Spring ES 属性前缀
+     */
     private static final String SPRING_PREFIX = "spring.elasticsearch.";
 
     @Override

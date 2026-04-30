@@ -84,8 +84,8 @@ public final class QueryHelper {
      * @param value   模糊查询关键词；为空时跳过
      */
     public static <T> void likeIfPresent(LambdaQueryWrapper<T> wrapper,
-                                          SFunction<T, ?> column,
-                                          String value) {
+                                         SFunction<T, ?> column,
+                                         String value) {
         if (StringUtils.hasText(value)) {
             wrapper.like(column, value);
         }
@@ -112,9 +112,9 @@ public final class QueryHelper {
      * @return 传入的 {@code wrapper} 本身（支持链式调用）
      */
     public static <T> LambdaQueryWrapper<T> dateBetween(LambdaQueryWrapper<T> wrapper,
-                                                          SFunction<T, ?> column,
-                                                          LocalDateTime start,
-                                                          LocalDateTime end) {
+                                                        SFunction<T, ?> column,
+                                                        LocalDateTime start,
+                                                        LocalDateTime end) {
         if (start != null) {
             wrapper.ge(column, start);
         }
@@ -147,9 +147,9 @@ public final class QueryHelper {
      * @return 传入的 {@code wrapper} 本身（支持继续追加条件）
      */
     public static <T> LambdaQueryWrapper<T> conditionEq(LambdaQueryWrapper<T> wrapper,
-                                                          boolean condition,
-                                                          SFunction<T, ?> column,
-                                                          Object value) {
+                                                        boolean condition,
+                                                        SFunction<T, ?> column,
+                                                        Object value) {
         wrapper.eq(condition, column, value);
         return wrapper;
     }
@@ -166,8 +166,8 @@ public final class QueryHelper {
      * @param value   等值条件（{@code null} 则跳过）
      */
     public static <T> void conditionEqIfPresent(LambdaQueryWrapper<T> wrapper,
-                                                 SFunction<T, ?> column,
-                                                 Object value) {
+                                                SFunction<T, ?> column,
+                                                Object value) {
         wrapper.eq(value != null, column, value);
     }
 
@@ -180,8 +180,8 @@ public final class QueryHelper {
      * @param values  候选值集合；{@code null} 或空集合时跳过
      */
     public static <T> void conditionIn(LambdaQueryWrapper<T> wrapper,
-                                        SFunction<T, ?> column,
-                                        Collection<?> values) {
+                                       SFunction<T, ?> column,
+                                       Collection<?> values) {
         if (values != null && !values.isEmpty()) {
             wrapper.in(column, values);
         }

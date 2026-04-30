@@ -19,7 +19,9 @@ public class CreateDictItemRequest {
     @NotBlank(message = "字典项标签不能为空")
     private String name;
 
-    /** 父级字典项 ID，0 或 null 表示顶级 */
+    /**
+     * 父级字典项 ID，0 或 null 表示顶级
+     */
     private Long parentId;
 
     private String description;

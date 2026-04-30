@@ -70,7 +70,7 @@ public class SentinelRuleManager {
      * @param timeWindowSec      熔断持续时长（秒），期间所有请求直接失败
      */
     public void addSlowCallDegradeRule(String resource, double slowRatioThreshold,
-            long rtThresholdMs, int timeWindowSec) {
+                                       long rtThresholdMs, int timeWindowSec) {
         DegradeRule rule = new DegradeRule(resource);
         rule.setGrade(CircuitBreakerStrategy.SLOW_REQUEST_RATIO.getType());
         rule.setCount(slowRatioThreshold);
@@ -102,7 +102,7 @@ public class SentinelRuleManager {
      * @param timeWindowSec           熔断持续时长（秒）
      */
     public void addExceptionRatioDegradeRule(String resource, double exceptionRatioThreshold,
-            int timeWindowSec) {
+                                             int timeWindowSec) {
         DegradeRule rule = new DegradeRule(resource);
         rule.setGrade(CircuitBreakerStrategy.ERROR_RATIO.getType());
         rule.setCount(exceptionRatioThreshold);

@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * 统一响应结果
+ *
  * @author sunshixiong
  */
 @Getter

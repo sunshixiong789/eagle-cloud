@@ -22,6 +22,8 @@ public class DictResponse {
     private String remarks;
     private LocalDateTime createTime;
 
-    /** 字典项列表（仅按类型查询时返回） */
+    /**
+     * 字典项列表（仅按类型查询时返回）
+     */
     private List<DictItemResponse> items;
 }

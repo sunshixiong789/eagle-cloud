@@ -16,15 +16,23 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AssignedRoleResponse {
 
-    /** 角色 ID */
+    /**
+     * 角色 ID
+     */
     private Long id;
 
-    /** 角色名称 */
+    /**
+     * 角色名称
+     */
     private String roleName;
 
-    /** 角色标识 */
+    /**
+     * 角色标识
+     */
     private String roleCode;
 
-    /** 角色状态：ENABLE（启用）或 DISABLE（禁用）*/
+    /**
+     * 角色状态：ENABLE（启用）或 DISABLE（禁用）
+     */
     private String status;
 }

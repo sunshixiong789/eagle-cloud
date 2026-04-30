@@ -30,22 +30,22 @@ eagle.idempotency:
 
 ## 三种模式
 
-| 模式 | 工作机制 | 重复请求行为 |
-|------|---------|-------------|
-| `TOKEN` | 客户端先 `POST /idempotency/token` 取 Token，请求时 `X-Idempotency-Token` 头携带 | Token 已消费 → 返回 409 |
-| `BUSINESS_KEY` | 用 SpEL 提取业务键，Redis SetNX 防重 | 24h 内同 key → 返回 409 |
-| `RESULT_CACHE` | 同 TOKEN，但**返回首次执行结果**（对重试友好） | 重试直接命中缓存返回 |
+| 模式             | 工作机制                                                                 | 重复请求行为              |
+|----------------|----------------------------------------------------------------------|---------------------|
+| `TOKEN`        | 客户端先 `POST /idempotency/token` 取 Token，请求时 `X-Idempotency-Token` 头携带 | Token 已消费 → 返回 409  |
+| `BUSINESS_KEY` | 用 SpEL 提取业务键，Redis SetNX 防重                                          | 24h 内同 key → 返回 409 |
+| `RESULT_CACHE` | 同 TOKEN，但**返回首次执行结果**（对重试友好）                                         | 重试直接命中缓存返回          |
 
 ## 核心 API
 
-| 注解 / 类 | 用途 |
-|---|---|
-| `@Idempotent(mode, key, tokenHeader, message, keyExtractor)` | 方法注解 |
-| `IdempotencyMode` | `TOKEN / BUSINESS_KEY / RESULT_CACHE` |
-| `IdempotencyKeyExtractor` | 自定义键提取扩展点（实现 + 注册 Bean，注解填 Bean 名） |
-| `IdempotencyAspect` | 切面 |
-| `IdempotencyTokenController` | Token 申请接口（路径由 starter 决定） |
-| `IdempotencyErrorCode` | 错误码（重复请求 → 409） |
+| 注解 / 类                                                       | 用途                                    |
+|--------------------------------------------------------------|---------------------------------------|
+| `@Idempotent(mode, key, tokenHeader, message, keyExtractor)` | 方法注解                                  |
+| `IdempotencyMode`                                            | `TOKEN / BUSINESS_KEY / RESULT_CACHE` |
+| `IdempotencyKeyExtractor`                                    | 自定义键提取扩展点（实现 + 注册 Bean，注解填 Bean 名）    |
+| `IdempotencyAspect`                                          | 切面                                    |
+| `IdempotencyTokenController`                                 | Token 申请接口（路径由 starter 决定）            |
+| `IdempotencyErrorCode`                                       | 错误码（重复请求 → 409）                       |
 
 ## 最小示例
 
@@ -85,17 +85,17 @@ public class OrderKeyExtractor implements IdempotencyKeyExtractor {
 
 @PostMapping("/orders/v2")
 @Idempotent(mode = IdempotencyMode.BUSINESS_KEY, keyExtractor = "orderKeyExtractor")
-public OrderResponse createV2(...) { ... }
+public OrderResponse createV2(...) { ...}
 ```
 
 ## 配置项
 
-| key | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `eagle.idempotency.enabled` | boolean | `true` | 总开关 |
-| `eagle.idempotency.token-expire-seconds` | long | `300` | Token 有效期 |
-| `eagle.idempotency.result-cache-seconds` | long | `86400` | 业务键 / 结果缓存 TTL |
-| `eagle.idempotency.key-prefix` | String | `eagle:idempotency:` | Redis Key 前缀 |
+| key                                      | 类型      | 默认                   | 说明             |
+|------------------------------------------|---------|----------------------|----------------|
+| `eagle.idempotency.enabled`              | boolean | `true`               | 总开关            |
+| `eagle.idempotency.token-expire-seconds` | long    | `300`                | Token 有效期      |
+| `eagle.idempotency.result-cache-seconds` | long    | `86400`              | 业务键 / 结果缓存 TTL |
+| `eagle.idempotency.key-prefix`           | String  | `eagle:idempotency:` | Redis Key 前缀   |
 
 ## 常见错误
 

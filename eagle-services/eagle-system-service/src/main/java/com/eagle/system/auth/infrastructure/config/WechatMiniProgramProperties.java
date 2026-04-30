@@ -18,9 +18,13 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "eagle.wechat.mini-program")
 public class WechatMiniProgramProperties {
 
-    /** 小程序 AppID */
+    /**
+     * 小程序 AppID
+     */
     private String appId = "";
 
-    /** 小程序 AppSecret */
+    /**
+     * 小程序 AppSecret
+     */
     private String appSecret = "";
 }

@@ -30,11 +30,16 @@ class IdGeneratorFacadeTest {
     private static final String MOCK_PAY_NO = "PAY20240115123456789";
     private static final String MOCK_RFD_NO = "RFD20240115123456789";
 
-    @Mock private IdGenerator defaultGenerator;
-    @Mock private UuidIdGenerator uuidGenerator;
-    @Mock private TsidIdGenerator tsidGenerator;
-    @Mock private NanoIdGenerator nanoIdGenerator;
-    @Mock private OrderNoGenerator orderNoGenerator;
+    @Mock
+    private IdGenerator defaultGenerator;
+    @Mock
+    private UuidIdGenerator uuidGenerator;
+    @Mock
+    private TsidIdGenerator tsidGenerator;
+    @Mock
+    private NanoIdGenerator nanoIdGenerator;
+    @Mock
+    private OrderNoGenerator orderNoGenerator;
 
     private IdGeneratorFacade facade;
 

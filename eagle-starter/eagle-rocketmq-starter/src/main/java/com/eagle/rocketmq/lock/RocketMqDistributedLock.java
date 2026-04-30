@@ -49,9 +49,8 @@ public class RocketMqDistributedLock implements DistributedLock, InitializingBea
 
     private final RocketMqProperties mqProps;
     private final LockProperties lockProps;
-
-    private ClientServiceProvider provider;
     private final Map<String, SimpleConsumer> consumerCache = new ConcurrentHashMap<>();
+    private ClientServiceProvider provider;
     private SimpleConsumer sharedConsumer;
 
     @Override

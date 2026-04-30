@@ -1,10 +1,10 @@
 package com.eagle.system.auth.infrastructure.security;
 
+import com.eagle.common.dto.EagleUser;
 import com.eagle.system.auth.application.service.AccountApplicationService;
 import com.eagle.system.auth.domain.model.Account;
 import com.eagle.system.auth.domain.service.WechatService;
 import com.eagle.system.auth.domain.service.WechatService.WechatUserInfo;
-import com.eagle.common.dto.EagleUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -50,6 +50,17 @@ public class WechatMiniProgramAuthenticationProvider implements AuthenticationPr
     private final WechatService wechatService;
     private final AccountApplicationService accountApplicationService;
 
+    private static OAuth2ClientAuthenticationToken getAuthenticatedClient(Authentication authentication) {
+        OAuth2ClientAuthenticationToken clientPrincipal = null;
+        if (authentication.getPrincipal() instanceof OAuth2ClientAuthenticationToken token) {
+            clientPrincipal = token;
+        }
+        if (clientPrincipal == null || !clientPrincipal.isAuthenticated()) {
+            throw new OAuth2AuthenticationException("invalid_client");
+        }
+        return clientPrincipal;
+    }
+
     @Override
     public Authentication authenticate(@NonNull Authentication authentication) throws AuthenticationException {
         WechatMiniProgramAuthenticationToken authToken = (WechatMiniProgramAuthenticationToken) authentication;
@@ -88,8 +99,8 @@ public class WechatMiniProgramAuthenticationProvider implements AuthenticationPr
     }
 
     private OAuth2AccessTokenAuthenticationToken generateTokens(EagleUser eagleUser,
-                                                                 RegisteredClient registeredClient,
-                                                                 OAuth2ClientAuthenticationToken clientPrincipal,
+                                                                RegisteredClient registeredClient,
+                                                                OAuth2ClientAuthenticationToken clientPrincipal,
                                                                 Map<String, Object> additionalParameters) {
         EagleUserAuthenticationToken userAuthentication = new EagleUserAuthenticationToken(eagleUser);
 
@@ -153,16 +164,5 @@ public class WechatMiniProgramAuthenticationProvider implements AuthenticationPr
                 registeredClient, clientPrincipal, accessToken, refreshToken,
                 Collections.emptyMap()
         );
-    }
-
-    private static OAuth2ClientAuthenticationToken getAuthenticatedClient(Authentication authentication) {
-        OAuth2ClientAuthenticationToken clientPrincipal = null;
-        if (authentication.getPrincipal() instanceof OAuth2ClientAuthenticationToken token) {
-            clientPrincipal = token;
-        }
-        if (clientPrincipal == null || !clientPrincipal.isAuthenticated()) {
-            throw new OAuth2AuthenticationException("invalid_client");
-        }
-        return clientPrincipal;
     }
 }

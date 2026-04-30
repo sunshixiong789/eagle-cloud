@@ -6,7 +6,6 @@ import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 业务指标工具类。
@@ -165,8 +164,8 @@ public class BusinessMetrics {
     /**
      * 直接记录耗时（单位毫秒）。
      *
-     * @param operation   操作名
-     * @param durationMs  耗时（毫秒）
+     * @param operation  操作名
+     * @param durationMs 耗时（毫秒）
      */
     public void recordDuration(String operation, long durationMs) {
         timer(operation).record(Duration.ofMillis(durationMs));

@@ -42,7 +42,9 @@ public class MybatisSlowSqlInterceptor implements Interceptor {
 
     private static final Logger log = LoggerFactory.getLogger(MybatisSlowSqlInterceptor.class);
 
-    /** 慢 SQL 判断阈值（毫秒） */
+    /**
+     * 慢 SQL 判断阈值（毫秒）
+     */
     private final long slowSqlMillis;
 
     /**

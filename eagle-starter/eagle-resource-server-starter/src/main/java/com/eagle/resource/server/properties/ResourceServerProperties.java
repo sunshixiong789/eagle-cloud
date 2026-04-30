@@ -53,10 +53,14 @@ public class ResourceServerProperties {
     @Data
     public static class Api {
 
-        /** API 文档标题。 */
+        /**
+         * API 文档标题。
+         */
         private String title = "Eagle API";
 
-        /** API 版本号。 */
+        /**
+         * API 版本号。
+         */
         private String version = "v1.0.0";
 
         /**

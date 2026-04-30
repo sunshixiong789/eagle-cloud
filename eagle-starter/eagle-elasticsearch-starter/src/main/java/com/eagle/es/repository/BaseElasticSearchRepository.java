@@ -4,12 +4,11 @@ import com.eagle.es.base.EagleDocument;
 import com.eagle.es.model.EsPageResult;
 import com.eagle.es.util.EsHighlightUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
-
-import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,13 +46,19 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public abstract class BaseElasticSearchRepository<T extends EagleDocument> {
 
-    /** 批量写入的默认分批大小，避免单次 bulk 请求过大 */
+    /**
+     * 批量写入的默认分批大小，避免单次 bulk 请求过大
+     */
     private static final int DEFAULT_BATCH_SIZE = 500;
 
-    /** Spring Data Elasticsearch 操作模板 */
+    /**
+     * Spring Data Elasticsearch 操作模板
+     */
     protected final ElasticsearchOperations operations;
 
-    /** 文档实体类型，用于反射和 ES 索引映射 */
+    /**
+     * 文档实体类型，用于反射和 ES 索引映射
+     */
     protected final Class<T> entityClass;
 
     /**

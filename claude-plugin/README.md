@@ -5,11 +5,11 @@
 
 ## 内容清单
 
-| 类型 | 数量 | 说明 |
-|------|------|------|
-| Rules（自动注入） | 28 | DDD / Modulith / 安全 / 日志 / 缓存 / 消息 / 事务 / 多租户 / 性能 / 部署 等全部开发规范 |
-| Commands（slash） | 5 | `/check-arch` `/new-module` `/new-aggregate` `/new-starter` `/add-error-code` |
-| Skills（按需加载） | 22 | 22 个 starter 的使用指南，含触发关键词 |
+| 类型              | 数量 | 说明                                                                            |
+|-----------------|----|-------------------------------------------------------------------------------|
+| Rules（自动注入）     | 28 | DDD / Modulith / 安全 / 日志 / 缓存 / 消息 / 事务 / 多租户 / 性能 / 部署 等全部开发规范               |
+| Commands（slash） | 5  | `/check-arch` `/new-module` `/new-aggregate` `/new-starter` `/add-error-code` |
+| Skills（按需加载）    | 22 | 22 个 starter 的使用指南，含触发关键词                                                     |
 
 ## 目录结构
 
@@ -75,12 +75,12 @@ git commit -m "docs(plugin): update redis usage"
 
 各 Git 服务 URL 示例：
 
-| 服务 | URL 格式 |
-|------|---------|
-| Gitee（国内访问最快）| `git@gitee.com:eagle/eagle-cloud.git` |
-| GitHub | `git@github.com:eagle/eagle-cloud.git` |
-| GitLab 自建 | `git@gitlab.your-domain.com:eagle/eagle-cloud.git` |
-| Gitea 自建 | `git@gitea.your-domain.com:eagle/eagle-cloud.git` |
+| 服务            | URL 格式                                             |
+|---------------|----------------------------------------------------|
+| Gitee（国内访问最快） | `git@gitee.com:eagle/eagle-cloud.git`              |
+| GitHub        | `git@github.com:eagle/eagle-cloud.git`             |
+| GitLab 自建     | `git@gitlab.your-domain.com:eagle/eagle-cloud.git` |
+| Gitea 自建      | `git@gitea.your-domain.com:eagle/eagle-cloud.git`  |
 
 3. Claude Code 启动时自动拉取并加载
 
@@ -137,19 +137,19 @@ echo "
 
 ## 版本兼容矩阵
 
-| Plugin 版本 | eagle-cloud（基建版本） | Spring Boot | 说明 |
-|------------|------------------------|-------------|------|
-| 1.0.0 | 当前主干（2026-04-30）| 4.0.3 | 初始版本 |
+| Plugin 版本 | eagle-cloud（基建版本） | Spring Boot | 说明   |
+|-----------|-------------------|-------------|------|
+| 1.0.0     | 当前主干（2026-04-30）  | 4.0.3       | 初始版本 |
 
 **业务项目应锁定 plugin 版本**：在 `marketplaces` 配置加 `branch: v1.0.0`（git tag）或 `version: 1.0.0`，避免主干变更影响稳定性。
 
 ## 升级建议
 
-| 变更类型 | 处理 |
-|---------|------|
-| 新增 starter | minor 版本升级，业务项目无感升级即可 |
-| 修改既有 API（破坏性）| **major 版本升级**，发布前在 CHANGELOG 列明迁移指南 |
-| 修复 USAGE.md 错别字 / 补充示例 | patch 版本升级 |
+| 变更类型                   | 处理                                   |
+|------------------------|--------------------------------------|
+| 新增 starter             | minor 版本升级，业务项目无感升级即可                |
+| 修改既有 API（破坏性）          | **major 版本升级**，发布前在 CHANGELOG 列明迁移指南 |
+| 修复 USAGE.md 错别字 / 补充示例 | patch 版本升级                           |
 
 ## 验证
 
@@ -163,7 +163,8 @@ SecurityUtils.getCurrentUserId()           # 输入此代码，AI 应自动加�
 
 ## 反馈
 
-发现 USAGE/规则错漏 → 在 `eagle-cloud` 仓库提 PR 修改源（`.claude/rules/` 或 `eagle-starter/{name}/USAGE.md`），CI 跑 `sync.sh` 后合并即可。
+发现 USAGE/规则错漏 → 在 `eagle-cloud` 仓库提 PR 修改源（`.claude/rules/` 或 `eagle-starter/{name}/USAGE.md`），CI 跑
+`sync.sh` 后合并即可。
 
 ## 许可
 

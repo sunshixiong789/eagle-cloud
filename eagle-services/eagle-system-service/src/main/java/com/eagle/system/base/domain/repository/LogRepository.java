@@ -65,7 +65,7 @@ public interface LogRepository extends JpaRepository<SysLog, Long>,
      * @return 各类型日志统计列表
      */
     @Query("SELECT l.logType AS logType, COUNT(l) AS count FROM SysLog l " +
-           "WHERE l.createTime >= :start AND l.createTime < :end GROUP BY l.logType")
+            "WHERE l.createTime >= :start AND l.createTime < :end GROUP BY l.logType")
     List<LogTypeSummaryProjection> findLogSummaryByPeriod(@Param("start") LocalDateTime start,
                                                           @Param("end") LocalDateTime end);
 
@@ -79,7 +79,7 @@ public interface LogRepository extends JpaRepository<SysLog, Long>,
      * @return 日志数量
      */
     @Query("SELECT COUNT(l) FROM SysLog l WHERE l.logType = :logType AND l.status = :status " +
-           "AND l.createTime >= :start AND l.createTime < :end")
+            "AND l.createTime >= :start AND l.createTime < :end")
     Long countByLogTypeAndStatusAndPeriod(@Param("logType") LogType logType,
                                           @Param("status") LogStatus status,
                                           @Param("start") LocalDateTime start,
@@ -94,7 +94,7 @@ public interface LogRepository extends JpaRepository<SysLog, Long>,
      * @return 不重复用户名数
      */
     @Query("SELECT COUNT(DISTINCT l.username) FROM SysLog l WHERE l.logType = :logType " +
-           "AND l.createTime >= :start AND l.createTime < :end")
+            "AND l.createTime >= :start AND l.createTime < :end")
     Long countDistinctUsernameByLogTypeAndPeriod(@Param("logType") LogType logType,
                                                  @Param("start") LocalDateTime start,
                                                  @Param("end") LocalDateTime end);
@@ -108,9 +108,9 @@ public interface LogRepository extends JpaRepository<SysLog, Long>,
      * @return 每日登录数投影列表
      */
     @Query("SELECT CAST(l.createTime AS LocalDate) AS date, COUNT(l) AS count " +
-           "FROM SysLog l WHERE l.logType = :logType " +
-           "AND l.createTime >= :start AND l.createTime < :end " +
-           "GROUP BY CAST(l.createTime AS LocalDate) ORDER BY CAST(l.createTime AS LocalDate)")
+            "FROM SysLog l WHERE l.logType = :logType " +
+            "AND l.createTime >= :start AND l.createTime < :end " +
+            "GROUP BY CAST(l.createTime AS LocalDate) ORDER BY CAST(l.createTime AS LocalDate)")
     List<LoginTrendProjection> findLoginTrendByPeriod(@Param("logType") LogType logType,
                                                       @Param("start") LocalDateTime start,
                                                       @Param("end") LocalDateTime end);

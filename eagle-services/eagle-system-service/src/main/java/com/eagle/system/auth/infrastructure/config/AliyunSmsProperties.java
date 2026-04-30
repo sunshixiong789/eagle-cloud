@@ -18,15 +18,23 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "eagle.sms.aliyun")
 public class AliyunSmsProperties {
 
-    /** AccessKey ID */
+    /**
+     * AccessKey ID
+     */
     private String accessKeyId = "";
 
-    /** AccessKey Secret */
+    /**
+     * AccessKey Secret
+     */
     private String accessKeySecret = "";
 
-    /** 短信签名 */
+    /**
+     * 短信签名
+     */
     private String signName = "";
 
-    /** 短信模板 Code */
+    /**
+     * 短信模板 Code
+     */
     private String templateCode = "";
 }

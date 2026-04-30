@@ -24,10 +24,14 @@ import java.math.BigDecimal;
 @Builder
 public class TransferRequest {
 
-    /** 商户转账流水号（全局唯一，用于幂等控制） */
+    /**
+     * 商户转账流水号（全局唯一，用于幂等控制）
+     */
     private String outBizNo;
 
-    /** 收款方账号（支付宝登录号 / 微信 openId） */
+    /**
+     * 收款方账号（支付宝登录号 / 微信 openId）
+     */
     private String payeeAccount;
 
     /**
@@ -38,9 +42,13 @@ public class TransferRequest {
      */
     private String payeeName;
 
-    /** 转账金额（元，精确到分） */
+    /**
+     * 转账金额（元，精确到分）
+     */
     private BigDecimal amount;
 
-    /** 转账备注（展示给收款方） */
+    /**
+     * 转账备注（展示给收款方）
+     */
     private String remark;
 }

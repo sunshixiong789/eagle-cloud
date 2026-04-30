@@ -1,10 +1,10 @@
 package com.eagle.system.auth.infrastructure.adapter;
 
+import com.eagle.common.dto.EagleUser;
 import com.eagle.system.auth.domain.model.Account;
 import com.eagle.system.auth.domain.port.AuthorizationInfo;
 import com.eagle.system.auth.domain.port.AuthorizationPort;
 import com.eagle.system.auth.domain.repository.AccountRepository;
-import com.eagle.common.dto.EagleUser;
 import com.eagle.system.common.exception.AuthErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;

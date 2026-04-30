@@ -1,8 +1,8 @@
 package com.eagle.system.base.application.service;
 
+import com.eagle.common.exception.codes.OperationErrorCode;
 import com.eagle.system.auth.domain.port.OnlineUserInfo;
 import com.eagle.system.auth.domain.port.OnlineUserPort;
-import com.eagle.common.exception.codes.OperationErrorCode;
 import com.eagle.system.base.domain.model.enums.LogStatus;
 import com.eagle.system.base.domain.model.enums.LogType;
 import com.eagle.system.base.domain.repository.LogRepository;

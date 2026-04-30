@@ -36,14 +36,17 @@ eagle.storage:
 ```java
 public interface StorageService {
     String upload(String bucket, String path, InputStream input, long size, String mimeType);
+
     InputStream download(String bucket, String path);
+
     void delete(String bucket, String path);
+
     String getUrl(String bucket, String path);
 }
 ```
 
-| 实现 | 启用条件 |
-|------|---------|
+| 实现                        | 启用条件         |
+|---------------------------|--------------|
 | `MinioStorageServiceImpl` | `type=minio` |
 | `LocalStorageServiceImpl` | `type=local` |
 
@@ -52,6 +55,7 @@ public interface StorageService {
 ## 最小示例
 
 ```java
+
 @RequiredArgsConstructor
 @Service
 public class FileApplicationService {
@@ -64,15 +68,15 @@ public class FileApplicationService {
         String tenantId = TenantContextHolder.getTenantId();
         String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
         String objectKey = String.format("%s/avatar/%s/%s.%s",
-            tenantId, date, UUID.randomUUID(), ext(file.getOriginalFilename()));
+                tenantId, date, UUID.randomUUID(), ext(file.getOriginalFilename()));
 
         try (InputStream in = file.getInputStream()) {
             String url = storage.upload(
-                "eagle-prod-user-avatar",
-                objectKey,
-                in,
-                file.getSize(),
-                file.getContentType()
+                    "eagle-prod-user-avatar",
+                    objectKey,
+                    in,
+                    file.getSize(),
+                    file.getContentType()
             );
             return new FileResponse(objectKey, url);
         }
@@ -93,20 +97,21 @@ public class FileApplicationService {
 
 ## 配置项
 
-| key | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `eagle.storage.type` | String | **`local`** | `local / minio / oss` |
-| `eagle.storage.minio.endpoint` | String | `http://localhost:9000` | MinIO 地址 |
-| `eagle.storage.minio.access-key` | String | — | AK（生产 ENC()）|
-| `eagle.storage.minio.secret-key` | String | — | SK（生产 ENC()）|
-| `eagle.storage.local.base-path` | String | `/data/eagle/storage` | 本地存储根目录 |
-| `eagle.storage.local.url-prefix` | String | `http://localhost:8080/storage` | 访问 URL 前缀 |
+| key                              | 类型     | 默认                              | 说明                    |
+|----------------------------------|--------|---------------------------------|-----------------------|
+| `eagle.storage.type`             | String | **`local`**                     | `local / minio / oss` |
+| `eagle.storage.minio.endpoint`   | String | `http://localhost:9000`         | MinIO 地址              |
+| `eagle.storage.minio.access-key` | String | —                               | AK（生产 ENC()）          |
+| `eagle.storage.minio.secret-key` | String | —                               | SK（生产 ENC()）          |
+| `eagle.storage.local.base-path`  | String | `/data/eagle/storage`           | 本地存储根目录               |
+| `eagle.storage.local.url-prefix` | String | `http://localhost:8080/storage` | 访问 URL 前缀             |
 
 ⚠️ **没有 `enabled` / `upload.max-size` / `upload.allowed-extensions` 等**——业务方需自行做上传校验。
 
 ## Bucket / Key 设计建议
 
 业务方约定：
+
 - Bucket 命名：`eagle-{env}-{purpose}`（`eagle-prod-user-avatar`）
 - Key 命名：`{tenantId}/{biz}/{yyyy/MM/dd}/{uuid}.{ext}`
 - **强制 UUID 重命名**（防路径穿越 / 防猜测）

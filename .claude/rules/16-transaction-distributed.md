@@ -29,7 +29,7 @@ public void placeOrder(CreateOrderRequest req) {
 
 // ✅ 远程参与方使用普通 @Transactional 即可
 @Transactional(rollbackFor = Exception.class)
-public void lockStock(...) { ... }
+public void lockStock(...) { ...}
 ```
 
 - **只在发起方**加 `@GlobalTransactional`，参与方不加
@@ -42,12 +42,14 @@ public void lockStock(...) { ... }
 适用：扣库存、扣余额等高并发场景，或参与方非关系型资源。
 
 ```java
+
 @LocalTCC
 public interface StockTccAction {
     @TwoPhaseBusinessAction(name = "stockReserve", commitMethod = "commit", rollbackMethod = "rollback")
     boolean prepare(BusinessActionContext ctx, @BusinessActionContextParameter("productId") Long productId, @BusinessActionContextParameter("qty") int qty);
 
     boolean commit(BusinessActionContext ctx);
+
     boolean rollback(BusinessActionContext ctx);
 }
 ```
@@ -70,9 +72,10 @@ public void payOrder(Long orderId) {
     orderRepository.save(order);
 
     publisher.publishInTransaction(
-        "prod_order_paid",
-        new OrderPaidIntegrationEvent(orderId, ...),
-        () -> {} // 事务消息回调（在本地事务内）
+            "prod_order_paid",
+            new OrderPaidIntegrationEvent(orderId, ...),
+    () -> {
+    } // 事务消息回调（在本地事务内）
     );
 }
 ```
@@ -97,12 +100,12 @@ public void payOrder(Long orderId) {
 
 ## 失败处理
 
-| 失败类型 | 行为 |
-|---------|------|
-| 全局事务超时（TC 触发） | 自动 rollback 所有参与方 |
+| 失败类型          | 行为                   |
+|---------------|----------------------|
+| 全局事务超时（TC 触发） | 自动 rollback 所有参与方    |
 | 参与方 commit 失败 | TC 重试直到达到最大次数 → 人工介入 |
-| 参与方下线 | 数据保持中间态，等服务恢复后 TC 重试 |
-| 网络抖动 | 自动重试 3 次 |
+| 参与方下线         | 数据保持中间态，等服务恢复后 TC 重试 |
+| 网络抖动          | 自动重试 3 次             |
 
 **告警阈值**：单服务回滚率 > 1% / 全局事务超时数 > 0 → 立即告警。
 

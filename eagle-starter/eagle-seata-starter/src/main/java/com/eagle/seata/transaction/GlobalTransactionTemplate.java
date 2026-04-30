@@ -43,7 +43,9 @@ import org.apache.seata.tm.api.GlobalTransactionContext;
 @Slf4j
 public class GlobalTransactionTemplate {
 
-    /** 默认全局事务超时时长（毫秒），60 秒。 */
+    /**
+     * 默认全局事务超时时长（毫秒），60 秒。
+     */
     private static final int DEFAULT_TIMEOUT_MS = 60_000;
 
     /**

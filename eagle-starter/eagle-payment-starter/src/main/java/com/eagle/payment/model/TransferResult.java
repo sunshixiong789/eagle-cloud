@@ -15,15 +15,23 @@ import lombok.Data;
 @Builder
 public class TransferResult {
 
-    /** 是否转账成功（第三方受理成功） */
+    /**
+     * 是否转账成功（第三方受理成功）
+     */
     private boolean success;
 
-    /** 第三方转账单号（受理成功时有值） */
+    /**
+     * 第三方转账单号（受理成功时有值）
+     */
     private String orderId;
 
-    /** 商户转账流水号（与请求对应） */
+    /**
+     * 商户转账流水号（与请求对应）
+     */
     private String outBizNo;
 
-    /** 错误信息（success = false 时有值） */
+    /**
+     * 错误信息（success = false 时有值）
+     */
     private String errorMessage;
 }

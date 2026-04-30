@@ -1,11 +1,11 @@
 package com.eagle.system.auth.web.controller;
 
+import com.eagle.common.exception.codes.DataErrorCode;
 import com.eagle.system.auth.application.service.AccountApplicationService;
 import com.eagle.system.auth.domain.model.Account;
 import com.eagle.system.auth.domain.service.SmsService;
 import com.eagle.system.auth.infrastructure.config.WechatWebProperties;
 import com.eagle.system.common.exception.AuthErrorCode;
-import com.eagle.common.exception.codes.DataErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;

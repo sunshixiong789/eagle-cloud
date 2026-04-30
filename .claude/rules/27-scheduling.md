@@ -4,18 +4,19 @@
 
 ## 何时用 XXL-JOB vs Spring `@Scheduled`
 
-| 场景 | 选型 |
-|------|------|
-| 集群部署 / 需要分片 / 失败转移 | **XXL-JOB** |
-| 单机本地任务（启动初始化、内存清理）| `@Scheduled` |
-| 业务关键 / 需要监控 / 需可视化 | **XXL-JOB** |
-| 简单 cron / 不影响业务 | `@Scheduled` |
+| 场景                 | 选型           |
+|--------------------|--------------|
+| 集群部署 / 需要分片 / 失败转移 | **XXL-JOB**  |
+| 单机本地任务（启动初始化、内存清理） | `@Scheduled` |
+| 业务关键 / 需要监控 / 需可视化 | **XXL-JOB**  |
+| 简单 cron / 不影响业务    | `@Scheduled` |
 
 **禁止**：生产环境用 `@Scheduled` 跑业务关键任务（多实例并发 / 不可视化 / 不可重试）。
 
 ## XXL-JOB 任务定义
 
 ```java
+
 @Component
 @RequiredArgsConstructor
 public class OrderTimeoutJob {
@@ -44,17 +45,18 @@ public class OrderTimeoutJob {
 
 ## 路由策略
 
-| 策略 | 适用 |
-|------|------|
-| **第一个** | 单机执行任务（默认） |
-| **轮询** | 无状态、可负载均衡 |
-| **一致性 Hash** | 与数据分片对齐 |
-| **故障转移** | 高可用：主节点失败自动切到备 |
-| **分片广播** | 大数据量并行处理（必须配套分片逻辑）|
+| 策略           | 适用                 |
+|--------------|--------------------|
+| **第一个**      | 单机执行任务（默认）         |
+| **轮询**       | 无状态、可负载均衡          |
+| **一致性 Hash** | 与数据分片对齐            |
+| **故障转移**     | 高可用：主节点失败自动切到备     |
+| **分片广播**     | 大数据量并行处理（必须配套分片逻辑） |
 
 ## 分片任务
 
 ```java
+
 @XxlJob("syncBigTableHandler")
 public void execute() {
     int shardIndex = XxlJobHelper.getShardIndex();
@@ -62,7 +64,7 @@ public void execute() {
 
     // ✅ 按主键取模分片，每个 executor 处理自己的分片
     orderRepository.findByIdMod(shardIndex, shardTotal)
-        .forEach(this::process);
+            .forEach(this::process);
 }
 ```
 
@@ -88,8 +90,12 @@ public void execute() {
 // ✅ 方案二：批处理任务记录 last processed cursor
 Long lastProcessedId = cursorRepository.getLast("orderSync");
 List<Order> batch = orderRepository.findAfter(lastProcessedId, 1000);
-batch.forEach(this::process);
-cursorRepository.update("orderSync", batch.lastId());
+batch.
+
+forEach(this::process);
+cursorRepository.
+
+update("orderSync",batch.lastId());
 ```
 
 **禁止**任务依赖"上次执行成功的状态"——上次失败下次必须能继续。
@@ -97,6 +103,7 @@ cursorRepository.update("orderSync", batch.lastId());
 ## 任务超时
 
 ```java
+
 @XxlJob("longRunningHandler")
 public void execute() {
     Instant deadline = Instant.now().plus(Duration.ofMinutes(10));
@@ -124,11 +131,11 @@ public void execute() {
 
 ## 重试与告警
 
-| 配置 | 推荐 |
-|------|------|
-| 失败重试 | 3 次（指数退避） |
+| 配置   | 推荐           |
+|------|--------------|
+| 失败重试 | 3 次（指数退避）    |
 | 阻塞策略 | 单机串行（禁止重复触发） |
-| 告警邮件 | 必填到 oncall |
+| 告警邮件 | 必填到 oncall   |
 
 调度中心**告警必须接入企微 / 钉钉**，邮件容易漏。
 
@@ -148,6 +155,7 @@ public void execute() {
 ## 任务参数
 
 ```java
+
 @XxlJob("parameterizedJob")
 public void execute() {
     String json = XxlJobHelper.getJobParam();
@@ -188,7 +196,7 @@ public void execute() {
 ```java
 // ✅ 仅用于本地缓存刷新等内部任务
 @Scheduled(fixedDelay = 60_000)
-public void refreshLocalCache() { ... }
+public void refreshLocalCache() { ...}
 ```
 
 - 单机部署 / 容器副本 = 1 才使用

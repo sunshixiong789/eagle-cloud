@@ -41,18 +41,27 @@ eagle.payment:
 ```java
 public interface PaymentGateway {
     PayResult pay(PayRequest request);
+
     RefundResult refund(RefundRequest request);
-    NotifyResult parseNotify(Map<String,String> params, String body);
+
+    NotifyResult parseNotify(Map<String, String> params, String body);
+
     PayResult queryOrder(String outTradeNo);
-    default TransferResult transfer(TransferRequest request) { throw new UnsupportedOperationException(); }
-    default RefundResult queryRefund(String refundNo) { throw new UnsupportedOperationException(); }
+
+    default TransferResult transfer(TransferRequest request) {
+        throw new UnsupportedOperationException();
+    }
+
+    default RefundResult queryRefund(String refundNo) {
+        throw new UnsupportedOperationException();
+    }
 }
 ```
 
 多个实现 Bean 共存：
 
-| Bean 名 | 实现 |
-|---------|------|
+| Bean 名                 | 实现                     |
+|------------------------|------------------------|
 | `alipayPaymentGateway` | `AlipayPaymentGateway` |
 | `wechatPaymentGateway` | `WechatPaymentGateway` |
 
@@ -88,10 +97,10 @@ public class OrderPaymentService {
 
     public PayResult pay(Order order, PaymentChannelEnum channel) {
         PayRequest req = PayRequest.builder()
-            .outTradeNo(order.getOrderNo())
-            .totalAmount(order.getTotalAmount())
-            .subject(order.getSubject())
-            .build();
+                .outTradeNo(order.getOrderNo())
+                .totalAmount(order.getTotalAmount())
+                .subject(order.getSubject())
+                .build();
 
         return switch (channel) {
             case ALIPAY -> alipay.pay(req);
@@ -101,10 +110,10 @@ public class OrderPaymentService {
 
     public RefundResult refund(Order order, BigDecimal amount, String reason) {
         RefundRequest req = RefundRequest.builder()
-            .outTradeNo(order.getOrderNo())
-            .refundAmount(amount)
-            .reason(reason)
-            .build();
+                .outTradeNo(order.getOrderNo())
+                .refundAmount(amount)
+                .reason(reason)
+                .build();
         return alipay.refund(req);
     }
 }
@@ -133,22 +142,22 @@ PayResult result = alipay.queryOrder(orderNo);
 
 ## 配置项
 
-| key | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `eagle.payment.alipay.app-id` | String | — | 应用 ID |
-| `eagle.payment.alipay.private-key` | String | — | 商户私钥 PKCS8（ENC()） |
-| `eagle.payment.alipay.alipay-public-key` | String | — | 验签公钥 |
-| `eagle.payment.alipay.server-url` | String | `https://openapi.alipay.com/gateway.do` | 网关地址 |
-| `eagle.payment.alipay.sign-type` | String | `RSA2` | 签名类型 |
-| `eagle.payment.alipay.charset` | String | `UTF-8` | 字符集 |
-| `eagle.payment.alipay.notify-url` | String | — | 异步通知 URL |
-| `eagle.payment.alipay.return-url` | String | — | 同步跳转 URL |
-| `eagle.payment.wechat.mch-id` | String | — | 商户号 |
-| `eagle.payment.wechat.mch-serial-no` | String | — | API 证书序列号 |
-| `eagle.payment.wechat.private-key` | String | — | 商户私钥（ENC()） |
-| `eagle.payment.wechat.api-v3-key` | String | — | APIv3 密钥（ENC()） |
-| `eagle.payment.wechat.app-id` | String | — | AppId |
-| `eagle.payment.wechat.notify-url` | String | — | 异步通知 URL |
+| key                                      | 类型     | 默认                                      | 说明                |
+|------------------------------------------|--------|-----------------------------------------|-------------------|
+| `eagle.payment.alipay.app-id`            | String | —                                       | 应用 ID             |
+| `eagle.payment.alipay.private-key`       | String | —                                       | 商户私钥 PKCS8（ENC()） |
+| `eagle.payment.alipay.alipay-public-key` | String | —                                       | 验签公钥              |
+| `eagle.payment.alipay.server-url`        | String | `https://openapi.alipay.com/gateway.do` | 网关地址              |
+| `eagle.payment.alipay.sign-type`         | String | `RSA2`                                  | 签名类型              |
+| `eagle.payment.alipay.charset`           | String | `UTF-8`                                 | 字符集               |
+| `eagle.payment.alipay.notify-url`        | String | —                                       | 异步通知 URL          |
+| `eagle.payment.alipay.return-url`        | String | —                                       | 同步跳转 URL          |
+| `eagle.payment.wechat.mch-id`            | String | —                                       | 商户号               |
+| `eagle.payment.wechat.mch-serial-no`     | String | —                                       | API 证书序列号         |
+| `eagle.payment.wechat.private-key`       | String | —                                       | 商户私钥（ENC()）       |
+| `eagle.payment.wechat.api-v3-key`        | String | —                                       | APIv3 密钥（ENC()）   |
+| `eagle.payment.wechat.app-id`            | String | —                                       | AppId             |
+| `eagle.payment.wechat.notify-url`        | String | —                                       | 异步通知 URL          |
 
 ## 常见错误
 

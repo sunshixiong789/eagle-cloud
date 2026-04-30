@@ -29,10 +29,14 @@ public class OrderNoGenerator {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-    /** 序列号模数：取雪花 ID 后 9 位 */
+    /**
+     * 序列号模数：取雪花 ID 后 9 位
+     */
     private static final long SEQUENCE_MODULUS = 1_000_000_000L;
 
-    /** 序列号格式：9 位，不足前补零 */
+    /**
+     * 序列号格式：9 位，不足前补零
+     */
     private static final String SEQUENCE_FORMAT = "%09d";
 
     private final IdGenerator snowflakeIdGenerator;

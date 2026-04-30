@@ -1,10 +1,10 @@
 package com.eagle.system.auth.domain.model;
 
 import com.eagle.common.base.BaseAggregateRoot;
-import com.eagle.system.auth.domain.model.valueobject.ProfileHints;
-import com.eagle.system.auth.domain.model.valueobject.WechatBinding;
 import com.eagle.system.auth.domain.event.AccountDeletedEvent;
 import com.eagle.system.auth.domain.event.AccountRegisteredEvent;
+import com.eagle.system.auth.domain.model.valueobject.ProfileHints;
+import com.eagle.system.auth.domain.model.valueobject.WechatBinding;
 import com.eagle.system.common.exception.AuthErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;

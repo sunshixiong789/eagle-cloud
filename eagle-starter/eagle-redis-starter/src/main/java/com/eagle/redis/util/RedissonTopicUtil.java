@@ -35,7 +35,9 @@ public class RedissonTopicUtil {
 
     private final RedissonClient redissonClient;
 
-    /** 维护订阅 ID，用于精确取消订阅 */
+    /**
+     * 维护订阅 ID，用于精确取消订阅
+     */
     private final ConcurrentMap<String, Integer> listenerIds = new ConcurrentHashMap<>();
 
     /**
@@ -76,7 +78,7 @@ public class RedissonTopicUtil {
      * @param <T>         消息类型
      */
     public <T> void subscribe(String topic, Class<T> messageType,
-                               String listenerKey, MessageListener<T> listener) {
+                              String listenerKey, MessageListener<T> listener) {
         String key = topic + ":" + listenerKey;
         // 已存在则不重复注册
         if (listenerIds.containsKey(key)) {

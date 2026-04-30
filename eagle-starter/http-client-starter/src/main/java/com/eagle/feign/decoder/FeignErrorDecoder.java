@@ -48,7 +48,7 @@ public class FeignErrorDecoder implements ErrorDecoder {
                     .toServiceException(downstreamMessage);
             case 429 -> ExternalErrorCode.EXTERNAL_SERVICE_DETAIL
                     .toServiceException(downstreamMessage);
-            default  -> ExternalErrorCode.EXTERNAL_SERVICE_DETAIL
+            default -> ExternalErrorCode.EXTERNAL_SERVICE_DETAIL
                     .toServiceException(downstreamMessage);
         };
     }

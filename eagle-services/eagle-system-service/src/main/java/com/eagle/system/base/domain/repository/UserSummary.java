@@ -16,21 +16,33 @@ import java.time.LocalDateTime;
  */
 public interface UserSummary {
 
-    /** 用户 ID */
+    /**
+     * 用户 ID
+     */
     Long getId();
 
-    /** 用户名 */
+    /**
+     * 用户名
+     */
     String getUsername();
 
-    /** 邮箱 */
+    /**
+     * 邮箱
+     */
     String getEmail();
 
-    /** 部门 ID */
+    /**
+     * 部门 ID
+     */
     Long getDeptId();
 
-    /** 真实姓名（来自嵌入值对象 UserProfile） */
+    /**
+     * 真实姓名（来自嵌入值对象 UserProfile）
+     */
     String getFullName();
 
-    /** 账号创建时间 */
+    /**
+     * 账号创建时间
+     */
     LocalDateTime getCreateTime();
 }

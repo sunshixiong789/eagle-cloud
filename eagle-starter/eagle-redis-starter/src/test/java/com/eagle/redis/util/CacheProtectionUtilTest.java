@@ -36,22 +36,17 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class CacheProtectionUtilTest {
 
-    @Mock
-    private RedissonClient redissonClient;
-
-    @Mock
-    private RedisTemplate<String, Object> redisTemplate;
-
-    @Mock
-    private ValueOperations<String, Object> valueOps;
-
-    @Mock
-    private RLock rLock;
-
-    private CacheProtectionUtil cacheProtectionUtil;
-
     private static final String CACHE_KEY = "product:123";
     private static final String MUTEX_KEY_PREFIX = "eagle:mutex:";
+    @Mock
+    private RedissonClient redissonClient;
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
+    @Mock
+    private ValueOperations<String, Object> valueOps;
+    @Mock
+    private RLock rLock;
+    private CacheProtectionUtil cacheProtectionUtil;
 
     @BeforeEach
     void setUp() {

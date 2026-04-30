@@ -29,7 +29,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RedisOfflineMessageStore implements OfflineMessageStore {
 
-    /** Redis key 前缀 */
+    /**
+     * Redis key 前缀
+     */
     private static final String KEY_PREFIX = "eagle:ws:offline:";
 
     private final RedissonClient redissonClient;

@@ -2,8 +2,8 @@
 
 适用于模块化单体（Spring Modulith）和微服务架构。
 
-
 模块边界治理方式：
+
 - **单体架构**：Spring Modulith `@ApplicationModule` + 架构测试自动验证
 - **微服务架构**：独立部署单元 + API 契约（Feign/gRPC）+ 消息队列事件
 
@@ -11,7 +11,8 @@
 
 ### 原则一：出站端口（Driven Port）定义在领域层，适配器在基础设施层实现
 
-采用**六边形架构（Ports & Adapters）**。域需要外部提供数据时（如查询授权信息），在**自身的 `domain/port/`** 定义接口，由**本模块或外部模块的 `infrastructure/` 层**提供实现（Driven Adapter）。
+采用**六边形架构（Ports & Adapters）**。域需要外部提供数据时（如查询授权信息），在**自身的 `domain/port/`** 定义接口，由*
+*本模块或外部模块的 `infrastructure/` 层**提供实现（Driven Adapter）。
 
 ```
 依赖方向示例（auth 需要授权信息）：
@@ -31,7 +32,8 @@ public interface AuthorizationPort {
 import com.eagle.system.base.domain.repository.UserRepository;
 ```
 
-**微服务拆分路径**：auth 提取为独立服务时，在 `auth/infrastructure/remote/` 新增远程适配器（HTTP/gRPC 客户端）实现同一 `AuthorizationPort` 接口即可，领域层零改动。
+**微服务拆分路径**：auth 提取为独立服务时，在 `auth/infrastructure/remote/` 新增远程适配器（HTTP/gRPC 客户端）实现同一
+`AuthorizationPort` 接口即可，领域层零改动。
 
 **禁止直接依赖另一个域的 domain 层**（聚合根、Repository、领域服务）。
 
@@ -44,12 +46,15 @@ import com.eagle.system.base.domain.repository.UserRepository;
 方式二（端口调用）：域 A 在 domain/port/ 定义接口 → 域 B 基础设施层实现适配器
 ```
 
-跨域事件定义在**发布方**的 `domain/event/` 包中，通过 `@NamedInterface("event")` 暴露给订阅方。单体内通过 Spring 事件机制传递；拆分微服务后改为 JSON + MQ 传递，领域层不变。
+跨域事件定义在**发布方**的 `domain/event/` 包中，通过 `@NamedInterface("event")` 暴露给订阅方。单体内通过 Spring
+事件机制传递；拆分微服务后改为 JSON + MQ 传递，领域层不变。
 
 ```java
 // ✅ 正确：跨域事件定义在发布方（auth）的 domain/event/ 中
 package com.eagle.system.auth.domain.event;
-public record AccountRegisteredEvent(Long accountId, String username, ...) {}
+
+public record AccountRegisteredEvent(Long accountId, String username, ...) {
+}
 
 // ✅ 正确：订阅方（base）通过 allowedDependencies 声明依赖 auth::event
 @ApplicationModule(allowedDependencies = {"auth::event", "auth::port", "common"})
@@ -92,17 +97,18 @@ public record AccountRegisteredEvent(Long accountId, String username, ...) {}
 
 **分层依赖方向（单向）：** `web → application → domain ← infrastructure`
 
-> **可选演进（CQRS 命令/查询分离）**：如果模块的读写复杂度增长，可在 `application/` 下增加 `command/`（写模型入参）和 `query/`（读模型入参）包，将应用服务按读写职责拆分。当前项目未采用此模式。
+> **可选演进（CQRS 命令/查询分离）**：如果模块的读写复杂度增长，可在 `application/` 下增加 `command/`（写模型入参）和 `query/`
+> （读模型入参）包，将应用服务按读写职责拆分。当前项目未采用此模式。
 
 ## 聚合根规范
 
 **判断标准：**
 
-| 标准 | 聚合根（BaseAggregateRoot）| 子实体（BaseEntity）|
-|------|--------------------------|-------------------|
-| 有独立 Repository | ✅ | ❌ |
-| 可被其他聚合引用 | ✅（通过 ID）| ❌ |
-| 有独立业务生命周期 | ✅ | ❌ |
+| 标准             | 聚合根（BaseAggregateRoot） | 子实体（BaseEntity） |
+|----------------|------------------------|-----------------|
+| 有独立 Repository | ✅                      | ❌               |
+| 可被其他聚合引用       | ✅（通过 ID）               | ❌               |
+| 有独立业务生命周期      | ✅                      | ❌               |
 
 **跨聚合引用只存 ID，禁止 JPA 关联注解跨聚合：**
 
@@ -119,6 +125,7 @@ private List<Permission> permissions;
 ```
 
 **子实体规范：**
+
 - 只有聚合根才能拥有 Repository，子实体禁止创建独立 Repository
 - 子实体增删改必须通过聚合根的业务方法进行（级联管理）
 - 子实体 API 使用嵌套资源路径：`/api/{root}/{rootId}/{child}`
@@ -127,7 +134,8 @@ private List<Permission> permissions;
 
 聚合根创建时需要发布跨域事件的，**事件注册必须在工厂方法内完成**，由 `@PostPersist` 回调在 ID 分配后自动触发，禁止在应用服务中手动调用事件发布方法。
 
-**原因**：`GenerationType.IDENTITY` 策略下，ID 由数据库 INSERT 后分配。若在 `save()` 前构建事件，`getId()` 为 null，导致事件携带错误数据。
+**原因**：`GenerationType.IDENTITY` 策略下，ID 由数据库 INSERT 后分配。若在 `save()` 前构建事件，`getId()` 为
+null，导致事件携带错误数据。
 
 **做法**：
 
@@ -153,10 +161,13 @@ private void onPostPersist() {
 }
 
 // 应用服务只需一次 save()
-orderRepository.save(Order.create(orderNo, hints));
+orderRepository.
+
+save(Order.create(orderNo, hints));
 ```
 
-**注意**：`@PostPersist` 仅在 INSERT 时触发，UPDATE 时不会重复发布。对于非创建场景的事件（如删除），因聚合根已有 ID，可直接在业务方法中 `registerEvent()`。
+**注意**：`@PostPersist` 仅在 INSERT 时触发，UPDATE 时不会重复发布。对于非创建场景的事件（如删除），因聚合根已有 ID，可直接在业务方法中
+`registerEvent()`。
 
 ## 事件架构
 
@@ -199,8 +210,12 @@ public interface InventoryValidationService {
 }
 
 // 应用服务中使用
-inventoryValidationService.validateStock(productId, qty);  // 跨聚合校验
-order.addItem(productId, qty);                              // 聚合内操作
+inventoryValidationService.
+
+validateStock(productId, qty);  // 跨聚合校验
+order.
+
+addItem(productId, qty);                              // 聚合内操作
 ```
 
 ## CQRS 读模型分离
@@ -211,7 +226,9 @@ order.addItem(productId, qty);                              // 聚合内操作
 // 投影接口（只取必要字段）
 public interface OrderSummary {
     Long getId();
+
     String getOrderNo();
+
     BigDecimal getTotalAmount();
 }
 
@@ -224,10 +241,11 @@ Page<OrderSummary> findOrderSummaries(Pageable pageable);
 
 模块化单体设计天然为微服务拆分做好准备：
 
-| 单体时 | 拆分后 | 改动范围 |
-|--------|--------|---------|
-| `domain/port/` 接口 + 本地 Adapter | 远程 Adapter（HTTP/gRPC 客户端）实现同一接口 | **仅替换 infrastructure/remote/ 实现** |
-| `domain/event/` 跨域事件 + `@NamedInterface` | 消息队列事件契约（JSON），消费方按需解析 | 领域层不变，infrastructure/messaging/ 替换 |
-| Spring Modulith `verify()` | 独立部署单元天然隔离 | 持续保证边界 |
+| 单体时                                      | 拆分后                             | 改动范围                               |
+|------------------------------------------|---------------------------------|------------------------------------|
+| `domain/port/` 接口 + 本地 Adapter           | 远程 Adapter（HTTP/gRPC 客户端）实现同一接口 | **仅替换 infrastructure/remote/ 实现**  |
+| `domain/event/` 跨域事件 + `@NamedInterface` | 消息队列事件契约（JSON），消费方按需解析          | 领域层不变，infrastructure/messaging/ 替换 |
+| Spring Modulith `verify()`               | 独立部署单元天然隔离                      | 持续保证边界                             |
 
-**六边形架构的核心价值**：领域层（`domain/port/` 接口 + `domain/event/` 事件）稳定不变，只需在对应服务的 `infrastructure/` 层替换实现，业务代码零改动。
+**六边形架构的核心价值**：领域层（`domain/port/` 接口 + `domain/event/` 事件）稳定不变，只需在对应服务的 `infrastructure/`
+层替换实现，业务代码零改动。

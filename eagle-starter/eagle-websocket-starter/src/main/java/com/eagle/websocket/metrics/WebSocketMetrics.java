@@ -30,10 +30,14 @@ import java.util.concurrent.atomic.AtomicLong;
 @RequiredArgsConstructor
 public class WebSocketMetrics {
 
-    /** 当前活跃连接数 */
+    /**
+     * 当前活跃连接数
+     */
     private final AtomicInteger activeConnections = new AtomicInteger(0);
 
-    /** 累计消息发送总数（用于内部统计，实际指标通过 Counter 上报） */
+    /**
+     * 累计消息发送总数（用于内部统计，实际指标通过 Counter 上报）
+     */
     private final AtomicLong totalMessagesSent = new AtomicLong(0);
 
     private final MeterRegistry meterRegistry;

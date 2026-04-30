@@ -12,7 +12,8 @@ import org.springframework.util.StringUtils;
  */
 public class RoleSpecification {
 
-    private RoleSpecification() {}
+    private RoleSpecification() {
+    }
 
     /**
      * 角色名称模糊匹配
@@ -22,9 +23,9 @@ public class RoleSpecification {
      */
     public static Specification<Role> roleNameLike(String roleName) {
         return (root, query, cb) ->
-            StringUtils.hasText(roleName)
-                ? cb.like(root.get("roleName"), "%" + roleName + "%")
-                : cb.conjunction();
+                StringUtils.hasText(roleName)
+                        ? cb.like(root.get("roleName"), "%" + roleName + "%")
+                        : cb.conjunction();
     }
 
     /**
@@ -35,9 +36,9 @@ public class RoleSpecification {
      */
     public static Specification<Role> roleCodeEquals(String roleCode) {
         return (root, query, cb) ->
-            StringUtils.hasText(roleCode)
-                ? cb.equal(root.get("roleCode"), roleCode)
-                : cb.conjunction();
+                StringUtils.hasText(roleCode)
+                        ? cb.equal(root.get("roleCode"), roleCode)
+                        : cb.conjunction();
     }
 
     /**
@@ -48,8 +49,8 @@ public class RoleSpecification {
      */
     public static Specification<Role> statusEquals(RoleStatus status) {
         return (root, query, cb) ->
-            status != null
-                ? cb.equal(root.get("status"), status)
-                : cb.conjunction();
+                status != null
+                        ? cb.equal(root.get("status"), status)
+                        : cb.conjunction();
     }
 }

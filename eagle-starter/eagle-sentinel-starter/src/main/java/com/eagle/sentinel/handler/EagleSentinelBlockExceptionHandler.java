@@ -32,10 +32,14 @@ import java.util.Map;
 @Slf4j
 public class EagleSentinelBlockExceptionHandler implements BlockExceptionHandler {
 
-    /** JSON 内容类型。 */
+    /**
+     * JSON 内容类型。
+     */
     private static final String CONTENT_TYPE_JSON = "application/json;charset=UTF-8";
 
-    /** Jackson ObjectMapper，线程安全，可安全共享。 */
+    /**
+     * Jackson ObjectMapper，线程安全，可安全共享。
+     */
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     /**
@@ -48,7 +52,7 @@ public class EagleSentinelBlockExceptionHandler implements BlockExceptionHandler
      */
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
-            String resourceName, com.alibaba.csp.sentinel.slots.block.BlockException exception) throws Exception {
+                       String resourceName, com.alibaba.csp.sentinel.slots.block.BlockException exception) throws Exception {
 
         int status;
         String message;

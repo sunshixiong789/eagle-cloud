@@ -1,8 +1,8 @@
 package com.eagle.idempotency.aspect;
 
-import com.eagle.idempotency.annotation.Idempotent;
 import com.eagle.idempotency.annotation.IdempotencyKey;
 import com.eagle.idempotency.annotation.IdempotencyMode;
+import com.eagle.idempotency.annotation.Idempotent;
 import com.eagle.idempotency.exception.IdempotencyErrorCode;
 import com.eagle.idempotency.extractor.IdempotencyKeyExtractor;
 import com.eagle.idempotency.properties.IdempotencyProperties;
@@ -24,9 +24,9 @@ import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.Duration;
 
 /**
  * 幂等性 AOP 切面。
@@ -46,16 +46,16 @@ import java.time.Duration;
 @Aspect
 public class IdempotencyAspect {
 
+    private static final ExpressionParser PARSER = new SpelExpressionParser();
+    /**
+     * Redis key 中缓存的结果类型后缀 key 部分
+     */
+    private static final String RESULT_TYPE_SUFFIX = ":type";
     private final RedissonClient redissonClient;
     private final IdempotencyProperties properties;
     private final HttpServletRequest request;
     private final ObjectMapper objectMapper;
     private final ApplicationContext applicationContext;
-
-    private static final ExpressionParser PARSER = new SpelExpressionParser();
-
-    /** Redis key 中缓存的结果类型后缀 key 部分 */
-    private static final String RESULT_TYPE_SUFFIX = ":type";
 
     /**
      * 构造幂等性切面。

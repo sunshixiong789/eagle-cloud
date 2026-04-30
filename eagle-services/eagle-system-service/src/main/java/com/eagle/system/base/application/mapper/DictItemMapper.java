@@ -9,5 +9,6 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface DictItemMapper {
     DictItemResponse toResponse(DictItemEntity entity);
+
     List<DictItemResponse> toResponseList(List<DictItemEntity> entities);
 }

@@ -53,21 +53,22 @@ V202604301400__alter_t_user_fix.sql   # 新建修复脚本
 
 ```sql
 -- V202604301030__create_t_order.sql
-CREATE TABLE t_order (
-    id            BIGINT       NOT NULL AUTO_INCREMENT COMMENT '订单ID',
-    tenant_id     VARCHAR(64)  NOT NULL                 COMMENT '租户ID',
-    order_no      VARCHAR(32)  NOT NULL                 COMMENT '订单号',
-    status        VARCHAR(20)  NOT NULL DEFAULT 'CREATED' COMMENT '状态',
-    total_amount  DECIMAL(18,2) NOT NULL DEFAULT 0      COMMENT '订单金额',
-    version       INT          NOT NULL DEFAULT 0       COMMENT '乐观锁',
-    created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_by    VARCHAR(64),
-    updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    updated_by    VARCHAR(64),
-    deleted       TINYINT(1)   NOT NULL DEFAULT 0,
+CREATE TABLE t_order
+(
+    id           BIGINT         NOT NULL AUTO_INCREMENT COMMENT '订单ID',
+    tenant_id    VARCHAR(64)    NOT NULL COMMENT '租户ID',
+    order_no     VARCHAR(32)    NOT NULL COMMENT '订单号',
+    status       VARCHAR(20)    NOT NULL DEFAULT 'CREATED' COMMENT '状态',
+    total_amount DECIMAL(18, 2) NOT NULL DEFAULT 0 COMMENT '订单金额',
+    version      INT            NOT NULL DEFAULT 0 COMMENT '乐观锁',
+    created_at   TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by   VARCHAR(64),
+    updated_at   TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_by   VARCHAR(64),
+    deleted      TINYINT(1)   NOT NULL DEFAULT 0,
     PRIMARY KEY (id),
     UNIQUE KEY uk_order_no (order_no),
-    KEY idx_tenant_status_created (tenant_id, status, created_at)
+    KEY          idx_tenant_status_created (tenant_id, status, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单主表';
 ```
 
@@ -81,17 +82,20 @@ CREATE TABLE t_order (
 
 ```sql
 -- ✅ 新增列必须有默认值，不影响旧代码读写
-ALTER TABLE t_user ADD COLUMN avatar VARCHAR(500) NULL COMMENT '头像URL';
+ALTER TABLE t_user
+    ADD COLUMN avatar VARCHAR(500) NULL COMMENT '头像URL';
 
 -- ❌ 禁止：NOT NULL 无默认值（旧代码 INSERT 失败）
-ALTER TABLE t_user ADD COLUMN avatar VARCHAR(500) NOT NULL;
+ALTER TABLE t_user
+    ADD COLUMN avatar VARCHAR(500) NOT NULL;
 ```
 
 ### 加索引（在线 DDL）
 
 ```sql
 -- MySQL 8 在线建索引（不锁表）
-ALTER TABLE t_order ADD INDEX idx_user_status (user_id, status), ALGORITHM=INPLACE, LOCK=NONE;
+ALTER TABLE t_order
+    ADD INDEX idx_user_status (user_id, status), ALGORITHM=INPLACE, LOCK=NONE;
 ```
 
 百万行以上表加索引需评估业务低峰期执行。
@@ -100,8 +104,10 @@ ALTER TABLE t_order ADD INDEX idx_user_status (user_id, status), ALGORITHM=INPLA
 
 ```sql
 -- ✅ 大表分批，避免长事务
-UPDATE t_order SET status = 'COMPLETED'
-WHERE status = 'CLOSED' AND id BETWEEN 1 AND 100000;
+UPDATE t_order
+SET status = 'COMPLETED'
+WHERE status = 'CLOSED'
+  AND id BETWEEN 1 AND 100000;
 -- 多个文件分批，或脚本内循环
 ```
 
@@ -109,12 +115,12 @@ WHERE status = 'CLOSED' AND id BETWEEN 1 AND 100000;
 
 ### 高危操作
 
-| 操作 | 风险 | 缓解 |
-|------|------|------|
-| `DROP COLUMN` | 旧版本读写报错 | 多步：先停用代码读写 → 下次发布删字段 |
-| `RENAME` | 旧代码找不到 | 改为新增 + 数据迁移 + 后续删除 |
-| `DROP TABLE` | 不可逆 | 先重命名为 `t_xxx_archive_yyyymmdd` 观察 N 天 |
-| `ALTER 大表加非空列` | 锁表 | 先加可空 + 回填 + 改非空，分多个迁移 |
+| 操作             | 风险      | 缓解                                    |
+|----------------|---------|---------------------------------------|
+| `DROP COLUMN`  | 旧版本读写报错 | 多步：先停用代码读写 → 下次发布删字段                  |
+| `RENAME`       | 旧代码找不到  | 改为新增 + 数据迁移 + 后续删除                    |
+| `DROP TABLE`   | 不可逆     | 先重命名为 `t_xxx_archive_yyyymmdd` 观察 N 天 |
+| `ALTER 大表加非空列` | 锁表      | 先加可空 + 回填 + 改非空，分多个迁移                 |
 
 ## 配置
 
@@ -152,7 +158,10 @@ Flyway **不支持自动回滚**（与 Liquibase 不同），回滚需**前向�
 
 ```sql
 -- 反向修复脚本
-V202604301600__rollback_user_avatar.sql:
+V202604301600__rollback_user_avatar
+.
+sql
+:
 ALTER TABLE t_user DROP COLUMN avatar;
 ```
 

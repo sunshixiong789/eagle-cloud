@@ -17,12 +17,12 @@ public interface InventoryFeignClient {
 
 `eagle-feign-starter` 已内置 `FeignErrorDecoder`，自动将下游 HTTP 错误转换为项目异常体系：
 
-| 下游状态码 | 转换结果 |
-|-----------|---------|
-| 404 | `NotFoundException`（`ExternalErrorCode.EXTERNAL_SERVICE_ERROR`）|
-| 400 / 409 | `DomainException` |
-| 403 / 429 | `ServiceException` |
-| 其他 | `ServiceException` |
+| 下游状态码     | 转换结果                                                            |
+|-----------|-----------------------------------------------------------------|
+| 404       | `NotFoundException`（`ExternalErrorCode.EXTERNAL_SERVICE_ERROR`） |
+| 400 / 409 | `DomainException`                                               |
+| 403 / 429 | `ServiceException`                                              |
+| 其他        | `ServiceException`                                              |
 
 调用方**无需手动 try-catch** Feign 异常，全局异常处理器统一处理。
 
@@ -56,6 +56,7 @@ Page<UserResponse> findUsers(Pageable pageable);
 `PageJacksonModule` 和 `SortJacksonModule` 已注册，可以直接将下游 JSON 反序列化为 `Page<T>`：
 
 ```java
+
 @FeignClient(name = "eagle-inventory-server", path = "/api/inventory")
 public interface InventoryFeignClient {
 
@@ -72,7 +73,7 @@ public interface InventoryFeignClient {
 ```java
 // application service 中
 Page<ItemResponse> page = inventoryFeignClient.findItems(
-        PageRequest.of(0, 20, Sort.by("name").ascending()));
+                PageRequest.of(0, 20, Sort.by("name").ascending()));
 ```
 
 ## 禁止

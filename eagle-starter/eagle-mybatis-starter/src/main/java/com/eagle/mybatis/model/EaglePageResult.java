@@ -32,25 +32,39 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 public class EaglePageResult<T> {
 
-    /** 当前页数据列表 */
+    /**
+     * 当前页数据列表
+     */
     private List<T> records;
 
-    /** 符合条件的总记录数 */
+    /**
+     * 符合条件的总记录数
+     */
     private long total;
 
-    /** 当前页码（从 1 开始） */
+    /**
+     * 当前页码（从 1 开始）
+     */
     private int pageNum;
 
-    /** 每页大小 */
+    /**
+     * 每页大小
+     */
     private int pageSize;
 
-    /** 总页数 */
+    /**
+     * 总页数
+     */
     private int totalPages;
 
-    /** 是否有下一页 */
+    /**
+     * 是否有下一页
+     */
     private boolean hasNext;
 
-    /** 是否有上一页 */
+    /**
+     * 是否有上一页
+     */
     private boolean hasPrevious;
 
     /**

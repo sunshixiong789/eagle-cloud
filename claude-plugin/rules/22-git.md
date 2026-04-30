@@ -16,13 +16,13 @@ main                  # 主干：所有变更最终汇入，永远可发布
 
 ## 分支命名
 
-| 类型 | 命名 | 示例 |
-|------|------|------|
-| 功能 | `feature/{ticket}-{slug}` | `feature/EAGLE-123-add-payment` |
-| 修复 | `fix/{ticket}-{slug}` | `fix/EAGLE-456-order-status-race` |
-| 热修 | `hotfix/{ticket}-{slug}` | `hotfix/EAGLE-789-token-expire` |
-| 发布 | `release/v{semver}` | `release/v1.4.0` |
-| 重构 | `refactor/{slug}` | `refactor/extract-payment-port` |
+| 类型 | 命名                        | 示例                                |
+|----|---------------------------|-----------------------------------|
+| 功能 | `feature/{ticket}-{slug}` | `feature/EAGLE-123-add-payment`   |
+| 修复 | `fix/{ticket}-{slug}`     | `fix/EAGLE-456-order-status-race` |
+| 热修 | `hotfix/{ticket}-{slug}`  | `hotfix/EAGLE-789-token-expire`   |
+| 发布 | `release/v{semver}`       | `release/v1.4.0`                  |
+| 重构 | `refactor/{slug}`         | `refactor/extract-payment-port`   |
 
 - 全小写、kebab-case
 - 关联工单号（无工单号不应有分支）
@@ -42,18 +42,18 @@ main                  # 主干：所有变更最终汇入，永远可发布
 
 **type 取值：**
 
-| type | 说明 |
-|------|------|
-| `feat` | 新功能 |
-| `fix` | Bug 修复 |
-| `refactor` | 重构（不改外部行为）|
-| `perf` | 性能优化 |
-| `docs` | 文档 |
-| `test` | 测试 |
-| `build` | 构建系统 / 依赖 |
-| `ci` | CI 配置 |
-| `chore` | 杂项（无业务逻辑变更） |
-| `revert` | 回滚提交 |
+| type       | 说明          |
+|------------|-------------|
+| `feat`     | 新功能         |
+| `fix`      | Bug 修复      |
+| `refactor` | 重构（不改外部行为）  |
+| `perf`     | 性能优化        |
+| `docs`     | 文档          |
+| `test`     | 测试          |
+| `build`    | 构建系统 / 依赖   |
+| `ci`       | CI 配置       |
+| `chore`    | 杂项（无业务逻辑变更） |
+| `revert`   | 回滚提交        |
 
 **scope**：模块/功能名（小写）。常用：`auth / base / order / payment / starter / build / docs`。
 
@@ -113,11 +113,11 @@ git commit -m "feat(payment): WeChat support and bug fixes and refactor"
 
 ### Squash vs Merge
 
-| 场景 | 策略 |
-|------|------|
-| 功能分支 → main | **Squash and merge**（保持主干线性、清晰） |
-| Release 分支 → main | **Merge commit**（保留发布历史） |
-| Hotfix → main + release | **Cherry-pick** |
+| 场景                      | 策略                              |
+|-------------------------|---------------------------------|
+| 功能分支 → main             | **Squash and merge**（保持主干线性、清晰） |
+| Release 分支 → main       | **Merge commit**（保留发布历史）        |
+| Hotfix → main + release | **Cherry-pick**                 |
 
 ## Rebase vs Merge
 
@@ -198,11 +198,11 @@ git tag -a v1.4.0 -m "Release 1.4.0"
 git push origin v1.4.0
 ```
 
-| 版本变化 | 触发条件 |
-|---------|---------|
-| Major（1.x.x → 2.0.0）| 破坏性 API 变更 |
-| Minor（1.4.x → 1.5.0）| 新功能、向后兼容 |
-| Patch（1.4.0 → 1.4.1）| Bug 修复 |
+| 版本变化                 | 触发条件       |
+|----------------------|------------|
+| Major（1.x.x → 2.0.0） | 破坏性 API 变更 |
+| Minor（1.4.x → 1.5.0） | 新功能、向后兼容   |
+| Patch（1.4.0 → 1.4.1） | Bug 修复     |
 
 ## 禁止清单
 

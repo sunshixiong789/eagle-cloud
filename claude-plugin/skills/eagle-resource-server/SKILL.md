@@ -29,7 +29,7 @@ spring.security.oauth2.resourceserver.jwt:
 
 # starter 自身配置
 eagle.resource-server:
-  permit-paths:                          # 额外放行（合并默认白名单）
+  permit-paths: # 额外放行（合并默认白名单）
     - /sms/code
     - /auth/refresh
   auth-server-url: http://localhost:8080  # Swagger OAuth2 流程显示用
@@ -42,30 +42,34 @@ eagle.resource-server:
 主应用类加 `@EnableEagleResourceServer`：
 
 ```java
+
 @EnableEagleResourceServer
 @SpringBootApplication
-public class OrderServerApplication { }
+public class OrderServerApplication {
+}
 ```
 
 **默认放行**（无需配置）：`/public/**` / `/actuator/health` / `/actuator/info` / `/swagger-ui/**` / `/v3/api-docs/**` 等。
 
 ## 核心 API
 
-| 类 / 注解 | 说明 |
-|---|---|
-| `@EnableEagleResourceServer` | 启用资源服务器（与 Spring Boot 自动配置等效，二选一）|
-| `EagleAuthentication` | 自定义 `Authentication`，`getPrincipal()` 返回 `EagleUser` |
-| `EagleJwtAuthenticationConverter` | JWT → `EagleAuthentication` 转换器 |
-| `SecurityUtils` | 静态：`getAuthentication() / getCurrentUser() / getCurrentUserId() / getCurrentUsername() / getCurrentDeptId() / hasRole(role) / hasAnyRole(roles...)` |
-| `ResourceServerSecurityConfig` | 默认 SecurityFilterChain（业务可覆盖更高优先级 Bean） |
-| `OpenApiConfig` / `CacheConfig` | 由 `@EnableEagleResourceServer` 自动 Import |
+| 类 / 注解                            | 说明                                                                                                                                                  |
+|-----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| `@EnableEagleResourceServer`      | 启用资源服务器（与 Spring Boot 自动配置等效，二选一）                                                                                                                   |
+| `EagleAuthentication`             | 自定义 `Authentication`，`getPrincipal()` 返回 `EagleUser`                                                                                                |
+| `EagleJwtAuthenticationConverter` | JWT → `EagleAuthentication` 转换器                                                                                                                     |
+| `SecurityUtils`                   | 静态：`getAuthentication() / getCurrentUser() / getCurrentUserId() / getCurrentUsername() / getCurrentDeptId() / hasRole(role) / hasAnyRole(roles...)` |
+| `ResourceServerSecurityConfig`    | 默认 SecurityFilterChain（业务可覆盖更高优先级 Bean）                                                                                                             |
+| `OpenApiConfig` / `CacheConfig`   | 由 `@EnableEagleResourceServer` 自动 Import                                                                                                            |
 
 ## 最小示例
 
 ```java
+
 @EnableEagleResourceServer
 @SpringBootApplication
-public class OrderServerApplication { }
+public class OrderServerApplication {
+}
 
 @Tag(name = "订单管理")
 @RestController
@@ -98,8 +102,12 @@ public class OrderController {
 }
 
 // 编程式
-if (!SecurityUtils.hasRole("ADMIN")) {
-    throw CommonErrorCode.ACCESS_DENIED.toDomainException();
+if(!SecurityUtils.
+
+hasRole("ADMIN")){
+        throw CommonErrorCode.ACCESS_DENIED.
+
+toDomainException();
 }
 
 EagleUser user = SecurityUtils.getCurrentUser();
@@ -112,29 +120,30 @@ Long deptId = user.getDeptId();
 需要更复杂规则时定义优先级更高的 Bean：
 
 ```java
+
 @Configuration
 public class CustomSecurityConfig {
     @Bean
     @Order(0)
     public SecurityFilterChain customChain(HttpSecurity http) throws Exception {
         return http.securityMatcher("/api/custom/**")
-            .authorizeHttpRequests(a -> a
-                .requestMatchers("/api/custom/admin/**").hasRole("ADMIN")
-                .anyRequest().authenticated())
-            .build();
+                .authorizeHttpRequests(a -> a
+                        .requestMatchers("/api/custom/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated())
+                .build();
     }
 }
 ```
 
 ## 配置项
 
-| key | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `eagle.resource-server.permit-paths` | List | `[]` | 额外放行路径（合并默认白名单） |
-| `eagle.resource-server.auth-server-url` | String | `""` | Swagger OAuth2 流程绝对 URL |
-| `eagle.resource-server.api.title` | String | `Eagle API` | OpenAPI 标题 |
-| `eagle.resource-server.api.version` | String | `v1.0.0` | OpenAPI 版本 |
-| `eagle.resource-server.api.description` | String | `""` | OpenAPI 描述（空则用内置默认） |
+| key                                     | 类型     | 默认          | 说明                      |
+|-----------------------------------------|--------|-------------|-------------------------|
+| `eagle.resource-server.permit-paths`    | List   | `[]`        | 额外放行路径（合并默认白名单）         |
+| `eagle.resource-server.auth-server-url` | String | `""`        | Swagger OAuth2 流程绝对 URL |
+| `eagle.resource-server.api.title`       | String | `Eagle API` | OpenAPI 标题              |
+| `eagle.resource-server.api.version`     | String | `v1.0.0`    | OpenAPI 版本              |
+| `eagle.resource-server.api.description` | String | `""`        | OpenAPI 描述（空则用内置默认）     |
 
 JWT 解码走 `spring.security.oauth2.resourceserver.jwt.issuer-uri` 或 `jwk-set-uri`。
 

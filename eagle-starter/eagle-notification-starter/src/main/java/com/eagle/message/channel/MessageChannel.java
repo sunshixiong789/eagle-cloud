@@ -21,8 +21,8 @@ public interface MessageChannel {
     /**
      * 发送消息。
      *
-     * @param message          消息对象
-     * @param renderedContent  渲染后的模板内容
+     * @param message         消息对象
+     * @param renderedContent 渲染后的模板内容
      */
     void send(MessageDTO message, String renderedContent);
 }

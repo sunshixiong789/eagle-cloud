@@ -2,7 +2,9 @@ package com.eagle.common.exception.codes;
 
 import com.eagle.common.exception.ErrorCode;
 
-/** 数据验证错误码（12001–12005） */
+/**
+ * 数据验证错误码（12001–12005）
+ */
 public enum DataErrorCode implements ErrorCode {
     DATA_ALREADY_EXISTS(12001, "error.data.already_exists", "数据已存在"),
     DATA_NOT_FOUND(12002, "error.data.not_found", "数据不存在"),

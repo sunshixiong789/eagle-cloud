@@ -24,7 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NanoIdGenerator {
 
-    /** 默认长度 21（与 nanoid.js 默认一致，碰撞概率 ≈ UUID v4） */
+    /**
+     * 默认长度 21（与 nanoid.js 默认一致，碰撞概率 ≈ UUID v4）
+     */
     public static final int DEFAULT_SIZE = 21;
 
     private final int defaultSize;

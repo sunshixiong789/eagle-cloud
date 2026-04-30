@@ -85,7 +85,9 @@ public class Post extends BaseAggregateRoot<Post> {
         this.postSort = postSort;
     }
 
-    /** 启用岗位 */
+    /**
+     * 启用岗位
+     */
     public void enable() {
         if (this.status == PostStatus.ENABLE) {
             return;  // already enabled, no-op
@@ -93,7 +95,9 @@ public class Post extends BaseAggregateRoot<Post> {
         this.status = PostStatus.ENABLE;
     }
 
-    /** 禁用岗位 */
+    /**
+     * 禁用岗位
+     */
     public void disable() {
         if (this.status == PostStatus.DISABLE) {
             return;  // already disabled, no-op

@@ -33,22 +33,23 @@ eagle.elasticsearch:
 
 ## 核心 API
 
-| 类 | 用途 |
-|---|---|
-| `EagleDocument` | 文档基类（含 `@Id` + 审计字段） |
-| `BaseElasticSearchRepository<T extends EagleDocument>` | Repository 基类：`save / saveAll(自动分批 500) / findById / deleteById / search(NativeQuery) / count` |
-| `EsSearchRequest` | 通用搜索入参 |
-| `EsPageResult<T>` | 通用分页响应（含 hits） |
-| `EsQueryBuilder` | **静态 `of()` + 链式构造**：`multiMatch / term / terms / range / prefix / wildcard / sort / highlight / page / build()` |
-| `EsHighlightUtil` | 高亮反射写回（`search()` 自动调用） |
-| `EsAggregationUtil` | 聚合查询辅助 |
+| 类                                                      | 用途                                                                                                               |
+|--------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
+| `EagleDocument`                                        | 文档基类（含 `@Id` + 审计字段）                                                                                             |
+| `BaseElasticSearchRepository<T extends EagleDocument>` | Repository 基类：`save / saveAll(自动分批 500) / findById / deleteById / search(NativeQuery) / count`                   |
+| `EsSearchRequest`                                      | 通用搜索入参                                                                                                           |
+| `EsPageResult<T>`                                      | 通用分页响应（含 hits）                                                                                                   |
+| `EsQueryBuilder`                                       | **静态 `of()` + 链式构造**：`multiMatch / term / terms / range / prefix / wildcard / sort / highlight / page / build()` |
+| `EsHighlightUtil`                                      | 高亮反射写回（`search()` 自动调用）                                                                                          |
+| `EsAggregationUtil`                                    | 聚合查询辅助                                                                                                           |
 
 ## 最小示例
 
 ```java
 // 文档定义
 @Document(indexName = "product")
-@Getter @Setter
+@Getter
+@Setter
 public class ProductDoc extends EagleDocument {
 
     @Field(type = FieldType.Text, analyzer = "ik_max_word")
@@ -73,26 +74,32 @@ public class ProductRepository extends BaseElasticSearchRepository<ProductDoc> {
     }
 
     public EsPageResult<ProductDoc> search(String keyword, String category,
-                                            BigDecimal minPrice, BigDecimal maxPrice,
-                                            int page, int size) {
+                                           BigDecimal minPrice, BigDecimal maxPrice,
+                                           int page, int size) {
         NativeQuery query = EsQueryBuilder.of()
-            .multiMatch(keyword, "title", "description")
-            .term("category", category)
-            .range("price", minPrice, maxPrice)
-            .sort("salesCount", SortOrder.Desc)
-            .highlight("title", "description")
-            .page(page, size)
-            .build();
+                .multiMatch(keyword, "title", "description")
+                .term("category", category)
+                .range("price", minPrice, maxPrice)
+                .sort("salesCount", SortOrder.Desc)
+                .highlight("title", "description")
+                .page(page, size)
+                .build();
         return search(query);   // 基类方法，自动应用高亮
     }
 }
 
 // 写入
-productRepository.save(new ProductDoc(...));
-productRepository.saveAll(List.of(doc1, doc2, ...));   // 自动按 500 分批
+productRepository.
+
+save(new ProductDoc(...));
+        productRepository.
+
+saveAll(List.of(doc1, doc2, ...));   // 自动按 500 分批
 
 // 删除
-productRepository.deleteById("doc-id");
+        productRepository.
+
+deleteById("doc-id");
 
 // 统计
 long total = productRepository.count(query);
@@ -100,29 +107,29 @@ long total = productRepository.count(query);
 
 ## 配置项
 
-| key | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `eagle.elasticsearch.uris` | List | `[http://localhost:9200]` | 节点地址 |
-| `eagle.elasticsearch.username` | String | — | 用户名 |
-| `eagle.elasticsearch.password` | String | — | 密码 |
-| `eagle.elasticsearch.connect-timeout` | int | `5000` | 连接超时（ms） |
-| `eagle.elasticsearch.socket-timeout` | int | `30000` | Socket 超时（ms） |
-| `eagle.elasticsearch.ssl-enabled` | boolean | `false` | 启用 SSL |
+| key                                   | 类型      | 默认                        | 说明            |
+|---------------------------------------|---------|---------------------------|---------------|
+| `eagle.elasticsearch.uris`            | List    | `[http://localhost:9200]` | 节点地址          |
+| `eagle.elasticsearch.username`        | String  | —                         | 用户名           |
+| `eagle.elasticsearch.password`        | String  | —                         | 密码            |
+| `eagle.elasticsearch.connect-timeout` | int     | `5000`                    | 连接超时（ms）      |
+| `eagle.elasticsearch.socket-timeout`  | int     | `30000`                   | Socket 超时（ms） |
+| `eagle.elasticsearch.ssl-enabled`     | boolean | `false`                   | 启用 SSL        |
 
 ## EsQueryBuilder 全部方法
 
-| 方法 | 子句 | 说明 |
-|------|------|------|
-| `multiMatch(keyword, fields...)` | must | 多字段全文，参与评分 |
-| `term(field, value)` | filter | 精确匹配，不评分 |
-| `terms(field, values...)` | filter | 多值精确匹配 |
-| `range(field, min, max)` | filter | 范围（min/max 任一为 null 则不限边） |
-| `prefix(field, prefix)` | filter | 前缀（自动补全） |
-| `wildcard(field, pattern)` | filter | 通配符（性能差，慎用大索引） |
-| `sort(field, SortOrder.Asc/Desc)` | sort | 多字段排序按调用顺序 |
-| `highlight(fields...)` | highlight | 默认 `<em>...</em>` 标签 |
-| `page(page, size)` | pagination | page 从 1 开始 |
-| `build()` | — | 返回 `NativeQuery` |
+| 方法                                | 子句         | 说明                        |
+|-----------------------------------|------------|---------------------------|
+| `multiMatch(keyword, fields...)`  | must       | 多字段全文，参与评分                |
+| `term(field, value)`              | filter     | 精确匹配，不评分                  |
+| `terms(field, values...)`         | filter     | 多值精确匹配                    |
+| `range(field, min, max)`          | filter     | 范围（min/max 任一为 null 则不限边） |
+| `prefix(field, prefix)`           | filter     | 前缀（自动补全）                  |
+| `wildcard(field, pattern)`        | filter     | 通配符（性能差，慎用大索引）            |
+| `sort(field, SortOrder.Asc/Desc)` | sort       | 多字段排序按调用顺序                |
+| `highlight(fields...)`            | highlight  | 默认 `<em>...</em>` 标签      |
+| `page(page, size)`                | pagination | page 从 1 开始               |
+| `build()`                         | —          | 返回 `NativeQuery`          |
 
 ## 常见错误
 

@@ -166,7 +166,7 @@ public class RocketMqDomainEventPublisher implements DomainEventPublisher, Initi
      * 构建 RocketMQ 消息，支持 Tag、延迟时间戳和消息分组（顺序消息）。
      */
     private <T extends BaseEvent> Message buildMessage(String topic, String tag,
-            Long deliveryTimestamp, String messageGroup, T event) {
+                                                       Long deliveryTimestamp, String messageGroup, T event) {
         byte[] body = JSON.toJSONString(event).getBytes(StandardCharsets.UTF_8);
         var builder = provider.newMessageBuilder()
                 .setTopic(topic)

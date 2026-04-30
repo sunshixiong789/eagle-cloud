@@ -40,16 +40,16 @@ eagle.mybatis:
 
 ## 核心 API
 
-| 类 / 接口 | 主要方法 |
-|---|---|
-| `BaseMapperPlus<T>` | 继承 MP `BaseMapper<T>`，扩展 `selectBatchByIds(ids)` |
-| `IEagleService<T>` | 继承 MP `IService<T>`，扩展：`pageQuery(EaglePageQuery, Wrapper<T>)` / `getByIdOrThrow(id, errorMsg)` / `saveOrUpdateBatchOptimized(list, batchSize)` |
-| `EagleServiceImpl<M, T>` | `IEagleService` 默认实现 |
-| `EaglePageQuery` | `pageNum`(1) / `pageSize`(20，最大 200) / `orderBy` / `orderDirection`("desc") / `toPage()` |
-| `EaglePageResult<T>` | `records / total / pageNum / pageSize / totalPages / hasNext / hasPrevious`，`static of(IPage)` + `convert(Function)` |
-| `EagleMetaObjectHandler` | 自动填充 `createBy / createTime / updateBy / updateTime` |
-| `MybatisSlowSqlInterceptor` | 慢 SQL 拦截器，超 `slow-sql-millis` 输出 WARN |
-| `QueryHelper` | 动态查询条件构造工具 |
+| 类 / 接口                      | 主要方法                                                                                                                                            |
+|-----------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| `BaseMapperPlus<T>`         | 继承 MP `BaseMapper<T>`，扩展 `selectBatchByIds(ids)`                                                                                                |
+| `IEagleService<T>`          | 继承 MP `IService<T>`，扩展：`pageQuery(EaglePageQuery, Wrapper<T>)` / `getByIdOrThrow(id, errorMsg)` / `saveOrUpdateBatchOptimized(list, batchSize)` |
+| `EagleServiceImpl<M, T>`    | `IEagleService` 默认实现                                                                                                                            |
+| `EaglePageQuery`            | `pageNum`(1) / `pageSize`(20，最大 200) / `orderBy` / `orderDirection`("desc") / `toPage()`                                                        |
+| `EaglePageResult<T>`        | `records / total / pageNum / pageSize / totalPages / hasNext / hasPrevious`，`static of(IPage)` + `convert(Function)`                            |
+| `EagleMetaObjectHandler`    | 自动填充 `createBy / createTime / updateBy / updateTime`                                                                                            |
+| `MybatisSlowSqlInterceptor` | 慢 SQL 拦截器，超 `slow-sql-millis` 输出 WARN                                                                                                           |
+| `QueryHelper`               | 动态查询条件构造工具                                                                                                                                      |
 
 ## 最小示例
 
@@ -88,8 +88,8 @@ public class OrderController {
     @GetMapping
     public EaglePageResult<OrderResponse> list(@Valid QueryOrderRequest query) {
         LambdaQueryWrapper<Order> wrapper = new LambdaQueryWrapper<Order>()
-            .eq(query.getStatus() != null, Order::getStatus, query.getStatus())
-            .like(StringUtils.hasText(query.getKeyword()), Order::getOrderNo, query.getKeyword());
+                .eq(query.getStatus() != null, Order::getStatus, query.getStatus())
+                .like(StringUtils.hasText(query.getKeyword()), Order::getOrderNo, query.getKeyword());
 
         EaglePageResult<Order> page = orderService.pageQuery(query, wrapper);
         return page.convert(OrderResponse::from);
@@ -108,16 +108,18 @@ public class QueryOrderRequest extends EaglePageQuery {
 Order order = orderService.getByIdOrThrow(orderId, "订单不存在");
 
 // 批量保存（自动分批）
-orderService.saveOrUpdateBatchOptimized(orders, 500);
+orderService.
+
+saveOrUpdateBatchOptimized(orders, 500);
 ```
 
 ## 配置项
 
-| key | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `eagle.mybatis.optimistic-locker-enabled` | boolean | `true` | 启用乐观锁插件 |
-| `eagle.mybatis.performance-enabled` | boolean | `false` | SQL 性能分析（仅开发） |
-| `eagle.mybatis.slow-sql-millis` | long | `1000` | 慢 SQL 阈值 |
+| key                                       | 类型      | 默认      | 说明            |
+|-------------------------------------------|---------|---------|---------------|
+| `eagle.mybatis.optimistic-locker-enabled` | boolean | `true`  | 启用乐观锁插件       |
+| `eagle.mybatis.performance-enabled`       | boolean | `false` | SQL 性能分析（仅开发） |
+| `eagle.mybatis.slow-sql-millis`           | long    | `1000`  | 慢 SQL 阈值      |
 
 ## 常见错误
 

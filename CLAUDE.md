@@ -4,7 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-Eagle Cloud 是一个基于 DDD + 六边形架构 + Spring Modulith 模块化单体构建的 Spring Boot 平台。设计为微服务拆分就绪——领域层通过 Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
+Eagle Cloud 是一个基于 DDD + 六边形架构 + Spring Modulith 模块化单体构建的 Spring Boot 平台。设计为微服务拆分就绪——领域层通过
+Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 
 ## 技术栈
 
@@ -55,29 +56,29 @@ Eagle Cloud 是一个基于 DDD + 六边形架构 + Spring Modulith 模块化单
 
 ### 可执行服务 (eagle-base-server)
 
-| 服务 | 说明 | 技术栈 |
-|------|------|--------|
-| `eagle-system-server` | 系统服务：OAuth2 授权服务器、用户/角色/权限管理、微信/短信登录 | JPA, OAuth2 Auth Server, WebSocket, Nacos, Thymeleaf |
-| `eagle-gateway-server` | API 网关：路由、JWT 鉴权、限流、链路追踪 | Spring Cloud Gateway (WebFlux), Sentinel, Nacos |
+| 服务                     | 说明                                   | 技术栈                                                  |
+|------------------------|--------------------------------------|------------------------------------------------------|
+| `eagle-system-server`  | 系统服务：OAuth2 授权服务器、用户/角色/权限管理、微信/短信登录 | JPA, OAuth2 Auth Server, WebSocket, Nacos, Thymeleaf |
+| `eagle-gateway-server` | API 网关：路由、JWT 鉴权、限流、链路追踪             | Spring Cloud Gateway (WebFlux), Sentinel, Nacos      |
 
 ### Starter 库模块 (eagle-starter)
 
-| 模块 | 说明 |
-|------|------|
-| `eagle-common-starter` | 核心基础设施：基类（BaseAggregateRoot/BaseEntity）、异常体系（AppException/ErrorCode）、领域事件（BaseEvent）、i18n、安全工具 |
-| `eagle-data-jpa-starter` | JPA/Hibernate 配置、审计、MySQL/PostgreSQL/H2 支持 |
-| `eagle-redis-starter` | Redisson + Caffeine 多级缓存 |
-| `eagle-resource-server-starter` | OAuth2 资源服务器 JWT 验证 |
-| `eagle-feign-starter` | OpenFeign 客户端配置（含 Seata XID 透传） |
-| `eagle-tracing-starter` | 分布式链路追踪（Brave/Zipkin） |
-| `eagle-rocketmq-starter` | RocketMQ v5 消息队列 |
-| `eagle-data-permission-starter` | 行级数据权限控制（AspectJ） |
-| `eagle-dynamic-datasource-starter` | 多数据源动态路由 |
-| `eagle-tenant-starter` | 多租户支持（动态数据源路由） |
-| `eagle-oss-starter` | 对象存储（MinIO） |
-| `eagle-message-starter` | 多渠道消息（阿里云 SMS、Spring Mail） |
-| `eagle-xxl-job-starter` | 分布式定时任务（XXL-JOB） |
-| `eagle-openapi-starter` | Swagger/OpenAPI 文档集成 |
+| 模块                                 | 说明                                                                                             |
+|------------------------------------|------------------------------------------------------------------------------------------------|
+| `eagle-common-starter`             | 核心基础设施：基类（BaseAggregateRoot/BaseEntity）、异常体系（AppException/ErrorCode）、领域事件（BaseEvent）、i18n、安全工具 |
+| `eagle-data-jpa-starter`           | JPA/Hibernate 配置、审计、MySQL/PostgreSQL/H2 支持                                                     |
+| `eagle-redis-starter`              | Redisson + Caffeine 多级缓存                                                                       |
+| `eagle-resource-server-starter`    | OAuth2 资源服务器 JWT 验证                                                                            |
+| `eagle-feign-starter`              | OpenFeign 客户端配置（含 Seata XID 透传）                                                                |
+| `eagle-tracing-starter`            | 分布式链路追踪（Brave/Zipkin）                                                                          |
+| `eagle-rocketmq-starter`           | RocketMQ v5 消息队列                                                                               |
+| `eagle-data-permission-starter`    | 行级数据权限控制（AspectJ）                                                                              |
+| `eagle-dynamic-datasource-starter` | 多数据源动态路由                                                                                       |
+| `eagle-tenant-starter`             | 多租户支持（动态数据源路由）                                                                                 |
+| `eagle-oss-starter`                | 对象存储（MinIO）                                                                                    |
+| `eagle-message-starter`            | 多渠道消息（阿里云 SMS、Spring Mail）                                                                     |
+| `eagle-xxl-job-starter`            | 分布式定时任务（XXL-JOB）                                                                               |
+| `eagle-openapi-starter`            | Swagger/OpenAPI 文档集成                                                                           |
 
 Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖使用 `api` 范围暴露传递依赖。
 
@@ -85,28 +86,31 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 
 `eagle-system-server` 中 `com.eagle.system` 下按有界上下文划分为 4 个模块：
 
-| 模块 | 包 | 类型 | 职责 | allowedDependencies |
-|------|----|------|------|---------------------|
-| **auth** | `com.eagle.system.auth` | 业务域 | 认证授权、OAuth2、微信/短信登录 | `common` |
-| **base** | `com.eagle.system.base` | 业务域 | 用户、角色、权限、部门、菜单管理 | `auth::port`, `auth::event`, `common` |
-| **config** | `com.eagle.system.config` | 基础设施胶水 | SecurityConfig、CacheConfig、AsyncConfig、WebSocket、i18n、全局异常处理 | `auth::security`, `common` |
-| **common** | `com.eagle.system.common` | 共享内核 (OPEN) | ErrorCode 枚举、通用 DTO、异常基础设施 | 无外部依赖 |
+| 模块         | 包                         | 类型          | 职责                                                           | allowedDependencies                   |
+|------------|---------------------------|-------------|--------------------------------------------------------------|---------------------------------------|
+| **auth**   | `com.eagle.system.auth`   | 业务域         | 认证授权、OAuth2、微信/短信登录                                          | `common`                              |
+| **base**   | `com.eagle.system.base`   | 业务域         | 用户、角色、权限、部门、菜单管理                                             | `auth::port`, `auth::event`, `common` |
+| **config** | `com.eagle.system.config` | 基础设施胶水      | SecurityConfig、CacheConfig、AsyncConfig、WebSocket、i18n、全局异常处理 | `auth::security`, `common`            |
+| **common** | `com.eagle.system.common` | 共享内核 (OPEN) | ErrorCode 枚举、通用 DTO、异常基础设施                                   | 无外部依赖                                 |
 
 **模块间协作方式：**
+
 - auth 定义 Driven Port（`auth/domain/port/`），base 在 `infrastructure/` 层实现适配器——auth 对 base 零依赖
 - auth → base 通过领域事件（`AccountRegisteredEvent` 等，放在 `auth/domain/event/`，通过 `@NamedInterface("event")` 暴露）异步解耦
 - config 通过 Named Interface `auth::security` 引用安全组件装配过滤链
 
 ## DDD 分层架构
 
-每个业务模块内部遵循 `web / application / domain / infrastructure` 四层，依赖方向：`web → application → domain ← infrastructure`。完整分层结构和规范见 `.claude/rules/03-architecture.md`。
+每个业务模块内部遵循 `web / application / domain / infrastructure` 四层，依赖方向：
+`web → application → domain ← infrastructure`。完整分层结构和规范见 `.claude/rules/03-architecture.md`。
 
 ## 关键基类
 
 - `BaseAggregateRoot<T>` — 聚合根：ID (IDENTITY)、审计字段、`@Version` 乐观锁、`registerEvent()` 事件能力
 - `BaseEntity` — 子实体：审计字段 + 乐观锁，无事件能力
 - `BaseEvent` — 领域事件：time-ordered UUID `eventId` + `occurredOn`
-- `ErrorCode` 接口 → 各域枚举实现（`toNotFoundException()` / `toDomainException()` / `toConflictException()` / `toServiceException()`）
+- `ErrorCode` 接口 → 各域枚举实现（`toNotFoundException()` / `toDomainException()` / `toConflictException()` /
+  `toServiceException()`）
 
 ## Gradle 配置要点
 
@@ -118,43 +122,43 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 
 ## 详细开发规范（按场景查阅）
 
-| 文件 | 适用场景 |
-|------|----------|
-| `.claude/rules/01-naming.md` | 命名约定（类、方法、DDD 组件、ErrorCode） |
-| `.claude/rules/02-code-style.md` | Google Java Style + Lombok 规则 + `@NullMarked` |
-| `.claude/rules/03-architecture.md` | DDD 分层、跨域 Port/Adapter、聚合根创建型事件 |
-| `.claude/rules/04-modulith.md` | `@ApplicationModule` / `@NamedInterface` 边界治理 |
-| `.claude/rules/05-api.md` | RESTful URL、`@PreAuthorize`、CORS、响应格式 |
-| `.claude/rules/06-database.md` | JPA 实体、跨聚合 ID 引用、索引、CQRS 投影 |
-| `.claude/rules/07-exception.md` | AppException 体系、ErrorCode 工厂方法 |
-| `.claude/rules/08-concurrency.md` | 事务、领域事件 `@Async + AFTER_COMMIT`、缓存失效 |
-| `.claude/rules/09-testing.md` | JUnit 5 + Mockito、AAA、命名、覆盖要求 |
-| `.claude/rules/10-starter.md` | `@AutoConfiguration` + Properties + imports |
-| `.claude/rules/11-feign.md` | FeignClient 位置、错误处理、`@SpringQueryMap` |
-| `.claude/rules/12-security.md` | OAuth2 / JWT、密码、CORS、敏感数据脱敏、审计 |
-| `.claude/rules/13-logging.md` | SLF4J 占位符、MDC、异常日志、敏感字段脱敏 |
-| `.claude/rules/14-cache.md` | Redis+Caffeine、Key 命名、TTL、击穿/穿透/雪崩 |
-| `.claude/rules/15-messaging.md` | RocketMQ Topic 命名、幂等、死信、事务消息 |
-| `.claude/rules/16-transaction-distributed.md` | Seata AT/TCC 选型、本地消息表 |
-| `.claude/rules/17-tenant-permission.md` | 多租户隔离、行级数据权限、跨租户操作 |
-| `.claude/rules/18-openapi.md` | SpringDoc 注解、版本、错误码文档化 |
-| `.claude/rules/19-config.md` | Properties、Nacos、profile、Jasypt 加密 |
-| `.claude/rules/20-i18n.md` | messages 组织、key 规则、Locale 解析 |
-| `.claude/rules/22-git.md` | 分支模型、Conventional Commits、PR、Tag |
-| `.claude/rules/23-performance.md` | N+1、慢 SQL、连接池、Async 池、JVM |
-| `.claude/rules/24-deployment.md` | Dockerfile、健康检查、优雅停机、K8s |
-| `.claude/rules/25-review-checklist.md` | **PR 前完整自检清单（必看）** |
-| `.claude/rules/26-file-storage.md` | MinIO Bucket、Object Key、上传校验、签名 URL |
-| `.claude/rules/27-scheduling.md` | XXL-JOB 路由、分片、幂等、超时 |
-| `.claude/rules/28-migration.md` | Flyway 命名、不可变、回滚 |
-| `.claude/rules/30-dependency.md` | Gradle 范围、BOM、版本升级、CVE |
+| 文件                                            | 适用场景                                          |
+|-----------------------------------------------|-----------------------------------------------|
+| `.claude/rules/01-naming.md`                  | 命名约定（类、方法、DDD 组件、ErrorCode）                   |
+| `.claude/rules/02-code-style.md`              | Google Java Style + Lombok 规则 + `@NullMarked` |
+| `.claude/rules/03-architecture.md`            | DDD 分层、跨域 Port/Adapter、聚合根创建型事件               |
+| `.claude/rules/04-modulith.md`                | `@ApplicationModule` / `@NamedInterface` 边界治理 |
+| `.claude/rules/05-api.md`                     | RESTful URL、`@PreAuthorize`、CORS、响应格式         |
+| `.claude/rules/06-database.md`                | JPA 实体、跨聚合 ID 引用、索引、CQRS 投影                   |
+| `.claude/rules/07-exception.md`               | AppException 体系、ErrorCode 工厂方法                |
+| `.claude/rules/08-concurrency.md`             | 事务、领域事件 `@Async + AFTER_COMMIT`、缓存失效          |
+| `.claude/rules/09-testing.md`                 | JUnit 5 + Mockito、AAA、命名、覆盖要求                 |
+| `.claude/rules/10-starter.md`                 | `@AutoConfiguration` + Properties + imports   |
+| `.claude/rules/11-feign.md`                   | FeignClient 位置、错误处理、`@SpringQueryMap`         |
+| `.claude/rules/12-security.md`                | OAuth2 / JWT、密码、CORS、敏感数据脱敏、审计                |
+| `.claude/rules/13-logging.md`                 | SLF4J 占位符、MDC、异常日志、敏感字段脱敏                     |
+| `.claude/rules/14-cache.md`                   | Redis+Caffeine、Key 命名、TTL、击穿/穿透/雪崩            |
+| `.claude/rules/15-messaging.md`               | RocketMQ Topic 命名、幂等、死信、事务消息                  |
+| `.claude/rules/16-transaction-distributed.md` | Seata AT/TCC 选型、本地消息表                         |
+| `.claude/rules/17-tenant-permission.md`       | 多租户隔离、行级数据权限、跨租户操作                            |
+| `.claude/rules/18-openapi.md`                 | SpringDoc 注解、版本、错误码文档化                        |
+| `.claude/rules/19-config.md`                  | Properties、Nacos、profile、Jasypt 加密            |
+| `.claude/rules/20-i18n.md`                    | messages 组织、key 规则、Locale 解析                  |
+| `.claude/rules/22-git.md`                     | 分支模型、Conventional Commits、PR、Tag              |
+| `.claude/rules/23-performance.md`             | N+1、慢 SQL、连接池、Async 池、JVM                     |
+| `.claude/rules/24-deployment.md`              | Dockerfile、健康检查、优雅停机、K8s                      |
+| `.claude/rules/25-review-checklist.md`        | **PR 前完整自检清单（必看）**                            |
+| `.claude/rules/26-file-storage.md`            | MinIO Bucket、Object Key、上传校验、签名 URL           |
+| `.claude/rules/27-scheduling.md`              | XXL-JOB 路由、分片、幂等、超时                           |
+| `.claude/rules/28-migration.md`               | Flyway 命名、不可变、回滚                              |
+| `.claude/rules/30-dependency.md`              | Gradle 范围、BOM、版本升级、CVE                        |
 
 ## 项目级 Commands（slash command）
 
-| 命令 | 作用 |
-|------|------|
-| `/check-arch` | Modulith 架构验证 + 模块测试 + 全量构建一键检查 |
-| `/new-module` | 按 DDD 模板创建新业务模块（含 `package-info.java` + 四层骨架） |
-| `/new-aggregate` | 创建聚合根全栈骨架（聚合根 + Repository + ErrorCode + ApplicationService + Controller + DTO） |
-| `/new-starter` | 按 Spring Boot 3 模板创建新 starter 模块 |
-| `/add-error-code` | 在 ErrorCode 枚举追加常量并同步 i18n 三语翻译 |
+| 命令                | 作用                                                                              |
+|-------------------|---------------------------------------------------------------------------------|
+| `/check-arch`     | Modulith 架构验证 + 模块测试 + 全量构建一键检查                                                 |
+| `/new-module`     | 按 DDD 模板创建新业务模块（含 `package-info.java` + 四层骨架）                                   |
+| `/new-aggregate`  | 创建聚合根全栈骨架（聚合根 + Repository + ErrorCode + ApplicationService + Controller + DTO） |
+| `/new-starter`    | 按 Spring Boot 3 模板创建新 starter 模块                                                |
+| `/add-error-code` | 在 ErrorCode 枚举追加常量并同步 i18n 三语翻译                                                 |

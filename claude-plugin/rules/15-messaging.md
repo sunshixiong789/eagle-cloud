@@ -1,16 +1,17 @@
 # 消息队列规范（RocketMQ）
 
-技术栈：`eagle-rocketmq-starter` 提供 `DomainEventPublisher`（同步发布）、`TransactionalEventPublisher`（事务消息）、`AbstractRocketMqListener`（统一消费骨架）、`AbstractDlqListener`（死信处理）。
+技术栈：`eagle-rocketmq-starter` 提供 `DomainEventPublisher`（同步发布）、`TransactionalEventPublisher`（事务消息）、
+`AbstractRocketMqListener`（统一消费骨架）、`AbstractDlqListener`（死信处理）。
 
 ## 何时使用 MQ
 
-| 场景 | 选型 |
-|------|------|
+| 场景         | 选型                               |
+|------------|----------------------------------|
 | 同模块内、同事务边界 | Spring `ApplicationEvent`（不走 MQ） |
-| 跨模块、最终一致性 | 领域事件 → MQ（事务消息） |
-| 跨服务、异步通知 | MQ（事务消息或同步发送 + 重试） |
-| 削峰、批处理、广播 | MQ |
-| 强一致性 RPC | Feign，**不**走 MQ |
+| 跨模块、最终一致性  | 领域事件 → MQ（事务消息）                  |
+| 跨服务、异步通知   | MQ（事务消息或同步发送 + 重试）               |
+| 削峰、批处理、广播  | MQ                               |
+| 强一致性 RPC   | Feign，**不**走 MQ                  |
 
 ## Topic / Tag 命名
 
@@ -44,10 +45,14 @@ public class NotificationApplicationService {
 }
 
 // ✅ 事务消息（推荐用于聚合根写库 + 发消息的强保证场景）
-publisher.publishInTransaction(
+publisher.
+
+publishInTransaction(
     "prod_order_created",
     event,
-    () -> orderRepository.save(order)   // 本地事务回调
+    () ->orderRepository.
+
+save(order)   // 本地事务回调
 );
 ```
 
@@ -61,14 +66,15 @@ publisher.publishInTransaction(
 
 ```java
 // 内部领域事件（聚合根注册，不出域）
-public record OrderCreatedEvent(Long orderId, ...) {}
+public record OrderCreatedEvent(Long orderId, ...) {
+}
 
 // 处理器转换为外部集成事件并发到 MQ
 @Async
 @TransactionalEventListener(phase = AFTER_COMMIT)
 public void onOrderCreated(OrderCreatedEvent e) {
     publisher.publish("prod_order_created",
-        new OrderCreatedIntegrationEvent(e.orderId(), e.orderNo(), ...));
+            new OrderCreatedIntegrationEvent(e.orderId(), e.orderNo(), ...));
 }
 ```
 
@@ -76,7 +82,8 @@ public void onOrderCreated(OrderCreatedEvent e) {
 
 ## 消费者（继承 AbstractRocketMqListener）
 
-`eagle-rocketmq-starter` 使用 RocketMQ 5.x **原生客户端 API**（`PushConsumer` + `MessageView`），消费者**不使用** `@RocketMQMessageListener` 注解，而是继承 `AbstractRocketMqListener<T>` 实现 3 个抽象方法：
+`eagle-rocketmq-starter` 使用 RocketMQ 5.x **原生客户端 API**（`PushConsumer` + `MessageView`），消费者**不使用**
+`@RocketMQMessageListener` 注解，而是继承 `AbstractRocketMqListener<T>` 实现 3 个抽象方法：
 
 ```java
 // ✅ 标准消费者
@@ -88,7 +95,7 @@ public class OrderCreatedConsumer
     private final IdempotencyChecker idempotency;
 
     public OrderCreatedConsumer(StockApplicationService stockService,
-                                 IdempotencyChecker idempotency) {
+                                IdempotencyChecker idempotency) {
         this.stockService = stockService;
         this.idempotency = idempotency;
     }
@@ -128,17 +135,23 @@ public class OrderCreatedConsumer
 // ✅ 方案一：唯一约束（推荐，DB 强一致）
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = "event_id"))
 
-try {
-    inboxRepository.save(new InboxRecord(event.eventId()));
-    process(event);
-} catch (DataIntegrityViolationException ignore) {
-    // 重复消息直接跳过
-}
+try{
+        inboxRepository.
+
+save(new InboxRecord(event.eventId()));
+
+process(event);
+}catch(
+DataIntegrityViolationException ignore){
+        // 重复消息直接跳过
+        }
 
 // ✅ 方案二：Redis SETNX（高吞吐场景）
 Boolean first = redisTemplate.opsForValue()
-    .setIfAbsent("eagle:mq:idempotent:" + event.eventId(), "1", Duration.ofDays(1));
-if (Boolean.FALSE.equals(first)) return;
+        .setIfAbsent("eagle:mq:idempotent:" + event.eventId(), "1", Duration.ofDays(1));
+if(Boolean.FALSE.
+
+equals(first))return;
 ```
 
 幂等 Key **必须**用消息自带的 `eventId`（`BaseEvent.eventId`），**不**用 MQ 自动生成的 `MsgId`（重投递会变）。
@@ -148,6 +161,7 @@ if (Boolean.FALSE.equals(first)) return;
 RocketMQ 默认重试 16 次后进入 `%DLQ%{ConsumerGroup}` 队列。继承 `AbstractDlqListener` 处理（实现 3 个方法：原消费者组、事件类、死信处理逻辑）：
 
 ```java
+
 @Component
 public class OrderCreatedDlqListener
         extends AbstractDlqListener<OrderCreatedIntegrationEvent> {
@@ -156,7 +170,7 @@ public class OrderCreatedDlqListener
     private final DeadLetterRepository deadLetterRepository;
 
     public OrderCreatedDlqListener(AlarmService alarmService,
-                                    DeadLetterRepository deadLetterRepository) {
+                                   DeadLetterRepository deadLetterRepository) {
         this.alarmService = alarmService;
         this.deadLetterRepository = deadLetterRepository;
     }

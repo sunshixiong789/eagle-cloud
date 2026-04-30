@@ -132,20 +132,20 @@ public class SomeService {
 
 ### Eagle 配置
 
-| 配置项 | 类型 | 默认值 | 说明 |
-|--------|------|--------|------|
-| `eagle.security.oauth2.resource-server.enabled` | Boolean | true | 是否启用资源服务器 |
-| `eagle.security.oauth2.resource-server.issuer-uri` | String | http://localhost:8080 | 授权服务器地址 |
-| `eagle.security.oauth2.resource-server.jwk-set-uri` | String | null | JWK Set URI（可选） |
-| `eagle.security.oauth2.resource-server.public-paths` | String[] | ["/public/**", "/actuator/health", "/actuator/info"] | 公开路径 |
-| `eagle.security.oauth2.resource-server.enable-swagger` | Boolean | true | 是否允许访问 Swagger 文档 |
+| 配置项                                                    | 类型       | 默认值                                                  | 说明                |
+|--------------------------------------------------------|----------|------------------------------------------------------|-------------------|
+| `eagle.security.oauth2.resource-server.enabled`        | Boolean  | true                                                 | 是否启用资源服务器         |
+| `eagle.security.oauth2.resource-server.issuer-uri`     | String   | http://localhost:8080                                | 授权服务器地址           |
+| `eagle.security.oauth2.resource-server.jwk-set-uri`    | String   | null                                                 | JWK Set URI（可选）   |
+| `eagle.security.oauth2.resource-server.public-paths`   | String[] | ["/public/**", "/actuator/health", "/actuator/info"] | 公开路径              |
+| `eagle.security.oauth2.resource-server.enable-swagger` | Boolean  | true                                                 | 是否允许访问 Swagger 文档 |
 
 ### Spring Security 配置
 
-| 配置项 | 类型 | 说明 |
-|--------|------|------|
-| `spring.security.oauth2.resourceserver.jwt.issuer-uri` | String | JWT 签发者 URI（必须配置） |
-| `spring.security.oauth2.resourceserver.jwt.jwk-set-uri` | String | JWK Set URI（可选） |
+| 配置项                                                     | 类型     | 说明                |
+|---------------------------------------------------------|--------|-------------------|
+| `spring.security.oauth2.resourceserver.jwt.issuer-uri`  | String | JWT 签发者 URI（必须配置） |
+| `spring.security.oauth2.resourceserver.jwt.jwk-set-uri` | String | JWK Set URI（可选）   |
 
 ## 架构说明
 
@@ -189,14 +189,14 @@ public class SomeService {
 资源服务器需要与 Eagle System Server（授权服务器）配合使用：
 
 1. 授权服务器负责：
-   - 用户认证
-   - 颁发 JWT Token
-   - 提供 JWK Set 端点（公钥）
+    - 用户认证
+    - 颁发 JWT Token
+    - 提供 JWK Set 端点（公钥）
 
 2. 资源服务器负责：
-   - 验证 JWT Token
-   - 提取用户信息和权限
-   - 保护 API 端点
+    - 验证 JWT Token
+    - 提取用户信息和权限
+    - 保护 API 端点
 
 ## 测试
 
@@ -226,12 +226,14 @@ curl -X GET http://localhost:8081/api/users/me \
 **问题**: 返回 401 Unauthorized
 
 **可能原因**:
+
 - `issuer-uri` 配置错误
 - 授权服务器不可访问
 - Token 已过期
 - Token 签名验证失败
 
 **解决方案**:
+
 - 检查 `spring.security.oauth2.resourceserver.jwt.issuer-uri` 配置
 - 确保授权服务器正常运行
 - 重新获取 Token
@@ -242,10 +244,12 @@ curl -X GET http://localhost:8081/api/users/me \
 **问题**: 返回 403 Forbidden
 
 **可能原因**:
+
 - 用户没有所需的角色或权限
 - `@PreAuthorize` 表达式错误
 
 **解决方案**:
+
 - 检查用户的角色配置
 - 验证 JWT Token 中的 `roles` Claim
 - 检查权限表达式是否正确
@@ -255,6 +259,7 @@ curl -X GET http://localhost:8081/api/users/me \
 **问题**: 浏览器报 CORS 错误
 
 **解决方案**:
+
 - 检查 `ResourceServerSecurityConfig` 中的 CORS 配置
 - 确保前端请求包含正确的 `Origin` 头
 - 检查是否需要自定义 CORS 配置
@@ -262,24 +267,24 @@ curl -X GET http://localhost:8081/api/users/me \
 ## 最佳实践
 
 1. **生产环境配置**:
-   - 使用 HTTPS
-   - 配置合适的 Token 过期时间
-   - 使用环境变量管理敏感配置
+    - 使用 HTTPS
+    - 配置合适的 Token 过期时间
+    - 使用环境变量管理敏感配置
 
 2. **权限设计**:
-   - 使用细粒度的角色和权限
-   - 遵循最小权限原则
-   - 定期审查权限配置
+    - 使用细粒度的角色和权限
+    - 遵循最小权限原则
+    - 定期审查权限配置
 
 3. **性能优化**:
-   - 启用 JWT Token 缓存
-   - 合理配置 JWK Set 缓存时间
-   - 使用连接池
+    - 启用 JWT Token 缓存
+    - 合理配置 JWK Set 缓存时间
+    - 使用连接池
 
 4. **监控和日志**:
-   - 记录认证失败事件
-   - 监控 Token 验证性能
-   - 定期审计访问日志
+    - 记录认证失败事件
+    - 监控 Token 验证性能
+    - 定期审计访问日志
 
 ## 版本兼容性
 

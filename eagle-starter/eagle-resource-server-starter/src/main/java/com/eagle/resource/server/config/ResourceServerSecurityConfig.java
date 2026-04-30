@@ -53,7 +53,7 @@ public class ResourceServerSecurityConfig {
     /**
      * 配置资源服务器的无状态安全过滤链。
      *
-     * @param http                        HttpSecurity
+     * @param http                            HttpSecurity
      * @param eagleJwtAuthenticationConverter JWT 认证转换器
      * @return SecurityFilterChain
      */

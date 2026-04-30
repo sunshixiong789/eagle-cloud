@@ -1,6 +1,7 @@
 # eagle-rocketmq-starter
 
-基于 RocketMQ 5.x 轻量客户端（gRPC）的消息队列封装模块，提供领域事件的同步发布、异步发布、延迟消息、顺序消息（FIFO）、Tag 过滤以及事务消息（Outbox Pattern）能力。
+基于 RocketMQ 5.x 轻量客户端（gRPC）的消息队列封装模块，提供领域事件的同步发布、异步发布、延迟消息、顺序消息（FIFO）、Tag
+过滤以及事务消息（Outbox Pattern）能力。
 
 ## 目录
 
@@ -10,18 +11,18 @@
 - [配置参考](#配置参考)
 - [使用规范](#使用规范)
 - [功能使用说明](#功能使用说明)
-  - [同步发布](#同步发布)
-  - [异步发布](#异步发布)
-  - [延迟消息](#延迟消息)
-  - [顺序消息（FIFO）](#顺序消息fifo)
-  - [Tag 过滤](#tag-过滤)
-  - [消费者](#消费者)
-  - [事务消息（Outbox Pattern）](#事务消息outbox-pattern)
+    - [同步发布](#同步发布)
+    - [异步发布](#异步发布)
+    - [延迟消息](#延迟消息)
+    - [顺序消息（FIFO）](#顺序消息fifo)
+    - [Tag 过滤](#tag-过滤)
+    - [消费者](#消费者)
+    - [事务消息（Outbox Pattern）](#事务消息outbox-pattern)
 - [消费端必达保障](#消费端必达保障)
-  - [第一层：RocketMQ 自动重试](#第一层rocketmq-自动重试)
-  - [第二层：重试告警](#第二层重试告警)
-  - [第三层：死信队列处理](#第三层死信队列处理)
-  - [消费幂等性](#消费幂等性)
+    - [第一层：RocketMQ 自动重试](#第一层rocketmq-自动重试)
+    - [第二层：重试告警](#第二层重试告警)
+    - [第三层：死信队列处理](#第三层死信队列处理)
+    - [消费幂等性](#消费幂等性)
 - [与 DDD 架构集成](#与-ddd-架构集成)
 - [消息发布方式选型](#消息发布方式选型)
 - [常见问题](#常见问题)
@@ -32,14 +33,14 @@
 
 ### 提供的能力
 
-| 分类 | 组件 | 说明 |
-|------|------|------|
-| 同步发布 | `DomainEventPublisher.publish()` | 阻塞发送，支持自动推导 Topic 和指定 Tag |
-| 异步发布 | `DomainEventPublisher.publishAsync()` | 非阻塞发送，返回 `CompletableFuture<Void>` |
-| 延迟消息 | `DomainEventPublisher.publishDelayed()` | 指定延迟时长后消费者才可见 |
-| 顺序消息 | `DomainEventPublisher.publishOrdered()` | 相同 `messageGroup` 内严格 FIFO |
-| 事务消息 | `TransactionalEventPublisher.publishInTransaction()` | 本地事务与消息发布原子，Outbox Pattern |
-| 消费者 | `AbstractRocketMqListener<T>` | 推模式消费，自动反序列化为领域事件，支持 Tag 过滤 |
+| 分类   | 组件                                                   | 说明                                 |
+|------|------------------------------------------------------|------------------------------------|
+| 同步发布 | `DomainEventPublisher.publish()`                     | 阻塞发送，支持自动推导 Topic 和指定 Tag          |
+| 异步发布 | `DomainEventPublisher.publishAsync()`                | 非阻塞发送，返回 `CompletableFuture<Void>` |
+| 延迟消息 | `DomainEventPublisher.publishDelayed()`              | 指定延迟时长后消费者才可见                      |
+| 顺序消息 | `DomainEventPublisher.publishOrdered()`              | 相同 `messageGroup` 内严格 FIFO         |
+| 事务消息 | `TransactionalEventPublisher.publishInTransaction()` | 本地事务与消息发布原子，Outbox Pattern         |
+| 消费者  | `AbstractRocketMqListener<T>`                        | 推模式消费，自动反序列化为领域事件，支持 Tag 过滤        |
 
 ### 依赖关系
 
@@ -68,12 +69,13 @@ dependencies {
 ## 自动配置说明
 
 `RocketMqAutoConfiguration` 在以下条件满足时生效：
+
 - 类路径存在 `org.apache.rocketmq.client.apis.ClientServiceProvider`
 - 配置项 `eagle.rocketmq.enabled=true`（默认为 `true`）
 
-| Bean | 类型 | 条件 |
-|------|------|------|
-| `DomainEventPublisher` | `RocketMqDomainEventPublisher` | 默认注册，可覆盖 |
+| Bean                          | 类型                                    | 条件                                                     |
+|-------------------------------|---------------------------------------|--------------------------------------------------------|
+| `DomainEventPublisher`        | `RocketMqDomainEventPublisher`        | 默认注册，可覆盖                                               |
 | `TransactionalEventPublisher` | `RocketMqTransactionalEventPublisher` | 默认注册，有 `AbstractRocketMqTransactionChecker` Bean 时自动绑定 |
 
 **Bean 覆盖：** 若需自定义发布逻辑，声明同名 Bean 即可：
@@ -107,13 +109,13 @@ eagle:
 
 ### 配置项说明
 
-| 配置项 | 默认值 | 说明 |
-|--------|--------|------|
-| `eagle.rocketmq.enabled` | `true` | 设为 `false` 时所有发布操作降级为打印警告日志，不发送 |
-| `eagle.rocketmq.endpoints` | `localhost:8081` | RocketMQ 5.x Proxy 地址（不是 NameServer 端口 9876）|
-| `eagle.rocketmq.topic-prefix` | `eagle-` | `publish(event)` 自动推导 Topic 时的前缀，如 `OrderCreatedEvent` → `eagle-OrderCreatedEvent` |
-| `eagle.rocketmq.max-attempts` | `2` | 同步发送失败后的额外重试次数，总计 `maxAttempts + 1` 次尝试 |
-| `eagle.rocketmq.consumer.max-cached-message-count` | `1024` | 消费者本地积压上限，超过后暂停从 Broker 拉取，防止内存溢出 |
+| 配置项                                                | 默认值              | 说明                                                                                 |
+|----------------------------------------------------|------------------|------------------------------------------------------------------------------------|
+| `eagle.rocketmq.enabled`                           | `true`           | 设为 `false` 时所有发布操作降级为打印警告日志，不发送                                                    |
+| `eagle.rocketmq.endpoints`                         | `localhost:8081` | RocketMQ 5.x Proxy 地址（不是 NameServer 端口 9876）                                       |
+| `eagle.rocketmq.topic-prefix`                      | `eagle-`         | `publish(event)` 自动推导 Topic 时的前缀，如 `OrderCreatedEvent` → `eagle-OrderCreatedEvent` |
+| `eagle.rocketmq.max-attempts`                      | `2`              | 同步发送失败后的额外重试次数，总计 `maxAttempts + 1` 次尝试                                            |
+| `eagle.rocketmq.consumer.max-cached-message-count` | `1024`           | 消费者本地积压上限，超过后暂停从 Broker 拉取，防止内存溢出                                                  |
 
 ---
 
@@ -121,12 +123,12 @@ eagle:
 
 ### Topic 命名规范
 
-| 规则 | 示例 |
-|------|------|
-| 自动推导（推荐）| `publish(event)` → `eagle-OrderCreatedEvent` |
-| 显式指定 | `publish("order-created", event)` |
-| Topic 命名格式 | `{prefix}{EventClassName}` 或 kebab-case |
-| **禁止** | 不同业务复用同一 Topic；Topic 名包含特殊字符 |
+| 规则         | 示例                                           |
+|------------|----------------------------------------------|
+| 自动推导（推荐）   | `publish(event)` → `eagle-OrderCreatedEvent` |
+| 显式指定       | `publish("order-created", event)`            |
+| Topic 命名格式 | `{prefix}{EventClassName}` 或 kebab-case      |
+| **禁止**     | 不同业务复用同一 Topic；Topic 名包含特殊字符                 |
 
 ### 消费者幂等性要求
 
@@ -147,7 +149,8 @@ protected void handle(OrderCreatedEvent event) {
 
 ### 消费者事务规范
 
-消费者 `handle()` 内需要写 DB 时，必须加 `@Transactional`（在应用服务或 Repository 层）。若 `handle()` 抛出异常，消息将被重新投递（`ConsumeResult.FAILURE`）。
+消费者 `handle()` 内需要写 DB 时，必须加 `@Transactional`（在应用服务或 Repository 层）。若 `handle()` 抛出异常，消息将被重新投递（
+`ConsumeResult.FAILURE`）。
 
 ---
 
@@ -181,7 +184,8 @@ public class OrderApplicationService {
 }
 ```
 
-> **注意：** 同步发布在 `@Transactional` 方法内调用时，消息在事务提交前就已发送到 Broker。若事务回滚，消息不会撤回。需要原子性保证时，请使用[事务消息](#事务消息outbox-pattern)。
+> **注意：** 同步发布在 `@Transactional` 方法内调用时，消息在事务提交前就已发送到
+> Broker。若事务回滚，消息不会撤回。需要原子性保证时，请使用[事务消息](#事务消息outbox-pattern)。
 
 ---
 
@@ -439,7 +443,8 @@ public class PointsOrderListener extends AbstractRocketMqListener<OrderCreatedEv
 
 ### 事务消息（Outbox Pattern）
 
-**解决问题：** 数据库写入与消息发布的原子性。普通 `publish()` 在 `@Transactional` 内调用时，若事务回滚，消息已发出且无法撤回，导致**消费方执行了一个未实际发生的操作**。
+**解决问题：** 数据库写入与消息发布的原子性。普通 `publish()` 在 `@Transactional` 内调用时，若事务回滚，消息已发出且无法撤回，导致
+**消费方执行了一个未实际发生的操作**。
 
 **流程：**
 
@@ -573,18 +578,20 @@ public void createOrder(CreateOrderRequest request) {
 `handle()` 抛出任何异常时，框架返回 `ConsumeResult.FAILURE`，Broker 按**指数退避**间隔重新投递：
 
 | 重试次数 | 延迟时间 |
-|---------|---------|
-| 1 | 10s |
-| 2 | 30s |
-| 3 | 1min |
-| 4 | 2min |
-| 5 | 3min |
-| ... | ... |
-| 16 | 2h |
+|------|------|
+| 1    | 10s  |
+| 2    | 30s  |
+| 3    | 1min |
+| 4    | 2min |
+| 5    | 3min |
+| ...  | ...  |
+| 16   | 2h   |
 
-最大重试次数由 Broker 订阅组配置控制（`subscriptionGroupConfig.retryMaxTimes`，默认 16）。**无需客户端代码做任何额外配置**，失败即自动重试。
+最大重试次数由 Broker 订阅组配置控制（`subscriptionGroupConfig.retryMaxTimes`，默认 16）。**无需客户端代码做任何额外配置**
+，失败即自动重试。
 
-> **注意：** 下游依赖（DB、第三方接口）临时不可用时，重试天然会等待恢复。但业务逻辑 bug 导致的失败会持续重试直到进入 DLQ，因此幂等性和 DLQ 处理缺一不可。
+> **注意：** 下游依赖（DB、第三方接口）临时不可用时，重试天然会等待恢复。但业务逻辑 bug 导致的失败会持续重试直到进入
+> DLQ，因此幂等性和 DLQ 处理缺一不可。
 
 ### 第二层：重试告警
 
@@ -706,7 +713,8 @@ CREATE TABLE t_dead_letter (
 
 ### 消费幂等性
 
-RocketMQ **至少一次（at-least-once）** 投递，重试必然带来重复消费，消费者必须实现幂等。推荐以 `eventId` 为去重 key，存入 Redis（短期幂等）或 DB（长期幂等）：
+RocketMQ **至少一次（at-least-once）** 投递，重试必然带来重复消费，消费者必须实现幂等。推荐以 `eventId` 为去重 key，存入
+Redis（短期幂等）或 DB（长期幂等）：
 
 **方案一：Redis 幂等（推荐，低成本）**
 
@@ -749,12 +757,12 @@ protected void handle(OrderPaidEvent event) {
 
 **完整消费保障总结：**
 
-| 层次 | 机制 | 覆盖场景 |
-|------|------|---------|
-| 第一层 | RocketMQ 自动重试（最多 16 次，指数退避） | 临时故障：DB 不可用、网络抖动、下游超时 |
-| 第二层 | 重试告警（`onRetryAlert`） | 持续失败早发现，人工介入 |
-| 第三层 | 死信队列（`AbstractDlqListener`） | 代码 bug / 无法自动恢复的场景，持久化待人工处理 |
-| 幂等校验 | Redis/DB 去重（`eventId` 为 key） | 重试带来的重复消费 |
+| 层次   | 机制                           | 覆盖场景                        |
+|------|------------------------------|-----------------------------|
+| 第一层  | RocketMQ 自动重试（最多 16 次，指数退避）  | 临时故障：DB 不可用、网络抖动、下游超时       |
+| 第二层  | 重试告警（`onRetryAlert`）         | 持续失败早发现，人工介入                |
+| 第三层  | 死信队列（`AbstractDlqListener`）  | 代码 bug / 无法自动恢复的场景，持久化待人工处理 |
+| 幂等校验 | Redis/DB 去重（`eventId` 为 key） | 重试带来的重复消费                   |
 
 ---
 
@@ -843,14 +851,14 @@ public class OrderCreatedMessageListener extends AbstractRocketMqListener<OrderC
 
 ## 消息发布方式选型
 
-| 需求 | 推荐方式 | 说明 |
-|------|----------|------|
-| 通知类、允许少量丢失 | `publishAsync()` | 非阻塞，主流程不等待结果 |
-| 关键业务事件、需要确认 | `publish()` | 阻塞直到 Broker 确认，失败自动重试 |
-| 超时处理、定时任务 | `publishDelayed()` | 延迟到期后消费者可见 |
-| 账户流水、状态机流转 | `publishOrdered()` | 同 Group 内严格 FIFO |
-| DB 写入与消息必须原子 | `publishInTransaction()` | Two-Phase Commit，防止事务回滚后消息已发 |
-| 同 Topic 多消费逻辑 | `publish(topic, tag, event)` + Tag 过滤 | 减少无效消息，精细路由 |
+| 需求            | 推荐方式                                  | 说明                           |
+|---------------|---------------------------------------|------------------------------|
+| 通知类、允许少量丢失    | `publishAsync()`                      | 非阻塞，主流程不等待结果                 |
+| 关键业务事件、需要确认   | `publish()`                           | 阻塞直到 Broker 确认，失败自动重试        |
+| 超时处理、定时任务     | `publishDelayed()`                    | 延迟到期后消费者可见                   |
+| 账户流水、状态机流转    | `publishOrdered()`                    | 同 Group 内严格 FIFO             |
+| DB 写入与消息必须原子  | `publishInTransaction()`              | Two-Phase Commit，防止事务回滚后消息已发 |
+| 同 Topic 多消费逻辑 | `publish(topic, tag, event)` + Tag 过滤 | 减少无效消息，精细路由                  |
 
 ---
 
@@ -859,14 +867,17 @@ public class OrderCreatedMessageListener extends AbstractRocketMqListener<OrderC
 **Q: `publish()` 在 `@Transactional` 方法内，事务回滚后消息发出去了怎么办？**
 
 A: 这是普通发布的设计限制。解决方案：
+
 1. 使用 `publishInTransaction()` 事务消息，本地事务回滚时消息自动回滚
-2. 或将 `publish()` 改为 `@TransactionalEventListener(phase = AFTER_COMMIT)` 中调用，确保事务提交后才发送（但此方式不保证原子性，Broker 宕机时可能丢失）
+2. 或将 `publish()` 改为 `@TransactionalEventListener(phase = AFTER_COMMIT)` 中调用，确保事务提交后才发送（但此方式不保证原子性，Broker
+   宕机时可能丢失）
 
 ---
 
 **Q: 消费者 `handle()` 抛出异常，消息会重复消费吗？**
 
-A: 会。`handle()` 抛异常时返回 `ConsumeResult.FAILURE`，RocketMQ 将按配置的重试间隔重新投递。消费者**必须实现幂等**，用 `eventId` 作去重 key 即可：
+A: 会。`handle()` 抛异常时返回 `ConsumeResult.FAILURE`，RocketMQ 将按配置的重试间隔重新投递。消费者**必须实现幂等**，用
+`eventId` 作去重 key 即可：
 
 ```java
 @Override
@@ -890,6 +901,7 @@ A: 不需要。默认从 `eagle.rocketmq.endpoints` 和 `eagle.rocketmq.consumer
 **Q: `publishOrdered()` 和普通 `publish()` 有什么区别？**
 
 A: 顺序消息要求：
+
 1. Topic 必须在 Broker 上创建为 **FIFO 类型**
 2. 相同 `messageGroup` 的消息路由到同一队列，保证顺序
 3. 消费者是单线程顺序消费，吞吐量低于普通消息
@@ -906,4 +918,5 @@ A: 推荐将跨服务共用的事件类放在独立的接口模块（`eagle-api`
 
 **Q: `TransactionChecker` 的回查间隔是多少？**
 
-A: 由 Broker 端配置控制，默认首次 6 秒后开始回查，最多回查 15 次，之后消息进入死信队列。生产环境需在 Broker 配置文件中合理设置 `transactionTimeOut` 和 `transactionCheckMax`。
+A: 由 Broker 端配置控制，默认首次 6 秒后开始回查，最多回查 15 次，之后消息进入死信队列。生产环境需在 Broker 配置文件中合理设置
+`transactionTimeOut` 和 `transactionCheckMax`。

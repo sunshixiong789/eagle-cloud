@@ -42,7 +42,7 @@ public class TokenTrackingHandler implements AuthenticationSuccessHandler {
     private final OnlineUserPort onlineUserPort;
 
     private final HttpMessageConverter<OAuth2AccessTokenResponse>
-        tokenResponseConverter = new OAuth2AccessTokenResponseHttpMessageConverter();
+            tokenResponseConverter = new OAuth2AccessTokenResponseHttpMessageConverter();
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -53,17 +53,17 @@ public class TokenTrackingHandler implements AuthenticationSuccessHandler {
 
         // 1. Write standard token response
         OAuth2AccessTokenResponse tokenResponse = OAuth2AccessTokenResponse
-            .withToken(tokenAuth.getAccessToken().getTokenValue())
-            .tokenType(tokenAuth.getAccessToken().getTokenType())
-            .scopes(tokenAuth.getAccessToken().getScopes())
-            .expiresIn(tokenAuth.getAccessToken().getExpiresAt() != null
-                ? Duration.between(Instant.now(), tokenAuth.getAccessToken().getExpiresAt()).getSeconds()
-                : 3600L)
-            .additionalParameters(tokenAuth.getAdditionalParameters() != null
-                ? tokenAuth.getAdditionalParameters() : Map.of())
-            .build();
+                .withToken(tokenAuth.getAccessToken().getTokenValue())
+                .tokenType(tokenAuth.getAccessToken().getTokenType())
+                .scopes(tokenAuth.getAccessToken().getScopes())
+                .expiresIn(tokenAuth.getAccessToken().getExpiresAt() != null
+                        ? Duration.between(Instant.now(), tokenAuth.getAccessToken().getExpiresAt()).getSeconds()
+                        : 3600L)
+                .additionalParameters(tokenAuth.getAdditionalParameters() != null
+                        ? tokenAuth.getAdditionalParameters() : Map.of())
+                .build();
         tokenResponseConverter.write(tokenResponse, MediaType.APPLICATION_JSON,
-            new ServletServerHttpResponse(response));
+                new ServletServerHttpResponse(response));
 
         // 2. Track online user — failure must not affect the already-written token response
         try {
@@ -85,24 +85,26 @@ public class TokenTrackingHandler implements AuthenticationSuccessHandler {
         String sub = extractClaim(tokenValue, "sub");
         Instant expiresAt = tokenAuth.getAccessToken().getExpiresAt();
         long expiresIn = expiresAt != null
-            ? Math.max(Duration.between(Instant.now(), expiresAt).getSeconds(), 0L)
-            : 3600L;
+                ? Math.max(Duration.between(Instant.now(), expiresAt).getSeconds(), 0L)
+                : 3600L;
 
         String userAgent = request.getHeader("User-Agent");
         OnlineUserInfo info = new OnlineUserInfo(
-            jti, null,
-            sub != null ? sub : "unknown",
-            getClientIp(request),
-            LocalDateTime.now(), LocalDateTime.now(),
-            parseBrowser(userAgent),
-            parseOs(userAgent),
-            expiresIn
+                jti, null,
+                sub != null ? sub : "unknown",
+                getClientIp(request),
+                LocalDateTime.now(), LocalDateTime.now(),
+                parseBrowser(userAgent),
+                parseOs(userAgent),
+                expiresIn
         );
         onlineUserPort.trackLogin(info);
         log.debug("Tracked online user: {}, jti: {}", sub, jti);
     }
 
-    /** 从 JWT payload 中提取指定 claim 值（无签名验证，仅用于非安全用途的元数据读取）。 */
+    /**
+     * 从 JWT payload 中提取指定 claim 值（无签名验证，仅用于非安全用途的元数据读取）。
+     */
     private String extractClaim(String jwtValue, String claimName) {
         try {
             String[] parts = jwtValue.split("\\.");

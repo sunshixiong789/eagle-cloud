@@ -72,13 +72,13 @@ spring:
 
 **namespace 规划**：
 
-| Namespace | 用途 |
-|-----------|------|
-| `dev` | 开发 |
-| `test` | 测试 |
-| `staging` | 预发 |
-| `prod` | 生产（严格权限） |
-| `public` | 跨环境共享配置（极少用） |
+| Namespace | 用途           |
+|-----------|--------------|
+| `dev`     | 开发           |
+| `test`    | 测试           |
+| `staging` | 预发           |
+| `prod`    | 生产（严格权限）     |
+| `public`  | 跨环境共享配置（极少用） |
 
 ## 敏感字段加密（Jasypt）
 
@@ -118,11 +118,11 @@ public class FeatureFlagsHolder {
 
 ## 配置项分级
 
-| 级别 | 分类 | 示例 |
-|------|------|------|
-| L1 启动配置 | 启动时不可变 | DB 连接、Redis 地址、端口 |
-| L2 业务配置 | 重启生效 | 业务开关默认值、缓存 TTL |
-| L3 动态配置 | 实时生效（`@RefreshScope`）| 限流阈值、灰度比例 |
+| 级别      | 分类                    | 示例                |
+|---------|-----------------------|-------------------|
+| L1 启动配置 | 启动时不可变                | DB 连接、Redis 地址、端口 |
+| L2 业务配置 | 重启生效                  | 业务开关默认值、缓存 TTL    |
+| L3 动态配置 | 实时生效（`@RefreshScope`） | 限流阈值、灰度比例         |
 
 L1 走 `bootstrap.yml`，L2 走 `application.yml`，L3 走 Nacos 动态推送。
 
@@ -148,13 +148,18 @@ application.yml
 `@ConfigurationProperties` + Bean Validation 启动期校验：
 
 ```java
+
 @Data
 @Validated
 @ConfigurationProperties(prefix = "eagle.payment")
 public class PaymentProperties {
-    @NotBlank private String gatewayUrl;
-    @Min(1000) @Max(60000) private int timeoutMs = 5000;
-    @NotNull private Duration backoff = Duration.ofMillis(500);
+    @NotBlank
+    private String gatewayUrl;
+    @Min(1000)
+    @Max(60000)
+    private int timeoutMs = 5000;
+    @NotNull
+    private Duration backoff = Duration.ofMillis(500);
 }
 ```
 

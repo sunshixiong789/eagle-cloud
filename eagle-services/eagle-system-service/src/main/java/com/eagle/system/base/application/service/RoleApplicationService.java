@@ -1,6 +1,5 @@
 package com.eagle.system.base.application.service;
 
-import com.eagle.system.common.exception.SystemErrorCode;
 import com.eagle.system.base.application.mapper.RoleMapper;
 import com.eagle.system.base.application.mapper.UserMapper;
 import com.eagle.system.base.domain.model.Role;
@@ -12,6 +11,7 @@ import com.eagle.system.base.web.dto.request.RoleQueryRequest;
 import com.eagle.system.base.web.dto.request.UpdateRoleRequest;
 import com.eagle.system.base.web.dto.response.RoleResponse;
 import com.eagle.system.base.web.dto.response.UserResponse;
+import com.eagle.system.common.exception.SystemErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -85,9 +85,9 @@ public class RoleApplicationService {
     @Transactional(readOnly = true)
     public Page<RoleResponse> queryRoles(RoleQueryRequest request, Pageable pageable) {
         Specification<Role> spec = Specification
-            .where(RoleSpecification.roleNameLike(request.getRoleName()))
-            .and(RoleSpecification.roleCodeEquals(request.getRoleCode()))
-            .and(RoleSpecification.statusEquals(request.getStatus()));
+                .where(RoleSpecification.roleNameLike(request.getRoleName()))
+                .and(RoleSpecification.roleCodeEquals(request.getRoleCode()))
+                .and(RoleSpecification.statusEquals(request.getStatus()));
         return roleRepository.findAll(spec, pageable).map(roleMapper::toResponse);
     }
 
@@ -101,7 +101,7 @@ public class RoleApplicationService {
     @Transactional(readOnly = true)
     public Page<UserResponse> getUsersByRoleId(Long roleId, Pageable pageable) {
         roleRepository.findById(roleId)
-            .orElseThrow(SystemErrorCode.ROLE_NOT_FOUND::toNotFoundException);
+                .orElseThrow(SystemErrorCode.ROLE_NOT_FOUND::toNotFoundException);
         return userRepository.findByRoleId(roleId, pageable).map(userMapper::toResponse);
     }
 

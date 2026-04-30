@@ -27,7 +27,9 @@ import org.springframework.context.ApplicationEvent;
  */
 public class PaymentNotifyEvent extends ApplicationEvent {
 
-    /** 支付通知解析结果 */
+    /**
+     * 支付通知解析结果
+     */
     private final NotifyResult result;
 
     /**

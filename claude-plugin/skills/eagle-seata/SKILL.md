@@ -30,20 +30,21 @@ eagle.seata:
   tx-service-group: eagle_tx_group
 ```
 
-`SeataEnvironmentPostProcessor` 自动桥接到 Seata 原生 `seata.*` 配置。Seata Server 接入参数（注册中心、配置中心）按 Seata 文档单独配置。
+`SeataEnvironmentPostProcessor` 自动桥接到 Seata 原生 `seata.*` 配置。Seata Server 接入参数（注册中心、配置中心）按 Seata
+文档单独配置。
 
 参与方需要建 `undo_log` 表（AT 模式）。
 
 ## 核心 API
 
-| 类 / 注解 | 用途 |
-|---|---|
-| `@GlobalTransactional` | Seata 标准注解：发起方加，开启全局事务（不是 starter 自定义） |
+| 类 / 注解                      | 用途                                                                              |
+|-----------------------------|---------------------------------------------------------------------------------|
+| `@GlobalTransactional`      | Seata 标准注解：发起方加，开启全局事务（不是 starter 自定义）                                          |
 | `GlobalTransactionTemplate` | 编程式全局事务：`execute(txName, TransactionCallback<T>)` / `execute(txName, Runnable)` |
-| `TransactionCallback<T>` | 函数式：`T doInTransaction()` |
-| `TccAction<T>` | TCC 抽象：`tryAction(ctx, T param)` / `confirm(ctx)` / `cancel(ctx)` |
-| `TccIdempotencyHelper` | TCC 幂等 / 防悬挂 / 防空回滚帮助类 |
-| `SeataUtil` | `getCurrentXid()` / `bind` / `unbind` |
+| `TransactionCallback<T>`    | 函数式：`T doInTransaction()`                                                       |
+| `TccAction<T>`              | TCC 抽象：`tryAction(ctx, T param)` / `confirm(ctx)` / `cancel(ctx)`               |
+| `TccIdempotencyHelper`      | TCC 幂等 / 防悬挂 / 防空回滚帮助类                                                          |
+| `SeataUtil`                 | `getCurrentXid()` / `bind` / `unbind`                                           |
 
 ## AT 模式示例（最常用）
 
@@ -78,6 +79,7 @@ public class InventoryService {
 ## 编程式（GlobalTransactionTemplate）
 
 ```java
+
 @Service
 @RequiredArgsConstructor
 public class BatchService {
@@ -99,17 +101,21 @@ public class BatchService {
 ## TCC 模式示例（高并发场景）
 
 ```java
+
 @LocalTCC
 public interface InventoryTccAction extends TccAction<InventoryTccParam> {
 
     @TwoPhaseBusinessAction(name = "inventoryTcc",
-        commitMethod = "confirm", rollbackMethod = "cancel")
+            commitMethod = "confirm", rollbackMethod = "cancel")
     @Override
     boolean tryAction(BusinessActionContext ctx,
                       @BusinessActionContextParameter("param") InventoryTccParam param);
 
-    @Override boolean confirm(BusinessActionContext ctx);
-    @Override boolean cancel(BusinessActionContext ctx);
+    @Override
+    boolean confirm(BusinessActionContext ctx);
+
+    @Override
+    boolean cancel(BusinessActionContext ctx);
 }
 
 @Service
@@ -122,7 +128,7 @@ public class InventoryTccActionImpl implements InventoryTccAction {
     @Override
     public boolean tryAction(BusinessActionContext ctx, InventoryTccParam param) {
         return idempotency.runOnce(ctx, () ->
-            inventoryRepository.freezeStock(param.getProductId(), param.getQuantity())
+                inventoryRepository.freezeStock(param.getProductId(), param.getQuantity())
         );
     }
 
@@ -147,11 +153,11 @@ public class InventoryTccActionImpl implements InventoryTccAction {
 
 ## 配置项
 
-| key | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `eagle.seata.enabled` | boolean | `true` | 总开关 |
-| `eagle.seata.application-id` | String | — | Seata 应用 ID（建议同 `spring.application.name`） |
-| `eagle.seata.tx-service-group` | String | `eagle_tx_group` | 事务分组 |
+| key                            | 类型      | 默认               | 说明                                         |
+|--------------------------------|---------|------------------|--------------------------------------------|
+| `eagle.seata.enabled`          | boolean | `true`           | 总开关                                        |
+| `eagle.seata.application-id`   | String  | —                | Seata 应用 ID（建议同 `spring.application.name`） |
+| `eagle.seata.tx-service-group` | String  | `eagle_tx_group` | 事务分组                                       |
 
 ⚠️ Seata 完整配置（注册中心 / 配置中心 / 服务地址等）走 `seata.*` 原生前缀，starter 不重复包装。
 

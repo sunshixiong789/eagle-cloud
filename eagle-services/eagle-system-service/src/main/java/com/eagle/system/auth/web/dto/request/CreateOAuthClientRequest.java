@@ -25,27 +25,43 @@ public class CreateOAuthClientRequest {
     @Size(max = 200)
     private String clientName;
 
-    /** 认证方式集合，如 ["none"], ["client_secret_basic"] */
+    /**
+     * 认证方式集合，如 ["none"], ["client_secret_basic"]
+     */
     private Set<String> clientAuthenticationMethods;
 
-    /** 授权类型集合，如 ["authorization_code", "refresh_token"] */
+    /**
+     * 授权类型集合，如 ["authorization_code", "refresh_token"]
+     */
     private Set<String> authorizationGrantTypes;
 
-    /** 重定向 URI 集合 */
+    /**
+     * 重定向 URI 集合
+     */
     private Set<String> redirectUris;
 
-    /** 授权范围集合，如 ["openid", "profile"] */
+    /**
+     * 授权范围集合，如 ["openid", "profile"]
+     */
     private Set<String> scopes;
 
-    /** 是否要求 PKCE */
+    /**
+     * 是否要求 PKCE
+     */
     private Boolean requireProofKey = false;
 
-    /** 是否要求授权同意 */
+    /**
+     * 是否要求授权同意
+     */
     private Boolean requireAuthorizationConsent = false;
 
-    /** Access Token 有效期（秒），默认 3600 */
+    /**
+     * Access Token 有效期（秒），默认 3600
+     */
     private Long accessTokenTtlSeconds = 3600L;
 
-    /** Refresh Token 有效期（秒），默认 30 天 */
+    /**
+     * Refresh Token 有效期（秒），默认 30 天
+     */
     private Long refreshTokenTtlSeconds = 2592000L;
 }

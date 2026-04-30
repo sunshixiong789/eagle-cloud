@@ -5,7 +5,8 @@ argument-hint: "<feature-name>，例 webhook（生成 eagle-webhook-starter）"
 
 # /new-starter — 创建新 Starter 模块
 
-按 `10-starter.md` 规范创建一个完整的自动配置 starter，自动注册到 settings.gradle、生成 build.gradle、AutoConfiguration、Properties、imports 文件。
+按 `10-starter.md` 规范创建一个完整的自动配置 starter，自动注册到 settings.gradle、生成
+build.gradle、AutoConfiguration、Properties、imports 文件。
 
 ## 输入
 
@@ -60,7 +61,9 @@ package com.eagle.{feature_no_dash}.properties;
 @Data
 @Validated
 @ConfigurationProperties(prefix = "eagle.{feature}")
-public class {Feature}Properties {
+public class {Feature}
+
+Properties {
 
     /** 是否启用 */
     private boolean enabled = true;
@@ -77,18 +80,28 @@ package com.eagle.{feature_no_dash}.config;
 @AutoConfiguration
 @ConditionalOnClass(/* 必备类，如 SomeLib.class */)
 @ConditionalOnProperty(prefix = "eagle.{feature}", name = "enabled", havingValue = "true", matchIfMissing = true)
-@EnableConfigurationProperties({Feature}Properties.class)
+@EnableConfigurationProperties({Feature} Properties .class)
 @RequiredArgsConstructor
 @Slf4j
-public class {Feature}AutoConfiguration {
+public class {Feature}
 
-    private final {Feature}Properties properties;
+AutoConfiguration {
+
+    private final {
+        Feature
+    } Properties properties;
 
     @Bean
     @ConditionalOnMissingBean
-    public {Feature}Service {feature}Service() {
+    public {
+        Feature
+    } Service {
+        feature
+    } Service() {
         log.info("Initializing {} service", "{feature}");
-        return new {Feature}Service(properties);
+        return new {
+            Feature
+        } Service(properties);
     }
 }
 ```
@@ -122,11 +135,15 @@ api project(':eagle-starter:eagle-{feature}-starter')
 ### 9. 单元测试骨架
 
 ```java
-@SpringBootTest(classes = {Feature}AutoConfiguration.class)
-class {Feature}AutoConfigurationTest {
-    @Autowired private {Feature}Service service;
+@SpringBootTest(classes = {Feature} AutoConfiguration .class)
+class {Feature}
 
-    @Test void should_load_service_bean() {
+AutoConfigurationTest {
+    @Autowired private {
+        Feature
+    } Service service;
+
+    @Test void should_load_service_bean () {
         assertNotNull(service);
     }
 }

@@ -16,15 +16,23 @@ import java.math.BigDecimal;
 @Builder
 public class RefundRequest {
 
-    /** 原商户订单号 */
+    /**
+     * 原商户订单号
+     */
     private String outTradeNo;
 
-    /** 退款流水号（全局唯一，用于幂等控制） */
+    /**
+     * 退款流水号（全局唯一，用于幂等控制）
+     */
     private String refundNo;
 
-    /** 退款金额（元，精确到分） */
+    /**
+     * 退款金额（元，精确到分）
+     */
     private BigDecimal refundAmount;
 
-    /** 退款原因（展示给买家） */
+    /**
+     * 退款原因（展示给买家）
+     */
     private String reason;
 }

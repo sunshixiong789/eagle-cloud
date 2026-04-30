@@ -6,10 +6,12 @@
 
 ```java
 // ✅ 有独立 Repository 的实体（聚合根）
-public class Order extends BaseAggregateRoot<Order> { }
+public class Order extends BaseAggregateRoot<Order> {
+}
 
 // ✅ 聚合内子实体（无独立 Repository，由聚合根级联管理）
-public class OrderItemEntity extends BaseEntity { }
+public class OrderItemEntity extends BaseEntity {
+}
 ```
 
 **值对象（`@Embeddable`）映射：**
@@ -78,29 +80,30 @@ private Department dept;
 
 **索引命名约定（强制）：索引名在 schema 内必须全局唯一**
 
-H2 / PostgreSQL / Oracle 等数据库要求索引名在 schema 范围内唯一（MySQL 是表内唯一，但跨 DB 兼容必须按全局唯一）。两个表共用同名索引会触发 `Index "XXX" already exists` 启动错误。
+H2 / PostgreSQL / Oracle 等数据库要求索引名在 schema 范围内唯一（MySQL 是表内唯一，但跨 DB 兼容必须按全局唯一）。两个表共用同名索引会触发
+`Index "XXX" already exists` 启动错误。
 
 格式：`idx_{table}_{column}`（普通）/ `uk_{table}_{column}`（唯一）
 
 ```java
 // ✅ 正确：包含表名前缀，全局唯一
 @Table(name = "sys_user", indexes = {
-    @Index(name = "uk_user_account_id", columnList = "account_id", unique = true),
-    @Index(name = "idx_user_username", columnList = "username"),
-    @Index(name = "idx_user_dept_id", columnList = "dept_id")
+        @Index(name = "uk_user_account_id", columnList = "account_id", unique = true),
+        @Index(name = "idx_user_username", columnList = "username"),
+        @Index(name = "idx_user_dept_id", columnList = "dept_id")
 })
 
 @Table(name = "sys_role_dept", indexes = {
-    @Index(name = "idx_role_dept_role_id", columnList = "role_id"),
-    @Index(name = "idx_role_dept_dept_id", columnList = "dept_id")   // 不与 user 表的 dept_id 索引冲突
+        @Index(name = "idx_role_dept_role_id", columnList = "role_id"),
+        @Index(name = "idx_role_dept_dept_id", columnList = "dept_id")   // 不与 user 表的 dept_id 索引冲突
 })
 
 // ❌ 错误：多张表共用 idx_dept_id 会在 H2 启动时冲突
 @Table(name = "sys_user", indexes = {
-    @Index(name = "idx_dept_id", columnList = "dept_id")
+        @Index(name = "idx_dept_id", columnList = "dept_id")
 })
 @Table(name = "sys_role_dept", indexes = {
-    @Index(name = "idx_dept_id", columnList = "dept_id")
+        @Index(name = "idx_dept_id", columnList = "dept_id")
 })
 ```
 
@@ -127,7 +130,9 @@ find . -name "*.java" | xargs grep -hE "@Index\(name\s*=\s*\"" \
 // 投影接口
 public interface OrderSummary {
     Long getId();
+
     String getOrderNo();
+
     BigDecimal getTotalAmount();
 }
 

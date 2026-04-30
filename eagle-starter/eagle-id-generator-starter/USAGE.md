@@ -39,6 +39,7 @@ eagle.id-generator:
 ```java
 public interface IdGenerator {
     long nextId();
+
     String nextIdStr();
 }
 ```
@@ -47,7 +48,8 @@ public interface IdGenerator {
 
 ```java
 // 默认实现
-long pk = facade.nextId();              long
+long pk = facade.nextId();
+long
 String s = facade.nextIdStr();
 
 // Snowflake
@@ -86,6 +88,7 @@ String code = IdGeneratorUtil.nanoId(8);
 ## 最小示例
 
 ```java
+
 @Service
 @RequiredArgsConstructor
 public class OrderApplicationService {
@@ -113,17 +116,17 @@ public String generateInviteCode() {
 
 ## 配置项
 
-| key | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `eagle.id-generator.enabled` | boolean | `true` | 总开关 |
-| `eagle.id-generator.type` | enum | `SNOWFLAKE` | 默认 IdGenerator：`SNOWFLAKE / UUID / TSID` |
-| `eagle.id-generator.worker-id` | long | `1` | Snowflake workerId（集群唯一） |
-| `eagle.id-generator.datacenter-id` | long | `1` | Snowflake dataCenterId |
-| `eagle.id-generator.sequence` | long | `0` | 序列起始（兼容字段） |
-| `eagle.id-generator.enable-facade` | boolean | `true` | 同时注册 Facade + OrderNoGenerator |
-| `eagle.id-generator.tsid.node-id` | int | `1` | TSID 节点 ID |
-| `eagle.id-generator.tsid.node-bits` | int | `10` | TSID 节点位数 |
-| `eagle.id-generator.nano-id.default-size` | int | `21` | NanoId 默认长度 |
+| key                                       | 类型      | 默认          | 说明                                       |
+|-------------------------------------------|---------|-------------|------------------------------------------|
+| `eagle.id-generator.enabled`              | boolean | `true`      | 总开关                                      |
+| `eagle.id-generator.type`                 | enum    | `SNOWFLAKE` | 默认 IdGenerator：`SNOWFLAKE / UUID / TSID` |
+| `eagle.id-generator.worker-id`            | long    | `1`         | Snowflake workerId（集群唯一）                 |
+| `eagle.id-generator.datacenter-id`        | long    | `1`         | Snowflake dataCenterId                   |
+| `eagle.id-generator.sequence`             | long    | `0`         | 序列起始（兼容字段）                               |
+| `eagle.id-generator.enable-facade`        | boolean | `true`      | 同时注册 Facade + OrderNoGenerator           |
+| `eagle.id-generator.tsid.node-id`         | int     | `1`         | TSID 节点 ID                               |
+| `eagle.id-generator.tsid.node-bits`       | int     | `10`        | TSID 节点位数                                |
+| `eagle.id-generator.nano-id.default-size` | int     | `21`        | NanoId 默认长度                              |
 
 ## 常见错误
 
@@ -131,7 +134,8 @@ public String generateInviteCode() {
 - ❌ 业务单号用 UUID → ✅ 用 `orderNo(prefix)`（含时间，可读）
 - ❌ Spring 启动前用 `IdGeneratorUtil.xxx()` → ✅ 静态工具需等 Spring 初始化完成
 - ❌ 期望默认是 UUID → ✅ 默认 **`SNOWFLAKE`**
-- ❌ 把 `IdGeneratorFacade.nextId()` 用作前端可见 ID → ✅ Snowflake long 在前端可能精度丢失，用 `nextIdStr()` 或 JSON 序列化为 String
+- ❌ 把 `IdGeneratorFacade.nextId()` 用作前端可见 ID → ✅ Snowflake long 在前端可能精度丢失，用 `nextIdStr()` 或 JSON 序列化为
+  String
 
 ## 关联规则
 

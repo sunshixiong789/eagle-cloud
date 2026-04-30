@@ -9,7 +9,10 @@ import org.springframework.data.elasticsearch.core.AggregationsContainer;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for {@link EsAggregationUtil}.
@@ -33,6 +36,23 @@ class EsAggregationUtilTest {
     // Utility class instantiation guard
     // -----------------------------------------------------------------------
 
+    /**
+     * Minimal {@link AggregationsContainer} implementation that is intentionally
+     * NOT an {@link org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregations}.
+     * Used to exercise the wrong-type cast branch in {@link EsAggregationUtil}.
+     */
+    static final class StubAggregationsContainer implements AggregationsContainer<Object> {
+
+        @Override
+        public Object aggregations() {
+            return new Object();
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // extractTermsAgg()
+    // -----------------------------------------------------------------------
+
     @Nested
     @DisplayName("constructor guard")
     class ConstructorGuard {
@@ -48,7 +68,7 @@ class EsAggregationUtilTest {
     }
 
     // -----------------------------------------------------------------------
-    // extractTermsAgg()
+    // extractDateHistogramAgg()
     // -----------------------------------------------------------------------
 
     @Nested
@@ -95,7 +115,7 @@ class EsAggregationUtilTest {
     }
 
     // -----------------------------------------------------------------------
-    // extractDateHistogramAgg()
+    // extractMetricAgg()
     // -----------------------------------------------------------------------
 
     @Nested
@@ -140,7 +160,7 @@ class EsAggregationUtilTest {
     }
 
     // -----------------------------------------------------------------------
-    // extractMetricAgg()
+    // Stub / test helper
     // -----------------------------------------------------------------------
 
     @Nested
@@ -177,23 +197,6 @@ class EsAggregationUtilTest {
             double result = EsAggregationUtil.extractMetricAgg(container, "total_sales");
             assertEquals(0.0, result,
                     "Non-ElasticsearchAggregations container must yield 0.0");
-        }
-    }
-
-    // -----------------------------------------------------------------------
-    // Stub / test helper
-    // -----------------------------------------------------------------------
-
-    /**
-     * Minimal {@link AggregationsContainer} implementation that is intentionally
-     * NOT an {@link org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregations}.
-     * Used to exercise the wrong-type cast branch in {@link EsAggregationUtil}.
-     */
-    static final class StubAggregationsContainer implements AggregationsContainer<Object> {
-
-        @Override
-        public Object aggregations() {
-            return new Object();
         }
     }
 }

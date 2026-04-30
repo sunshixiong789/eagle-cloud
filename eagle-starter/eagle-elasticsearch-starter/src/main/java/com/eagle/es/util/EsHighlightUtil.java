@@ -23,7 +23,9 @@ public final class EsHighlightUtil {
 
     private static final Logger log = LoggerFactory.getLogger(EsHighlightUtil.class);
 
-    /** 高亮片段拼接分隔符 */
+    /**
+     * 高亮片段拼接分隔符
+     */
     private static final String HIGHLIGHT_SEPARATOR = "...";
 
     /**

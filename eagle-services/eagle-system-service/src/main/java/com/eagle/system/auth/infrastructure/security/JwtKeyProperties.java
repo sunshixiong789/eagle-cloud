@@ -38,10 +38,14 @@ public class JwtKeyProperties {
     @NotNull(message = "JWT 密钥库路径不能为空，请配置 eagle.jwt.keystore-location")
     private Resource keystoreLocation;
 
-    /** 密钥库密码 */
+    /**
+     * 密钥库密码
+     */
     @NotBlank(message = "JWT 密钥库密码不能为空，请设置环境变量 EAGLE_JWT_KEYSTORE_PASSWORD")
     private String keystorePassword;
 
-    /** 密钥别名 */
+    /**
+     * 密钥别名
+     */
     private String keyAlias = "eagle-jwt";
 }

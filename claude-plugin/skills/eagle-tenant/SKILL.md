@@ -33,27 +33,30 @@ eagle.tenant:
 
 ## 核心 API
 
-| 类 / 注解 | 说明 |
-|---|---|
-| `TenantContextHolder` | 静态：`setTenantId(String)` / `getTenantId()` / `clear()` |
-| `TenantAware` | 实体接口：`getTenantId() / setTenantId(String)` |
-| `@TenantFilter` | 标在 **Service / Repository 方法或类**上（不是实体），触发 Hibernate Filter 自动注入 `WHERE tenant_id = :tenantId` |
-| `TenantIdFilter` | HTTP Filter，自动注册 |
-| `TenantFilterAspect` | `@TenantFilter` 切面 |
-| `TenantDatabaseRoutingAspect` | DATABASE 模式数据源路由切面 |
+| 类 / 注解                        | 说明                                                                                             |
+|-------------------------------|------------------------------------------------------------------------------------------------|
+| `TenantContextHolder`         | 静态：`setTenantId(String)` / `getTenantId()` / `clear()`                                         |
+| `TenantAware`                 | 实体接口：`getTenantId() / setTenantId(String)`                                                     |
+| `@TenantFilter`               | 标在 **Service / Repository 方法或类**上（不是实体），触发 Hibernate Filter 自动注入 `WHERE tenant_id = :tenantId` |
+| `TenantIdFilter`              | HTTP Filter，自动注册                                                                               |
+| `TenantFilterAspect`          | `@TenantFilter` 切面                                                                             |
+| `TenantDatabaseRoutingAspect` | DATABASE 模式数据源路由切面                                                                             |
 
 ## 实体配合规范（COLUMN 模式必备）
 
 实体本身需要：
+
 1. 实现 `TenantAware`
 2. 加 `@FilterDef` + `@Filter` Hibernate 注解
 3. 自动填充 `tenantId`（`@PrePersist`）
 
 ```java
+
 @Entity
-@Getter @Setter
+@Getter
+@Setter
 @FilterDef(name = "tenantFilter",
-           parameters = @ParamDef(name = "tenantId", type = String.class))
+        parameters = @ParamDef(name = "tenantId", type = String.class))
 @Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 @Table(indexes = @Index(name = "idx_tenant_status", columnList = "tenant_id, status"))
 public class Order extends BaseAggregateRoot<Order> implements TenantAware {
@@ -61,8 +64,15 @@ public class Order extends BaseAggregateRoot<Order> implements TenantAware {
     @Column(name = "tenant_id", nullable = false, updatable = false)
     private String tenantId;
 
-    @Override public String getTenantId() { return tenantId; }
-    @Override public void setTenantId(String t) { this.tenantId = t; }
+    @Override
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    @Override
+    public void setTenantId(String t) {
+        this.tenantId = t;
+    }
 
     @PrePersist
     void fillTenant() {
@@ -89,26 +99,37 @@ public class OrderQueryService {
 }
 
 // ✅ 编程式（特殊场景：跨租户后台任务）
-TenantContextHolder.setTenantId("tenant_001");
-try {
-    List<Order> orders = orderService.findAllForTenant();
-} finally {
-    TenantContextHolder.clear();
+TenantContextHolder.
+
+setTenantId("tenant_001");
+try{
+List<Order> orders = orderService.findAllForTenant();
+}finally{
+        TenantContextHolder.
+
+clear();
 }
 
 // ✅ 测试：显式设置 + 清理
-@BeforeEach void setup() { TenantContextHolder.setTenantId("test"); }
-@AfterEach  void clear() { TenantContextHolder.clear(); }
+@BeforeEach
+void setup() {
+    TenantContextHolder.setTenantId("test");
+}
+
+@AfterEach
+void clear() {
+    TenantContextHolder.clear();
+}
 ```
 
 ## 配置项
 
-| key | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `eagle.tenant.enabled` | boolean | **`false`** | 总开关（默认关）|
-| `eagle.tenant.mode` | enum | `COLUMN` | `COLUMN` / `DATABASE` |
-| `eagle.tenant.header-name` | String | `X-Tenant-Id` | 解析 HTTP 头名 |
-| `eagle.tenant.default-tenant-id` | String | `"0"` | 缺失时兜底 |
+| key                              | 类型      | 默认            | 说明                    |
+|----------------------------------|---------|---------------|-----------------------|
+| `eagle.tenant.enabled`           | boolean | **`false`**   | 总开关（默认关）              |
+| `eagle.tenant.mode`              | enum    | `COLUMN`      | `COLUMN` / `DATABASE` |
+| `eagle.tenant.header-name`       | String  | `X-Tenant-Id` | 解析 HTTP 头名            |
+| `eagle.tenant.default-tenant-id` | String  | `"0"`         | 缺失时兜底                 |
 
 ## 常见错误
 

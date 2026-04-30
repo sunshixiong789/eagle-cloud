@@ -108,6 +108,7 @@ spring:
 ```
 
 启用后接收 `SIGTERM`：
+
 1. 停止接收新请求（健康检查失败）
 2. 等待进行中的请求完成（最多 30s）
 3. 关闭 Spring 容器（线程池、DB 连接、MQ 消费者）
@@ -119,12 +120,12 @@ spring:
 
 **禁止**镜像内硬编码环境配置。注入方式：
 
-| 方式 | 适用 |
-|------|------|
-| 环境变量 | 简单字段（DB URL、Redis 地址、Profile） |
-| ConfigMap（K8s）| 大段 YAML 配置 |
-| Secret（K8s）| 密码、Token、密钥 |
-| Nacos | 业务动态配置（详见 `19-config.md`） |
+| 方式             | 适用                            |
+|----------------|-------------------------------|
+| 环境变量           | 简单字段（DB URL、Redis 地址、Profile） |
+| ConfigMap（K8s） | 大段 YAML 配置                    |
+| Secret（K8s）    | 密码、Token、密钥                   |
+| Nacos          | 业务动态配置（详见 `19-config.md`）     |
 
 ```yaml
 # k8s deployment 示例
@@ -174,10 +175,10 @@ resources:
 initContainers:
   - name: wait-for-db
     image: busybox
-    command: ['sh', '-c', 'until nc -z mysql 3306; do sleep 2; done']
+    command: [ 'sh', '-c', 'until nc -z mysql 3306; do sleep 2; done' ]
   - name: wait-for-nacos
     image: busybox
-    command: ['sh', '-c', 'until nc -z nacos 8848; do sleep 2; done']
+    command: [ 'sh', '-c', 'until nc -z nacos 8848; do sleep 2; done' ]
 ```
 
 或在应用层使用 Spring Boot 启动重试 + 熔断。**禁止**写死"启动后等待 30s"。
@@ -200,13 +201,13 @@ strategy:
 
 每个生产服务必须接入：
 
-| 监控 | 工具 |
-|------|------|
-| 指标 | Prometheus（Micrometer 暴露） |
-| 链路 | Zipkin / Jaeger（`eagle-tracing-starter`） |
-| 日志 | ELK / Loki |
-| 告警 | AlertManager → 钉钉/企微 |
-| APM | Pinpoint / Skywalking（可选） |
+| 监控  | 工具                                       |
+|-----|------------------------------------------|
+| 指标  | Prometheus（Micrometer 暴露）                |
+| 链路  | Zipkin / Jaeger（`eagle-tracing-starter`） |
+| 日志  | ELK / Loki                               |
+| 告警  | AlertManager → 钉钉/企微                     |
+| APM | Pinpoint / Skywalking（可选）                |
 
 ## 环境晋升
 
@@ -220,11 +221,11 @@ strategy:
 
 ## 回滚
 
-| 类型 | 回滚方式 |
-|------|---------|
-| 应用代码 | `kubectl rollout undo` 切回上一镜像版本 |
-| 数据库 DDL | 前向修复脚本（详见 `28-migration.md`）|
-| 配置变更 | Nacos 历史版本恢复 |
+| 类型      | 回滚方式                            |
+|---------|---------------------------------|
+| 应用代码    | `kubectl rollout undo` 切回上一镜像版本 |
+| 数据库 DDL | 前向修复脚本（详见 `28-migration.md`）    |
+| 配置变更    | Nacos 历史版本恢复                    |
 
 **事前**：上线 PR 必须包含回滚方案；**事中**：监控自动触发告警；**事后**：复盘记录。
 

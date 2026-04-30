@@ -17,7 +17,9 @@ public class GatewayProperties {
     private Security security = new Security();
     private Openapi openapi = new Openapi();
 
-    /** 安全相关配置。 */
+    /**
+     * 安全相关配置。
+     */
     @Data
     public static class Security {
 
@@ -46,11 +48,15 @@ public class GatewayProperties {
         );
     }
 
-    /** OpenAPI 聚合相关配置。 */
+    /**
+     * OpenAPI 聚合相关配置。
+     */
     @Data
     public static class Openapi {
 
-        /** 是否通过 Nacos 动态发现服务并聚合 API 文档，默认开启。 */
+        /**
+         * 是否通过 Nacos 动态发现服务并聚合 API 文档，默认开启。
+         */
         private boolean discoveryEnabled = true;
     }
 }

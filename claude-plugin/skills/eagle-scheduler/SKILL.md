@@ -39,16 +39,17 @@ eagle.xxl-job:
 
 ## 核心 API（XXL-JOB 原生）
 
-| 注解 / 类 | 用途 |
-|---|---|
-| `@XxlJob("handlerName")` | 任务方法注解（值是 handler 名，调度中心配置时填同名） |
-| `XxlJobHelper` | 静态：`getJobParam` / `getShardIndex` / `getShardTotal` / `log(format, args)` |
+| 注解 / 类                   | 用途                                                                         |
+|--------------------------|----------------------------------------------------------------------------|
+| `@XxlJob("handlerName")` | 任务方法注解（值是 handler 名，调度中心配置时填同名）                                            |
+| `XxlJobHelper`           | 静态：`getJobParam` / `getShardIndex` / `getShardTotal` / `log(format, args)` |
 
 业务无需引入 starter 自身的代码——本 starter 只做自动配置。
 
 ## 最小示例
 
 ```java
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -109,16 +110,16 @@ Cron: 0 */5 * * * ?
 
 ## 配置项
 
-| key | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `eagle.xxl-job.enabled` | boolean | `true` | 总开关 |
-| `eagle.xxl-job.admin-addresses` | String | `http://localhost:8080/xxl-job-admin` | 调度中心 |
-| `eagle.xxl-job.access-token` | String | `""` | 访问令牌 |
-| `eagle.xxl-job.app-name` | String | `""` | 执行器名 |
-| `eagle.xxl-job.ip` | String | `""` | 留空自动 |
-| `eagle.xxl-job.port` | int | `0` | 0 = 自动分配 |
-| `eagle.xxl-job.log-path` | String | `/data/applogs/xxl-job/jobhandler` | 任务日志目录 |
-| `eagle.xxl-job.log-retention-days` | int | `30` | 日志保留 |
+| key                                | 类型      | 默认                                    | 说明       |
+|------------------------------------|---------|---------------------------------------|----------|
+| `eagle.xxl-job.enabled`            | boolean | `true`                                | 总开关      |
+| `eagle.xxl-job.admin-addresses`    | String  | `http://localhost:8080/xxl-job-admin` | 调度中心     |
+| `eagle.xxl-job.access-token`       | String  | `""`                                  | 访问令牌     |
+| `eagle.xxl-job.app-name`           | String  | `""`                                  | 执行器名     |
+| `eagle.xxl-job.ip`                 | String  | `""`                                  | 留空自动     |
+| `eagle.xxl-job.port`               | int     | `0`                                   | 0 = 自动分配 |
+| `eagle.xxl-job.log-path`           | String  | `/data/applogs/xxl-job/jobhandler`    | 任务日志目录   |
+| `eagle.xxl-job.log-retention-days` | int     | `30`                                  | 日志保留     |
 
 ## 常见错误
 

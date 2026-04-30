@@ -17,9 +17,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserUpdatedEvent {
 
-    /** 用户 ID */
+    /**
+     * 用户 ID
+     */
     private Long userId;
 
-    /** 用户名（缓存 key） */
+    /**
+     * 用户名（缓存 key）
+     */
     private String username;
 }

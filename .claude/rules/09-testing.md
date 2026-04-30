@@ -5,6 +5,7 @@
 ## 架构测试
 
 使用 Spring Modulith 的项目，PR 前必须运行架构验证测试，确保：
+
 - 模块间无循环依赖
 - 无非法跨模块访问（访问其他模块内部包）
 - 模块依赖符合 `allowedDependencies` 声明

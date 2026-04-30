@@ -91,7 +91,7 @@ public class RateLimitAspect {
      * @throws Throwable 目标方法或框架抛出的异常
      */
     private Object executeWithRateLimit(ProceedingJoinPoint joinPoint,
-            RateLimit rateLimit, String resourceName) throws Throwable {
+                                        RateLimit rateLimit, String resourceName) throws Throwable {
         // 首次调用时注册规则（ConcurrentHashMap 保证并发安全）
         registeredResources.computeIfAbsent(resourceName, key -> {
             registerFlowRule(key, rateLimit);

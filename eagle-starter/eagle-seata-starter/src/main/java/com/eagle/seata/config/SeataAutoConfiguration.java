@@ -40,7 +40,9 @@ import org.springframework.context.annotation.Bean;
 @ConditionalOnProperty(name = "eagle.seata.enabled", havingValue = "true", matchIfMissing = true)
 public class SeataAutoConfiguration {
 
-    /** Seata 配置属性，用于启动日志输出。 */
+    /**
+     * Seata 配置属性，用于启动日志输出。
+     */
     private final SeataProperties seataProperties;
 
     /**
@@ -49,7 +51,7 @@ public class SeataAutoConfiguration {
     @PostConstruct
     public void init() {
         log.info("[Eagle Seata] Seata distributed transaction enabled. "
-                + "applicationId={}, txServiceGroup={}",
+                        + "applicationId={}, txServiceGroup={}",
                 seataProperties.getApplicationId(),
                 seataProperties.getTxServiceGroup());
     }

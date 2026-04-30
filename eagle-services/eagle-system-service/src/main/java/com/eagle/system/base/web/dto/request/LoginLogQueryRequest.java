@@ -5,7 +5,9 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-/** 登录日志查询请求 */
+/**
+ * 登录日志查询请求
+ */
 @Data
 @Schema(description = "登录日志查询请求")
 public class LoginLogQueryRequest {

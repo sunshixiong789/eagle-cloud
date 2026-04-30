@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -21,10 +20,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RedisRateLimiter {
 
-    private final StringRedisTemplate stringRedisTemplate;
-
     private static final String RATE_LIMIT_PREFIX = "rate_limit:";
-
     /**
      * Lua 脚本：令牌桶算法（原子）。
      *
@@ -41,15 +37,15 @@ public class RedisRateLimiter {
             local rate = tonumber(ARGV[2])
             local now = tonumber(ARGV[3])
             local last_key = key .. ":last"
-
+            
             local tokens = redis.call('GET', key)
             tokens = tokens and tonumber(tokens) or capacity
             local last = redis.call('GET', last_key)
             last = last and tonumber(last) or now
-
+            
             local delta = math.max(0, now - last)
             tokens = math.min(capacity, tokens + delta * rate)
-
+            
             if tokens >= 1 then
                 tokens = tokens - 1
                 redis.call('SET', key, tokens, 'EX', 60)
@@ -61,7 +57,6 @@ public class RedisRateLimiter {
                 return 0
             end
             """;
-
     /**
      * Lua 脚本：滑动窗口算法（原子）。
      *
@@ -84,7 +79,7 @@ public class RedisRateLimiter {
             local window_ms = tonumber(ARGV[2])
             local now = tonumber(ARGV[3])
             local member = ARGV[4]
-
+            
             redis.call('ZREMRANGEBYSCORE', key, 0, now - window_ms)
             local current = tonumber(redis.call('ZCARD', key))
             if current < max_count then
@@ -95,12 +90,11 @@ public class RedisRateLimiter {
                 return 0
             end
             """;
-
     private static final RedisScript<Long> TOKEN_BUCKET_REDIS_SCRIPT =
             RedisScript.of(TOKEN_BUCKET_SCRIPT, Long.class);
-
     private static final RedisScript<Long> SLIDING_WINDOW_REDIS_SCRIPT =
             RedisScript.of(SLIDING_WINDOW_SCRIPT, Long.class);
+    private final StringRedisTemplate stringRedisTemplate;
 
     /**
      * 令牌桶限流：适合允许一定突发流量的场景。

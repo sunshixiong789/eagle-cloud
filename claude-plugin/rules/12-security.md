@@ -1,6 +1,7 @@
 # 安全规范（Security）
 
-适用于 OAuth2 授权服务器（`eagle-system-server`）+ 资源服务器（`eagle-resource-server-starter`）+ 网关（`eagle-gateway-server`）三层安全架构。
+适用于 OAuth2 授权服务器（`eagle-system-server`）+ 资源服务器（`eagle-resource-server-starter`）+ 网关（
+`eagle-gateway-server`）三层安全架构。
 
 ## 认证体系
 
@@ -65,26 +66,30 @@ private String idCard;     // 110***********1234
 
 ## 输入安全
 
-| 风险 | 防护手段 |
-|------|---------|
+| 风险     | 防护手段                                                      |
+|--------|-----------------------------------------------------------|
 | SQL 注入 | 统一使用 JPA `@Query` 命名参数 / Repository 方法名查询，**禁止**字符串拼接 SQL |
-| XSS | 前端框架默认转义；后端富文本走 OWASP Java HTML Sanitizer 白名单过滤 |
-| 文件上传 | 限制 MIME / 后缀白名单 / 大小（详见 `26-file-storage.md`），重命名为 UUID |
-| SSRF | 外部 URL 调用前校验域名白名单，**禁止**直接拿用户输入做 HTTP 请求 |
-| 反序列化 | **禁止** `ObjectInputStream` 反序列化用户输入；JSON 用 Jackson 默认配置 |
+| XSS    | 前端框架默认转义；后端富文本走 OWASP Java HTML Sanitizer 白名单过滤           |
+| 文件上传   | 限制 MIME / 后缀白名单 / 大小（详见 `26-file-storage.md`），重命名为 UUID   |
+| SSRF   | 外部 URL 调用前校验域名白名单，**禁止**直接拿用户输入做 HTTP 请求                  |
+| 反序列化   | **禁止** `ObjectInputStream` 反序列化用户输入；JSON 用 Jackson 默认配置   |
 
 ## CORS / CSRF
 
 ```java
 // ✅ 生产环境必须显式枚举允许的域名
 config.setAllowedOriginPatterns(List.of(
-    "https://*.eagle.com",
+                                        "https://*.eagle.com",
     "https://eagle-admin.example.com"
 ));
-config.setAllowCredentials(true);
+        config.
+
+setAllowCredentials(true);
 
 // ❌ 生产禁止：通配符 + credentials 同时开启
-config.setAllowedOrigins(List.of("*"));      // 与 allowCredentials 冲突
+config.
+
+setAllowedOrigins(List.of("*"));      // 与 allowCredentials 冲突
 ```
 
 - 前后端分离 + JWT 模式下，CSRF 默认关闭（无浏览器 Cookie 状态）
@@ -112,7 +117,8 @@ Content-Security-Policy: default-src 'self'
 - 删除聚合根
 - 跨租户管理操作
 
-审计字段：`operatorId / operatorName / tenantId / action / resourceType / resourceId / ip / userAgent / occurredAt / result`
+审计字段：
+`operatorId / operatorName / tenantId / action / resourceType / resourceId / ip / userAgent / occurredAt / result`
 
 ## 速率限制
 

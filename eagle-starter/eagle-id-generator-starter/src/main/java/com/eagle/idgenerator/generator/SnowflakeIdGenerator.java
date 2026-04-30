@@ -28,7 +28,9 @@ import java.util.Date;
 @Slf4j
 public class SnowflakeIdGenerator implements IdGenerator {
 
-    /** 默认起始时间戳：2024-01-01T00:00:00Z 的毫秒值 */
+    /**
+     * 默认起始时间戳：2024-01-01T00:00:00Z 的毫秒值
+     */
     private static final long DEFAULT_EPOCH = 1704067200000L;
 
     private final Snowflake snowflake;

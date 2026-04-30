@@ -1,5 +1,6 @@
 package com.eagle.oss.service;
 
+import com.eagle.common.exception.codes.FileErrorCode;
 import com.eagle.oss.properties.StorageProperties;
 import io.minio.GetObjectArgs;
 import io.minio.GetPresignedObjectUrlArgs;
@@ -7,7 +8,6 @@ import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
 import io.minio.http.Method;
-import com.eagle.common.exception.codes.FileErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

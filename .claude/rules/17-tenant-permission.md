@@ -1,16 +1,18 @@
 # 多租户与数据权限规范
 
 技术栈：
-- `eagle-tenant-starter` — 多租户：`TenantContextHolder` + `TenantIdFilter`（HTTP 过滤器）+ `@TenantFilter`（Service/Repository 切面）+ `TenantDatabaseRoutingAspect`（DATABASE 模式数据源路由）
+
+- `eagle-tenant-starter` — 多租户：`TenantContextHolder` + `TenantIdFilter`（HTTP 过滤器）+ `@TenantFilter`
+  （Service/Repository 切面）+ `TenantDatabaseRoutingAspect`（DATABASE 模式数据源路由）
 - `eagle-row-security-starter` — 行级数据权限：基于 `DataPermissionAspect` + JPA `Specification` 注入
 - `eagle-dynamic-datasource-starter` — 主从 / 多数据源动态路由（与 tenant-starter DATABASE 模式正交）
 
 ## 多租户隔离策略
 
-| 策略 | 配置 | 实现机制 |
-|------|------|---------|
-| **行级隔离**（默认推荐）| `eagle.tenant.mode=COLUMN` | 每张表 `tenant_id` 字段 + Hibernate `@FilterDef` / `@Filter` + `@TenantFilter` 切面激活 |
-| **DB 隔离** | `eagle.tenant.mode=DATABASE` | `TenantDatabaseRoutingAspect` 路由不同 DataSource |
+| 策略             | 配置                           | 实现机制                                                                           |
+|----------------|------------------------------|--------------------------------------------------------------------------------|
+| **行级隔离**（默认推荐） | `eagle.tenant.mode=COLUMN`   | 每张表 `tenant_id` 字段 + Hibernate `@FilterDef` / `@Filter` + `@TenantFilter` 切面激活 |
+| **DB 隔离**      | `eagle.tenant.mode=DATABASE` | `TenantDatabaseRoutingAspect` 路由不同 DataSource                                  |
 
 **禁止**应用层手动拼接 `WHERE tenant_id = ?`——必须通过 starter 自动注入。
 
@@ -32,26 +34,36 @@
 ## 实体定义（COLUMN 模式）
 
 实体必须：
+
 1. 实现 `TenantAware` 接口
 2. 自带 Hibernate `@FilterDef` + `@Filter` 注解（**starter 不会替你加**）
 3. `@PrePersist` 自动填充 `tenantId`
 
 ```java
+
 @Entity
-@Getter @Setter
+@Getter
+@Setter
 @Table(name = "t_order", indexes = {
-    @Index(name = "idx_tenant_status", columnList = "tenant_id, status")
+        @Index(name = "idx_tenant_status", columnList = "tenant_id, status")
 })
 @FilterDef(name = "tenantFilter",
-           parameters = @ParamDef(name = "tenantId", type = String.class))
+        parameters = @ParamDef(name = "tenantId", type = String.class))
 @Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 public class Order extends BaseAggregateRoot<Order> implements TenantAware {
 
     @Column(name = "tenant_id", nullable = false, updatable = false)
     private String tenantId;
 
-    @Override public String getTenantId() { return tenantId; }
-    @Override public void setTenantId(String t) { this.tenantId = t; }
+    @Override
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    @Override
+    public void setTenantId(String t) {
+        this.tenantId = t;
+    }
 
     @PrePersist
     void fillTenant() {
@@ -113,10 +125,14 @@ public List<Order> findAllAcrossTenants() {
 ```java
 // ✅ 切换到目标租户执行操作
 TenantContextHolder.setTenantId("tenant_001");
-try {
-    return orderRepository.findAll();
-} finally {
-    TenantContextHolder.clear();
+try{
+        return orderRepository.
+
+findAll();
+}finally{
+        TenantContextHolder.
+
+clear();
 }
 ```
 
@@ -125,7 +141,8 @@ try {
 
 ## 数据源路由（DATABASE 模式）
 
-`eagle.tenant.mode=DATABASE` 时，`TenantDatabaseRoutingAspect` 自动根据 `TenantContextHolder.getTenantId()` 选择 DataSource——业务代码无需任何注解，与 COLUMN 模式相同的 Service 调用方式。
+`eagle.tenant.mode=DATABASE` 时，`TenantDatabaseRoutingAspect` 自动根据 `TenantContextHolder.getTenantId()` 选择
+DataSource——业务代码无需任何注解，与 COLUMN 模式相同的 Service 调用方式。
 
 具体多个数据源的注册由项目侧基础设施完成（参见 `eagle-dynamic-datasource-starter` 或自定义 `DataSource` Bean）。
 
@@ -145,6 +162,7 @@ try {
 ### 注解使用
 
 ```java
+
 @Service
 public class OrderQueryService {
 
@@ -173,17 +191,18 @@ public class OrderQueryService {
 
 ### DataScope 范围枚举（5 种）
 
-| 类型 | 行为 | 边界处理 |
-|------|------|---------|
-| `ALL` | 无过滤（全部数据） | — |
-| `SELF` | `userField = currentUserId` | userId null → 无过滤（log warn） |
-| `DEPT` | `deptField = currentDeptId` | deptId null → 退化 SELF |
-| `DEPT_AND_CHILD` | `deptField IN (childDeptIds)` | 无子部门 → 退化 DEPT |
-| `CUSTOM` | `deptField IN (customDeptIds)` | 空集合 → 退化 SELF |
+| 类型               | 行为                             | 边界处理                        |
+|------------------|--------------------------------|-----------------------------|
+| `ALL`            | 无过滤（全部数据）                      | —                           |
+| `SELF`           | `userField = currentUserId`    | userId null → 无过滤（log warn） |
+| `DEPT`           | `deptField = currentDeptId`    | deptId null → 退化 SELF       |
+| `DEPT_AND_CHILD` | `deptField IN (childDeptIds)`  | 无子部门 → 退化 DEPT              |
+| `CUSTOM`         | `deptField IN (customDeptIds)` | 空集合 → 退化 SELF               |
 
 ### 业务方必须实现 DataPermissionProvider
 
 ```java
+
 @Component
 @RequiredArgsConstructor
 public class MyDataPermissionProvider implements DataPermissionProvider {
@@ -196,16 +215,30 @@ public class MyDataPermissionProvider implements DataPermissionProvider {
         return DataScope.SELF;
     }
 
-    @Override public Long getCurrentUserId() { return SecurityUtils.getCurrentUserId(); }
-    @Override public Long getCurrentUserDeptId() { return SecurityUtils.getCurrentDeptId(); }
-    @Override public Set<Long> getCurrentUserCustomDeptIds() { return Set.of(); }
-    @Override public Set<Long> getChildDeptIds(Long deptId) {
+    @Override
+    public Long getCurrentUserId() {
+        return SecurityUtils.getCurrentUserId();
+    }
+
+    @Override
+    public Long getCurrentUserDeptId() {
+        return SecurityUtils.getCurrentDeptId();
+    }
+
+    @Override
+    public Set<Long> getCurrentUserCustomDeptIds() {
+        return Set.of();
+    }
+
+    @Override
+    public Set<Long> getChildDeptIds(Long deptId) {
         return deptRepository.findAllChildIds(deptId);
     }
 }
 ```
 
 **禁止**：
+
 - 在 Service 内部手动 `if (currentUser.role == ADMIN) ... else ...` 判断数据范围
 - SQL 拼接数据权限条件（必须走切面注入）
 - 方法签名缺少 `Specification` 参数（切面无法拦截）
@@ -215,15 +248,17 @@ public class MyDataPermissionProvider implements DataPermissionProvider {
 两者**叠加**生效（先租户过滤，再数据范围过滤）：
 
 ```sql
-SELECT * FROM t_order
-WHERE tenant_id = ?              -- Hibernate Filter 注入（@TenantFilter）
-  AND dept_id IN (?, ?, ?)        -- DataPermissionAspect 注入（@DataPermission）
-  AND deleted = false             -- 软删除条件
+SELECT *
+FROM t_order
+WHERE tenant_id = ?        -- Hibernate Filter 注入（@TenantFilter）
+  AND dept_id IN (?, ?, ?) -- DataPermissionAspect 注入（@DataPermission）
+  AND deleted = false -- 软删除条件
 ```
 
 ## 单元测试
 
 ```java
+
 @BeforeEach
 void setUp() {
     TenantContextHolder.setTenantId("test_tenant");
@@ -247,8 +282,11 @@ public TaskDecorator tenantAwareDecorator() {
         String tenantId = TenantContextHolder.getTenantId();
         return () -> {
             TenantContextHolder.setTenantId(tenantId);
-            try { runnable.run(); }
-            finally { TenantContextHolder.clear(); }
+            try {
+                runnable.run();
+            } finally {
+                TenantContextHolder.clear();
+            }
         };
     };
 }

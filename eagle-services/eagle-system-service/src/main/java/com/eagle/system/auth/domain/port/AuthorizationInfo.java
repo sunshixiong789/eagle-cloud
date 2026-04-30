@@ -24,7 +24,9 @@ public record AuthorizationInfo(
         Set<String> roleCodes
 ) {
 
-    /** 空授权信息（新注册用户尚未分配角色和部门时使用） */
+    /**
+     * 空授权信息（新注册用户尚未分配角色和部门时使用）
+     */
     public static AuthorizationInfo empty() {
         return new AuthorizationInfo(null, null, null, Set.of());
     }

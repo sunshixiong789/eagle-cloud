@@ -28,11 +28,10 @@ import java.util.Set;
 @ConditionalOnProperty(name = "eagle.gateway.openapi.discovery-enabled", havingValue = "true", matchIfMissing = true)
 public class GatewayOpenApiConfig implements ApplicationListener<ApplicationReadyEvent> {
 
-    private final NacosDiscoveryClient discoveryClient;
-    private final SwaggerUiConfigProperties swaggerUiConfigProperties;
-
     private static final String GATEWAY_NAME = "eagle-gateway-server";
     private static final String API_DOCS_PATH = "/v3/api-docs";
+    private final NacosDiscoveryClient discoveryClient;
+    private final SwaggerUiConfigProperties swaggerUiConfigProperties;
 
     /**
      * 应用完全就绪后从 Nacos 发现服务，注册到 Swagger UI 聚合 URLs。
@@ -72,7 +71,9 @@ public class GatewayOpenApiConfig implements ApplicationListener<ApplicationRead
         }
     }
 
-    /** 将服务 ID 转为可读展示名，如 "eagle-system-server" → "System Server"。 */
+    /**
+     * 将服务 ID 转为可读展示名，如 "eagle-system-server" → "System Server"。
+     */
     private String formatServiceName(String serviceId) {
         String stripped = serviceId.replace("eagle-", "").replace("-server", "");
         String[] parts = stripped.split("-");

@@ -34,7 +34,7 @@ public class DataPermissionAutoConfiguration {
     @ConditionalOnMissingBean
     @ConditionalOnBean(DataPermissionProvider.class)
     public DataPermissionAspect dataPermissionAspect(DataPermissionProvider provider,
-            DataPermissionProperties properties) {
+                                                     DataPermissionProperties properties) {
         log.info("Data permission aspect initialized, defaultDeptField: {}, defaultUserField: {}",
                 properties.getDefaultDeptField(), properties.getDefaultUserField());
         return new DataPermissionAspect(provider, properties);

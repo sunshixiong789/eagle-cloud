@@ -20,21 +20,21 @@ public class UserCreatedEvent {
     /**
      * 用户ID
      */
-    private  Long userId;
+    private Long userId;
 
     /**
      * 用户名
      */
-    private  String username;
+    private String username;
 
     /**
      * 手机号
      */
-    private  String phone;
+    private String phone;
 
     /**
      * 邮箱
      */
-    private  String email;
+    private String email;
 
 }

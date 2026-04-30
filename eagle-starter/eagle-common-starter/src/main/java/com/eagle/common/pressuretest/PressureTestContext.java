@@ -26,7 +26,9 @@ package com.eagle.common.pressuretest;
  */
 public final class PressureTestContext {
 
-    /** 压测流量请求头名称 */
+    /**
+     * 压测流量请求头名称
+     */
     public static final String PRESSURE_TEST_HEADER = "X-Eagle-Gray";
 
     private static final ThreadLocal<Boolean> PRESSURE_TEST_FLAG = ThreadLocal.withInitial(() -> false);

@@ -15,13 +15,19 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class LoginAttemptService {
 
-    /** 同一 IP 在封锁窗口内允许的最大失败次数 */
+    /**
+     * 同一 IP 在封锁窗口内允许的最大失败次数
+     */
     private static final int MAX_ATTEMPTS = 5;
 
-    /** 封锁持续时长（毫秒），默认 30 分钟 */
+    /**
+     * 封锁持续时长（毫秒），默认 30 分钟
+     */
     private static final long BLOCK_DURATION_MS = 30L * 60 * 1000;
 
-    /** key: IP 地址，value: [失败次数, 过期时间戳] */
+    /**
+     * key: IP 地址，value: [失败次数, 过期时间戳]
+     */
     private final ConcurrentHashMap<String, long[]> cache = new ConcurrentHashMap<>();
 
     /**

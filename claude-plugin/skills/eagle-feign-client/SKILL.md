@@ -32,18 +32,20 @@ eagle.feign:
 主应用加 `@EnableFeignClients`：
 
 ```java
+
 @EnableFeignClients(basePackages = "com.eagle")
 @SpringBootApplication
-public class MyApplication { }
+public class MyApplication {
+}
 ```
 
 ## 核心拦截器（自动注册）
 
-| 拦截器 | 透传内容 | 触发条件 |
-|--------|---------|---------|
-| `FeignAuthInterceptor` | `Authorization` JWT、`Accept-Language`、`X-Eagle-Gray`（压测） | 始终启用，HTTP 上下文存在时 |
-| `FeignTenantInterceptor` | `X-Tenant-Id`（来自 `TenantContextHolder`） | `eagle-tenant-starter` 在类路径时 |
-| `SeataXidRequestInterceptor` | `TX_XID`（来自 `RootContext.getXID()`） | `seata-spring-boot-starter` 在类路径时 |
+| 拦截器                          | 透传内容                                                     | 触发条件                              |
+|------------------------------|----------------------------------------------------------|-----------------------------------|
+| `FeignAuthInterceptor`       | `Authorization` JWT、`Accept-Language`、`X-Eagle-Gray`（压测） | 始终启用，HTTP 上下文存在时                  |
+| `FeignTenantInterceptor`     | `X-Tenant-Id`（来自 `TenantContextHolder`）                  | `eagle-tenant-starter` 在类路径时      |
+| `SeataXidRequestInterceptor` | `TX_XID`（来自 `RootContext.getXID()`）                      | `seata-spring-boot-starter` 在类路径时 |
 
 B3 链路追踪头由 Spring Cloud OpenFeign + Micrometer Tracing **自动**注入，无需手动处理。
 
@@ -51,12 +53,12 @@ B3 链路追踪头由 Spring Cloud OpenFeign + Micrometer Tracing **自动**注�
 
 下游返回 `ErrorResult` JSON 时，自动提取 `message` 字段透传：
 
-| 下游 HTTP | 抛出 | 错误码 |
-|-----------|------|--------|
-| 404 | `NotFoundException` | `ExternalErrorCode.EXTERNAL_SERVICE_DETAIL` |
-| 409 | `ConflictException` | 同上 |
-| 400 | `DomainException` | 同上 |
-| 403 / 429 / 5xx / 其他 | `ServiceException` | 同上 |
+| 下游 HTTP              | 抛出                  | 错误码                                         |
+|----------------------|---------------------|---------------------------------------------|
+| 404                  | `NotFoundException` | `ExternalErrorCode.EXTERNAL_SERVICE_DETAIL` |
+| 409                  | `ConflictException` | 同上                                          |
+| 400                  | `DomainException`   | 同上                                          |
+| 403 / 429 / 5xx / 其他 | `ServiceException`  | 同上                                          |
 
 调用方**无需 try-catch**，全局异常处理器统一返回。
 
@@ -95,11 +97,11 @@ public class OrderApplicationService {
 
 ## 配置项
 
-| key | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `eagle.feign.log-level` | enum | `BASIC` | NONE / BASIC / HEADERS / FULL |
-| `eagle.feign.connect-timeout` | int | `2000` | 连接超时（**ms**，整数） |
-| `eagle.feign.read-timeout` | int | `5000` | 读超时（**ms**，整数） |
+| key                           | 类型   | 默认      | 说明                            |
+|-------------------------------|------|---------|-------------------------------|
+| `eagle.feign.log-level`       | enum | `BASIC` | NONE / BASIC / HEADERS / FULL |
+| `eagle.feign.connect-timeout` | int  | `2000`  | 连接超时（**ms**，整数）               |
+| `eagle.feign.read-timeout`    | int  | `5000`  | 读超时（**ms**，整数）                |
 
 ⚠️ **starter 仅 3 个配置项**，没有 `enabled` / `retry` / `tenant.enabled` 等。
 

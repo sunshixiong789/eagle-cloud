@@ -9,19 +9,19 @@
 - [自动配置说明](#自动配置说明)
 - [配置参考](#配置参考)
 - [使用规范](#使用规范)
-  - [Key 命名规范](#key-命名规范)
-  - [序列化规范](#序列化规范)
-  - [缓存使用规范](#缓存使用规范)
-  - [异常处理规范](#异常处理规范)
+    - [Key 命名规范](#key-命名规范)
+    - [序列化规范](#序列化规范)
+    - [缓存使用规范](#缓存使用规范)
+    - [异常处理规范](#异常处理规范)
 - [功能使用说明](#功能使用说明)
-  - [Spring Cache 注解缓存](#spring-cache-注解缓存)
-  - [分布式锁 RedisLockUtil](#分布式锁-redislockutil)
-  - [限流 RedisRateLimiter](#限流-redisratelimiter)
-  - [Redisson 限流 RedissonRateLimiterUtil](#redisson-限流-redissonratelimiterutil)
-  - [原子计数 RedissonAtomicUtil](#原子计数-redissonatomicutil)
-  - [布隆过滤器 RedissonBloomFilterUtil](#布隆过滤器-redissonbloomfilterutil)
-  - [延迟队列 RedissonDelayedQueueUtil](#延迟队列-redissondelayedqueueutil)
-  - [发布订阅 RedissonTopicUtil](#发布订阅-redissontopiutil)
+    - [Spring Cache 注解缓存](#spring-cache-注解缓存)
+    - [分布式锁 RedisLockUtil](#分布式锁-redislockutil)
+    - [限流 RedisRateLimiter](#限流-redisratelimiter)
+    - [Redisson 限流 RedissonRateLimiterUtil](#redisson-限流-redissonratelimiterutil)
+    - [原子计数 RedissonAtomicUtil](#原子计数-redissonatomicutil)
+    - [布隆过滤器 RedissonBloomFilterUtil](#布隆过滤器-redissonbloomfilterutil)
+    - [延迟队列 RedissonDelayedQueueUtil](#延迟队列-redissondelayedqueueutil)
+    - [发布订阅 RedissonTopicUtil](#发布订阅-redissontopiutil)
 - [工具选型指南](#工具选型指南)
 - [常见问题](#常见问题)
 
@@ -31,17 +31,17 @@
 
 ### 提供的能力
 
-| 分类 | 组件 | 说明 |
-|------|------|------|
-| 缓存 | `RedisCacheManager`（自动配置）| Spring Cache 注解驱动，支持 JSON 序列化、按域配置 TTL |
-| 缓存 | `RedisTemplate<String, Object>` | 低层级操作，key 为 String，value 为 JSON |
-| 分布式锁 | `RedisLockUtil` | 基于 Redisson `RLock`，支持自动释放 |
-| 限流（轻量）| `RedisRateLimiter` | Lua 脚本实现令牌桶 + 滑动窗口 |
-| 限流（持久）| `RedissonRateLimiterUtil` | Redisson `RRateLimiter`，支持全局/单节点模式 |
-| 原子计数 | `RedissonAtomicUtil` | 基于 `RAtomicLong`，CAS 无锁操作 |
-| 布隆过滤器 | `RedissonBloomFilterUtil` | 防缓存穿透，基于 `RBloomFilter` |
-| 延迟队列 | `RedissonDelayedQueueUtil` | 延迟任务，重启不丢，基于 `RDelayedQueue` |
-| 发布订阅 | `RedissonTopicUtil` | 分布式广播，基于 `RTopic` |
+| 分类     | 组件                              | 说明                                     |
+|--------|---------------------------------|----------------------------------------|
+| 缓存     | `RedisCacheManager`（自动配置）       | Spring Cache 注解驱动，支持 JSON 序列化、按域配置 TTL |
+| 缓存     | `RedisTemplate<String, Object>` | 低层级操作，key 为 String，value 为 JSON        |
+| 分布式锁   | `RedisLockUtil`                 | 基于 Redisson `RLock`，支持自动释放             |
+| 限流（轻量） | `RedisRateLimiter`              | Lua 脚本实现令牌桶 + 滑动窗口                     |
+| 限流（持久） | `RedissonRateLimiterUtil`       | Redisson `RRateLimiter`，支持全局/单节点模式     |
+| 原子计数   | `RedissonAtomicUtil`            | 基于 `RAtomicLong`，CAS 无锁操作              |
+| 布隆过滤器  | `RedissonBloomFilterUtil`       | 防缓存穿透，基于 `RBloomFilter`                |
+| 延迟队列   | `RedissonDelayedQueueUtil`      | 延迟任务，重启不丢，基于 `RDelayedQueue`           |
+| 发布订阅   | `RedissonTopicUtil`             | 分布式广播，基于 `RTopic`                      |
 
 ### 依赖关系
 
@@ -73,12 +73,13 @@ dependencies {
 
 模块通过 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 注册以下两个自动配置类：
 
-| 配置类 | 条件 | 注册的 Bean |
-|--------|------|------------|
-| `RedisCacheConfig` | `RedisConnectionFactory` 存在 | `redisObjectMapper`、`redisJsonSerializer`、`RedisTemplate`、`CacheManager` |
-| `RedisAutoConfiguration` | `RedisOperations` 存在（在 `RedisCacheConfig` 之后加载）| 无额外 Bean（入口类） |
+| 配置类                      | 条件                                              | 注册的 Bean                                                                 |
+|--------------------------|-------------------------------------------------|--------------------------------------------------------------------------|
+| `RedisCacheConfig`       | `RedisConnectionFactory` 存在                     | `redisObjectMapper`、`redisJsonSerializer`、`RedisTemplate`、`CacheManager` |
+| `RedisAutoConfiguration` | `RedisOperations` 存在（在 `RedisCacheConfig` 之后加载） | 无额外 Bean（入口类）                                                            |
 
-所有工具类（`RedisLockUtil`、`RedisRateLimiter` 等）均通过 `@Component` 注册为 Bean，引入模块后可直接 `@RequiredArgsConstructor` 注入使用。
+所有工具类（`RedisLockUtil`、`RedisRateLimiter` 等）均通过 `@Component` 注册为 Bean，引入模块后可直接
+`@RequiredArgsConstructor` 注入使用。
 
 **Bean 覆盖：** 若项目有特殊需求，可声明同名 Bean 覆盖默认实现：
 
@@ -129,17 +130,18 @@ eagle:
 
 ### 配置项说明
 
-| 配置项 | 类型 | 默认值 | 说明 |
-|--------|------|--------|------|
-| `eagle.redis.default-ttl` | `Duration` | `30m` | 所有未单独配置的缓存的过期时间 |
-| `eagle.redis.cache-null-values` | `boolean` | `true` | 为 `true` 时，查询结果为 null 也会缓存（防缓存穿透）；为 `false` 时，null 结果不缓存 |
-| `eagle.redis.key-prefix` | `String` | `""` | 全局 key 前缀，设置后 key 格式变为 `{prefix}{cacheName}::{key}` |
-| `eagle.redis.transaction-aware` | `boolean` | `true` | 开启后，`@CacheEvict` 等写操作在当前事务提交后才执行，防止事务回滚导致的缓存/DB 不一致 |
-| `eagle.redis.cache-ttls` | `Map<String, Duration>` | `{}` | 按缓存域名称配置独立 TTL，key 为 `@Cacheable(value = "...")` 中的值 |
+| 配置项                             | 类型                      | 默认值    | 说明                                                       |
+|---------------------------------|-------------------------|--------|----------------------------------------------------------|
+| `eagle.redis.default-ttl`       | `Duration`              | `30m`  | 所有未单独配置的缓存的过期时间                                          |
+| `eagle.redis.cache-null-values` | `boolean`               | `true` | 为 `true` 时，查询结果为 null 也会缓存（防缓存穿透）；为 `false` 时，null 结果不缓存 |
+| `eagle.redis.key-prefix`        | `String`                | `""`   | 全局 key 前缀，设置后 key 格式变为 `{prefix}{cacheName}::{key}`      |
+| `eagle.redis.transaction-aware` | `boolean`               | `true` | 开启后，`@CacheEvict` 等写操作在当前事务提交后才执行，防止事务回滚导致的缓存/DB 不一致     |
+| `eagle.redis.cache-ttls`        | `Map<String, Duration>` | `{}`   | 按缓存域名称配置独立 TTL，key 为 `@Cacheable(value = "...")` 中的值     |
 
 ### Redisson 连接配置
 
-Redisson 连接由 `redisson-spring-boot-starter` 自动读取 `spring.data.redis.*` 配置，无需额外配置 `redisson.yml`。如需集群模式或哨兵模式，按 Redisson 文档配置即可。
+Redisson 连接由 `redisson-spring-boot-starter` 自动读取 `spring.data.redis.*` 配置，无需额外配置 `redisson.yml`
+。如需集群模式或哨兵模式，按 Redisson 文档配置即可。
 
 ---
 
@@ -153,16 +155,17 @@ Redisson 连接由 `redisson-spring-boot-starter` 自动读取 `spring.data.redi
 {业务域}:{资源类型}:{标识}
 ```
 
-| 示例 | 说明 |
-|------|------|
-| `stock:sku:1001` | 商品 SKU 1001 的库存 |
-| `lock:order:create:userId` | 用户下单的分布式锁 |
-| `rate_limit:api:createOrder` | 下单接口限流 key |
-| `user:exist` | 用户布隆过滤器 |
-| `order:timeout` | 订单超时延迟队列 |
-| `cache:evict:user` | 用户缓存失效 Topic |
+| 示例                           | 说明              |
+|------------------------------|-----------------|
+| `stock:sku:1001`             | 商品 SKU 1001 的库存 |
+| `lock:order:create:userId`   | 用户下单的分布式锁       |
+| `rate_limit:api:createOrder` | 下单接口限流 key      |
+| `user:exist`                 | 用户布隆过滤器         |
+| `order:timeout`              | 订单超时延迟队列        |
+| `cache:evict:user`           | 用户缓存失效 Topic    |
 
 **禁止：**
+
 - 禁止使用无意义的短 key（如 `u1`、`tmp`）
 - 禁止不同业务复用相同 key 名
 - 多服务共用 Redis 时，必须在 `eagle.redis.key-prefix` 中配置服务前缀
@@ -171,16 +174,18 @@ Redisson 连接由 `redisson-spring-boot-starter` 自动读取 `spring.data.redi
 
 模块自动配置以下序列化策略，**禁止手动修改**：
 
-| 对象 | Key 序列化 | Value 序列化 |
-|------|-----------|-------------|
-| `RedisTemplate` | `StringRedisSerializer` | JSON（含 `@class` 类型信息）|
-| `CacheManager` | `StringRedisSerializer` | JSON（含 `@class` 类型信息）|
+| 对象              | Key 序列化                 | Value 序列化             |
+|-----------------|-------------------------|-----------------------|
+| `RedisTemplate` | `StringRedisSerializer` | JSON（含 `@class` 类型信息） |
+| `CacheManager`  | `StringRedisSerializer` | JSON（含 `@class` 类型信息） |
 
 Value 使用带类型信息的 JSON（`DefaultTyping.NON_FINAL`），反序列化时可还原为原始类型，不会变成 `LinkedHashMap`。
 
-**注意：** Redis 专用 `ObjectMapper`（Bean 名 `redisObjectMapper`）与 Spring MVC 全局 `ObjectMapper` 完全隔离，修改 MVC 的 Jackson 配置不会影响 Redis 序列化行为。
+**注意：** Redis 专用 `ObjectMapper`（Bean 名 `redisObjectMapper`）与 Spring MVC 全局 `ObjectMapper` 完全隔离，修改 MVC 的
+Jackson 配置不会影响 Redis 序列化行为。
 
 **缓存对象要求：** 存入 Redis 的对象必须是可序列化的 POJO，避免存入以下类型：
+
 - JPA 懒加载代理对象（`Hibernate$ByteBuddy$xxx`）— 序列化会触发额外 SQL 或失败
 - `Page<T>` 等包含不可序列化字段的 Spring 内置类型
 - 含有循环引用的对象图
@@ -342,10 +347,10 @@ public class UserApplicationService {
 
 #### 默认参数
 
-| 参数 | 默认值 | 说明 |
-|------|--------|------|
-| `waitTime` | 3 秒 | 等待获取锁的最长时间，超时抛出 `ServiceException` |
-| `leaseTime` | 30 秒 | 持锁最长时间，超时后自动释放（防死锁） |
+| 参数          | 默认值  | 说明                                 |
+|-------------|------|------------------------------------|
+| `waitTime`  | 3 秒  | 等待获取锁的最长时间，超时抛出 `ServiceException` |
+| `leaseTime` | 30 秒 | 持锁最长时间，超时后自动释放（防死锁）                |
 
 #### 使用示例
 
@@ -386,10 +391,10 @@ public class OrderApplicationService {
 
 #### 两种算法对比
 
-| 算法 | 方法 | 特点 | 适合场景 |
-|------|------|------|----------|
-| 令牌桶 | `tryAcquire` | 允许一定突发，稳定补充令牌 | 接口 QPS 限制 |
-| 滑动窗口 | `tryAcquireWindow` | 精确控制时间窗口内总次数 | 频率限制（如短信验证码） |
+| 算法   | 方法                 | 特点            | 适合场景         |
+|------|--------------------|---------------|--------------|
+| 令牌桶  | `tryAcquire`       | 允许一定突发，稳定补充令牌 | 接口 QPS 限制    |
+| 滑动窗口 | `tryAcquireWindow` | 精确控制时间窗口内总次数  | 频率限制（如短信验证码） |
 
 #### 令牌桶示例
 
@@ -427,12 +432,12 @@ if (!rateLimiter.tryAcquireWindow("query:" + userId, 10, Duration.ofMinutes(1)))
 
 #### 与 RedisRateLimiter 的区别
 
-| | `RedisRateLimiter` | `RedissonRateLimiterUtil` |
-|--|---|---|
-| 实现 | Lua 脚本 | Redisson `RRateLimiter` |
-| 状态 | 无持久状态（轻量）| Redis 持久状态 |
-| 模式 | 无 | 支持 `OVERALL`（全局）/ `PER_CLIENT`（单节点）|
-| 适合场景 | 接口限流（短期）| 下游调用速率控制（长期）|
+|      | `RedisRateLimiter` | `RedissonRateLimiterUtil`           |
+|------|--------------------|-------------------------------------|
+| 实现   | Lua 脚本             | Redisson `RRateLimiter`             |
+| 状态   | 无持久状态（轻量）          | Redis 持久状态                          |
+| 模式   | 无                  | 支持 `OVERALL`（全局）/ `PER_CLIENT`（单节点） |
+| 适合场景 | 接口限流（短期）           | 下游调用速率控制（长期）                        |
 
 #### 使用示例
 
@@ -472,12 +477,12 @@ public class WechatNotifyService {
 
 #### 适用场景
 
-| 场景 | 方法 |
-|------|------|
-| 库存扣减（防超卖）| `decrementIfSufficient` |
-| 积分 / 余额消费 | `decrementIfSufficient` |
-| 计数器（浏览量、点赞）| `increment` / `addAndGet` |
-| CAS 版本控制 | `compareAndSet` |
+| 场景          | 方法                        |
+|-------------|---------------------------|
+| 库存扣减（防超卖）   | `decrementIfSufficient`   |
+| 积分 / 余额消费   | `decrementIfSufficient`   |
+| 计数器（浏览量、点赞） | `increment` / `addAndGet` |
+| CAS 版本控制    | `compareAndSet`           |
 
 #### 完整示例：库存管理
 
@@ -701,12 +706,12 @@ public void pollTimeoutOrders() {
 
 #### 与 RocketMQ 的区别
 
-| | `RedissonTopicUtil` | `eagle-rocketmq-starter` |
-|--|---|---|
-| 消息持久化 | 否（断连丢失）| 是 |
-| 消费确认 | 否 | 是 |
-| 广播方式 | 全节点广播（含发送方）| 可选广播 / 集群消费 |
-| 适合场景 | 缓存刷新、配置推送 | 业务事件、订单、通知 |
+|       | `RedissonTopicUtil` | `eagle-rocketmq-starter` |
+|-------|---------------------|--------------------------|
+| 消息持久化 | 否（断连丢失）             | 是                        |
+| 消费确认  | 否                   | 是                        |
+| 广播方式  | 全节点广播（含发送方）         | 可选广播 / 集群消费              |
+| 适合场景  | 缓存刷新、配置推送           | 业务事件、订单、通知               |
 
 #### 完整示例：多节点 Caffeine 本地缓存同步
 
@@ -750,18 +755,18 @@ topicUtil.subscribe("cache:evict:user", Long.class, "userCacheEvict", listener);
 
 ## 工具选型指南
 
-| 需求 | 推荐工具 | 备注 |
-|------|----------|------|
-| 防重复提交、串行执行 | `RedisLockUtil` | 悲观锁，适合低并发串行场景 |
-| 库存扣减（大库存）| `RedissonAtomicUtil.decrementIfSufficient` | CAS 无锁，高并发高效 |
-| 库存扣减（秒杀场景）| `RedisLockUtil` + `RedissonAtomicUtil` | 悲观锁减少无效自旋 |
-| 计数器（浏览量、点赞）| `RedissonAtomicUtil.increment` | 原子自增，无需加锁 |
-| 接口 QPS 限流（无状态）| `RedisRateLimiter` | 轻量，Lua 脚本 |
-| 对下游服务调用限速 | `RedissonRateLimiterUtil` | 支持全局 / 单节点模式 |
-| 防缓存穿透 | `RedissonBloomFilterUtil` | 需启动预热，不支持删除 |
-| 延迟任务（超时取消等）| `RedissonDelayedQueueUtil` | 持久化，重启不丢 |
-| 多节点缓存同步 | `RedissonTopicUtil` | 广播，允许少量丢失 |
-| 可靠消息（持久化）| `eagle-rocketmq-starter` | 需要确认 / 死信时使用 |
+| 需求             | 推荐工具                                       | 备注            |
+|----------------|--------------------------------------------|---------------|
+| 防重复提交、串行执行     | `RedisLockUtil`                            | 悲观锁，适合低并发串行场景 |
+| 库存扣减（大库存）      | `RedissonAtomicUtil.decrementIfSufficient` | CAS 无锁，高并发高效  |
+| 库存扣减（秒杀场景）     | `RedisLockUtil` + `RedissonAtomicUtil`     | 悲观锁减少无效自旋     |
+| 计数器（浏览量、点赞）    | `RedissonAtomicUtil.increment`             | 原子自增，无需加锁     |
+| 接口 QPS 限流（无状态） | `RedisRateLimiter`                         | 轻量，Lua 脚本     |
+| 对下游服务调用限速      | `RedissonRateLimiterUtil`                  | 支持全局 / 单节点模式  |
+| 防缓存穿透          | `RedissonBloomFilterUtil`                  | 需启动预热，不支持删除   |
+| 延迟任务（超时取消等）    | `RedissonDelayedQueueUtil`                 | 持久化，重启不丢      |
+| 多节点缓存同步        | `RedissonTopicUtil`                        | 广播，允许少量丢失     |
+| 可靠消息（持久化）      | `eagle-rocketmq-starter`                   | 需要确认 / 死信时使用  |
 
 ---
 
@@ -770,6 +775,7 @@ topicUtil.subscribe("cache:evict:user", Long.class, "userCacheEvict", listener);
 **Q: `@CacheEvict` 没有生效，缓存没有被清除？**
 
 A: 检查以下几点：
+
 1. 是否通过 Spring 代理调用（不能是同类内部调用）
 2. `transaction-aware: true` 时，缓存失效在事务提交后执行，确认事务是否正常提交
 3. key 表达式是否正确（`#userId` 对应方法参数名）
@@ -778,29 +784,34 @@ A: 检查以下几点：
 
 **Q: 缓存读取后返回 `LinkedHashMap` 而不是原始对象？**
 
-A: 自动配置的序列化器已开启类型信息（`@class`），正常情况不会出现此问题。若发生，检查是否有自定义 `RedisTemplate` 覆盖了默认配置，确认 value 序列化器是 `redisJsonSerializer`。
+A: 自动配置的序列化器已开启类型信息（`@class`），正常情况不会出现此问题。若发生，检查是否有自定义 `RedisTemplate` 覆盖了默认配置，确认
+value 序列化器是 `redisJsonSerializer`。
 
 ---
 
 **Q: 多服务共用一个 Redis，key 冲突怎么办？**
 
 A: 配置服务专属前缀：
+
 ```yaml
 eagle.redis.key-prefix: "sys:"  # eagle-system-server
 eagle.redis.key-prefix: "gw:"   # eagle-gateway-server
 ```
+
 最终 key 格式为 `{prefix}{cacheName}::{key}`，如 `sys:USER_CACHE::1001`。
 
 ---
 
 **Q: 延迟队列消费者服务重启后，已有的延迟任务还在吗？**
 
-A: 任务保存在 Redis 中，服务重启后只需重新启动消费者循环即可继续消费，任务不会丢失。推荐在 `ApplicationRunner.run()` 中启动消费者，确保服务启动后立即开始处理。
+A: 任务保存在 Redis 中，服务重启后只需重新启动消费者循环即可继续消费，任务不会丢失。推荐在 `ApplicationRunner.run()`
+中启动消费者，确保服务启动后立即开始处理。
 
 ---
 
 **Q: 布隆过滤器中的数据怎么删除？**
 
 A: 布隆过滤器**不支持单条删除**。若需要删除已有数据（如用户注销），可以：
+
 1. 接受误判：允许该 ID 通过过滤器，后续查询 DB 返回空即可
 2. 定期重建：在低峰期执行 `bloomFilter.delete(filterName)` + 重新 `init` + 全量预热

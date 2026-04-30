@@ -39,9 +39,9 @@ public class RedissonBloomFilterUtil {
      * bloomFilter.init("user:exist", 1_000_000, 0.001);
      * </pre>
      *
-     * @param filterName        过滤器名称
+     * @param filterName         过滤器名称
      * @param expectedInsertions 预期插入元素数量
-     * @param falseProbability  期望误判率（0 ~ 1，如 0.01 表示 1%）
+     * @param falseProbability   期望误判率（0 ~ 1，如 0.01 表示 1%）
      * @return {@code true} 初始化成功；{@code false} 已存在，跳过初始化
      */
     public <T> boolean init(String filterName, long expectedInsertions, double falseProbability) {

@@ -42,20 +42,21 @@ eagle.jpa:
 
 ## 核心 API
 
-| 类 | 用途 |
-|---|---|
-| `JpaConfig` | `@EnableJpaAuditing` + 自动配置 Hibernate 属性 |
+| 类                    | 用途                                                                    |
+|----------------------|-----------------------------------------------------------------------|
+| `JpaConfig`          | `@EnableJpaAuditing` + 自动配置 Hibernate 属性                              |
 | `AuditorAware<Long>` | Bean 自动注册：从 `SecurityContextHolder` 提取 `EagleUser.getId()`，未登录回退 `0L` |
 
 业务代码用 Spring Data JPA 标准 API：`JpaRepository<T, ID>`、`@Query`、`@EntityGraph`、`Specification`、`Pageable` 等。
 
 ## 工作机制
 
-1. `@EnableJpaAuditing` 自动启用——`BaseAggregateRoot / BaseEntity` 的 `@CreatedBy / @CreatedDate / @LastModifiedBy / @LastModifiedDate` 字段自动填充
+1. `@EnableJpaAuditing` 自动启用——`BaseAggregateRoot / BaseEntity` 的
+   `@CreatedBy / @CreatedDate / @LastModifiedBy / @LastModifiedDate` 字段自动填充
 2. `eagleHibernatePropertiesConfigurer` BeanPostProcessor 在 EntityManagerFactory 初始化前注入：
-   - `hibernate.jdbc.batch_size`
-   - `hibernate.order_inserts` / `hibernate.order_updates`
-   - `hibernate.session.events.log.LOG_QUERIES_SLOWER_THAN_MS`
+    - `hibernate.jdbc.batch_size`
+    - `hibernate.order_inserts` / `hibernate.order_updates`
+    - `hibernate.session.events.log.LOG_QUERIES_SLOWER_THAN_MS`
 3. **已通过 `spring.jpa.properties.*` 显式设置的属性优先级更高**
 
 ## 最小示例
@@ -86,27 +87,29 @@ public interface OrderRepository extends JpaRepository<Order, Long>,
     Optional<Order> findFullById(Long id);
 
     @Query("SELECT o.id AS id, o.orderNo AS orderNo, o.totalAmount AS totalAmount " +
-           "FROM Order o WHERE o.status = :status")
+            "FROM Order o WHERE o.status = :status")
     Page<OrderSummary> findSummaries(OrderStatus status, Pageable pageable);
 }
 
 // 投影（避免完整加载聚合根）
 public interface OrderSummary {
     Long getId();
+
     String getOrderNo();
+
     BigDecimal getTotalAmount();
 }
 ```
 
 ## 配置项
 
-| key | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `eagle.jpa.batch-size` | int | `100` | Hibernate JDBC 批量大小，0 禁用 |
-| `eagle.jpa.order-inserts` | boolean | `true` | 重排批量 INSERT |
-| `eagle.jpa.order-updates` | boolean | `true` | 重排批量 UPDATE |
-| `eagle.jpa.slow-query-threshold-millis` | long | `2000` | 慢 SQL 阈值，0 禁用 |
-| `eagle.jpa.show-sql` | boolean | `false` | 控制台输出 SQL（生产 false） |
+| key                                     | 类型      | 默认      | 说明                       |
+|-----------------------------------------|---------|---------|--------------------------|
+| `eagle.jpa.batch-size`                  | int     | `100`   | Hibernate JDBC 批量大小，0 禁用 |
+| `eagle.jpa.order-inserts`               | boolean | `true`  | 重排批量 INSERT              |
+| `eagle.jpa.order-updates`               | boolean | `true`  | 重排批量 UPDATE              |
+| `eagle.jpa.slow-query-threshold-millis` | long    | `2000`  | 慢 SQL 阈值，0 禁用            |
+| `eagle.jpa.show-sql`                    | boolean | `false` | 控制台输出 SQL（生产 false）      |
 
 JPA / Hibernate 标准配置走 `spring.jpa.*` 和 `spring.jpa.properties.hibernate.*`（优先级更高）。
 

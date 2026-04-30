@@ -9,15 +9,15 @@
 - [自动配置说明](#自动配置说明)
 - [配置参考](#配置参考)
 - [使用规范](#使用规范)
-  - [FeignClient 定义规范](#feigclient-定义规范)
-  - [禁止事项](#禁止事项)
+    - [FeignClient 定义规范](#feigclient-定义规范)
+    - [禁止事项](#禁止事项)
 - [功能使用说明](#功能使用说明)
-  - [Authorization 透传](#authorization-透传)
-  - [多租户 ID 透传](#多租户-id-透传)
-  - [错误解码器](#错误解码器)
-  - [超时配置](#超时配置)
-  - [Seata XID 透传](#seata-xid-透传)
-  - [日志级别配置](#日志级别配置)
+    - [Authorization 透传](#authorization-透传)
+    - [多租户 ID 透传](#多租户-id-透传)
+    - [错误解码器](#错误解码器)
+    - [超时配置](#超时配置)
+    - [Seata XID 透传](#seata-xid-透传)
+    - [日志级别配置](#日志级别配置)
 - [常见问题](#常见问题)
 
 ---
@@ -26,14 +26,14 @@
 
 ### 提供的能力
 
-| 组件 | 说明 |
-|------|------|
-| `FeignAuthInterceptor` | 全局拦截器，透传 `Authorization`（JWT）和 `Accept-Language`（i18n） |
-| `FeignErrorDecoder` | 将下游 HTTP 错误响应统一转换为 `AppException` 体系异常 |
-| `FeignTenantInterceptor` | 透传 `X-Tenant-Id`（可选，依赖 `eagle-tenant-starter`） |
-| `SeataXidRequestInterceptor` | 透传 Seata 分布式事务 XID（可选，依赖 `seata-spring-boot-starter`） |
-| `feign.Request.Options` | 全局连接 / 读取超时，可通过配置文件覆盖 |
-| `feign.Logger.Level` | 全局日志级别，可通过配置文件覆盖 |
+| 组件                           | 说明                                                     |
+|------------------------------|--------------------------------------------------------|
+| `FeignAuthInterceptor`       | 全局拦截器，透传 `Authorization`（JWT）和 `Accept-Language`（i18n） |
+| `FeignErrorDecoder`          | 将下游 HTTP 错误响应统一转换为 `AppException` 体系异常                 |
+| `FeignTenantInterceptor`     | 透传 `X-Tenant-Id`（可选，依赖 `eagle-tenant-starter`）         |
+| `SeataXidRequestInterceptor` | 透传 Seata 分布式事务 XID（可选，依赖 `seata-spring-boot-starter`）  |
+| `feign.Request.Options`      | 全局连接 / 读取超时，可通过配置文件覆盖                                  |
+| `feign.Logger.Level`         | 全局日志级别，可通过配置文件覆盖                                       |
 
 ### 依赖关系
 
@@ -65,27 +65,30 @@ dependencies {
 在服务启动类上声明 FeignClient 扫描路径：
 
 ```java
+
 @SpringBootApplication
 @EnableFeignClients(basePackages = "com.eagle.yourservice")
-public class YourServiceApplication { ... }
+public class YourServiceApplication { ...
+}
 ```
 
 ---
 
 ## 自动配置说明
 
-模块通过 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 注册 `EagleFeignAutoConfiguration`，在 `FeignAutoConfiguration` 之后加载。
+模块通过 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 注册
+`EagleFeignAutoConfiguration`，在 `FeignAutoConfiguration` 之后加载。
 
 ### 注册的 Bean
 
-| Bean | 类型 | 条件 | 说明 |
-|------|------|------|------|
-| `feignAuthInterceptor` | `FeignAuthInterceptor` | `@ConditionalOnMissingBean` | 透传 Authorization / Accept-Language |
-| `feignErrorDecoder` | `FeignErrorDecoder` | `@ConditionalOnMissingBean` | HTTP 错误 → AppException |
-| `feignLoggerLevel` | `Logger.Level` | `@ConditionalOnMissingBean(Logger.Level.class)` | 全局日志级别（默认 BASIC）|
-| `feignRequestOptions` | `Request.Options` | `@ConditionalOnMissingBean(Request.Options.class)` | 全局超时配置 |
-| `seataXidRequestInterceptor` | `SeataXidRequestInterceptor` | Seata 在类路径时 | Seata XID 透传 |
-| `feignTenantInterceptor` | `FeignTenantInterceptor` | eagle-tenant-starter 在类路径时 | 租户 ID 透传 |
+| Bean                         | 类型                           | 条件                                                 | 说明                                 |
+|------------------------------|------------------------------|----------------------------------------------------|------------------------------------|
+| `feignAuthInterceptor`       | `FeignAuthInterceptor`       | `@ConditionalOnMissingBean`                        | 透传 Authorization / Accept-Language |
+| `feignErrorDecoder`          | `FeignErrorDecoder`          | `@ConditionalOnMissingBean`                        | HTTP 错误 → AppException             |
+| `feignLoggerLevel`           | `Logger.Level`               | `@ConditionalOnMissingBean(Logger.Level.class)`    | 全局日志级别（默认 BASIC）                   |
+| `feignRequestOptions`        | `Request.Options`            | `@ConditionalOnMissingBean(Request.Options.class)` | 全局超时配置                             |
+| `seataXidRequestInterceptor` | `SeataXidRequestInterceptor` | Seata 在类路径时                                        | Seata XID 透传                       |
+| `feignTenantInterceptor`     | `FeignTenantInterceptor`     | eagle-tenant-starter 在类路径时                         | 租户 ID 透传                           |
 
 **Bean 覆盖：** 所有 Bean 均支持 `@ConditionalOnMissingBean`，消费方可声明同类型 Bean 覆盖默认实现：
 
@@ -113,20 +116,20 @@ eagle:
 
 ### 配置项说明
 
-| 配置项 | 类型 | 默认值 | 说明 |
-|--------|------|--------|------|
-| `eagle.feign.log-level` | `feign.Logger.Level` | `BASIC` | 全局 Feign 日志级别，影响所有未单独配置的 FeignClient |
-| `eagle.feign.connect-timeout` | `int` | `2000` | TCP 连接建立超时（毫秒）。超时后抛出 `RetryableException` |
-| `eagle.feign.read-timeout` | `int` | `5000` | 等待响应的读取超时（毫秒）。超时后抛出 `RetryableException` |
+| 配置项                           | 类型                   | 默认值     | 说明                                        |
+|-------------------------------|----------------------|---------|-------------------------------------------|
+| `eagle.feign.log-level`       | `feign.Logger.Level` | `BASIC` | 全局 Feign 日志级别，影响所有未单独配置的 FeignClient      |
+| `eagle.feign.connect-timeout` | `int`                | `2000`  | TCP 连接建立超时（毫秒）。超时后抛出 `RetryableException` |
+| `eagle.feign.read-timeout`    | `int`                | `5000`  | 等待响应的读取超时（毫秒）。超时后抛出 `RetryableException`  |
 
 ### 日志级别说明
 
-| 级别 | 内容 | 推荐环境 |
-|------|------|----------|
-| `NONE` | 无日志 | 生产（性能最优）|
-| `BASIC` | 请求方法、URL、响应状态码、耗时 | 生产（默认）|
-| `HEADERS` | BASIC + 请求/响应头 | 集成测试 |
-| `FULL` | 全量请求/响应体 | 本地调试 |
+| 级别        | 内容                | 推荐环境     |
+|-----------|-------------------|----------|
+| `NONE`    | 无日志               | 生产（性能最优） |
+| `BASIC`   | 请求方法、URL、响应状态码、耗时 | 生产（默认）   |
+| `HEADERS` | BASIC + 请求/响应头    | 集成测试     |
+| `FULL`    | 全量请求/响应体          | 本地调试     |
 
 开启 Feign 日志还需配置日志框架的输出级别（`BASIC` 及以上均使用 DEBUG 级别输出）：
 
@@ -170,6 +173,7 @@ public interface InventoryFeignClient {
 ```
 
 **规范要点：**
+
 - `name` 使用服务注册名（与 Nacos / Eureka 服务名一致）
 - `path` 抽取公共前缀，接口方法只写差异路径
 - 使用 `@PathVariable`、`@RequestParam`、`@RequestBody` 明确参数绑定方式
@@ -178,6 +182,7 @@ public interface InventoryFeignClient {
 **3. 注入使用**
 
 ```java
+
 @Service
 @RequiredArgsConstructor
 public class OrderApplicationService {
@@ -203,22 +208,29 @@ public class OrderApplicationService {
 ```java
 // ❌ 禁止在 FeignClient 中定义 fallback（失败应上抛，降级由调用方决定）
 @FeignClient(name = "eagle-inventory", fallback = InventoryFallback.class)
-public interface InventoryFeignClient { ... }
+public interface InventoryFeignClient { ...
+}
 
 // ❌ 禁止手动 try-catch Feign 异常（全局处理器统一处理）
-try {
-    inventoryFeignClient.getStock(productId);
-} catch (FeignException e) {
-    return null;
-}
+try{
+        inventoryFeignClient.
+
+getStock(productId);
+}catch(
+FeignException e){
+        return null;
+        }
 
 // ❌ 禁止在 FeignClient 上加 @Transactional（远程调用不应参与本地事务）
 @FeignClient(...)
 @Transactional
-public interface InventoryFeignClient { ... }
+public interface InventoryFeignClient { ...
+}
 
 // ❌ 禁止使用 RestTemplate / WebClient 替代 FeignClient
-restTemplate.getForObject("http://eagle-inventory/api/...", StockResponse.class);
+restTemplate.
+
+getForObject("http://eagle-inventory/api/...",StockResponse .class);
 ```
 
 ---
@@ -227,7 +239,8 @@ restTemplate.getForObject("http://eagle-inventory/api/...", StockResponse.class)
 
 ### Authorization 透传
 
-`FeignAuthInterceptor` 自动将当前 HTTP 请求中的 `Authorization` Header（Bearer JWT Token）透传到所有下游 Feign 调用，**无需任何额外配置**。
+`FeignAuthInterceptor` 自动将当前 HTTP 请求中的 `Authorization` Header（Bearer JWT Token）透传到所有下游 Feign 调用，*
+*无需任何额外配置**。
 
 ```
 用户请求 → Gateway → eagle-order-server → [FeignAuthInterceptor] → eagle-inventory-server
@@ -238,7 +251,8 @@ restTemplate.getForObject("http://eagle-inventory/api/...", StockResponse.class)
 
 **在异步 / 定时任务上下文中：**
 
-`RequestContextHolder` 无法获取当前 HTTP 请求（没有 Servlet 上下文），`FeignAuthInterceptor` 会跳过 Header 透传。这些场景通常使用服务账号（Client Credentials）认证，由各服务自行处理鉴权：
+`RequestContextHolder` 无法获取当前 HTTP 请求（没有 Servlet 上下文），`FeignAuthInterceptor` 会跳过 Header
+透传。这些场景通常使用服务账号（Client Credentials）认证，由各服务自行处理鉴权：
 
 ```java
 // ✅ 定时任务中需要鉴权时，手动设置 Token
@@ -280,14 +294,14 @@ eagle:
 
 `FeignErrorDecoder` 将下游 HTTP 错误响应自动转换为项目异常体系，**调用方无需手动 try-catch**：
 
-| 下游状态码 | 转换结果 | HTTP 语义 |
-|-----------|----------|-----------|
-| `404` | `NotFoundException`（`ExternalErrorCode.EXTERNAL_SERVICE_ERROR`） | 下游资源不存在 |
-| `400` | `DomainException` | 下游参数校验失败 |
-| `409` | `DomainException` | 下游业务冲突 |
-| `403` | `ServiceException` | 下游无权限 |
-| `429` | `ServiceException` | 下游限流 |
-| 其他 | `ServiceException` | 未知下游错误 |
+| 下游状态码 | 转换结果                                                            | HTTP 语义  |
+|-------|-----------------------------------------------------------------|----------|
+| `404` | `NotFoundException`（`ExternalErrorCode.EXTERNAL_SERVICE_ERROR`） | 下游资源不存在  |
+| `400` | `DomainException`                                               | 下游参数校验失败 |
+| `409` | `DomainException`                                               | 下游业务冲突   |
+| `403` | `ServiceException`                                              | 下游无权限    |
+| `429` | `ServiceException`                                              | 下游限流     |
+| 其他    | `ServiceException`                                              | 未知下游错误   |
 
 转换后的异常会被全局异常处理器（`GlobalExceptionHandler`）捕获，向调用方返回标准错误响应：
 
@@ -304,13 +318,14 @@ eagle:
 
 **超时异常处理：**
 
-Feign 连接/读取超时抛出 `feign.RetryableException`，未被 `FeignErrorDecoder` 捕获，会以 `ServiceException`（500）的形式被全局处理器兜底处理：
+Feign 连接/读取超时抛出 `feign.RetryableException`，未被 `FeignErrorDecoder` 捕获，会以 `ServiceException`
+（500）的形式被全局处理器兜底处理：
 
 ```java
 // 可通过声明额外的 ErrorDecoder 专门处理超时
 @Bean
 public ErrorDecoder feignErrorDecoder() {
-    return (methodKey, response) -> { ... };
+    return (methodKey, response) -> { ...};
 }
 ```
 
@@ -339,7 +354,7 @@ spring:
     openfeign:
       client:
         config:
-          eagle-report-server:           # 服务名
+          eagle-report-server: # 服务名
             connect-timeout: 3000
             read-timeout: 30000          # 报表生成允许最长 30 秒
           eagle-inventory-server:
@@ -361,7 +376,8 @@ class SlowServiceFeignConfig {
 }
 
 @FeignClient(name = "eagle-slow-server", configuration = SlowServiceFeignConfig.class)
-public interface SlowServiceFeignClient { ... }
+public interface SlowServiceFeignClient { ...
+}
 ```
 
 ---
@@ -381,6 +397,7 @@ public interface SlowServiceFeignClient { ... }
 使用方式：在调用入口加 `@GlobalTransactional`，下游服务均可自动加入全局事务：
 
 ```java
+
 @GlobalTransactional
 @Transactional(rollbackFor = Exception.class)
 public void placeOrder(PlaceOrderRequest request) {
@@ -415,7 +432,8 @@ class VerboseFeignConfig {
 }
 
 @FeignClient(name = "eagle-debug-server", configuration = VerboseFeignConfig.class)
-public interface DebugFeignClient { ... }
+public interface DebugFeignClient { ...
+}
 ```
 
 同时在 `application.yml` 配置对应包的 logger 级别（Feign 日志使用 DEBUG 输出）：
@@ -433,6 +451,7 @@ logging:
 **Q: 下游服务报 401，但我的接口已登录，为什么 Authorization 没有透传？**
 
 A: 检查以下两点：
+
 1. 调用是否发生在异步线程 / 定时任务中（无 `RequestContextHolder`，Token 无法获取）
 2. 下游服务是否配置了 OAuth2 资源服务器校验，确认 Token 格式是否被接受
 
@@ -443,6 +462,7 @@ A: 检查以下两点：
 A: 覆盖 `FeignErrorDecoder`，对 `RetryableException` 做单独处理：
 
 ```java
+
 @Bean
 public ErrorDecoder feignErrorDecoder() {
     ErrorDecoder defaultDecoder = new FeignErrorDecoder();
@@ -479,6 +499,7 @@ spring:
 A: 直接用 `@MockBean` 或 `@Mock`，不需要真实网络调用：
 
 ```java
+
 @ExtendWith(MockitoExtension.class)
 class OrderApplicationServiceTest {
 
@@ -504,6 +525,7 @@ class OrderApplicationServiceTest {
 **Q: Seata XID 透传失败，下游服务没有加入全局事务？**
 
 A: 检查以下几点：
+
 1. 下游服务是否也引入了 `seata-spring-boot-starter` 并正确配置 Seata Server 地址
 2. 下游服务的 Seata `@GlobalTransactional` 或 `DataSourceProxy` 是否正常工作
 3. 确认 `TX_XID` Header 在下游服务的请求日志中存在（开启 `HEADERS` 日志级别验证）
@@ -519,10 +541,12 @@ A: 可以通过自定义 `RequestInterceptor` 实现空拦截器，并在该 Fei
 class NoAuthFeignConfig {
     @Bean
     public RequestInterceptor feignAuthInterceptor() {
-        return template -> {};   // 覆盖全局 FeignAuthInterceptor
+        return template -> {
+        };   // 覆盖全局 FeignAuthInterceptor
     }
 }
 
 @FeignClient(name = "eagle-public-service", configuration = NoAuthFeignConfig.class)
-public interface PublicApiFeignClient { ... }
+public interface PublicApiFeignClient { ...
+}
 ```

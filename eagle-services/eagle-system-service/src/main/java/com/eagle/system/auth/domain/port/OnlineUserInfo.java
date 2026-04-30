@@ -16,13 +16,14 @@ import java.time.LocalDateTime;
  * @param expiresIn      token 有效期（秒），用于 Redis TTL
  */
 public record OnlineUserInfo(
-    String tokenId,
-    Long userId,
-    String username,
-    String ip,
-    LocalDateTime loginTime,
-    LocalDateTime lastActiveTime,
-    String browser,
-    String os,
-    long expiresIn
-) {}
+        String tokenId,
+        Long userId,
+        String username,
+        String ip,
+        LocalDateTime loginTime,
+        LocalDateTime lastActiveTime,
+        String browser,
+        String os,
+        long expiresIn
+) {
+}

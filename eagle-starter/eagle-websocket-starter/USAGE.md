@@ -31,24 +31,25 @@ eagle.websocket:
 
 ## 核心 API
 
-| 类 / 接口 | 用途 |
-|---|---|
-| `EagleWebSocketConfig` | STOMP 端点 + Broker 配置（自动注册） |
-| `WebSocketAuthHandshakeInterceptor` | 握手期 JWT 鉴权 |
-| `WebSocketChannelInterceptor` | 订阅通道拦截 |
-| `WebSocketEventListener` | Connect / Disconnect 事件 |
-| `WebSocketSessionManager` | `sendToUser(userId, destination, payload)` / `broadcast(destination, payload)` |
-| `OfflineMessageStore` | `store(userId, message, ttl)` / `getAndClear(userId)` 返回 `List<String>` / `count(userId)` |
-| `RedisOfflineMessageStore` | 默认实现 |
-| `OfflineMessage` | 离线消息载荷 |
-| `SseEmitterManager` | SSE：`connect(userId [, timeoutMs])` / `sendToUser(userId, event, payload)` / `broadcast(event, payload)` / `getConnectionCount(userId)` / `disconnectUser(userId)` |
-| `WebSocketMetrics` | Micrometer 指标埋点 |
+| 类 / 接口                              | 用途                                                                                                                                                                 |
+|-------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `EagleWebSocketConfig`              | STOMP 端点 + Broker 配置（自动注册）                                                                                                                                         |
+| `WebSocketAuthHandshakeInterceptor` | 握手期 JWT 鉴权                                                                                                                                                         |
+| `WebSocketChannelInterceptor`       | 订阅通道拦截                                                                                                                                                             |
+| `WebSocketEventListener`            | Connect / Disconnect 事件                                                                                                                                            |
+| `WebSocketSessionManager`           | `sendToUser(userId, destination, payload)` / `broadcast(destination, payload)`                                                                                     |
+| `OfflineMessageStore`               | `store(userId, message, ttl)` / `getAndClear(userId)` 返回 `List<String>` / `count(userId)`                                                                          |
+| `RedisOfflineMessageStore`          | 默认实现                                                                                                                                                               |
+| `OfflineMessage`                    | 离线消息载荷                                                                                                                                                             |
+| `SseEmitterManager`                 | SSE：`connect(userId [, timeoutMs])` / `sendToUser(userId, event, payload)` / `broadcast(event, payload)` / `getConnectionCount(userId)` / `disconnectUser(userId)` |
+| `WebSocketMetrics`                  | Micrometer 指标埋点                                                                                                                                                    |
 
 ## 最小示例
 
 ### WebSocket / STOMP
 
 ```java
+
 @RequiredArgsConstructor
 @Service
 public class NotificationService {
@@ -64,20 +65,23 @@ public class NotificationService {
         // 2) 同时存离线（保证用户上线后能看到）
         // 实际策略：可由业务方决定"在线则不存离线"
         offlineStore.store(userId.toString(),
-            objectMapper.writeValueAsString(dto),
-            Duration.ofDays(7));
+                objectMapper.writeValueAsString(dto),
+                Duration.ofDays(7));
     }
 
     /** 用户重连时取出离线消息 */
     public List<NotifyDto> drainOffline(Long userId) throws Exception {
         List<String> raw = offlineStore.getAndClear(userId.toString());
         return raw.stream()
-            .map(s -> {
-                try { return objectMapper.readValue(s, NotifyDto.class); }
-                catch (Exception e) { return null; }
-            })
-            .filter(Objects::nonNull)
-            .toList();
+                .map(s -> {
+                    try {
+                        return objectMapper.readValue(s, NotifyDto.class);
+                    } catch (Exception e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     /** 广播 */
@@ -97,6 +101,7 @@ public class NotificationService {
 ### Server-Sent Events（SSE，单向流）
 
 ```java
+
 @RestController
 @RequiredArgsConstructor
 public class StreamController {
@@ -105,36 +110,44 @@ public class StreamController {
 
     /** 客户端订阅：浏览器 EventSource 或 fetch + ReadableStream */
     @GetMapping(value = "/api/stream/{userId}",
-                produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+            produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream(@PathVariable String userId) {
         return sseManager.connect(userId, 60_000);   // 60s 超时
     }
 }
 
 // 业务侧推送
-sseManager.sendToUser(userId, "order-update", orderDto);
-sseManager.broadcast("system-status", status);
+sseManager.
+
+sendToUser(userId, "order-update",orderDto);
+sseManager.
+
+broadcast("system-status",status);
 
 // 强制下线
-sseManager.disconnectUser(userId);
+sseManager.
+
+disconnectUser(userId);
 ```
 
 ## 配置项
 
-| key | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `eagle.websocket.endpoint` | String | `/ws` | STOMP 端点 |
-| `eagle.websocket.topic-prefix` | String | `/topic` | 广播前缀 |
-| `eagle.websocket.user-prefix` | String | `/user` | 用户专属前缀 |
-| `eagle.websocket.app-prefix` | String | `/app` | 客户端发送应用前缀 |
-| `eagle.websocket.heartbeat-ms` | long | `10000` | 心跳间隔 |
-| `eagle.websocket.allowed-origins` | List | `[*]` | 跨域来源（生产必须改具体域名） |
+| key                               | 类型     | 默认       | 说明              |
+|-----------------------------------|--------|----------|-----------------|
+| `eagle.websocket.endpoint`        | String | `/ws`    | STOMP 端点        |
+| `eagle.websocket.topic-prefix`    | String | `/topic` | 广播前缀            |
+| `eagle.websocket.user-prefix`     | String | `/user`  | 用户专属前缀          |
+| `eagle.websocket.app-prefix`      | String | `/app`   | 客户端发送应用前缀       |
+| `eagle.websocket.heartbeat-ms`    | long   | `10000`  | 心跳间隔            |
+| `eagle.websocket.allowed-origins` | List   | `[*]`    | 跨域来源（生产必须改具体域名） |
 
-⚠️ **没有 `enabled` / `message-size-limit` / `offline-message.enabled / ttl` 等**——离线消息 TTL 由业务方调用 `store()` 时传入。
+⚠️ **没有 `enabled` / `message-size-limit` / `offline-message.enabled / ttl` 等**——离线消息 TTL 由业务方调用 `store()`
+时传入。
 
 ## 集群部署
 
-多实例需用 Redis Pub/Sub（`eagle-redis-starter` 的 `RedissonTopicUtil`）做跨实例消息分发；离线消息走 `RedisOfflineMessageStore`（默认）。
+多实例需用 Redis Pub/Sub（`eagle-redis-starter` 的 `RedissonTopicUtil`）做跨实例消息分发；离线消息走
+`RedisOfflineMessageStore`（默认）。
 
 ## 常见错误
 

@@ -61,7 +61,7 @@ public class UuidIdGenerator implements IdGenerator {
      * 生成原始 UUID v7 对象（含连字符的 36 位标准格式）。
      *
      * @return UUID v7 对象，{@link UUID#toString()} 形如
-     *         {@code "018f3a1b-2c9d-7e4f-9g6h-7i8j9k0l1m2n"}
+     * {@code "018f3a1b-2c9d-7e4f-9g6h-7i8j9k0l1m2n"}
      */
     public UUID nextUuid() {
         return UuidCreator.getTimeOrderedEpoch();

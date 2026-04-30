@@ -2,7 +2,9 @@ package com.eagle.system.common.exception;
 
 import com.eagle.common.exception.ErrorCode;
 
-/** 认证领域错误码（11001–11028） */
+/**
+ * 认证领域错误码（11001–11028）
+ */
 public enum AuthErrorCode implements ErrorCode {
 
     // ==================== 认证流程（11001–11015）====================

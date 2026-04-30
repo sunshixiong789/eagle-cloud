@@ -35,10 +35,14 @@ public class LockProperties {
      */
     private Granularity granularity = Granularity.PER_KEY;
 
-    /** {@link Granularity#PER_KEY} 模式下，topic 命名前缀。 */
+    /**
+     * {@link Granularity#PER_KEY} 模式下，topic 命名前缀。
+     */
     private String topicPrefix = "eagle-lock-";
 
-    /** {@link Granularity#SHARED_TOPIC} 模式下，共用 topic 名称。 */
+    /**
+     * {@link Granularity#SHARED_TOPIC} 模式下，共用 topic 名称。
+     */
     private String sharedTopic = "eagle-lock-shared";
 
     /**
@@ -49,7 +53,9 @@ public class LockProperties {
      */
     private int invisibleDurationSeconds = 30;
 
-    /** MQ 锁消费者组名。 */
+    /**
+     * MQ 锁消费者组名。
+     */
     private String consumerGroup = "eagle-lock-consumer";
 
     /**
@@ -71,7 +77,9 @@ public class LockProperties {
      */
     private boolean autoInitToken = false;
 
-    /** 单次轮询拉取 token 消息的超时（秒），用于在 {@code waitTime} 范围内做循环 receive。 */
+    /**
+     * 单次轮询拉取 token 消息的超时（秒），用于在 {@code waitTime} 范围内做循环 receive。
+     */
     private int pollIntervalSeconds = 1;
 
     public enum Type {

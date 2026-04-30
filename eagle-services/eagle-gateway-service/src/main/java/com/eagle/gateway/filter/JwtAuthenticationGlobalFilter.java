@@ -32,15 +32,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
 
-    private final ReactiveJwtDecoder reactiveJwtDecoder;
-    private final GatewayProperties gatewayProperties;
-
     private static final String AUTHORIZATION_PREFIX = "Bearer ";
     private static final String USER_ID_HEADER = "X-User-Id";
     private static final String USERNAME_HEADER = "X-Username";
     private static final String ROLES_HEADER = "X-Roles";
     private static final String TENANT_ID_HEADER = "X-Tenant-Id";
-
+    private final ReactiveJwtDecoder reactiveJwtDecoder;
+    private final GatewayProperties gatewayProperties;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     @Override

@@ -40,6 +40,7 @@ git push gitlab main
 GitLab 项目设置 → **Members** → 添加团队成员（至少 Reporter 角色，可读即可）。
 
 如需个人访问令牌（PAT）认证：
+
 - GitLab → User Settings → Access Tokens → 创建 `read_repository` scope token
 - 把 token 加到业务项目开发者的 `~/.netrc` 或 git credential helper
 
@@ -203,9 +204,9 @@ Gitee Workflow 默认就支持 actions/checkout 等标准 action，无需修改�
 name: plugin-sync-check
 trigger:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 stages:
   - validate
@@ -241,14 +242,14 @@ Gitee 支持 webhook，可触发自建 CI 系统跑同步校验。配置路径�
 
 ### 4.6 与 GitHub/GitLab 的差异
 
-| 特性 | Gitee | GitHub | GitLab |
-|------|-------|--------|--------|
-| 国内访问速度 | ✅ 优 | ⚠️ 偶尔慢 | ⚠️ 自建可优化 |
-| 免费私有仓库 | ✅（5 人内）| ✅ 个人 | ✅（自建） |
-| Tag 引用 | ✅ | ✅ | ✅ |
-| Webhook | ✅ | ✅ | ✅ |
-| CI 配置文件 | `.gitee/workflows/*.yml` 或 `.gitee-go.yaml` | `.github/workflows/*.yml` | `.gitlab-ci.yml` |
-| Marketplace `type` | `git` | `git` | `git` |
+| 特性                 | Gitee                                       | GitHub                    | GitLab           |
+|--------------------|---------------------------------------------|---------------------------|------------------|
+| 国内访问速度             | ✅ 优                                         | ⚠️ 偶尔慢                    | ⚠️ 自建可优化         |
+| 免费私有仓库             | ✅（5 人内）                                     | ✅ 个人                      | ✅（自建）            |
+| Tag 引用             | ✅                                           | ✅                         | ✅                |
+| Webhook            | ✅                                           | ✅                         | ✅                |
+| CI 配置文件            | `.gitee/workflows/*.yml` 或 `.gitee-go.yaml` | `.github/workflows/*.yml` | `.gitlab-ci.yml` |
+| Marketplace `type` | `git`                                       | `git`                     | `git`            |
 
 **Plugin 内容本身完全相同**，只是 Git 服务的 URL 与 CI 配置文件路径不同。
 
@@ -296,10 +297,10 @@ name: Sync plugin to standalone repo
 
 on:
   push:
-    branches: [main]
-    paths: ['claude-plugin/**']
+    branches: [ main ]
+    paths: [ 'claude-plugin/**' ]
   push:
-    tags: ['v*']
+    tags: [ 'v*' ]
 
 jobs:
   sync:
@@ -325,22 +326,22 @@ jobs:
 ## 团队推广步骤
 
 1. **小范围试点**（1 周）
-   - 选 1-2 个新业务项目接入，按 `INTEGRATION-TEST.md` 全流程验证
-   - 收集开发者反馈
-   - 修复发现的 USAGE/规则偏差，发版 1.0.x
+    - 选 1-2 个新业务项目接入，按 `INTEGRATION-TEST.md` 全流程验证
+    - 收集开发者反馈
+    - 修复发现的 USAGE/规则偏差，发版 1.0.x
 
 2. **公司内宣讲**（30 分钟）
-   - 演示一个典型业务流程：用 `/new-aggregate` 起项目 + AI 自动用正确 API 写代码
-   - 强调 5 个高频陷阱（参见 `INTEGRATION-TEST.md` 阶段 2）
-   - 讲解版本升级机制
+    - 演示一个典型业务流程：用 `/new-aggregate` 起项目 + AI 自动用正确 API 写代码
+    - 强调 5 个高频陷阱（参见 `INTEGRATION-TEST.md` 阶段 2）
+    - 讲解版本升级机制
 
 3. **存量项目接入**
-   - 旧项目按需接入（无强制要求）
-   - 修复 PR 时让 AI 加载 plugin 检查规范
+    - 旧项目按需接入（无强制要求）
+    - 修复 PR 时让 AI 加载 plugin 检查规范
 
 4. **形成闭环**
-   - PR 模板加一行："本次变更是否需要更新 Plugin？"
-   - 季度 review 一次 USAGE 准确性
+    - PR 模板加一行："本次变更是否需要更新 Plugin？"
+    - 季度 review 一次 USAGE 准确性
 
 ## CI/CD 集成（业务项目侧）
 
@@ -363,9 +364,9 @@ jobs:
 1. 修改源（`.claude/rules/` 或 `eagle-starter/*/USAGE.md`）
 2. `./claude-plugin/sync.sh`
 3. 更新版本：
-   - `claude-plugin/plugin.json` 中的 `version`
-   - `claude-plugin/marketplace.json` 中的 `version`
-   - `claude-plugin/CHANGELOG.md` 添加新条目
+    - `claude-plugin/plugin.json` 中的 `version`
+    - `claude-plugin/marketplace.json` 中的 `version`
+    - `claude-plugin/CHANGELOG.md` 添加新条目
 4. `git commit && git tag v1.x.0 && git push --tags`
 5. CI 自动校验通过后，通知业务项目
 
@@ -387,12 +388,12 @@ jobs:
 
 ### 度量指标
 
-| 指标 | 目标 |
-|------|------|
-| 接入项目数 | 半年内 ≥ 10 个 |
-| Plugin 升级延迟 | 业务项目升到最新 minor 版本 ≤ 30 天 |
-| API 编造率 | 接入后 AI 生成代码中编造的 starter API 数 / 总数 ≤ 5% |
-| Issue 关闭速度 | USAGE 错漏 ≤ 3 天修复发布 |
+| 指标          | 目标                                      |
+|-------------|-----------------------------------------|
+| 接入项目数       | 半年内 ≥ 10 个                              |
+| Plugin 升级延迟 | 业务项目升到最新 minor 版本 ≤ 30 天                |
+| API 编造率     | 接入后 AI 生成代码中编造的 starter API 数 / 总数 ≤ 5% |
+| Issue 关闭速度  | USAGE 错漏 ≤ 3 天修复发布                      |
 
 ## 安全考虑
 

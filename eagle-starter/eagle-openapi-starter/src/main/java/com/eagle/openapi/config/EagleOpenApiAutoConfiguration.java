@@ -107,7 +107,7 @@ public class EagleOpenApiAutoConfiguration {
                 .bearerFormat("JWT")
                 .description("""
                         直接输入 JWT Access Token。
-
+                        
                         获取方式：
                         1. 用户名密码：通过 OAuth2 授权码流程获取
                         2. 短信验证码：POST /oauth2/token (grant_type=sms_code&phone=xxx&code=xxx&client_id=eagleWeb)
@@ -173,15 +173,15 @@ public class EagleOpenApiAutoConfiguration {
     private String apiDescription() {
         return properties.getDescription() != null ? properties.getDescription() : """
                 Eagle 企业级应用接口文档
-
+                
                 ## 认证方式
-
+                
                 ### 方式一：Bearer Token（推荐调试用）
                 点击右上角 **Authorize** 按钮，在 BearerAuth 中粘贴 JWT Token。
-
+                
                 ### 方式二：OAuth2 授权码流程
                 点击 **Authorize** 按钮，在 OAuth2 中点击授权，跳转登录页完成认证。
-
+                
                 ### 方式三：短信验证码获取 Token
                 1. 调用 `POST /sms/code?phone=手机号` 获取验证码
                 2. 调用 `POST /oauth2/token` 参数：
@@ -190,9 +190,9 @@ public class EagleOpenApiAutoConfiguration {
                    - `code=验证码`
                    - `client_id=eagleWeb`
                 3. 复制返回的 `access_token`，粘贴到 BearerAuth 中
-
+                
                 ## 角色说明
-
+                
                 | 角色 | 说明 |
                 |------|------|
                 | `admin` | 系统管理员，拥有所有管理权限 |

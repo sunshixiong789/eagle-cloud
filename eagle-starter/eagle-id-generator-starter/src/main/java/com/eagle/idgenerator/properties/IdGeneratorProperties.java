@@ -27,9 +27,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "eagle.id-generator")
 public class IdGeneratorProperties {
 
-    /** 是否启用 ID 生成器，默认启用 */
+    /**
+     * TSID 配置
+     */
+    private final Tsid tsid = new Tsid();
+    /**
+     * NanoId 配置
+     */
+    private final NanoId nanoId = new NanoId();
+    /**
+     * 是否启用 ID 生成器，默认启用
+     */
     private boolean enabled = true;
-
     /**
      * 默认 {@code IdGenerator} Bean 选用的实现。
      * <ul>
@@ -39,32 +48,26 @@ public class IdGeneratorProperties {
      * </ul>
      */
     private Type type = Type.SNOWFLAKE;
-
     /**
      * 雪花算法工作机器 ID，范围 0-31，集群部署时各实例须不同。
      */
     private long workerId = 1;
-
     /**
      * 雪花算法数据中心 ID，范围 0-31，多数据中心部署时各中心不同。
      */
     private long datacenterId = 1;
-
-    /** 序列号起始值（Hutool Snowflake 不使用此项，保留以兼容旧配置）*/
+    /**
+     * 序列号起始值（Hutool Snowflake 不使用此项，保留以兼容旧配置）
+     */
     private long sequence = 0L;
-
     /**
      * 是否同时注册 {@code OrderNoGenerator} 和 {@code IdGeneratorFacade}，默认启用。
      */
     private boolean enableFacade = true;
 
-    /** TSID 配置 */
-    private final Tsid tsid = new Tsid();
-
-    /** NanoId 配置 */
-    private final NanoId nanoId = new NanoId();
-
-    /** 默认 IdGenerator 实现类型 */
+    /**
+     * 默认 IdGenerator 实现类型
+     */
     public enum Type {
         SNOWFLAKE,
         UUID,
@@ -73,15 +76,21 @@ public class IdGeneratorProperties {
 
     @Data
     public static class Tsid {
-        /** 节点 ID，范围依 nodeBits 决定（默认 1024 节点 → [0, 1023]） */
+        /**
+         * 节点 ID，范围依 nodeBits 决定（默认 1024 节点 → [0, 1023]）
+         */
         private int nodeId = 1;
-        /** 节点位数：8=256 / 10=1024 / 12=4096 节点 */
+        /**
+         * 节点位数：8=256 / 10=1024 / 12=4096 节点
+         */
         private int nodeBits = 10;
     }
 
     @Data
     public static class NanoId {
-        /** NanoId 默认长度（21 字符 ≈ UUID v4 碰撞概率） */
+        /**
+         * NanoId 默认长度（21 字符 ≈ UUID v4 碰撞概率）
+         */
         private int defaultSize = 21;
     }
 }

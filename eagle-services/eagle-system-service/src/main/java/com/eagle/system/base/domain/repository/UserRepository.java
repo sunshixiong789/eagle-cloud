@@ -84,8 +84,8 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
      * @return 用户摘要投影分页结果
      */
     @Query("SELECT u.id AS id, u.username AS username, " +
-           "u.email AS email, u.deptId AS deptId, " +
-           "u.profile.name AS fullName, u.createTime AS createTime FROM User u")
+            "u.email AS email, u.deptId AS deptId, " +
+            "u.profile.name AS fullName, u.createTime AS createTime FROM User u")
     Page<UserSummary> findUserSummaries(Pageable pageable);
 
     /**

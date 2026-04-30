@@ -37,7 +37,7 @@ public final class EagleAuthentication extends AbstractAuthenticationToken {
      * @param authorities 权限集合
      */
     public EagleAuthentication(Jwt credentials, EagleUser principal,
-                                Collection<? extends GrantedAuthority> authorities) {
+                               Collection<? extends GrantedAuthority> authorities) {
         super(authorities);
         this.credentials = credentials;
         this.principal = principal;

@@ -20,10 +20,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "eagle.wechat.web")
 public class WechatWebProperties {
 
-    /** PC 扫码登录（微信开放平台网站应用）配置 */
+    /**
+     * PC 扫码登录（微信开放平台网站应用）配置
+     */
     private Pc pc = new Pc();
 
-    /** H5 网页授权（微信公众号）配置 */
+    /**
+     * H5 网页授权（微信公众号）配置
+     */
     private H5 h5 = new H5();
 
     /**
@@ -33,13 +37,19 @@ public class WechatWebProperties {
     @Setter
     public static class Pc {
 
-        /** 开放平台网站应用 AppId */
+        /**
+         * 开放平台网站应用 AppId
+         */
         private String appId = "";
 
-        /** 开放平台网站应用 AppSecret */
+        /**
+         * 开放平台网站应用 AppSecret
+         */
         private String appSecret = "";
 
-        /** 回调地址，需在微信开放平台配置白名单 */
+        /**
+         * 回调地址，需在微信开放平台配置白名单
+         */
         private String redirectUri = "";
     }
 
@@ -50,13 +60,19 @@ public class WechatWebProperties {
     @Setter
     public static class H5 {
 
-        /** 公众号 AppId */
+        /**
+         * 公众号 AppId
+         */
         private String appId = "";
 
-        /** 公众号 AppSecret */
+        /**
+         * 公众号 AppSecret
+         */
         private String appSecret = "";
 
-        /** 回调地址，需在公众号后台配置网页授权域名 */
+        /**
+         * 回调地址，需在公众号后台配置网页授权域名
+         */
         private String redirectUri = "";
     }
 }

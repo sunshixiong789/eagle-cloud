@@ -17,10 +17,14 @@ import jakarta.servlet.http.HttpServletRequest;
  */
 public class EagleSentinelRequestOriginParser implements RequestOriginParser {
 
-    /** 用于传递调用方应用名的请求头名称。 */
+    /**
+     * 用于传递调用方应用名的请求头名称。
+     */
     private static final String HEADER_APP_NAME = "X-Application-Name";
 
-    /** 请求头不存在时的默认来源标识。 */
+    /**
+     * 请求头不存在时的默认来源标识。
+     */
     private static final String DEFAULT_ORIGIN = "default";
 
     /**

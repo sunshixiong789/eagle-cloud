@@ -32,15 +32,15 @@ eagle.data-permission:
 
 ## 核心 API
 
-| 类 / 接口 / 注解 | 说明 |
-|---|---|
-| `@DataPermission(deptField, userField)` | 标在方法上，切面拦截**第一个 `Specification` 类型参数**追加过滤条件 |
-| `@DataPermissionIgnore` | 显式跳过本次过滤 |
-| `DataScope`（枚举）| `ALL / SELF / DEPT / DEPT_AND_CHILD / CUSTOM` |
-| `DataPermissionProvider` | **业务方实现**：`getCurrentUserDataScope()` / `getCurrentUserDeptId()` / `getCurrentUserId()` / `getCurrentUserCustomDeptIds()` / `getChildDeptIds(deptId)` |
-| `DataPermissionContext` | ThreadLocal 强制覆盖 scope（优先级高于 Provider） |
-| `DataPermissionAspect` | `@DataPermission` 切面 |
-| `DataPermissionHelper` | 静态：`specification(provider, deptField, userField [, existingSpec])` |
+| 类 / 接口 / 注解                             | 说明                                                                                                                                                    |
+|-----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `@DataPermission(deptField, userField)` | 标在方法上，切面拦截**第一个 `Specification` 类型参数**追加过滤条件                                                                                                          |
+| `@DataPermissionIgnore`                 | 显式跳过本次过滤                                                                                                                                              |
+| `DataScope`（枚举）                         | `ALL / SELF / DEPT / DEPT_AND_CHILD / CUSTOM`                                                                                                         |
+| `DataPermissionProvider`                | **业务方实现**：`getCurrentUserDataScope()` / `getCurrentUserDeptId()` / `getCurrentUserId()` / `getCurrentUserCustomDeptIds()` / `getChildDeptIds(deptId)` |
+| `DataPermissionContext`                 | ThreadLocal 强制覆盖 scope（优先级高于 Provider）                                                                                                                |
+| `DataPermissionAspect`                  | `@DataPermission` 切面                                                                                                                                  |
+| `DataPermissionHelper`                  | 静态：`specification(provider, deptField, userField [, existingSpec])`                                                                                   |
 
 ## 工作流程
 
@@ -65,13 +65,19 @@ public class MyDataPermissionProvider implements DataPermissionProvider {
     }
 
     @Override
-    public Long getCurrentUserId() { return SecurityUtils.getCurrentUserId(); }
+    public Long getCurrentUserId() {
+        return SecurityUtils.getCurrentUserId();
+    }
 
     @Override
-    public Long getCurrentUserDeptId() { return SecurityUtils.getCurrentDeptId(); }
+    public Long getCurrentUserDeptId() {
+        return SecurityUtils.getCurrentDeptId();
+    }
 
     @Override
-    public Set<Long> getCurrentUserCustomDeptIds() { return Set.of(); }
+    public Set<Long> getCurrentUserCustomDeptIds() {
+        return Set.of();
+    }
 
     @Override
     public Set<Long> getChildDeptIds(Long deptId) {
@@ -105,44 +111,51 @@ public class OrderQueryService {
 // 3) 编程式（不用注解）
 public Page<Order> queryProgrammatically(Pageable pageable) {
     Specification<Order> spec = DataPermissionHelper.specification(
-        provider, "deptId", "id"
+            provider, "deptId", "id"
     );
     return orderRepository.findAll(spec, pageable);
 }
 
 // 4) 强制覆盖范围（ThreadLocal）
-DataPermissionContext.setScope(DataScope.ALL);
-try {
-    return queryService.findAll(...);
-} finally {
-    DataPermissionContext.clear();
+DataPermissionContext.
+
+setScope(DataScope.ALL);
+try{
+        return queryService.
+
+findAll(...);
+}finally{
+        DataPermissionContext.
+
+clear();
 }
 ```
 
 ## 配置项
 
-| key | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `eagle.data-permission.enabled` | boolean | `true` | 总开关 |
-| `eagle.data-permission.default-dept-field` | String | `deptId` | 实体默认部门字段名 |
-| `eagle.data-permission.default-user-field` | String | `id` | 实体默认用户字段名 |
+| key                                        | 类型      | 默认       | 说明        |
+|--------------------------------------------|---------|----------|-----------|
+| `eagle.data-permission.enabled`            | boolean | `true`   | 总开关       |
+| `eagle.data-permission.default-dept-field` | String  | `deptId` | 实体默认部门字段名 |
+| `eagle.data-permission.default-user-field` | String  | `id`     | 实体默认用户字段名 |
 
 ## DataScope 行为
 
-| 范围 | SQL 注入 | 边界处理 |
-|------|---------|---------|
-| `ALL` | 无过滤 | — |
-| `SELF` | `userField = currentUserId` | userId null → 无过滤（log warn） |
-| `DEPT` | `deptField = currentDeptId` | deptId null → 退化 SELF |
-| `DEPT_AND_CHILD` | `deptField IN (childDeptIds)` | 无子部门 → 退化 DEPT |
-| `CUSTOM` | `deptField IN (customDeptIds)` | 空集合 → 退化 SELF |
+| 范围               | SQL 注入                         | 边界处理                        |
+|------------------|--------------------------------|-----------------------------|
+| `ALL`            | 无过滤                            | —                           |
+| `SELF`           | `userField = currentUserId`    | userId null → 无过滤（log warn） |
+| `DEPT`           | `deptField = currentDeptId`    | deptId null → 退化 SELF       |
+| `DEPT_AND_CHILD` | `deptField IN (childDeptIds)`  | 无子部门 → 退化 DEPT              |
+| `CUSTOM`         | `deptField IN (customDeptIds)` | 空集合 → 退化 SELF               |
 
 `DataPermissionProvider.getCurrentUserDataScope()` 返回 null 时**安全降级到 SELF**。
 
 ## 常见错误
 
 - ❌ 枚举写 `DEPT_ONLY / SELF_ONLY` → ✅ 真名是 **`DEPT / SELF`**
-- ❌ `@DataPermission(type = ..., deptColumn = ..., creatorColumn = ...)` → ✅ 真实只有 `deptField` 和 `userField`，**没有 type**（type 由 Provider 决定）
+- ❌ `@DataPermission(type = ..., deptColumn = ..., creatorColumn = ...)` → ✅ 真实只有 `deptField` 和 `userField`，**没有
+  type**（type 由 Provider 决定）
 - ❌ 方法签名不带 `Specification` 参数 → ✅ 切面只拦截第一个 `Specification` 参数；纯无 Spec 方法不生效
 - ❌ 不实现 Provider → ✅ 必须实现（无业务部门信息）
 - ❌ 用 SQL 拼接数据范围 → ✅ 让切面自动注入

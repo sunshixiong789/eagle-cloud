@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -29,16 +28,6 @@ class QueryHelperTest {
 
     // ==================== Stub entity ====================
 
-    /** 测试用存根实体，仅用于构建 LambdaQueryWrapper 的类型参数。 */
-    @Data
-    static class StubEntity {
-        private Long id;
-        private String name;
-        private String phone;
-        private Integer status;
-        private LocalDateTime createTime;
-    }
-
     @BeforeAll
     static void initTableInfo() {
         // MyBatis-Plus requires TableInfo to be registered before lambda method references
@@ -47,6 +36,18 @@ class QueryHelperTest {
                 new MybatisConfiguration(), "");
         assistant.setCurrentNamespace(QueryHelperTest.class.getName());
         TableInfoHelper.initTableInfo(assistant, StubEntity.class);
+    }
+
+    /**
+     * 测试用存根实体，仅用于构建 LambdaQueryWrapper 的类型参数。
+     */
+    @Data
+    static class StubEntity {
+        private Long id;
+        private String name;
+        private String phone;
+        private Integer status;
+        private LocalDateTime createTime;
     }
 
     // ==================== likeAny ====================

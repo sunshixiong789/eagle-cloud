@@ -50,44 +50,41 @@ public class IdGeneratorUtil implements InitializingBean {
         this.nanoIdGenerator = nanoIdGenerator;
     }
 
-    @Override
-    public void afterPropertiesSet() {
-        defaultInstance = this.idGenerator;
-        uuidInstance = this.uuidIdGenerator;
-        tsidInstance = this.tsidIdGenerator;
-        nanoIdInstance = this.nanoIdGenerator;
-        log.info("IdGeneratorUtil initialized with default={}", idGenerator.getClass().getSimpleName());
-    }
-
-    // ==================== 默认实现 ====================
-
     public static long nextId() {
         return require(defaultInstance).nextId();
     }
+
+    // ==================== 默认实现 ====================
 
     public static String nextIdStr() {
         return require(defaultInstance).nextIdStr();
     }
 
-    // ==================== UUID v7 ====================
-
-    /** 32 位 UUID v7 字符串（无连字符）。 */
+    /**
+     * 32 位 UUID v7 字符串（无连字符）。
+     */
     public static String uuid() {
         return require(uuidInstance).nextIdStr();
     }
 
-    /** 原始 UUID v7 对象（36 位标准格式）。 */
+    // ==================== UUID v7 ====================
+
+    /**
+     * 原始 UUID v7 对象（36 位标准格式）。
+     */
     public static UUID uuidV7() {
         return require(uuidInstance).nextUuid();
     }
-
-    // ==================== TSID ====================
 
     public static long tsidLong() {
         return require(tsidInstance).nextId();
     }
 
-    /** 13 位 TSID 字符串。 */
+    // ==================== TSID ====================
+
+    /**
+     * 13 位 TSID 字符串。
+     */
     public static String tsidStr() {
         return require(tsidInstance).nextIdStr();
     }
@@ -96,11 +93,11 @@ public class IdGeneratorUtil implements InitializingBean {
         return require(tsidInstance).nextTsid();
     }
 
-    // ==================== NanoId ====================
-
     public static String nanoId() {
         return require(nanoIdInstance).nextId();
     }
+
+    // ==================== NanoId ====================
 
     public static String nanoId(int size) {
         return require(nanoIdInstance).nextId(size);
@@ -113,5 +110,14 @@ public class IdGeneratorUtil implements InitializingBean {
                             + "and Spring context has started.");
         }
         return instance;
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        defaultInstance = this.idGenerator;
+        uuidInstance = this.uuidIdGenerator;
+        tsidInstance = this.tsidIdGenerator;
+        nanoIdInstance = this.nanoIdGenerator;
+        log.info("IdGeneratorUtil initialized with default={}", idGenerator.getClass().getSimpleName());
     }
 }

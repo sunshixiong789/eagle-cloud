@@ -2,11 +2,11 @@ package com.eagle.system.base.domain.model;
 
 import com.eagle.common.base.BaseAggregateRoot;
 import com.eagle.common.exception.DomainException;
-import com.eagle.system.common.exception.UserErrorCode;
 import com.eagle.system.base.domain.event.UserCreatedEvent;
 import com.eagle.system.base.domain.event.UserUpdatedEvent;
 import com.eagle.system.base.domain.model.valueobject.Address;
 import com.eagle.system.base.domain.model.valueobject.UserProfile;
+import com.eagle.system.common.exception.UserErrorCode;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -129,7 +129,7 @@ public class User extends BaseAggregateRoot<User> {
      * @return 新创建的用户
      */
     public static User createForAccount(Long accountId, String username,
-                                         String phone, UserProfile profile) {
+                                        String phone, UserProfile profile) {
         User user = new User();
         user.accountId = accountId;
         user.username = username;

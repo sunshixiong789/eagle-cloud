@@ -6,11 +6,11 @@
 
 ### 可发布产物
 
-| 模块 | 类型 | groupId | artifactId | 用途 |
-|------|------|---------|------------|------|
-| `eagle-bom` | BOM (`java-platform`) | `com.eagle` | `eagle-bom` | 统一管理项目所有依赖版本 |
-| `eagle-starter:*` | 库 (`jar`) | `com.eagle` | `eagle-{name}-starter` | Spring Boot Starter，供业务方按需引入 |
-| `eagle-services:*` | 可执行应用 (`bootJar`) | `com.eagle` | `eagle-{name}-service` | 通常不发布到仓库，由 Docker 镜像分发 |
+| 模块                 | 类型                    | groupId     | artifactId             | 用途                           |
+|--------------------|-----------------------|-------------|------------------------|------------------------------|
+| `eagle-bom`        | BOM (`java-platform`) | `com.eagle` | `eagle-bom`            | 统一管理项目所有依赖版本                 |
+| `eagle-starter:*`  | 库 (`jar`)             | `com.eagle` | `eagle-{name}-starter` | Spring Boot Starter，供业务方按需引入 |
+| `eagle-services:*` | 可执行应用 (`bootJar`)     | `com.eagle` | `eagle-{name}-service` | 通常不发布到仓库，由 Docker 镜像分发       |
 
 ### 版本管理
 
@@ -20,7 +20,8 @@
 
 ### 仓库配置位置
 
-根 `build.gradle` 的 `configure(subprojects)` 块统一注册了 `nexus` Maven 仓库，所有子模块（含 BOM）共享。仓库 URL 与凭证通过参数 / 环境变量注入，**不入仓库**。
+根 `build.gradle` 的 `configure(subprojects)` 块统一注册了 `nexus` Maven 仓库，所有子模块（含 BOM）共享。仓库 URL
+与凭证通过参数 / 环境变量注入，**不入仓库**。
 
 ---
 
@@ -78,10 +79,10 @@ repositories {
 写到 `~/.gradle/gradle.properties`，不入仓库，跨项目共享：
 
 ```properties
-nexusReleaseUrl=https://nexus.your-domain.com/repository/maven-releases/
-nexusSnapshotUrl=https://nexus.your-domain.com/repository/maven-snapshots/
-nexusUsername=your-username
-nexusPassword=your-token-or-password
+nexusReleaseUrl  = https://nexus.your-domain.com/repository/maven-releases/
+nexusSnapshotUrl = https://nexus.your-domain.com/repository/maven-snapshots/
+nexusUsername    = your-username
+nexusPassword    = your-token-or-password
 ```
 
 #### 方式 B — 命令行参数（一次性）
@@ -129,10 +130,10 @@ gradle publish
 
 构建脚本根据 `version` 自动选择：
 
-| 项目 version | 实际推送仓库 |
-|--------------|-------------|
+| 项目 version       | 实际推送仓库             |
+|------------------|--------------------|
 | `1.0.0-SNAPSHOT` | `nexusSnapshotUrl` |
-| `1.0.0` | `nexusReleaseUrl` |
+| `1.0.0`          | `nexusReleaseUrl`  |
 
 要切换正式版发布，只需修改根 `build.gradle` 的 `version`，无需改其他地方。
 
@@ -149,10 +150,10 @@ gradle publish
 ### 前置准备
 
 1. **注册 Sonatype 账号**：[https://central.sonatype.com/](https://central.sonatype.com/)
-   - 验证 groupId 所有权（域名验证或 GitHub 仓库验证）
-   - 当前 groupId `com.eagle` 不是合法域名，发布到 Central 前需要：
-     - 改成已有域名（如 `com.example.eagle`、`io.github.username`）
-     - 或迁移到 `io.github.{你的 GitHub 用户名}`
+    - 验证 groupId 所有权（域名验证或 GitHub 仓库验证）
+    - 当前 groupId `com.eagle` 不是合法域名，发布到 Central 前需要：
+        - 改成已有域名（如 `com.example.eagle`、`io.github.username`）
+        - 或迁移到 `io.github.{你的 GitHub 用户名}`
 2. **生成 GPG 密钥**：
    ```bash
    gpg --gen-key
@@ -185,7 +186,7 @@ publishing {
         mavenJava(MavenPublication) {
             from components.java
             groupId = 'io.github.your-name'
-            
+
             pom {
                 name = 'Eagle Common Starter'
                 description = 'Eagle Cloud 公共基础设施'
@@ -302,17 +303,17 @@ repositories {
 dependencies {
     // 关键：先引入 BOM，后续依赖无需写版本
     implementation platform('com.eagle:eagle-bom:1.0.0-SNAPSHOT')
-    
+
     // Eagle Starter 按需引入（无版本号）
     implementation 'com.eagle:eagle-redis-starter'
     implementation 'com.eagle:eagle-data-jpa-starter'
     implementation 'com.eagle:eagle-resource-server-starter'
-    
+
     // 任何 BOM 管理过的第三方依赖也无需版本
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'com.baomidou:mybatis-plus-spring-boot4-starter'
     runtimeOnly 'com.mysql:mysql-connector-j'
-    
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 ```
@@ -329,7 +330,7 @@ gradle dependencies --configuration compileClasspath
 ```groovy
 dependencies {
     implementation platform('com.eagle:eagle-bom:1.0.0-SNAPSHOT')
-    
+
     // 享受 Eagle BOM 锁定的版本，但不依赖 Eagle 自身代码
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.redisson:redisson-spring-boot-starter'
@@ -347,7 +348,7 @@ dependencies {
 dependencies {
     api project(':eagle-starter:eagle-common-starter')
     api 'org.springframework.boot:spring-boot-starter-web'   // 无版本，BOM 已管
-    
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 ```
@@ -405,6 +406,7 @@ configurations.all {
 ### Q3：发到 Nexus 报 `401 Unauthorized`
 
 依次检查：
+
 1. `gradle.properties` 中是否有 `nexusUsername` / `nexusPassword`
 2. Nexus 账号是否对目标 repository 有 deploy 权限
 3. release 仓库是否禁止重复发布同版本号（多数 Nexus 默认禁止覆盖）—— 改为 SNAPSHOT 或升版本号
@@ -416,6 +418,7 @@ configurations.all {
 ### Q5：消费方报 `Could not resolve com.eagle:eagle-bom:1.0.0-SNAPSHOT`
 
 依次检查：
+
 1. 消费方 `repositories` 是否包含 Eagle 产物所在的仓库
 2. 该仓库是否开放匿名读取，否则需配置 credentials
 3. BOM 是否已经发布到该仓库（在 Nexus UI 直接搜 `eagle-bom`）
@@ -439,7 +442,8 @@ env:
 gradle :your-module:dependencyInsight --dependency redisson-spring-boot-starter
 ```
 
-如果有其他 BOM（如 Spring Boot 自带）覆盖了 Eagle BOM 的版本，需调整 BOM import 顺序——**Gradle platform 是后导入覆盖**，把 Eagle BOM 放在最后即可。
+如果有其他 BOM（如 Spring Boot 自带）覆盖了 Eagle BOM 的版本，需调整 BOM import 顺序——**Gradle platform 是后导入覆盖**，把
+Eagle BOM 放在最后即可。
 
 ---
 
