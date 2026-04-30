@@ -43,17 +43,23 @@ public class NotificationApplicationService {
         publisher.publish("prod_admin_alert", event);
     }
 }
+```
 
+```java
 // ✅ 事务消息（推荐用于聚合根写库 + 发消息的强保证场景）
-publisher.
+@RequiredArgsConstructor
+public class OrderApplicationService {
+    private final DomainEventPublisher publisher;
+    private final OrderRepository orderRepository;
 
-publishInTransaction(
-    "prod_order_created",
-    event,
-    () ->orderRepository.
-
-save(order)   // 本地事务回调
-);
+    public void placeOrder(Order order, OrderCreatedIntegrationEvent event) {
+        publisher.publishInTransaction(
+            "prod_order_created",
+            event,
+            () -> orderRepository.save(order)   // 本地事务回调
+        );
+    }
+}
 ```
 
 - **禁止**直接使用 `RocketMQTemplate` 裸调，必须走 starter 抽象
@@ -135,25 +141,37 @@ public class OrderCreatedConsumer
 
 ```java
 // ✅ 方案一：唯一约束（推荐，DB 强一致）
+@Entity
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = "event_id"))
+public class InboxRecord extends BaseEntity {
+    @Column(name = "event_id", nullable = false)
+    private String eventId;
+}
+```
 
-try{
-        inboxRepository.
-
-save(new InboxRecord(event.eventId()));
-
-process(event);
-}catch(
-DataIntegrityViolationException ignore){
-        // 重复消息直接跳过
+```java
+// ✅ 方案一：消费端去重逻辑
+public class OrderCreatedConsumer extends AbstractRocketMqListener<OrderCreatedIntegrationEvent> {
+    protected void handle(OrderCreatedIntegrationEvent event) {
+        try {
+            inboxRepository.save(new InboxRecord(event.eventId()));
+            process(event);
+        } catch (DataIntegrityViolationException ignore) {
+            // 重复消息直接跳过
         }
+    }
+}
+```
 
+```java
 // ✅ 方案二：Redis SETNX（高吞吐场景）
-Boolean first = redisTemplate.opsForValue()
-        .setIfAbsent("eagle:mq:idempotent:" + event.eventId(), "1", Duration.ofDays(1));
-if(Boolean.FALSE.
-
-equals(first))return;
+public class OrderCreatedConsumer extends AbstractRocketMqListener<OrderCreatedIntegrationEvent> {
+    protected void handle(OrderCreatedIntegrationEvent event) {
+        Boolean first = redisTemplate.opsForValue()
+                .setIfAbsent("eagle:mq:idempotent:" + event.eventId(), "1", Duration.ofDays(1));
+        if (Boolean.FALSE.equals(first)) return;
+    }
+}
 ```
 
 幂等 Key **必须**用消息自带的 `eventId`（`BaseEvent.eventId`），**不**用 MQ 自动生成的 `MsgId`（重投递会变）。
