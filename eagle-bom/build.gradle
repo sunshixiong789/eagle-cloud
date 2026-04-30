@@ -3,8 +3,7 @@ plugins {
     id 'maven-publish'
 }
 
-group = 'com.eagle'
-version = '1.0.0-SNAPSHOT'
+// group / version 由根 allprojects 块统一管理（com.eagle:1.0.0-SNAPSHOT）
 
 // 允许通过 api platform(...) 导入其他 BOM
 javaPlatform {
@@ -145,8 +144,7 @@ publishing {
     publications {
         bom(MavenPublication) {
             from components.javaPlatform
-            artifactId = 'eagle-bom'
         }
     }
-    // 如需推送 Nexus，在此追加 repositories { maven { url '...'; credentials { ... } } }
+    // Nexus 仓库配置在根 build.gradle 的 configure(subprojects) 中统一注册
 }

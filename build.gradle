@@ -10,11 +10,38 @@ plugins {
 
 allprojects {
     group = 'com.eagle'
-    version = '1.0.0'
+    version = '1.0.0-SNAPSHOT'
 
     repositories {
-        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url = 'https://maven.aliyun.com/repository/public' }
         mavenCentral()
+    }
+}
+
+// 所有子模块（含 BOM）共享 Nexus 发布仓库配置
+// 凭证优先从 -P 参数 / gradle.properties 取，其次回退环境变量
+configure(subprojects) {
+    apply plugin: 'maven-publish'
+
+    publishing {
+        repositories {
+            maven {
+                name = 'nexus'
+                def releaseUrl = findProperty('nexusReleaseUrl') ?: System.getenv('NEXUS_RELEASE_URL') ?: ''
+                def snapshotUrl = findProperty('nexusSnapshotUrl') ?: System.getenv('NEXUS_SNAPSHOT_URL') ?: ''
+                def isSnapshot = project.version.toString().endsWith('SNAPSHOT')
+                def targetUrl = isSnapshot ? snapshotUrl : releaseUrl
+                if (targetUrl) {
+                    url = targetUrl
+                }
+                // 内网 Nexus 常见为 http
+                allowInsecureProtocol = (targetUrl?.startsWith('http://')) as boolean
+                credentials {
+                    username = (findProperty('nexusUsername') ?: System.getenv('NEXUS_USERNAME')) as String
+                    password = (findProperty('nexusPassword') ?: System.getenv('NEXUS_PASSWORD')) as String
+                }
+            }
+        }
     }
 }
 
@@ -66,9 +93,7 @@ configure(subprojects.findAll { it.name != 'eagle-bom' }) {
         publications {
             mavenJava(MavenPublication) {
                 from components.java
-
                 groupId = 'com.eagle'
-                version = '1.0.0-SNAPSHOT'
             }
         }
     }
@@ -112,13 +137,18 @@ configure(subprojects.findAll { it.name != 'eagle-bom' }) {
         enabled = false
     }
 
-    dependencies {
-        // 统一通过 BOM 管理依赖版本，子模块使用无版本写法即可
-        implementation platform(project(':eagle-bom'))
-        annotationProcessor platform(project(':eagle-bom'))
-        testImplementation platform(project(':eagle-bom'))
-        testAnnotationProcessor platform(project(':eagle-bom'))
+    // 统一向所有可声明依赖的 configuration 注入 BOM platform，避免逐个添加
+    // （developmentOnly / mockitoAgent 等不继承 implementation，必须显式注入）
+    def bomTargets = ['implementation', 'compileOnly', 'runtimeOnly', 'annotationProcessor',
+                      'developmentOnly', 'testImplementation', 'testCompileOnly',
+                      'testRuntimeOnly', 'testAnnotationProcessor', 'mockitoAgent']
+    configurations.configureEach { conf ->
+        if (conf.name in bomTargets) {
+            project.dependencies.add(conf.name, project.dependencies.platform(project(':eagle-bom')))
+        }
+    }
 
+    dependencies {
         implementation 'org.springframework.boot:spring-boot-starter'
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         compileOnly 'org.projectlombok:lombok'
