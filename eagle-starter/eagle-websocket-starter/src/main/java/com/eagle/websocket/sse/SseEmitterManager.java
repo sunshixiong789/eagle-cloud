@@ -101,7 +101,8 @@ public class SseEmitterManager {
         userEmitters.forEach(emitter -> {
             try {
                 emitter.send(eventBuilder);
-            } catch (IOException e) {
+            } catch (Exception e) {
+                // IOException: network error; IllegalStateException: emitter already completed
                 log.debug("[SSE] Failed to send to user {}, removing connection: {}", userId, e.getMessage());
                 removeEmitter(userId, emitter);
             }
@@ -124,7 +125,7 @@ public class SseEmitterManager {
                 userEmitters.forEach(emitter -> {
                     try {
                         emitter.send(eventBuilder);
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         log.debug("[SSE] Broadcast failed for user {}, removing: {}", userId, e.getMessage());
                         removeEmitter(userId, emitter);
                     }

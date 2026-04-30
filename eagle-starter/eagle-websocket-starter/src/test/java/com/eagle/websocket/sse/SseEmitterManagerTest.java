@@ -101,11 +101,15 @@ class SseEmitterManagerTest {
         @Test
         @DisplayName("should remove dead emitter after send error and clean up connection")
         void sendToUser_shouldRemoveDeadEmitter() {
-            // Connect and then immediately complete the emitter (simulates a closed connection)
+            // Complete the emitter before sending. In a unit test (no servlet handler),
+            // complete() sets the flag but does NOT fire onCompletion. The removal
+            // happens via the send-error path: send() on a completed emitter throws
+            // IllegalStateException, which sendToUser catches and uses to removeEmitter.
             SseEmitter emitter = manager.connect("user1");
-            emitter.complete();  // triggers onCompletion callback -> removeEmitter
+            emitter.complete();
 
-            // After completion, the emitter should be cleaned up
+            manager.sendToUser("user1", "order", "payload");
+
             assertEquals(0, manager.getConnectionCount("user1"));
         }
     }

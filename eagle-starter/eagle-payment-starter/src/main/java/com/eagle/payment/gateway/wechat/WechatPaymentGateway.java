@@ -70,7 +70,7 @@ public class WechatPaymentGateway implements PaymentGateway {
     public void init() {
         this.config = new RSAAutoCertificateConfig.Builder()
                 .merchantId(wechatProps.getMchId())
-                .privateKeyFromString(wechatProps.getPrivateKey())
+                .privateKey(wechatProps.getPrivateKey())
                 .merchantSerialNumber(wechatProps.getMchSerialNo())
                 .apiV3Key(wechatProps.getApiV3Key())
                 .build();
@@ -121,10 +121,15 @@ public class WechatPaymentGateway implements PaymentGateway {
 
             // 将前端所需的支付参数序列化为 JSON 字符串返回
             String payInfo = buildPayInfo(response);
+            // getPackageVal() returns "prepay_id=xxx"; extract the id portion
+            String packageVal = response.getPackageVal();
+            String prepayId = (packageVal != null && packageVal.startsWith("prepay_id="))
+                    ? packageVal.substring("prepay_id=".length()) : packageVal;
+
             return PayResult.builder()
                     .success(true)
                     .outTradeNo(request.getOutTradeNo())
-                    .tradeNo(response.getPrepayId())
+                    .tradeNo(prepayId)
                     .payInfo(payInfo)
                     .build();
         } catch (ServiceException e) {

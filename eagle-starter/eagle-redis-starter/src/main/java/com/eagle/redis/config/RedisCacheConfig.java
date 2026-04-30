@@ -10,6 +10,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -40,6 +41,7 @@ import java.util.Map;
 @AutoConfiguration
 @EnableCaching
 @ConditionalOnClass(RedisConnectionFactory.class)
+@ConditionalOnProperty(name = "spring.cache.type", havingValue = "redis", matchIfMissing = true)
 @EnableConfigurationProperties(RedisProperties.class)
 public class RedisCacheConfig {
 

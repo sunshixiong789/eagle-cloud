@@ -1,7 +1,11 @@
 package com.eagle.mybatis.util;
 
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import lombok.Data;
+import org.apache.ibatis.builder.MapperBuilderAssistant;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -33,6 +37,16 @@ class QueryHelperTest {
         private String phone;
         private Integer status;
         private LocalDateTime createTime;
+    }
+
+    @BeforeAll
+    static void initTableInfo() {
+        // MyBatis-Plus requires TableInfo to be registered before lambda method references
+        // can resolve field names to column names in unit tests without a Spring context.
+        MapperBuilderAssistant assistant = new MapperBuilderAssistant(
+                new MybatisConfiguration(), "");
+        assistant.setCurrentNamespace(QueryHelperTest.class.getName());
+        TableInfoHelper.initTableInfo(assistant, StubEntity.class);
     }
 
     // ==================== likeAny ====================

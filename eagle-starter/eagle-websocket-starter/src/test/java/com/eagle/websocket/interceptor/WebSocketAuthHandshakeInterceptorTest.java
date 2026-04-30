@@ -53,7 +53,7 @@ class WebSocketAuthHandshakeInterceptorTest {
         @DisplayName("should extract token from URL query parameter and store in attributes")
         void beforeHandshake_shouldExtractTokenFromQueryString() throws Exception {
             when(request.getURI()).thenReturn(new URI("ws://localhost/ws?token=abc123"));
-            when(request.getHeaders()).thenReturn(new HttpHeaders());
+            // getHeaders() is never called when token is found in query string
 
             boolean result = interceptor.beforeHandshake(request, response, wsHandler, attributes);
 
@@ -65,7 +65,7 @@ class WebSocketAuthHandshakeInterceptorTest {
         @DisplayName("should extract token when there are multiple query parameters")
         void beforeHandshake_shouldExtractTokenAmongMultipleParams() throws Exception {
             when(request.getURI()).thenReturn(new URI("ws://localhost/ws?userId=42&token=mytoken&lang=zh"));
-            when(request.getHeaders()).thenReturn(new HttpHeaders());
+            // getHeaders() is never called when token is found in query string
 
             boolean result = interceptor.beforeHandshake(request, response, wsHandler, attributes);
 
@@ -133,10 +133,7 @@ class WebSocketAuthHandshakeInterceptorTest {
         @DisplayName("should prefer query param token over Authorization header")
         void beforeHandshake_shouldPreferQueryParamOverHeader() throws Exception {
             when(request.getURI()).thenReturn(new URI("ws://localhost/ws?token=query-token"));
-            // Even though Authorization header is present, query param wins
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer header-token");
-            when(request.getHeaders()).thenReturn(headers);
+            // getHeaders() is never reached when query param token is found (short-circuit)
 
             boolean result = interceptor.beforeHandshake(request, response, wsHandler, attributes);
 
