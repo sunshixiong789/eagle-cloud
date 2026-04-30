@@ -1,2 +1,3 @@
 com.eagle.common.config.AsyncConfig
 com.eagle.common.config.EagleCommonAutoConfiguration
+com.eagle.common.lock.LockAutoConfiguration

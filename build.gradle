@@ -20,8 +20,13 @@ allprojects {
     }
 }
 
+// Nexus 配置读取：-P 参数 > ~/.gradle/gradle.properties > 环境变量
+// 配置模板见项目根 gradle.properties.example
+ext.nexusConfig = { String propKey, String envKey ->
+    findProperty(propKey)?.toString() ?: System.getenv(envKey) ?: ''
+}
+
 // 所有子模块（含 BOM）共享 Nexus 发布仓库配置
-// 凭证优先从 -P 参数 / gradle.properties 取，其次回退环境变量
 configure(subprojects) {
     apply plugin: 'maven-publish'
 
@@ -29,18 +34,18 @@ configure(subprojects) {
         repositories {
             maven {
                 name = 'nexus'
-                def releaseUrl = findProperty('nexusReleaseUrl') ?: System.getenv('NEXUS_RELEASE_URL') ?: ''
-                def snapshotUrl = findProperty('nexusSnapshotUrl') ?: System.getenv('NEXUS_SNAPSHOT_URL') ?: ''
                 def isSnapshot = project.version.toString().endsWith('SNAPSHOT')
-                def targetUrl = isSnapshot ? snapshotUrl : releaseUrl
+                def targetUrl = isSnapshot
+                        ? rootProject.nexusConfig('nexusSnapshotUrl', 'NEXUS_SNAPSHOT_URL')
+                        : rootProject.nexusConfig('nexusReleaseUrl', 'NEXUS_RELEASE_URL')
                 if (targetUrl) {
                     url = targetUrl
+                    // 内网 Nexus 常见为 http
+                    allowInsecureProtocol = targetUrl.startsWith('http://')
                 }
-                // 内网 Nexus 常见为 http
-                allowInsecureProtocol = (targetUrl?.startsWith('http://')) as boolean
                 credentials {
-                    username = (findProperty('nexusUsername') ?: System.getenv('NEXUS_USERNAME')) as String
-                    password = (findProperty('nexusPassword') ?: System.getenv('NEXUS_PASSWORD')) as String
+                    username = rootProject.nexusConfig('nexusUsername', 'NEXUS_USERNAME')
+                    password = rootProject.nexusConfig('nexusPassword', 'NEXUS_PASSWORD')
                 }
             }
         }

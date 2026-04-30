@@ -1,0 +1,37 @@
+# ============================================================
+# Eagle Cloud — 团队成员本地配置模板
+# ============================================================
+# 把本文件复制到 ~/.gradle/gradle.properties 后填入真实值
+# 用户级配置不入仓库，跨所有项目共享
+#
+# Linux / macOS 一键复制：
+#   cp gradle.properties.example ~/.gradle/gradle.properties
+#
+# 校验：
+#   gradle :eagle-bom:tasks --group=publishing
+#   能看到 publishBomPublicationToNexusRepository 即配置生效
+# ============================================================
+
+
+# ===== Nexus 私服仓库 URL =====
+# Release 仓库（用于发布正式版，version 不带 -SNAPSHOT）
+nexusReleaseUrl=https://nexus.your-domain.com/repository/maven-releases/
+
+# Snapshot 仓库（用于发布开发版，version 以 -SNAPSHOT 结尾）
+nexusSnapshotUrl=https://nexus.your-domain.com/repository/maven-snapshots/
+
+
+# ===== Nexus 凭证 =====
+nexusUsername=your-username
+
+# 推荐使用 Nexus User Token，不要直接用登录密码
+# 获取路径：Nexus 右上角头像 → Profile → User Token → Generate
+nexusPassword=your-user-token
+
+
+# ===== (可选) Maven Central 发布凭证 =====
+# 仅在向 Maven Central 发布时需要，私服发布无需配置
+# centralUsername=your-sonatype-token-name
+# centralPassword=your-sonatype-token
+# signingKey=-----BEGIN PGP PRIVATE KEY BLOCK-----\n......\n-----END PGP PRIVATE KEY BLOCK-----
+# signingPassword=your-gpg-passphrase

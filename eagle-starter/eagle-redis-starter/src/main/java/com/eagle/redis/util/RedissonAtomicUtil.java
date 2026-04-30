@@ -81,7 +81,7 @@ import java.time.Duration;
  *   <li>若 CAS 失败（说明有并发修改），重新读取并重试</li>
  * </ol>
  * <p>此方案无需加锁，适合高并发低竞争场景（如大库存商品）。
- * 若库存极少且并发极高（抢购场景），建议配合 {@link RedisLockUtil} 使用悲观锁避免过多自旋。
+ * 若库存极少且并发极高（抢购场景），建议配合 {@link com.eagle.common.lock.DistributedLock} 使用悲观锁避免过多自旋。
  *
  * @author 孙士雄
  */
@@ -143,7 +143,7 @@ public class RedissonAtomicUtil {
      * 原子扣减（库存/余额场景）：当前值 >= delta 时才扣减，否则返回 false。
      *
      * <p>使用 CAS + 自旋实现无锁原子扣减，避免超扣（超卖）。
-     * 高并发竞争激烈时可配合 {@link RedisLockUtil} 降低自旋次数。
+     * 高并发竞争激烈时可配合 {@link com.eagle.common.lock.DistributedLock} 降低自旋次数。
      *
      * @param key   计数器 key
      * @param delta 扣减量（正数）
