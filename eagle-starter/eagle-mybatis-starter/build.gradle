@@ -5,6 +5,9 @@ dependencies {
     runtimeOnly 'com.mysql:mysql-connector-j'
     compileOnly 'com.alibaba:druid-spring-boot-3-starter'
 
+    // EagleMetaObjectHandler 通过 SecurityContextHolder 取审计用户
+    compileOnly 'org.springframework.security:spring-security-core'
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testCompileOnly 'org.projectlombok:lombok'

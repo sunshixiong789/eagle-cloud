@@ -2,6 +2,9 @@ dependencies {
     api project(':eagle-starter:eagle-common-starter')
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
 
+    // JpaConfig 通过 SecurityContextHolder 取审计用户；消费方启用 security 时该 Bean 才生效
+    compileOnly 'org.springframework.security:spring-security-core'
+
     // 数据库驱动（runtimeOnly：运行时按 profile 加载，不暴露给消费方）
     runtimeOnly 'com.mysql:mysql-connector-j'
     runtimeOnly 'org.postgresql:postgresql'

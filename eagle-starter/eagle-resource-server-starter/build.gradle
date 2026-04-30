@@ -8,6 +8,9 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-webmvc'
     api 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 
+    // CacheConfig 用 ObjectMapper 配置缓存序列化
+    compileOnly 'com.fasterxml.jackson.core:jackson-databind'
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 

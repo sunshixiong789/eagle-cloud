@@ -4,5 +4,10 @@ dependencies {
     api "org.redisson:redisson-spring-boot-starter"
     api 'org.springframework.boot:spring-boot-starter-cache'
 
+    // RedisCacheConfig 暴露 ObjectMapper Bean；运行时由消费方提供（引 web/json starter 即带）
+    compileOnly 'com.fasterxml.jackson.core:jackson-databind'
+    compileOnly 'com.fasterxml.jackson.core:jackson-annotations'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind'
 }

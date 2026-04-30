@@ -5,6 +5,9 @@ dependencies {
     compileOnly project(':eagle-starter:eagle-redis-starter')
     compileOnly 'org.springframework.boot:spring-boot-starter-actuator'
 
+    // SseEmitterManager 用 ObjectMapper 序列化推送事件
+    compileOnly 'com.fasterxml.jackson.core:jackson-databind'
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 

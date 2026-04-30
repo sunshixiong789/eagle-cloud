@@ -18,6 +18,9 @@ dependencies {
     implementation "com.github.ben-manes.caffeine:caffeine"
     implementation "org.apache.poi:poi-ooxml"
 
+    // 业务侧 LoginRateLimitFilter / TokenTrackingHandler / OnlineUserAdapter 直接用 fastjson2
+    implementation "com.alibaba.fastjson2:fastjson2"
+
     // 本地开发：自动加载项目根目录的 .env 文件到 Spring Environment
     runtimeOnly 'me.paulschwarz:spring-dotenv:4.0.0'
 
