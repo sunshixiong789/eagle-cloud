@@ -5,7 +5,12 @@ dependencies {
         // Nacos 服务发现：单体不需要注册中心
         exclude group: 'com.alibaba.cloud', module: 'spring-cloud-starter-alibaba-nacos-discovery'
     }
-    // 启动类需直接使用 @EntityScan / @EnableJpaRepositories 显式声明跨包扫描
-    // （system-service 以 implementation 引入 JPA starter，传递依赖在 monolith 编译期不可见）
+    // system-service 以 implementation 范围引入下列依赖，传递依赖在 monolith 编译期不可见，
+    // 这里显式重新声明，使 IDE 能加载 spring-configuration-metadata.json，
+    // 避免 application.yml 提示 "无法解析配置属性 eagle.websocket.* 等"。
+    // 启动类同样需要 @EntityScan / @EnableJpaRepositories 显式声明跨包扫描。
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation project(':eagle-starter:eagle-websocket-starter')
+    implementation project(':eagle-starter:eagle-resource-server-starter')
+    implementation project(':eagle-starter:eagle-row-security-starter')
 }
