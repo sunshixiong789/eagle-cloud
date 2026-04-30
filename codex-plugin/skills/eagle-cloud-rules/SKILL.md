@@ -13,17 +13,17 @@ description: Use when working in Eagle Cloud projects and needing repository rul
 
 只加载与当前任务相关的规则文件：
 
-- `../../rules/01-naming.md` — Java、DDD、错误码和模块命名规范。
-- `../../rules/02-code-style.md` — Java 风格、Lombok、空值标注和格式要求。
-- `../../rules/03-architecture.md` — DDD 分层和六边形架构。
-- `../../rules/04-modulith.md` — Spring Modulith 边界和 Named Interface。
-- `../../rules/09-testing.md` — JUnit、Mockito、测试命名和覆盖要求。
-- `../../rules/10-starter.md` — Spring Boot Starter 与自动配置模式。
-- `../../rules/12-security.md` — OAuth2、JWT、敏感数据和审计规则。
-- `../../rules/15-messaging.md` — RocketMQ Topic、幂等、死信和事务消息。
-- `../../rules/22-git.md` — 分支、提交、PR 和发布约定。
-- `../../rules/25-review-checklist.md` — 完成前的最终自检清单。
-- `../../rules/30-dependency.md` — Gradle 依赖范围、BOM、升级和 CVE 检查。
+- `../rules/01-naming.md` — Java、DDD、错误码和模块命名规范。
+- `../rules/02-code-style.md` — Java 风格、Lombok、空值标注和格式要求。
+- `../rules/03-architecture.md` — DDD 分层和六边形架构。
+- `../rules/04-modulith.md` — Spring Modulith 边界和 Named Interface。
+- `../rules/09-testing.md` — JUnit、Mockito、测试命名和覆盖要求。
+- `../rules/10-starter.md` — Spring Boot Starter 与自动配置模式。
+- `../rules/12-security.md` — OAuth2、JWT、敏感数据和审计规则。
+- `../rules/15-messaging.md` — RocketMQ Topic、幂等、死信和事务消息。
+- `../rules/22-git.md` — 分支、提交、PR 和发布约定。
+- `../rules/25-review-checklist.md` — 完成前的最终自检清单。
+- `../rules/30-dependency.md` — Gradle 依赖范围、BOM、升级和 CVE 检查。
 
 ## 工作流程
 
