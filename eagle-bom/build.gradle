@@ -1,0 +1,152 @@
+plugins {
+    id 'java-platform'
+    id 'maven-publish'
+}
+
+group = 'com.eagle'
+version = '1.0.0-SNAPSHOT'
+
+// 允许通过 api platform(...) 导入其他 BOM
+javaPlatform {
+    allowDependencies()
+}
+
+ext {
+    // Spring 系
+    springBootVersion = '4.0.3'
+    springCloudVersion = '2025.1.1'
+    springCloudAlibabaVersion = '2025.1.0.0'
+    springModulithVersion = '2.0.5'
+
+    // 数据库 / 连接池
+    mysqlConnectorVersion = '9.7.0'
+    postgresqlVersion = '42.7.10'
+    druidVersion = '1.2.28'
+
+    // Redis
+    redissonVersion = '4.3.0'
+
+    // 工具类
+    hutoolVersion = '5.8.43'
+    guavaVersion = '33.6.0-jre'
+    commonsLang3Version = '3.20.0'
+    commonsCollections4Version = '4.5.0'
+    commonsIoVersion = '2.21.0'
+    uuidCreatorVersion = '6.1.1'
+    caffeineVersion = '3.2.0'
+
+    // 第三方 SDK
+    wxJavaVersion = '4.8.2-20260420.104332'
+    aliyunSmsVersion = '4.5.1'
+
+    // API 文档
+    springdocVersion = '3.0.2'
+
+    // 消息中间件
+    rocketMqVersion = '2.3.5'
+
+    // 对象存储
+    minioVersion = '8.5.17'
+
+    // 任务调度
+    xxlJobVersion = '3.4.0'
+
+    // 分布式事务
+    seataVersion = '2.6.0'
+
+    // ORM
+    mybatisPlusVersion = '3.5.16'
+
+    // 支付 SDK
+    alipayVersion = '4.40.771.ALL'
+    wechatpayVersion = '0.2.17'
+
+    // 序列化
+    fastjson2Version = '2.0.61'
+
+    // Office 文档
+    poiVersion = '5.3.0'
+
+    // MapStruct
+    mapstructVersion = '1.6.3'
+    lombokMapstructVersion = '0.2.0'
+}
+
+dependencies {
+    // 导入官方 BOM（platform 形式）
+    api platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+    api platform("org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}")
+    api platform("com.alibaba.cloud:spring-cloud-alibaba-dependencies:${springCloudAlibabaVersion}")
+    api platform("org.springframework.modulith:spring-modulith-bom:${springModulithVersion}")
+
+    // 项目自管的版本约束（消费方无需写版本即可使用）
+    constraints {
+        // 数据库驱动
+        api "com.mysql:mysql-connector-j:${mysqlConnectorVersion}"
+        api "org.postgresql:postgresql:${postgresqlVersion}"
+
+        // 连接池
+        api "com.alibaba:druid-spring-boot-3-starter:${druidVersion}"
+
+        // Redis
+        api "org.redisson:redisson-spring-boot-starter:${redissonVersion}"
+
+        // 工具类
+        api "cn.hutool:hutool-all:${hutoolVersion}"
+        api "com.google.guava:guava:${guavaVersion}"
+        api "org.apache.commons:commons-lang3:${commonsLang3Version}"
+        api "org.apache.commons:commons-collections4:${commonsCollections4Version}"
+        api "commons-io:commons-io:${commonsIoVersion}"
+        api "com.github.f4b6a3:uuid-creator:${uuidCreatorVersion}"
+        api "com.github.ben-manes.caffeine:caffeine:${caffeineVersion}"
+
+        // 微信/第三方 SDK
+        api "com.github.binarywang:weixin-java-miniapp:${wxJavaVersion}"
+        api "com.aliyun:dysmsapi20170525:${aliyunSmsVersion}"
+
+        // API 文档
+        api "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
+        api "org.springdoc:springdoc-openapi-starter-webflux-ui:${springdocVersion}"
+
+        // 序列化
+        api "com.alibaba.fastjson2:fastjson2:${fastjson2Version}"
+
+        // Office 文档
+        api "org.apache.poi:poi-ooxml:${poiVersion}"
+
+        // MapStruct
+        api "org.projectlombok:lombok-mapstruct-binding:${lombokMapstructVersion}"
+        api "org.mapstruct:mapstruct:${mapstructVersion}"
+        api "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+
+        // RocketMQ
+        api "org.apache.rocketmq:rocketmq-spring-boot-starter:${rocketMqVersion}"
+        api "org.apache.rocketmq:rocketmq-v5-client-spring-boot-starter:${rocketMqVersion}"
+
+        // 对象存储
+        api "io.minio:minio:${minioVersion}"
+
+        // 分布式定时任务
+        api "com.xuxueli:xxl-job-core:${xxlJobVersion}"
+
+        // 分布式事务
+        api "org.apache.seata:seata-spring-boot-starter:${seataVersion}"
+
+        // MyBatis-Plus
+        api "com.baomidou:mybatis-plus-spring-boot4-starter:${mybatisPlusVersion}"
+
+        // 支付 SDK
+        api "com.alipay.sdk:alipay-sdk-java:${alipayVersion}"
+        api "com.github.wechatpay-apiv3:wechatpay-java:${wechatpayVersion}"
+    }
+}
+
+publishing {
+    publications {
+        bom(MavenPublication) {
+            from components.javaPlatform
+            artifactId = 'eagle-bom'
+        }
+    }
+    // 如需推送 Nexus，在此追加 repositories { maven { url '...'; credentials { ... } } }
+}

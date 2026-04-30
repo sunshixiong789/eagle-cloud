@@ -11,5 +11,5 @@ spring:
 eagle:
   jwt:
     keystore-location: classpath:jwt-keystore.p12
-    keystore-password: eagle-jwt-test-2026
+    keystore-password: eagle-jwt-dev-2026
     key-alias: eagle-jwt

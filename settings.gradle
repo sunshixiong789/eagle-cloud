@@ -1,23 +1,26 @@
 rootProject.name = 'eagle-cloud'
 
+// 依赖版本管理 BOM
+include 'eagle-bom'
+
 // 基础服务模块
-include 'eagle-base-server:eagle-gateway-server'
-include 'eagle-base-server:eagle-system-server'
+include 'eagle-services:eagle-gateway-service'
+include 'eagle-services:eagle-system-service'
 
 // Starter 模块
 include 'eagle-starter:eagle-common-starter'
 include 'eagle-starter:eagle-data-jpa-starter'
-include 'eagle-starter:eagle-feign-starter'
+include 'eagle-starter:http-client-starter'
 include 'eagle-starter:eagle-openapi-starter'
 include 'eagle-starter:eagle-redis-starter'
 include 'eagle-starter:eagle-resource-server-starter'
 include 'eagle-starter:eagle-tracing-starter'
 include 'eagle-starter:eagle-rocketmq-starter'
 include 'eagle-starter:eagle-dynamic-datasource-starter'
-include 'eagle-starter:eagle-data-permission-starter'
-include 'eagle-starter:eagle-oss-starter'
-include 'eagle-starter:eagle-message-starter'
-include 'eagle-starter:eagle-xxl-job-starter'
+include 'eagle-starter:eagle-row-security-starter'
+include 'eagle-starter:eagle-oss-minio-starter'
+include 'eagle-starter:eagle-notification-starter'
+include 'eagle-starter:eagle-scheduler-starter'
 include 'eagle-starter:eagle-tenant-starter'
 
 // 高并发电商扩展 Starter

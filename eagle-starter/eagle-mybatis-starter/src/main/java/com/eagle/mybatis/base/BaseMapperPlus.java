@@ -29,7 +29,7 @@ public interface BaseMapperPlus<T> extends BaseMapper<T> {
     /**
      * 根据 ID 列表批量查询实体。
      *
-     * <p>委托给 {@link BaseMapper#selectBatchIds(Collection)}，提供更直观的方法名。
+     * <p>委托给 {@link BaseMapper#selectByIds(Collection)}，提供更直观的方法名。
      * 列表为空时直接返回空列表。
      *
      * <p>使用示例：
@@ -41,6 +41,6 @@ public interface BaseMapperPlus<T> extends BaseMapper<T> {
      * @return 查询到的实体列表；未找到的 ID 不会出现在结果中
      */
     default List<T> selectBatchByIds(Collection<? extends Serializable> ids) {
-        return selectBatchIds(ids);
+        return selectByIds(ids);
     }
 }
