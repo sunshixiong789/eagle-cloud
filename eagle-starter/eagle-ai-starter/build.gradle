@@ -1,0 +1,13 @@
+dependencies {
+    api project(':eagle-starter:eagle-common-starter')
+
+    // Spring AI 核心：ChatClient.Builder 自动配置 + ChatModel/ChatMemory 等抽象
+    api 'org.springframework.ai:spring-ai-autoconfigure-model-chat-client'
+
+    // 以下提供商由消费方按需选择，示例：
+    //   implementation 'org.springframework.ai:spring-ai-starter-model-openai'   // OpenAI / Azure OpenAI
+    //   implementation 'org.springframework.ai:spring-ai-starter-model-ollama'   // 本地 Ollama
+    //   implementation 'org.springframework.ai:spring-ai-starter-model-anthropic' // Anthropic Claude
+    compileOnly 'org.springframework.ai:spring-ai-starter-model-openai'
+    compileOnly 'org.springframework.ai:spring-ai-starter-model-ollama'
+}

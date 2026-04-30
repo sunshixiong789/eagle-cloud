@@ -35,6 +35,12 @@ spring:
 spring.cloud.sentinel:
   enabled: false
 
+# 本地无 Redis，禁用 Redis 健康检查
+management:
+  health:
+    redis:
+      enabled: false
+
 # 手动配置聚合文档（本地无 Nacos，关闭自动发现）
 eagle:
   gateway:

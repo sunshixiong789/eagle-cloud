@@ -6,12 +6,15 @@
 
 server:
   port: 80
+  shutdown: graceful  # 优雅关闭：等待进行中的请求处理完毕
 
 spring:
   application:
     name: eagle-monolith
   profiles:
     active: local
+  lifecycle:
+    timeout-per-shutdown-phase: 30s  # 优雅关闭最长等待时间
   jpa:
     open-in-view: false   # 关闭 OSIV，避免视图层延迟加载（参考 .claude/rules/23-performance.md）
 
@@ -92,8 +95,14 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+      show-components: when-authorized  # 显示各健康组件状态
+      probes:
+        enabled: true  # 启用 /actuator/health/liveness 和 /actuator/health/readiness
     metrics:
       enabled: true
+  health:
+    db:
+      enabled: true  # 数据库连通性检查
   info:
     env:
       enabled: true

@@ -50,7 +50,10 @@ management:
   endpoint:
     health:
       show-details: never        # 生产不暴露 health 详情
+      show-components: never     # 生产不暴露组件列表
   health:
+    db:
+      enabled: true
     redis:
       enabled: true
 

@@ -9,6 +9,7 @@ include 'eagle-services:eagle-system-service'
 include 'eagle-services:eagle-monolith-service'
 
 // Starter 模块
+include 'eagle-starter:eagle-ai-starter'
 include 'eagle-starter:eagle-common-starter'
 include 'eagle-starter:eagle-data-jpa-starter'
 include 'eagle-starter:http-client-starter'

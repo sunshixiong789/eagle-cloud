@@ -5,6 +5,7 @@
 # 服务器配置
 server:
   port: 80  # 应用监听端口
+  shutdown: graceful  # 优雅关闭：等待进行中的请求处理完毕
 
 # Spring 基础配置
 spring:
@@ -12,6 +13,8 @@ spring:
     name: eagle-system-server  # 应用名称
   profiles:
     active: local  # 激活的配置文件（local/dev/prod）
+  lifecycle:
+    timeout-per-shutdown-phase: 30s  # 优雅关闭最长等待时间
   cloud:
     nacos:
       discovery:
@@ -120,8 +123,14 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+      show-components: when-authorized  # 显示各健康组件状态
+      probes:
+        enabled: true  # 启用 /actuator/health/liveness 和 /actuator/health/readiness
     metrics:
       enabled: true
+  health:
+    db:
+      enabled: true  # 数据库连通性检查
   info:
     env:
       enabled: true

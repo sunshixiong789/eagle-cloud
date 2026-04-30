@@ -101,7 +101,10 @@ management:
       base-path: /actuator
   endpoint:
     health:
-      show-details: when_authorized
+      show-details: when-authorized
+      show-components: when-authorized  # 显示各健康组件状态
+      probes:
+        enabled: true  # 启用 /actuator/health/liveness 和 /actuator/health/readiness
 
 # Eagle Gateway 配置
 eagle:
