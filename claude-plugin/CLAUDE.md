@@ -2,6 +2,9 @@
 
 > 本文件由 `eagle-cloud` Claude Code Plugin 自动注入业务项目。
 > 业务项目自身的 `CLAUDE.md` 仍然生效，本文件作为补充指引。
+>
+> Plugin 通过 Git Marketplace 分发，支持 **Gitee / GitHub / GitLab / Gitea**。
+> 接入方式见 `README.md` 与 `DEPLOYMENT.md`。
 
 ## 项目栈定位
 

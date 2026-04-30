@@ -1,0 +1,75 @@
+# GitLab CI 配置 — 与 .github/workflows/plugin-sync-check.yml 等价
+#
+# 仅校验 plugin 同步与元数据。Gradle 构建另起 pipeline。
+
+stages:
+  - validate
+
+plugin-sync-check:
+  stage: validate
+  image: alpine:3.20
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - .claude/rules/**/*
+        - .claude/commands/**/*
+        - eagle-starter/**/USAGE.md
+        - claude-plugin/**/*
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - .claude/rules/**/*
+        - .claude/commands/**/*
+        - eagle-starter/**/USAGE.md
+        - claude-plugin/**/*
+  before_script:
+    - apk add --no-cache bash git jq findutils
+  script:
+    - chmod +x ./claude-plugin/sync.sh
+    - ./claude-plugin/sync.sh
+    - |
+      if ! git diff --quiet claude-plugin/; then
+        echo "❌ claude-plugin/ is OUT OF SYNC with source files."
+        echo ""
+        echo "Diff:"
+        git diff claude-plugin/
+        echo ""
+        echo "Fix: run './claude-plugin/sync.sh' locally and commit the result."
+        exit 1
+      fi
+    - echo "✅ claude-plugin/ is in sync"
+
+plugin-metadata-validation:
+  stage: validate
+  image: alpine:3.20
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: [claude-plugin/**/*]
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: [claude-plugin/**/*]
+  before_script:
+    - apk add --no-cache bash git jq findutils
+  script:
+    - jq -e '.name and .version and .description' claude-plugin/plugin.json
+    - jq -e '.name and .plugins[0].name and .plugins[0].version' claude-plugin/marketplace.json
+    - |
+      PLUGIN_VER=$(jq -r '.version' claude-plugin/plugin.json)
+      MARKET_VER=$(jq -r '.plugins[0].version' claude-plugin/marketplace.json)
+      if [ "$PLUGIN_VER" != "$MARKET_VER" ]; then
+        echo "❌ Version mismatch: plugin.json=$PLUGIN_VER but marketplace.json=$MARKET_VER"
+        exit 1
+      fi
+    - |
+      for f in claude-plugin/skills/*/SKILL.md; do
+        if ! head -1 "$f" | grep -q '^---$'; then
+          echo "❌ Missing frontmatter: $f"
+          exit 1
+        fi
+      done
+    - |
+      USAGE_COUNT=$(find eagle-starter -maxdepth 3 -name 'USAGE.md' | wc -l)
+      SKILL_COUNT=$(find claude-plugin/skills -name 'SKILL.md' | wc -l)
+      if [ "$USAGE_COUNT" != "$SKILL_COUNT" ]; then
+        echo "❌ Mismatch: $USAGE_COUNT USAGE.md but $SKILL_COUNT SKILL.md"
+        exit 1
+      fi
+    - echo "✅ Plugin metadata valid"

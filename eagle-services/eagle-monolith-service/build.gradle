@@ -5,4 +5,7 @@ dependencies {
         // Nacos 服务发现：单体不需要注册中心
         exclude group: 'com.alibaba.cloud', module: 'spring-cloud-starter-alibaba-nacos-discovery'
     }
+    // 启动类需直接使用 @EntityScan / @EnableJpaRepositories 显式声明跨包扫描
+    // （system-service 以 implementation 引入 JPA starter，传递依赖在 monolith 编译期不可见）
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 }
