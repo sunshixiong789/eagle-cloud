@@ -8,8 +8,15 @@
 | 类型              | 数量 | 说明                                                                            |
 |-----------------|----|-------------------------------------------------------------------------------|
 | Rules（自动注入）     | 28 | DDD / Modulith / 安全 / 日志 / 缓存 / 消息 / 事务 / 多租户 / 性能 / 部署 等全部开发规范               |
-| Commands（slash） | 5  | `/check-arch` `/new-module` `/new-aggregate` `/new-starter` `/add-error-code` |
-| Skills（按需加载）    | 22 | 22 个 starter 的使用指南，含触发关键词                                                     |
+| Commands（slash） | 6  | `/eagle-flow` `/check-arch` `/new-module` `/new-aggregate` `/new-starter` `/add-error-code` |
+| Skills（按需加载）    | 23 | 22 个 starter skill + 1 个端到端编排 skill `eagle-feature-flow`                       |
+
+## 文档导航
+
+- **[USAGE.md](./USAGE.md)** ★ 团队使用指南(开发者必读) — 5 分钟上手、3 种使用层次、典型场景走读、FAQ、故障排查
+- [DEPLOYMENT.md](./DEPLOYMENT.md) — 私有 marketplace 部署、CI 配置、权限管理
+- [INTEGRATION-TEST.md](./INTEGRATION-TEST.md) — 接入后的验收 checklist
+- [CHANGELOG.md](./CHANGELOG.md) — 版本变更记录
 
 ## 目录结构
 

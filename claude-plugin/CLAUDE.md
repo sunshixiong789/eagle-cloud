@@ -91,13 +91,32 @@
 
 ## 项目级 Commands
 
-| 命令                | 作用                              |
-|-------------------|---------------------------------|
-| `/check-arch`     | Modulith 架构验证 + 模块测试 + 全量构建一键检查 |
-| `/new-module`     | 按 DDD 模板创建新业务模块                 |
-| `/new-aggregate`  | 创建聚合根全栈骨架                       |
-| `/new-starter`    | 按 Spring Boot 4 模板创建新 starter   |
-| `/add-error-code` | 在 ErrorCode 枚举追加常量并同步 i18n 三语翻译 |
+| 命令                | 作用                                                     |
+|-------------------|--------------------------------------------------------|
+| `/eagle-flow`     | **启动 6 阶段端到端流程**(自然语言"做一个新功能"等价触发)               |
+| `/check-arch`     | Modulith 架构验证 + 模块测试 + 全量构建一键检查                        |
+| `/new-module`     | 按 DDD 模板创建新业务模块                                        |
+| `/new-aggregate`  | 创建聚合根全栈骨架                                              |
+| `/new-starter`    | 按 Spring Boot 4 模板创建新 starter                          |
+| `/add-error-code` | 在 ErrorCode 枚举追加常量并同步 i18n 三语翻译                        |
+
+## 端到端开发流程(eagle-feature-flow skill)
+
+主干用 **Superpowers 6 阶段**,在 **规划** 与 **写代码** 阶段嵌入式调用本 plugin 的 rules / commands / starter skills:
+
+| 阶段 | 名称         | 主干调用                                          | claude-plugin 注入                                                            |
+|----|------------|-----------------------------------------------|---------------------------------------------------------------------------|
+| 1  | Brainstorm | `superpowers:brainstorming`                   | (无,聚焦需求澄清)                                                                |
+| 2  | Plan       | `superpowers:writing-plans`                   | ★ 必读相关 `rules/*` + 在 plan 中预定要触发的 commands(`/new-module` 等)               |
+| 3  | TDD        | `superpowers:test-driven-development`         | ★ 加载相关 starter skills(eagle-common / eagle-rocketmq 等) + 触发 plan 中的 commands |
+| 4  | Verify     | `superpowers:verification-before-completion`  | ★ 强制 `/check-arch`                                                        |
+| 5  | Review     | `superpowers:requesting-code-review`          | ★ 对照 `rules/25-review-checklist.md`(16 大类自检)                              |
+| 6  | Finish     | `superpowers:finishing-a-development-branch`  | 按 `rules/22-git.md` 整理 commit + PR 描述                                     |
+
+**设计哲学**:Superpowers 提供工程纪律(brainstorm → plan → TDD → verify → review → finish),
+本 plugin 提供 Eagle 平台的"约束"(rules)和"工具箱"(commands + per-starter skills),后者在主流程的关键节点被嵌入式调用。
+
+详见 `skills/eagle-feature-flow/SKILL.md`。手动触发:在对话中说"按 eagle flow 走"或描述一个非 trivial 的功能需求即可。
 
 ## 重要约定（高频陷阱）
 
