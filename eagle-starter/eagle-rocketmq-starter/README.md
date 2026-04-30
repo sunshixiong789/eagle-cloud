@@ -23,6 +23,15 @@
     - [第二层：重试告警](#第二层重试告警)
     - [第三层：死信队列处理](#第三层死信队列处理)
     - [消费幂等性](#消费幂等性)
+- [支付级强一致消费策略](#支付级强一致消费策略)
+    - [问题边界：消费"必达"到底要保证什么](#问题边界消费必达到底要保证什么)
+    - [核心原则：本地消息表 + 状态机 + 唯一约束](#核心原则本地消息表--状态机--唯一约束)
+    - [模式 A：本地消息表（Inbox）+ 业务事务原子](#模式-a本地消息表inbox-业务事务原子)
+    - [模式 B：状态机驱动的幂等消费](#模式-b状态机驱动的幂等消费)
+    - [模式 C：TCC 与预留资源](#模式-c-tcc-与预留资源)
+    - [系统异常 vs 业务失败 vs 永久失败](#系统异常-vs-业务失败-vs-永久失败)
+    - [人工介入闭环：DLQ 重投与对账](#人工介入闭环dlq-重投与对账)
+    - [完整支付通知消费样例](#完整支付通知消费样例)
 - [与 DDD 架构集成](#与-ddd-架构集成)
 - [消息发布方式选型](#消息发布方式选型)
 - [常见问题](#常见问题)
@@ -763,6 +772,409 @@ protected void handle(OrderPaidEvent event) {
 | 第二层  | 重试告警（`onRetryAlert`）         | 持续失败早发现，人工介入                |
 | 第三层  | 死信队列（`AbstractDlqListener`）  | 代码 bug / 无法自动恢复的场景，持久化待人工处理 |
 | 幂等校验 | Redis/DB 去重（`eventId` 为 key） | 重试带来的重复消费                   |
+
+---
+
+## 支付级强一致消费策略
+
+> 适用场景：**支付成功通知、扣款、记账、退款、库存扣减、积分发放**等"消费一旦失败，业务就处于不可逆的不一致状态"的关键链路。
+>
+> 普通业务用上一节的三层保障 + Redis 幂等已足够；本节面向**金融级 / 资金类**消费，要求"消费方原子提交、不重不漏、可对账、可补偿"。
+
+### 问题边界:消费"必达"到底要保证什么
+
+支付场景的"必达"是四个独立属性的乘积，缺一会引起资损：
+
+| 属性                    | 含义                       | 反例（典型事故）                                |
+|-----------------------|--------------------------|----------------------------------------|
+| **不丢失**（at-least-once） | 消息一定会被消费方收到至少一次          | 消费方 ACK 后处理崩溃 → 丢失                     |
+| **幂等**（at-most-once-effect） | 同一条消息无论被处理几次，业务结果只发生一次   | 重试导致用户被扣款两次                            |
+| **原子**（all-or-nothing） | 业务变更与"已消费"标记必须同事务提交      | 已扣款但状态没标记 → 重试再扣一次                     |
+| **可观察**               | 失败/堆积/卡住能被发现并能补偿         | 消息进 DLQ 没人看 → 永久丢失                     |
+
+RocketMQ 自身只提供 at-least-once。**幂等、原子、可观察必须靠消费方代码 + DB 约束 + 运营平台共同实现。**
+
+### 核心原则:本地消息表 + 状态机 + 唯一约束
+
+支付级消费要做到"必达且只做一次"，核心三件套：
+
+```
+┌────────────────────────────────────────────────────────────┐
+│  ① 入库表（Inbox / Consumed Event Log）                       │
+│     - 唯一索引 event_id：保证同一消息只能被记录一次               │
+│     - 与业务变更同事务提交：要么都成功，要么都回滚                  │
+├────────────────────────────────────────────────────────────┤
+│  ② 业务聚合根的状态机                                           │
+│     - 只有"前置状态正确"时业务方法才会执行（领域层守护不变量）         │
+│     - 重复消息进入时,状态已切换 → 业务方法直接 no-op,自然幂等        │
+├────────────────────────────────────────────────────────────┤
+│  ③ 唯一约束兜底                                                │
+│     - 资金流水表 (out_trade_no, channel) 唯一,DB 层最后一道防线  │
+│     - 即使应用层判断错了,DB 也不会让重复入账                        │
+└────────────────────────────────────────────────────────────┘
+```
+
+任何一层单独都不够：
+
+- 只有 Redis 幂等 → Redis 闪断会双扣
+- 只有状态机 → 一致性靠代码良心，难以审计
+- 只有唯一约束 → 应用层抛异常时无法判断是否真的入账
+
+**三层一起,才能实现"消费必达"。**
+
+### 模式 A:本地消息表(Inbox)+ 业务事务原子
+
+将"消息已消费"和"业务变更"绑在同一个 DB 事务内提交。
+
+#### Inbox 表设计
+
+```sql
+CREATE TABLE t_consumed_event (
+    id              BIGINT       NOT NULL AUTO_INCREMENT,
+    event_id        VARCHAR(64)  NOT NULL COMMENT '事件 ID（即 BaseEvent.eventId）',
+    consumer_group  VARCHAR(128) NOT NULL COMMENT '消费者组，区分多组消费同一消息',
+    topic           VARCHAR(128) NOT NULL,
+    payload_md5     CHAR(32)              COMMENT '消息体 MD5,可用于检测内容变化',
+    consumed_at     DATETIME(3)  NOT NULL,
+    biz_ref         VARCHAR(64)           COMMENT '业务对象 ID(订单号/支付单号),便于排查',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_event_consumer (event_id, consumer_group),  -- ★ 关键唯一索引
+    KEY idx_biz_ref (biz_ref),
+    KEY idx_consumed_at (consumed_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息消费记录(Inbox)';
+```
+
+**为何按 `(event_id, consumer_group)` 联合唯一**:同一消息可能被多个消费者组(库存、积分、通知)各自消费一次,组内幂等而不影响其他组。
+
+#### 消费实现
+
+```java
+@Component
+@RequiredArgsConstructor
+public class PaymentSucceededListener extends AbstractRocketMqListener<PaymentSucceededEvent> {
+
+    private final PaymentApplicationService paymentService;
+    private final ConsumedEventRepository consumedEventRepository;
+
+    @Override protected String getTopic()                 { return "eagle-PaymentSucceededEvent"; }
+    @Override protected String getConsumerGroup()         { return "ledger-payment-succeeded"; }
+    @Override protected Class<PaymentSucceededEvent> getEventClass() { return PaymentSucceededEvent.class; }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)         // ★ 关键:Inbox 与业务同事务
+    protected void handle(PaymentSucceededEvent event) {
+        // ① 先记录 Inbox—— 唯一索引会拦住重复消息
+        try {
+            consumedEventRepository.save(ConsumedEvent.builder()
+                    .eventId(event.getEventId())
+                    .consumerGroup(getConsumerGroup())
+                    .topic(getTopic())
+                    .bizRef(event.getOutTradeNo())
+                    .consumedAt(LocalDateTime.now())
+                    .build());
+        } catch (DataIntegrityViolationException duplicate) {
+            // 重复消息:Inbox 唯一约束阻止了二次插入,业务方法一定不会重复执行
+            log.warn("Duplicate payment event skipped, eventId: {}, outTradeNo: {}",
+                    event.getEventId(), event.getOutTradeNo());
+            return;
+        }
+
+        // ② 业务变更与 ① 在同一事务,要么一起成功,要么一起回滚
+        paymentService.confirmPayment(event.getOutTradeNo(), event.getPaidAmount(), event.getChannel());
+    }
+}
+```
+
+**为什么必须把 Inbox 写在业务变更前**:
+
+- 唯一索引冲突会立刻抛异常,事务还没产生业务变更,代价小
+- 业务变更若放前面,重复消费时已经做了一半工作,需要靠状态机/Redisson 锁额外保护
+
+**为什么必须用 `@Transactional`**:Inbox 写入和业务写入分别在两个事务时,若 Inbox 提交后业务回滚,下次重投会因 Inbox 已存在而被跳过,**业务永远不会做** —— 资损。
+
+### 模式 B:状态机驱动的幂等消费
+
+聚合根的状态字段守护"业务最多发生一次"的不变量,即便没有 Inbox 也能幂等。
+
+```java
+// 聚合根 — 状态机不变量
+public class Payment extends BaseAggregateRoot<Payment> {
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private PaymentStatus status = PaymentStatus.PENDING;
+
+    /**
+     * 确认支付成功。仅 PENDING → SUCCEEDED 合法,其他状态直接 no-op(幂等)。
+     */
+    public void markSucceeded(BigDecimal paidAmount, String channel) {
+        if (status == PaymentStatus.SUCCEEDED) {
+            return;                                       // ★ 已确认过,幂等跳过
+        }
+        if (status != PaymentStatus.PENDING) {
+            throw PaymentErrorCode.ILLEGAL_STATE_TRANSITION
+                    .toDomainException("Cannot mark succeeded from " + status);
+        }
+        this.status        = PaymentStatus.SUCCEEDED;
+        this.paidAmount    = paidAmount;
+        this.channel       = channel;
+        this.paidAt        = LocalDateTime.now();
+        registerEvent(new PaymentConfirmedEvent(getId(), getOutTradeNo()));
+    }
+}
+
+// 应用服务 — 配合乐观锁
+@Service
+@RequiredArgsConstructor
+public class PaymentApplicationService {
+
+    private final PaymentRepository paymentRepository;
+
+    @Transactional(rollbackFor = Exception.class)
+    public void confirmPayment(String outTradeNo, BigDecimal amount, String channel) {
+        Payment payment = paymentRepository.findByOutTradeNoForUpdate(outTradeNo)   // ★ 行锁
+                .orElseThrow(PaymentErrorCode.PAYMENT_NOT_FOUND::toNotFoundException);
+        payment.markSucceeded(amount, channel);                                     // 状态机决定是否真做
+        paymentRepository.save(payment);                                            // @Version 乐观锁兜底
+    }
+}
+```
+
+**为什么状态机比 Inbox 更接近"领域驱动"**:幂等是业务规则的自然结果("已支付的订单不能再被支付"),而不是基础设施层的额外检查。Inbox 是兜底,**两者通常一起用**。
+
+### 模式 C: TCC 与预留资源
+
+当业务**横跨多个聚合或多个服务**(扣款 + 加积分 + 发优惠券)时,单纯的状态机不够。此时用 **Try-Confirm-Cancel** 三阶段:
+
+| 阶段          | 动作                                       | 失败后果                       |
+|-------------|------------------------------------------|----------------------------|
+| **Try**     | 各方资源**预留**(冻结余额、预扣库存、预占积分)               | 整体放弃 → Cancel              |
+| **Confirm** | Try 全部成功后**确认**(实际扣款、扣库存)                | 必须可重试至成功(已 Try 过资源,Confirm 一定成功) |
+| **Cancel**  | Try 失败或超时,**释放**预留资源                    | 必须可重试至成功(空回滚 / 悬挂检测)       |
+
+详见 `.claude/rules/16-transaction-distributed.md`。Eagle 提供 `eagle-seata-starter` 集成 TCC 模式,RocketMQ 仅作为 Confirm/Cancel 阶段的事件广播通道。
+
+**适用判断**:
+
+| 业务场景                       | 推荐                                  |
+|----------------------------|-------------------------------------|
+| 单聚合状态变更(订单状态、用户余额变更)      | 模式 A + 模式 B                         |
+| 跨服务最终一致(用户支付 → 异步发积分)     | 模式 A + 事务消息(`publishInTransaction`) |
+| 跨服务必须强一致(秒级)(扣款 + 扣库存) | 模式 C(TCC) + 模式 A                  |
+
+### 系统异常 vs 业务失败 vs 永久失败
+
+`handle()` 抛出的异常**必须分类处理**,否则永远重试或永远不重试都是灾难:
+
+```java
+@Override
+@Transactional(rollbackFor = Exception.class)
+protected void handle(PaymentSucceededEvent event) {
+    try {
+        recordInbox(event);
+        paymentService.confirmPayment(event.getOutTradeNo(), event.getPaidAmount(), event.getChannel());
+
+    } catch (DataIntegrityViolationException duplicate) {
+        // ↳ 业务"幂等通过":Inbox 唯一约束已拦截,什么都不做
+        log.warn("Duplicate event, skip. eventId: {}", event.getEventId());
+
+    } catch (DomainException businessFail) {
+        // ↳ 业务规则不允许(如订单状态非 PENDING):不再重试,记录到告警表
+        unprocessableEventRepository.save(UnprocessableRecord.of(event, businessFail));
+        // 不抛出 → ConsumeResult.SUCCESS,避免无意义重试 16 次最终进 DLQ
+        // 业务侧通过运营平台决定如何处理(取消订单 / 客服介入 / 强制确认)
+
+    } catch (TransientException transient) {
+        // ↳ 系统暂时不可用(下游 RPC、DB 慢):抛出 → 触发 RocketMQ 重试
+        throw transient;
+
+    } catch (Exception unknown) {
+        // ↳ 未知异常,默认抛出走重试链路。重试到阈值会告警,最终进 DLQ
+        throw unknown;
+    }
+}
+```
+
+| 异常类                                | 应对                                    | 原因                  |
+|------------------------------------|---------------------------------------|---------------------|
+| `DataIntegrityViolationException`(Inbox 冲突)   | 吞掉,SUCCESS                            | 幂等命中,业务已生效          |
+| `DomainException` / `IllegalState`(业务规则失败)   | 持久化告警表后吞掉                            | 重试无意义,等待人工          |
+| `OptimisticLockingFailureException`(乐观锁冲突)   | 抛出 → 重试                              | 并发短暂冲突,下次重试有效       |
+| `CannotAcquireLockException`(行锁等待超时)         | 抛出 → 重试                              | DB 临时压力,退避后会成功      |
+| `Feign / RPC TimeoutException`(下游超时)         | 抛出 → 重试                              | 临时不可达,Broker 退避后重试  |
+| 其他 `RuntimeException`                          | 抛出 → 重试到 DLQ                         | 未识别,人工介入            |
+
+**关键反例(必须避免)**:
+
+```java
+// ❌ 反例 1:把所有异常都吞掉 — DLQ 进不了,告警发不出,资损静默积累
+catch (Exception e) { log.error("failed", e); }
+
+// ❌ 反例 2:把所有异常都抛出 — 业务永久失败的消息浪费 16 次重试机会
+catch (Exception e) { throw e; }
+
+// ❌ 反例 3:重试前部分提交业务变更 — 退款下发了但 Inbox 没记录,重试又退一次
+public void handle(...) {
+    refundService.refund(...);             // 调外部网关成功
+    consumedEventRepository.save(...);     // ★ 这里失败 → 下次重试再退一次款
+}
+```
+
+### 人工介入闭环:DLQ 重投与对账
+
+死信不是终点。支付场景必须有**运营后台 + 对账机制**关闭闭环:
+
+#### DLQ 持久化 + 重投接口
+
+```java
+@Component
+@RequiredArgsConstructor
+public class PaymentDlqListener extends AbstractDlqListener<PaymentSucceededEvent> {
+
+    private final DeadLetterRepository deadLetterRepository;
+    private final AlertService alertService;
+
+    @Override protected String getOriginalConsumerGroup() { return "ledger-payment-succeeded"; }
+    @Override protected Class<PaymentSucceededEvent> getEventClass() { return PaymentSucceededEvent.class; }
+
+    @Override
+    protected void handleDeadLetter(PaymentSucceededEvent event, int totalAttempts) {
+        deadLetterRepository.save(DeadLetterRecord.builder()
+                .eventId(event.getEventId())
+                .topic(getTopic())
+                .consumerGroup(getOriginalConsumerGroup())
+                .payload(JSON.toJSONString(event))
+                .totalAttempts(totalAttempts)
+                .status(DlqStatus.PENDING)
+                .build());
+
+        alertService.urgent("支付消息进入死信,outTradeNo=" + event.getOutTradeNo());
+    }
+}
+
+// 运营后台触发的重投接口
+@PostMapping("/admin/dlq/{id}/replay")
+@PreAuthorize("hasRole('ops_payment')")
+public void replay(@PathVariable Long id) {
+    DeadLetterRecord record = deadLetterRepository.findById(id).orElseThrow(...);
+    PaymentSucceededEvent event = JSON.parseObject(record.getPayload(), PaymentSucceededEvent.class);
+
+    // 重投会被原 Listener 的 Inbox 唯一索引拦截 → 安全幂等
+    domainEventPublisher.publish(record.getTopic(), event);
+    record.markReplayed();
+    deadLetterRepository.save(record);
+}
+```
+
+#### 与上游的双向对账(关键)
+
+支付通知**最后一道防线是对账**,不要假设 MQ 万无一失:
+
+```java
+/**
+ * 对账定时任务(XXL-JOB):每 10 分钟拉取支付网关的成功流水,
+ * 与本地 Payment 表比对,差异项触发补偿。
+ */
+@XxlJob("paymentReconciliationHandler")
+public void reconcile() {
+    LocalDateTime start = LocalDateTime.now().minusMinutes(30);
+    LocalDateTime end   = LocalDateTime.now().minusMinutes(10);   // 容忍 10 分钟延迟
+
+    List<GatewayTrade> gatewayTrades = paymentGateway.queryTrades(start, end);
+    for (GatewayTrade gt : gatewayTrades) {
+        Payment local = paymentRepository.findByOutTradeNo(gt.getOutTradeNo()).orElse(null);
+        if (local == null || local.getStatus() != PaymentStatus.SUCCEEDED) {
+            // 网关说付款成功,本地却没记 → 通知确实丢了 / 卡死信里 / Bug → 主动补偿
+            paymentService.confirmPayment(gt.getOutTradeNo(), gt.getAmount(), gt.getChannel());
+            log.warn("[RECONCILE] Payment fixed by reconciliation, outTradeNo: {}", gt.getOutTradeNo());
+        }
+    }
+}
+```
+
+**对账是支付链路真正的"最终保证"**,MQ + Inbox + 状态机解决 99.99% 场景,剩下 0.01% 由对账兜底。**没有对账的支付消费不能上线**。
+
+### 完整支付通知消费样例
+
+把以上所有要素串起来 —— 一个生产级支付成功通知消费者:
+
+```java
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class PaymentSucceededListener extends AbstractRocketMqListener<PaymentSucceededEvent> {
+
+    private final PaymentApplicationService paymentService;
+    private final ConsumedEventRepository consumedEventRepository;
+    private final UnprocessableEventRepository unprocessableEventRepository;
+    private final AlertService alertService;
+
+    @Override protected String getTopic()                          { return "eagle-PaymentSucceededEvent"; }
+    @Override protected String getConsumerGroup()                  { return "ledger-payment-succeeded"; }
+    @Override protected Class<PaymentSucceededEvent> getEventClass() { return PaymentSucceededEvent.class; }
+    @Override protected int getRetryAlertThreshold()               { return 5; }   // 支付场景早点告警
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)                  // ① Inbox + 业务同事务
+    protected void handle(PaymentSucceededEvent event) {
+        // ② 写 Inbox(组合幂等 key)
+        try {
+            consumedEventRepository.save(ConsumedEvent.builder()
+                    .eventId(event.getEventId())
+                    .consumerGroup(getConsumerGroup())
+                    .topic(getTopic())
+                    .bizRef(event.getOutTradeNo())
+                    .consumedAt(LocalDateTime.now())
+                    .build());
+        } catch (DataIntegrityViolationException duplicate) {
+            log.warn("Duplicate payment event skipped, outTradeNo: {}", event.getOutTradeNo());
+            return;                                                // 幂等命中,业务已生效
+        }
+
+        // ③ 业务处理(状态机内自动忽略已是 SUCCEEDED 的支付)
+        try {
+            paymentService.confirmPayment(event.getOutTradeNo(), event.getPaidAmount(), event.getChannel());
+
+        } catch (DomainException businessFail) {
+            // ④ 业务规则不允许 — 不再重试,记录待人工
+            unprocessableEventRepository.save(UnprocessableRecord.of(event, businessFail));
+            alertService.warn("支付消息无法处理,需人工:" + event.getOutTradeNo() + ", reason=" + businessFail.getMessage());
+            // 注意:这里不抛出,事务正常提交,Inbox 也保留 → 重试不会再来
+            //       但因为业务没变更,需要靠告警 + 人工 / 对账兜底
+        }
+        // ⑤ 其他异常(乐观锁、行锁、RPC 超时...)向上抛出 → RocketMQ 重试
+    }
+
+    @Override
+    protected void onRetryAlert(MessageView mv, String body, PaymentSucceededEvent event, Exception cause) {
+        alertService.urgent("【支付消费持续失败】outTradeNo=" + (event != null ? event.getOutTradeNo() : "?")
+                + ", attempt=" + mv.getDeliveryAttempt()
+                + ", error=" + cause.getMessage());
+    }
+}
+```
+
+**配套组件清单**:
+
+- ✅ `t_consumed_event`(Inbox 表)+ 唯一索引 `(event_id, consumer_group)`
+- ✅ `Payment` 聚合根状态机 + `@Version` 乐观锁
+- ✅ `PaymentSucceededDlqListener` 死信持久化
+- ✅ `paymentReconciliationHandler` 定时对账(10 分钟窗口)
+- ✅ 告警通道(`onRetryAlert` + 死信告警 + 业务失败告警 + 对账差异告警)
+- ✅ 运营后台:DLQ 列表 + 一键重投 + 待处理业务列表
+
+**支付级消费"必达"的完整公式**:
+
+```
+必达 = 至少一次投递(MQ 提供)
+     × 幂等(Inbox 唯一约束 + 状态机)
+     × 原子(@Transactional 同事务)
+     × 异常分类(系统异常重试 / 业务失败转人工)
+     × 死信兜底(持久化 + 告警 + 重投)
+     × 对账兜底(上游主数据双向核对)
+```
+
+**任意一项缺失,资损就是时间问题。**
 
 ---
 
