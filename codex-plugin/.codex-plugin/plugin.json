@@ -1,0 +1,35 @@
+{
+  "name": "eagle-cloud",
+  "version": "1.0.0",
+  "description": "Eagle Cloud Codex rules and development guidance for Spring Boot 4, DDD, and Spring Modulith projects.",
+  "author": {
+    "name": "Eagle Cloud Team"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "spring-boot",
+    "spring-modulith",
+    "ddd",
+    "hexagonal-architecture",
+    "java",
+    "codex"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Eagle Cloud",
+    "shortDescription": "Rules for Eagle Cloud development.",
+    "longDescription": "Provides Codex-facing rules for Eagle Cloud Java, Spring Boot Starter, DDD, Modulith, testing, security, messaging, and deployment work.",
+    "developerName": "Eagle Cloud Team",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Use Eagle Cloud rules for this change.",
+      "Review this module against Eagle rules.",
+      "Add a feature following Eagle DDD rules."
+    ],
+    "brandColor": "#2563EB"
+  }
+}
