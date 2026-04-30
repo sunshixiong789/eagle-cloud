@@ -6,6 +6,7 @@ include 'eagle-bom'
 // 基础服务模块
 include 'eagle-services:eagle-gateway-service'
 include 'eagle-services:eagle-system-service'
+include 'eagle-services:eagle-monolith-service'
 
 // Starter 模块
 include 'eagle-starter:eagle-common-starter'
