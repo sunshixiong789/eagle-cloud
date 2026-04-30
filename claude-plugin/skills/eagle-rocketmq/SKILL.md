@@ -121,13 +121,15 @@ public class PaymentService {
     }
 }
 
-// 3) 消费者（继承 AbstractRocketMqListener，实现 3 个抽象方法）
+// 3) 消费者（继承 AbstractRocketMqListener，构造器须 super(props) 透传配置）
 @Component
 public class OrderCreatedConsumer extends AbstractRocketMqListener<OrderCreatedEvent> {
 
     private final StockApplicationService stockService;
 
-    public OrderCreatedConsumer(StockApplicationService stockService) {
+    public OrderCreatedConsumer(RocketMqProperties props,
+                                StockApplicationService stockService) {
+        super(props);
         this.stockService = stockService;
     }
 
@@ -154,13 +156,14 @@ public class OrderCreatedConsumer extends AbstractRocketMqListener<OrderCreatedE
     }
 }
 
-// 4) 死信（继承 AbstractDlqListener）
+// 4) 死信（继承 AbstractDlqListener，构造器须 super(props)）
 @Component
 public class OrderCreatedDlqListener extends AbstractDlqListener<OrderCreatedEvent> {
 
     private final AlertService alertService;
 
-    public OrderCreatedDlqListener(AlertService alertService) {
+    public OrderCreatedDlqListener(RocketMqProperties props, AlertService alertService) {
+        super(props);
         this.alertService = alertService;
     }
 

@@ -23,54 +23,58 @@ spring:
         group: ${NACOS_GROUP:DEFAULT_GROUP}
 
     gateway:
-      # 全局 CORS 配置
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowedOriginPatterns:
-              - "*"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - PATCH
-              - OPTIONS
-            allowedHeaders:
-              - "*"
-            allowCredentials: true
-            maxAge: 3600
+      # Spring Cloud Gateway 4.3+ (2025.x) 起，配置前缀迁移到 spring.cloud.gateway.server.webflux.*
+      # 与 spring-cloud-starter-gateway-server-webflux artifact 对齐；旧 spring.cloud.gateway.* 已下线元数据
+      server:
+        webflux:
+          # 全局 CORS 配置
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOriginPatterns:
+                  - "*"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - PATCH
+                  - OPTIONS
+                allowedHeaders:
+                  - "*"
+                allowCredentials: true
+                maxAge: 3600
 
-      # HTTP 客户端超时配置（全局）
-      httpclient:
-        connect-timeout: 3000       # 连接超时 3s，下游不可达时快速失败
-        response-timeout: 30s       # 响应超时 30s，防止慢请求拖垮网关
+          # HTTP 客户端超时配置（全局）
+          httpclient:
+            connect-timeout: 3000       # 连接超时 3s，下游不可达时快速失败
+            response-timeout: 30s       # 响应超时 30s，防止慢请求拖垮网关
 
-      # 路由配置（使用服务发现 lb://）
-      routes:
-        # API Docs 聚合代理路由（必须在 system-server 之前，避免被 /** 兜底）
-        # 网关 Swagger UI 通过此路由代理各服务 /v3/api-docs，路径如 /v3/api-docs/eagle-system-server
-        # 注：/swagger-ui/** 和 /v3/api-docs 由网关自身 SpringDoc 处理，无需在此配置
-        - id: system-server-api-docs
-          uri: lb://eagle-system-server
-          predicates:
-            - Path=/v3/api-docs/eagle-system-server
-          filters:
-            - SetPath=/v3/api-docs
+          # 路由配置（使用服务发现 lb://）
+          routes:
+            # API Docs 聚合代理路由（必须在 system-server 之前，避免被 /** 兜底）
+            # 网关 Swagger UI 通过此路由代理各服务 /v3/api-docs，路径如 /v3/api-docs/eagle-system-server
+            # 注：/swagger-ui/** 和 /v3/api-docs 由网关自身 SpringDoc 处理，无需在此配置
+            - id: system-server-api-docs
+              uri: lb://eagle-system-server
+              predicates:
+                - Path=/v3/api-docs/eagle-system-server
+              filters:
+                - SetPath=/v3/api-docs
 
-        # 系统服务（认证授权 + 用户权限管理）
-        - id: system-server
-          uri: lb://eagle-system-server
-          predicates:
-            - Path=/api/system/**,/oauth2/**,/login,/logout
-          filters:
-            - StripPrefix=0
+            # 系统服务（认证授权 + 用户权限管理）
+            - id: system-server
+              uri: lb://eagle-system-server
+              predicates:
+                - Path=/api/system/**,/oauth2/**,/login,/logout
+              filters:
+                - StripPrefix=0
 
-        # 默认兜底路由
-        - id: default
-          uri: lb://eagle-system-server
-          predicates:
-            - Path=/**
+            # 默认兜底路由
+            - id: default
+              uri: lb://eagle-system-server
+              predicates:
+                - Path=/**
 
 # SpringDoc 聚合配置（Nacos 动态发现由 GatewayOpenApiConfig 自动注册）
 springdoc:

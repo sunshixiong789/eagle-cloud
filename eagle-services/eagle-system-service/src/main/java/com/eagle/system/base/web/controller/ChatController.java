@@ -3,6 +3,7 @@ package com.eagle.system.base.web.controller;
 import com.eagle.common.exception.codes.OperationErrorCode;
 import com.eagle.system.base.web.dto.ChatMessage;
 import com.eagle.system.base.web.dto.PrivateMessage;
+import com.eagle.websocket.listener.WebSocketEventListener;
 import com.eagle.websocket.session.WebSocketSessionManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +19,7 @@ import java.security.Principal;
  *
  * <p>处理客户端通过 STOMP 发送的消息（{@link MessageMapping}），
  * 推送逻辑委托给 {@link WebSocketSessionManager}。
- * 连接 / 断开事件由 {@link com.eagle.system.config.WebSocketEventListener} 统一处理。
+ * 连接 / 断开事件由 {@link WebSocketEventListener} 统一处理。
  *
  * @author 孙士雄
  */

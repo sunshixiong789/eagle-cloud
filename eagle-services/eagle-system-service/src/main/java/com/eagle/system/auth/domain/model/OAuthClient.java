@@ -16,8 +16,6 @@ import java.time.Instant;
  * OAuth2 客户端实体（充血模型）
  * <p>
  * 对应 Spring Authorization Server 的 RegisteredClient，
- * 通过 {@link com.eagle.auth.infrastructure.persistence.JpaRegisteredClientRepository}
- * 桥接转换。
  * <p>
  * 字段设计说明：
  * <ul>

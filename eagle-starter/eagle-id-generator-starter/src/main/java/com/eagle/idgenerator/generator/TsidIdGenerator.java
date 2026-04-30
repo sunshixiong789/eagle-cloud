@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>节点位 / 序列号位可动态配置（256 / 1024 / 4096 节点）</li>
  *   <li>字符串形式为 13 位 Crockford Base32（{@code "0AXFXR7X8PWGS"}），URL 安全且短于 Long</li>
  *   <li>同一作者维护 uuid-creator 与 tsid-creator，质量与可靠性已被广泛验证</li>
- *   <li>支持 long ↔ String 互转（{@link Tsid#fromString(String)} / {@link Tsid#toLong()}）</li>
+ *   <li>支持 long ↔ String 互转（{@link Tsid#format(String)} (String)} / {@link Tsid#toLong()}）</li>
  * </ul>
  *
  * <p>节点 ID 通过 {@code TSID_NODE} 环境变量、{@code tsidcreator.node} 系统属性，

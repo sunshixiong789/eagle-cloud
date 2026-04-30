@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Logger;
 import feign.Request;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -55,12 +56,14 @@ public class EagleFeignAutoConfiguration {
     /**
      * HTTP 错误解码器：解析下游 {@code ErrorResult} JSON，提取真实 message 透传给调用方。
      *
-     * <p>注入 Spring 容器的 {@link ObjectMapper}（含 {@link PageJacksonModule} 等定制），
-     * 确保与全局 Jackson 配置一致。
+     * <p>优先注入 Spring 容器中的 {@link ObjectMapper}（由 {@code JacksonAutoConfiguration}
+     * 注册，含 {@link PageJacksonModule} / {@link SortJacksonModule} 等定制），与全局 Jackson 配置一致；
+     * 容器内未定义时回退到独立实例，保证装配始终可用。
      */
     @Bean
     @ConditionalOnMissingBean
-    public FeignErrorDecoder feignErrorDecoder(ObjectMapper objectMapper) {
+    public FeignErrorDecoder feignErrorDecoder(ObjectProvider<ObjectMapper> objectMapperProvider) {
+        ObjectMapper objectMapper = objectMapperProvider.getIfAvailable(ObjectMapper::new);
         return new FeignErrorDecoder(objectMapper);
     }
 

@@ -8,7 +8,7 @@ import org.springframework.context.ApplicationEvent;
  *
  * <p>支付回调验签成功后由 {@link com.eagle.payment.controller.PaymentNotifyController}
  * 发布此事件，业务方通过 {@link org.springframework.context.event.EventListener} 或
- * {@link org.springframework.transaction.event.TransactionalEventListener} 监听处理。
+ * {@link org.springframework.transaction.event # TransactionalEventListener} 监听处理。
  *
  * <p>示例：
  * <pre>{@code

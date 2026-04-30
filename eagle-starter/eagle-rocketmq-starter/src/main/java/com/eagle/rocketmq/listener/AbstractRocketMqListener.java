@@ -16,7 +16,6 @@ import org.apache.rocketmq.client.apis.message.MessageView;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -25,12 +24,29 @@ import java.util.Collections;
 /**
  * RocketMQ 领域事件消费者抽象基类。
  *
- * <p>子类声明为 {@code @Component}，只需实现三个抽象方法：
+ * <p>子类声明为 {@code @Component}，构造器必须将 {@link RocketMqProperties} 透传给本类
+ * (通过 {@code super(rocketMqProperties)})，并实现三个抽象方法：
  * <ul>
  *   <li>{@link #getTopic()} — 监听的 Topic</li>
  *   <li>{@link #getEventClass()} — 事件类型</li>
  *   <li>{@link #handle(BaseEvent)} — 业务处理逻辑</li>
  * </ul>
+ *
+ * <h2>子类构造器示例</h2>
+ * <pre>{@code
+ * @Component
+ * public class OrderCreatedConsumer extends AbstractRocketMqListener<OrderCreatedEvent> {
+ *
+ *     private final StockApplicationService stockService;
+ *
+ *     public OrderCreatedConsumer(RocketMqProperties props,
+ *                                 StockApplicationService stockService) {
+ *         super(props);
+ *         this.stockService = stockService;
+ *     }
+ *     // ... getTopic / getEventClass / handle
+ * }
+ * }</pre>
  *
  * <h2>消费保障机制（三层）</h2>
  * <ol>
@@ -48,10 +64,18 @@ import java.util.Collections;
 @Slf4j
 public abstract class AbstractRocketMqListener<T extends BaseEvent> implements InitializingBean, DisposableBean {
 
-    @Autowired
-    private RocketMqProperties rocketMqProperties;
+    private final RocketMqProperties rocketMqProperties;
 
     private PushConsumer consumer;
+
+    /**
+     * 构造器注入 {@link RocketMqProperties}。子类须在自身构造器中通过 {@code super(rocketMqProperties)} 透传。
+     *
+     * @param rocketMqProperties RocketMQ 全局配置
+     */
+    protected AbstractRocketMqListener(RocketMqProperties rocketMqProperties) {
+        this.rocketMqProperties = rocketMqProperties;
+    }
 
     // -------------------------------------------------------------------------
     // 子类必须实现

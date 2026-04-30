@@ -1,12 +1,12 @@
 package com.eagle.gateway.config;
 
-import com.alibaba.cloud.nacos.discovery.NacosDiscoveryClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.properties.SwaggerUiConfigProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,7 +30,7 @@ public class GatewayOpenApiConfig implements ApplicationListener<ApplicationRead
 
     private static final String GATEWAY_NAME = "eagle-gateway-server";
     private static final String API_DOCS_PATH = "/v3/api-docs";
-    private final NacosDiscoveryClient discoveryClient;
+    private final DiscoveryClient discoveryClient;
     private final SwaggerUiConfigProperties swaggerUiConfigProperties;
 
     /**

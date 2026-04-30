@@ -124,7 +124,9 @@
 2. **AsyncConfig Bean 名**：`taskExecutor`（**不是** `eagleTaskExecutor`）
 3. **TenantContextHolder API**：`getTenantId() / setTenantId() / clear()`（**不是** `getCurrentTenantId`）
 4. **RocketMQ 消费者**：继承 `AbstractRocketMqListener<T>` + 实现 `getTopic()/getEventClass()/handle(T event)`，**不用**
-   `@RocketMQMessageListener` 注解
+   `@RocketMQMessageListener` 注解。**构造器必须显式声明并调用 `super(rocketMqProperties)`**（基类已改为构造器注入），
+   因此**子类不能再用 `@RequiredArgsConstructor`**——Lombok 生成的构造器不会调用带参 super。
+   `AbstractDlqListener` 同此约束
 5. **DistributedLock API**：`tryLock(key, long waitSec, long leaseSec, Supplier)`，参数是 **`long` 秒**不是 `Duration`
 6. **CacheProtectionUtil**：`getWithMutex(key, ttl, loader, type)` — **4 参数**含返回类型 `Class<T>`
 7. **DataScope 枚举**：`ALL / SELF / DEPT / DEPT_AND_CHILD / CUSTOM`（**不是** `DEPT_ONLY/SELF_ONLY`）

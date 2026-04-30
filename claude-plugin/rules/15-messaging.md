@@ -86,7 +86,7 @@ public void onOrderCreated(OrderCreatedEvent e) {
 `@RocketMQMessageListener` 注解，而是继承 `AbstractRocketMqListener<T>` 实现 3 个抽象方法：
 
 ```java
-// ✅ 标准消费者
+// ✅ 标准消费者：构造器须把 RocketMqProperties 透传给 super
 @Component
 public class OrderCreatedConsumer
         extends AbstractRocketMqListener<OrderCreatedIntegrationEvent> {
@@ -94,8 +94,10 @@ public class OrderCreatedConsumer
     private final StockApplicationService stockService;
     private final IdempotencyChecker idempotency;
 
-    public OrderCreatedConsumer(StockApplicationService stockService,
+    public OrderCreatedConsumer(RocketMqProperties props,
+                                StockApplicationService stockService,
                                 IdempotencyChecker idempotency) {
+        super(props);
         this.stockService = stockService;
         this.idempotency = idempotency;
     }
@@ -169,8 +171,10 @@ public class OrderCreatedDlqListener
     private final AlarmService alarmService;
     private final DeadLetterRepository deadLetterRepository;
 
-    public OrderCreatedDlqListener(AlarmService alarmService,
+    public OrderCreatedDlqListener(RocketMqProperties props,
+                                   AlarmService alarmService,
                                    DeadLetterRepository deadLetterRepository) {
+        super(props);
         this.alarmService = alarmService;
         this.deadLetterRepository = deadLetterRepository;
     }

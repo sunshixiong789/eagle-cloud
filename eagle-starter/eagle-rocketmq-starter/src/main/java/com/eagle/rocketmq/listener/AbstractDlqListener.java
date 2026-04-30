@@ -1,6 +1,7 @@
 package com.eagle.rocketmq.listener;
 
 import com.eagle.common.event.BaseEvent;
+import com.eagle.rocketmq.properties.RocketMqProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.apis.message.MessageView;
 
@@ -28,11 +29,18 @@ import org.apache.rocketmq.client.apis.message.MessageView;
  * <h2>使用示例</h2>
  * <pre>{@code
  * @Component
- * @RequiredArgsConstructor
  * public class OrderCreatedDlqListener extends AbstractDlqListener<OrderCreatedEvent> {
  *
  *     private final DeadLetterRepository deadLetterRepository;
  *     private final AlertService alertService;
+ *
+ *     public OrderCreatedDlqListener(RocketMqProperties props,
+ *                                    DeadLetterRepository deadLetterRepository,
+ *                                    AlertService alertService) {
+ *         super(props);
+ *         this.deadLetterRepository = deadLetterRepository;
+ *         this.alertService = alertService;
+ *     }
  *
  *     @Override
  *     protected String getOriginalConsumerGroup() {
@@ -59,6 +67,15 @@ import org.apache.rocketmq.client.apis.message.MessageView;
  */
 @Slf4j
 public abstract class AbstractDlqListener<T extends BaseEvent> extends AbstractRocketMqListener<T> {
+
+    /**
+     * 构造器透传 {@link RocketMqProperties} 给父类。子类构造器须调用 {@code super(rocketMqProperties)}。
+     *
+     * @param rocketMqProperties RocketMQ 全局配置
+     */
+    protected AbstractDlqListener(RocketMqProperties rocketMqProperties) {
+        super(rocketMqProperties);
+    }
 
     /**
      * 返回原消费者组名。

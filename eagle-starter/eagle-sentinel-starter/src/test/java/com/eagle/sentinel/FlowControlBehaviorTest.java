@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class FlowControlBehaviorTest {
 
     /**
-     * 调用 {@link RateLimitAspect#mapControlBehavior} 私有方法，
+     * 调用 {@link RateLimitAspect# mapControlBehavior} 私有方法，
      * 返回对应的 Sentinel RuleConstant 整数值。
      */
     private int mapBehavior(FlowControlBehavior behavior) throws Exception {

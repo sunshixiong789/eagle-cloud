@@ -262,7 +262,9 @@ public class OrderTimeoutCheckListener extends AbstractRocketMqListener<OrderTim
 
     private final OrderApplicationService orderApplicationService;
 
-    public OrderTimeoutCheckListener(OrderApplicationService orderApplicationService) {
+    public OrderTimeoutCheckListener(RocketMqProperties props,
+                                     OrderApplicationService orderApplicationService) {
+        super(props);
         this.orderApplicationService = orderApplicationService;
     }
 
@@ -340,6 +342,14 @@ eventPublisher.publish("order-events", "CANCELLED", new OrderCancelledEvent(...)
 @Component
 public class OrderPaidNotifyListener extends AbstractRocketMqListener<OrderPaidEvent> {
 
+    private final NotificationService notificationService;
+
+    public OrderPaidNotifyListener(RocketMqProperties props,
+                                   NotificationService notificationService) {
+        super(props);
+        this.notificationService = notificationService;
+    }
+
     @Override
     protected String getTopic() {
         return "order-events";
@@ -375,10 +385,15 @@ public class OrderPaidNotifyListener extends AbstractRocketMqListener<OrderPaidE
 
 ```java
 @Component
-@RequiredArgsConstructor
 public class OrderCreatedEventListener extends AbstractRocketMqListener<OrderCreatedEvent> {
 
     private final InventoryApplicationService inventoryService;
+
+    public OrderCreatedEventListener(RocketMqProperties props,
+                                     InventoryApplicationService inventoryService) {
+        super(props);
+        this.inventoryService = inventoryService;
+    }
 
     /**
      * 监听的 Topic。
@@ -434,6 +449,7 @@ protected String getTagExpression() {
 // 消费者 A：库存服务扣减库存
 @Component
 public class InventoryOrderListener extends AbstractRocketMqListener<OrderCreatedEvent> {
+    public InventoryOrderListener(RocketMqProperties props) { super(props); }
     @Override protected String getTopic() { return "eagle-OrderCreatedEvent"; }
     @Override protected String getConsumerGroup() { return "inventory-consumer-group"; }
     // ...
@@ -442,6 +458,7 @@ public class InventoryOrderListener extends AbstractRocketMqListener<OrderCreate
 // 消费者 B：积分服务发放积分（独立消费，互不干扰）
 @Component
 public class PointsOrderListener extends AbstractRocketMqListener<OrderCreatedEvent> {
+    public PointsOrderListener(RocketMqProperties props) { super(props); }
     @Override protected String getTopic() { return "eagle-OrderCreatedEvent"; }
     @Override protected String getConsumerGroup() { return "points-consumer-group"; }
     // ...
@@ -612,6 +629,11 @@ public class InventoryOrderListener extends AbstractRocketMqListener<OrderCreate
 
     private final AlertService alertService;  // 钉钉/企微/邮件告警
 
+    public InventoryOrderListener(RocketMqProperties props, AlertService alertService) {
+        super(props);
+        this.alertService = alertService;
+    }
+
     @Override
     protected void onRetryAlert(MessageView messageView, String rawBody,
                                 OrderCreatedEvent event, Exception cause) {
@@ -662,12 +684,21 @@ protected void onDeserializationFailed(MessageView messageView, String rawBody, 
  * 订阅 Topic: %DLQ%inventory-consumer-group
  */
 @Component
-@RequiredArgsConstructor
 public class OrderCreatedDlqListener extends AbstractDlqListener<OrderCreatedEvent> {
 
     private final DeadLetterRepository deadLetterRepository;
     private final AlertService alertService;
     private final InventoryCompensationService compensationService;
+
+    public OrderCreatedDlqListener(RocketMqProperties props,
+                                   DeadLetterRepository deadLetterRepository,
+                                   AlertService alertService,
+                                   InventoryCompensationService compensationService) {
+        super(props);
+        this.deadLetterRepository = deadLetterRepository;
+        this.alertService = alertService;
+        this.compensationService = compensationService;
+    }
 
     /** 与原消费者的 consumerGroup 保持一致 */
     @Override
@@ -850,11 +881,18 @@ CREATE TABLE t_consumed_event (
 
 ```java
 @Component
-@RequiredArgsConstructor
 public class PaymentSucceededListener extends AbstractRocketMqListener<PaymentSucceededEvent> {
 
     private final PaymentApplicationService paymentService;
     private final ConsumedEventRepository consumedEventRepository;
+
+    public PaymentSucceededListener(RocketMqProperties props,
+                                    PaymentApplicationService paymentService,
+                                    ConsumedEventRepository consumedEventRepository) {
+        super(props);
+        this.paymentService = paymentService;
+        this.consumedEventRepository = consumedEventRepository;
+    }
 
     @Override protected String getTopic()                 { return "eagle-PaymentSucceededEvent"; }
     @Override protected String getConsumerGroup()         { return "ledger-payment-succeeded"; }
@@ -1028,11 +1066,18 @@ public void handle(...) {
 
 ```java
 @Component
-@RequiredArgsConstructor
 public class PaymentDlqListener extends AbstractDlqListener<PaymentSucceededEvent> {
 
     private final DeadLetterRepository deadLetterRepository;
     private final AlertService alertService;
+
+    public PaymentDlqListener(RocketMqProperties props,
+                              DeadLetterRepository deadLetterRepository,
+                              AlertService alertService) {
+        super(props);
+        this.deadLetterRepository = deadLetterRepository;
+        this.alertService = alertService;
+    }
 
     @Override protected String getOriginalConsumerGroup() { return "ledger-payment-succeeded"; }
     @Override protected Class<PaymentSucceededEvent> getEventClass() { return PaymentSucceededEvent.class; }

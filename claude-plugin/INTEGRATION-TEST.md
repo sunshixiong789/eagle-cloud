@@ -124,6 +124,9 @@ return lock.tryLock("biz:key:"+id, 5L,30L,() ->{
 
 @Component
 public class OrderCreatedConsumer extends AbstractRocketMqListener<OrderCreatedEvent> {
+
+    public OrderCreatedConsumer(RocketMqProperties props) { super(props); }
+
     @Override
     protected String getTopic() {
         return "...";

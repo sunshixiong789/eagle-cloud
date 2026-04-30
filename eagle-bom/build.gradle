@@ -145,9 +145,9 @@ dependencies {
 
 publishing {
     publications {
-        // 用 register 替代 bom(MavenPublication) {} 命名块语法，让 IDEA 识别签名
-        register('bom', MavenPublication) {
-            from components.javaPlatform
+        // 显式声明 closure 入参类型，避免 IDEA Groovy DSL 推不出 register 的泛型 <U extends Publication>
+        register('bom', MavenPublication) { MavenPublication pub ->
+            pub.from components.javaPlatform
         }
     }
     // Nexus 仓库配置在根 build.gradle 的 configure(subprojects) 中统一注册

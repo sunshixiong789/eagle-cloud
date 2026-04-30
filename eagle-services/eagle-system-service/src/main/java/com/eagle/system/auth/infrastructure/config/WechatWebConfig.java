@@ -19,7 +19,7 @@ public class WechatWebConfig {
      * 用于调用微信 API 的 RestClient
      * <p>
      * 独立声明为 Bean，便于在测试中通过 Mock 替换，
-     * 避免在 {@link com.eagle.auth.infrastructure.external.WechatWebServiceImpl} 中内联创建。
+     * 避免在 {@link com.eagle.system.auth.infrastructure.external.WechatWebServiceImpl} 中内联创建。
      */
     @Bean("wechatRestClient")
     public RestClient wechatRestClient() {

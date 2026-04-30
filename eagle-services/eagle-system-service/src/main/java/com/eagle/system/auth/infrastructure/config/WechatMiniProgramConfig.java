@@ -19,7 +19,7 @@ public class WechatMiniProgramConfig {
     private final WechatMiniProgramProperties properties;
 
     /**
-     * 注册 WxMaService Bean，供 {@link com.eagle.auth.infrastructure.external.WechatMiniProgramServiceImpl} 使用
+     * 注册 WxMaService Bean，供 {@link com.eagle.system.auth.infrastructure.external.WechatMiniProgramServiceImpl} 使用
      */
     @Bean
     public WxMaService wxMaService() {
