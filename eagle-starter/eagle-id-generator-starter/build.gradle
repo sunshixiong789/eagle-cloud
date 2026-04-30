@@ -1,6 +1,12 @@
 dependencies {
     api project(':eagle-starter:eagle-common-starter')
 
+    // Hutool 提供 Snowflake / NanoId 等成熟实现
+    api 'cn.hutool:hutool-all'
+    // TSID（time-sorted unique identifier）— 推荐用作数据库主键，64 位、按时间排序
+    api 'com.github.f4b6a3:tsid-creator'
+    // uuid-creator 已由 eagle-common-starter 传递（提供 UUID v7）
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 

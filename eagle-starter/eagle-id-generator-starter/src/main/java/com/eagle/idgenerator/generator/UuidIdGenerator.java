@@ -1,29 +1,31 @@
 package com.eagle.idgenerator.generator;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.UUID;
 
 /**
- * 基于 {@link UUID#randomUUID()} 的 ID 生成器。
+ * 基于 UUID v7（time-ordered Unix Epoch，RFC 9562）的 ID 生成器。
+ *
+ * <p>UUID v7 相比 v4 的优势：
+ * <ul>
+ *   <li>前 48 位为毫秒级 Unix 时间戳，按字典序天然递增（适合数据库主键 / 索引）</li>
+ *   <li>避免 v4 完全随机导致的 B+Tree 页分裂问题（写入性能显著优于 v4）</li>
+ *   <li>仍保留足够随机位（74 bit）保证全局唯一性</li>
+ * </ul>
  *
  * <p>提供两种 ID 形态：
  * <ul>
- *   <li>{@link #nextId()} — 将 UUID 高 64 位转为 long（符号位不置零，可能为负数）</li>
- *   <li>{@link #nextIdStr()} — 去掉连字符的 32 位十六进制字符串（无序，全局唯一）</li>
+ *   <li>{@link #nextId()} — UUID 高 64 位转为 long（含时间戳前缀，趋势递增）</li>
+ *   <li>{@link #nextIdStr()} — 32 位十六进制字符串（去掉连字符）</li>
+ *   <li>{@link #nextUuid()} — 原始 UUID 对象</li>
  * </ul>
  *
- * <p>适用场景：
- * <ul>
- *   <li>不依赖中心化节点，无需配置 workerId / datacenterId</li>
- *   <li>对 ID 可读性要求不高，接受无序字符串</li>
- *   <li>低并发场景，不需要雪花算法的高吞吐量</li>
- * </ul>
+ * <p>实现委托 {@code com.github.f4b6a3:uuid-creator} 的 {@link UuidCreator#getTimeOrderedEpoch()}，
+ * 该库由 RFC 9562 草案作者之一维护，覆盖 v1/v3/v4/v5/v6/v7。
  *
- * <p>注意：{@link #nextId()} 的 long 值唯一性概率理论上非 100%（UUID 碰撞概率极低），
- * 如需强唯一性保证，优先使用 {@link SnowflakeIdGenerator}。
- *
- * <p>线程安全：{@link UUID#randomUUID()} 本身线程安全，本类无共享可变状态。
+ * <p>线程安全：{@link UuidCreator#getTimeOrderedEpoch()} 内部使用线程安全工厂，本类无可变状态。
  *
  * @author sunshixiong
  */
@@ -31,27 +33,37 @@ import java.util.UUID;
 public class UuidIdGenerator implements IdGenerator {
 
     /**
-     * 将 UUID 高 64 位作为 long 型 ID 返回。
+     * 返回 UUID v7 的高 64 位作为 long 型 ID。
      *
-     * <p>同一 UUID 的高低 64 位相互独立，高 64 位已具备足够的随机性。
-     * 返回值可能为负数（符号位由随机决定），使用方须注意。
+     * <p>高 64 位包含 48 bit 时间戳 + 4 bit 版本号 + 12 bit 随机数，
+     * 整体趋势递增，适合作为数据库主键（避免随机插入导致的索引碎片）。
      *
-     * @return UUID 的高 64 位 long 值
+     * @return UUID v7 的高 64 位 long 值
      */
     @Override
     public long nextId() {
-        return UUID.randomUUID().getMostSignificantBits();
+        return UuidCreator.getTimeOrderedEpoch().getMostSignificantBits();
     }
 
     /**
-     * 生成去掉连字符的 32 位十六进制 UUID 字符串。
+     * 生成去掉连字符的 32 位十六进制 UUID v7 字符串。
      *
-     * <p>示例：{@code "550e8400e29b41d4a716446655440000"}（32 位，无连字符，全小写）。
+     * <p>示例：{@code "018f3a1b2c9d7e4f5g6h7i8j9k0l1m2n"}（32 位、无连字符、全小写）。
      *
-     * @return 32 位 UUID 字符串
+     * @return 32 位 UUID v7 字符串
      */
     @Override
     public String nextIdStr() {
-        return UUID.randomUUID().toString().replace("-", "");
+        return UuidCreator.getTimeOrderedEpoch().toString().replace("-", "");
+    }
+
+    /**
+     * 生成原始 UUID v7 对象（含连字符的 36 位标准格式）。
+     *
+     * @return UUID v7 对象，{@link UUID#toString()} 形如
+     *         {@code "018f3a1b-2c9d-7e4f-9g6h-7i8j9k0l1m2n"}
+     */
+    public UUID nextUuid() {
+        return UuidCreator.getTimeOrderedEpoch();
     }
 }

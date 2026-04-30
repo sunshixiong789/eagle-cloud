@@ -1,19 +1,27 @@
 package com.eagle.idgenerator.util;
 
 import com.eagle.idgenerator.generator.IdGenerator;
+import com.eagle.idgenerator.generator.NanoIdGenerator;
+import com.eagle.idgenerator.generator.TsidIdGenerator;
+import com.eagle.idgenerator.generator.UuidIdGenerator;
+import com.github.f4b6a3.tsid.Tsid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
+
+import java.util.UUID;
 
 /**
  * 分布式 ID 静态工具类。
  *
- * <p>持有 Spring 容器中的 {@link IdGenerator} 实例，暴露静态方法供非 Spring 管理的类
+ * <p>持有 Spring 容器中的各 ID 生成器实例，暴露静态方法供非 Spring 管理的类
  * （如 JPA 实体、工具类）直接调用，无需注入。
  *
  * <p>使用示例：
  * <pre>{@code
- * long id = IdGeneratorUtil.nextId();
- * String idStr = IdGeneratorUtil.nextIdStr();
+ * long id = IdGeneratorUtil.nextId();        // 默认实现
+ * String uuid = IdGeneratorUtil.uuid();      // UUID v7
+ * String tsid = IdGeneratorUtil.tsidStr();   // TSID
+ * String code = IdGeneratorUtil.nanoId(8);   // 短码
  * }</pre>
  *
  * @author sunshixiong
@@ -21,57 +29,89 @@ import org.springframework.beans.factory.InitializingBean;
 @Slf4j
 public class IdGeneratorUtil implements InitializingBean {
 
-    /** Spring 容器中的 IdGenerator 实例，由构造器注入后暴露给静态方法 */
-    private static IdGenerator instance;
+    private static IdGenerator defaultInstance;
+    private static UuidIdGenerator uuidInstance;
+    private static TsidIdGenerator tsidInstance;
+    private static NanoIdGenerator nanoIdInstance;
 
     private final IdGenerator idGenerator;
+    private final UuidIdGenerator uuidIdGenerator;
+    private final TsidIdGenerator tsidIdGenerator;
+    private final NanoIdGenerator nanoIdGenerator;
 
-    /**
-     * 构造器注入 {@link IdGenerator}，由 Spring 容器调用。
-     *
-     * @param idGenerator 分布式 ID 生成器实现
-     */
-    public IdGeneratorUtil(IdGenerator idGenerator) {
+    public IdGeneratorUtil(
+            IdGenerator idGenerator,
+            UuidIdGenerator uuidIdGenerator,
+            TsidIdGenerator tsidIdGenerator,
+            NanoIdGenerator nanoIdGenerator) {
         this.idGenerator = idGenerator;
+        this.uuidIdGenerator = uuidIdGenerator;
+        this.tsidIdGenerator = tsidIdGenerator;
+        this.nanoIdGenerator = nanoIdGenerator;
     }
 
     @Override
     public void afterPropertiesSet() {
-        // Bean 初始化完成后，将实例发布到静态字段供静态方法使用
-        instance = this.idGenerator;
-        log.info("IdGeneratorUtil initialized with: {}", idGenerator.getClass().getSimpleName());
+        defaultInstance = this.idGenerator;
+        uuidInstance = this.uuidIdGenerator;
+        tsidInstance = this.tsidIdGenerator;
+        nanoIdInstance = this.nanoIdGenerator;
+        log.info("IdGeneratorUtil initialized with default={}", idGenerator.getClass().getSimpleName());
     }
 
-    /**
-     * 生成下一个 long 型唯一 ID。
-     *
-     * @return 全局唯一的 long 型 ID
-     * @throws IllegalStateException 若 Spring 容器未完成初始化时调用
-     */
+    // ==================== 默认实现 ====================
+
     public static long nextId() {
-        assertInitialized();
-        return instance.nextId();
+        return require(defaultInstance).nextId();
     }
 
-    /**
-     * 生成下一个 String 型唯一 ID。
-     *
-     * @return 全局唯一的字符串 ID
-     * @throws IllegalStateException 若 Spring 容器未完成初始化时调用
-     */
     public static String nextIdStr() {
-        assertInitialized();
-        return instance.nextIdStr();
+        return require(defaultInstance).nextIdStr();
     }
 
-    /**
-     * 校验工具类已完成初始化，避免在 Spring 容器启动前误调用。
-     */
-    private static void assertInitialized() {
+    // ==================== UUID v7 ====================
+
+    /** 32 位 UUID v7 字符串（无连字符）。 */
+    public static String uuid() {
+        return require(uuidInstance).nextIdStr();
+    }
+
+    /** 原始 UUID v7 对象（36 位标准格式）。 */
+    public static UUID uuidV7() {
+        return require(uuidInstance).nextUuid();
+    }
+
+    // ==================== TSID ====================
+
+    public static long tsidLong() {
+        return require(tsidInstance).nextId();
+    }
+
+    /** 13 位 TSID 字符串。 */
+    public static String tsidStr() {
+        return require(tsidInstance).nextIdStr();
+    }
+
+    public static Tsid tsid() {
+        return require(tsidInstance).nextTsid();
+    }
+
+    // ==================== NanoId ====================
+
+    public static String nanoId() {
+        return require(nanoIdInstance).nextId();
+    }
+
+    public static String nanoId(int size) {
+        return require(nanoIdInstance).nextId(size);
+    }
+
+    private static <T> T require(T instance) {
         if (instance == null) {
             throw new IllegalStateException(
                     "IdGeneratorUtil is not initialized. Ensure eagle-id-generator-starter is on the classpath "
                             + "and Spring context has started.");
         }
+        return instance;
     }
 }

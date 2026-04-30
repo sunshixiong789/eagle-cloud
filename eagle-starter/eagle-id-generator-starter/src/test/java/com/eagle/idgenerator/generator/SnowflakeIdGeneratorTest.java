@@ -6,10 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -21,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * {@link SnowflakeIdGenerator} 单元测试。
+ * {@link SnowflakeIdGenerator} 单元测试（基于 Hutool 实现）。
  */
 @DisplayName("SnowflakeIdGenerator")
 class SnowflakeIdGeneratorTest {
@@ -29,7 +26,6 @@ class SnowflakeIdGeneratorTest {
     private static final int SINGLE_THREAD_COUNT = 1000;
     private static final int THREAD_COUNT = 10;
     private static final int IDS_PER_THREAD = 100;
-    private static final long CLOCK_SKEW_MS = 5000L;
 
     private SnowflakeIdGenerator generator;
 
@@ -38,7 +34,6 @@ class SnowflakeIdGeneratorTest {
         IdGeneratorProperties props = new IdGeneratorProperties();
         props.setWorkerId(1);
         props.setDatacenterId(1);
-        props.setSequence(0);
         generator = new SnowflakeIdGenerator(props);
     }
 
@@ -91,26 +86,17 @@ class SnowflakeIdGeneratorTest {
         }
 
         @Test
-        @DisplayName("should throw IllegalStateException when clock moves backwards")
-        void shouldThrowWhenClockMovesBack() throws Exception {
-            // Prime the generator so lastTimestamp is set to a real value
-            generator.nextId();
-
-            // Reflect lastTimestamp to a future value (simulating clock moved back from that point)
-            Field lastTimestampField = SnowflakeIdGenerator.class.getDeclaredField("lastTimestamp");
-            lastTimestampField.setAccessible(true);
-            long futureTimestamp = System.currentTimeMillis() + CLOCK_SKEW_MS;
-            lastTimestampField.set(generator, futureTimestamp);
-
-            assertThrows(IllegalStateException.class, generator::nextId,
-                    "Should throw IllegalStateException when system clock is behind lastTimestamp");
-        }
-
-        @Test
         @DisplayName("should generate positive ids")
         void shouldGeneratePositiveIds() {
             long id = generator.nextId();
             assertTrue(id > 0, "Generated ID must be positive");
+        }
+
+        @Test
+        @DisplayName("nextIdStr should equal String.valueOf(nextId) format (numeric)")
+        void shouldReturnNumericString() {
+            String idStr = generator.nextIdStr();
+            assertTrue(idStr.matches("\\d+"), "Snowflake string id must be numeric: " + idStr);
         }
     }
 
@@ -119,7 +105,7 @@ class SnowflakeIdGeneratorTest {
     class Constructor {
 
         @Test
-        @DisplayName("should throw IllegalArgumentException when workerId exceeds 31")
+        @DisplayName("should reject workerId out of range")
         void shouldThrowWhenWorkerIdOutOfRange() {
             IdGeneratorProperties props = new IdGeneratorProperties();
             props.setWorkerId(32);
@@ -130,7 +116,7 @@ class SnowflakeIdGeneratorTest {
         }
 
         @Test
-        @DisplayName("should throw IllegalArgumentException when datacenterId exceeds 31")
+        @DisplayName("should reject datacenterId out of range")
         void shouldThrowWhenDatacenterIdOutOfRange() {
             IdGeneratorProperties props = new IdGeneratorProperties();
             props.setWorkerId(1);

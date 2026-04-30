@@ -1,15 +1,21 @@
 package com.eagle.idgenerator.util;
 
 import com.eagle.idgenerator.generator.IdGenerator;
+import com.eagle.idgenerator.generator.NanoIdGenerator;
 import com.eagle.idgenerator.generator.OrderNoGenerator;
+import com.eagle.idgenerator.generator.TsidIdGenerator;
+import com.eagle.idgenerator.generator.UuidIdGenerator;
+import com.github.f4b6a3.tsid.Tsid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.UUID;
 
 /**
  * ID 生成器统一门面。
  *
- * <p>聚合雪花算法 ID 生成器（{@link IdGenerator}）和订单号生成器（{@link OrderNoGenerator}），
- * 对外提供语义化的业务流水号生成方法，避免业务代码直接依赖具体实现类。
+ * <p>聚合 Snowflake / UUID v7 / TSID / NanoId / 业务订单号 五种生成能力，
+ * 业务代码通过本门面获取所需 ID，无需关心底层实现切换。
  *
  * <p>使用示例：
  * <pre>{@code
@@ -17,12 +23,15 @@ import lombok.extern.slf4j.Slf4j;
  * @RequiredArgsConstructor
  * public class OrderApplicationService {
  *
- *     private final IdGeneratorFacade idGeneratorFacade;
+ *     private final IdGeneratorFacade idFacade;
  *
- *     public void createOrder(CreateOrderRequest request) {
- *         long id = idGeneratorFacade.snowflakeId();      // 数据库主键
- *         String orderNo = idGeneratorFacade.orderNo("ORD"); // 对外业务单号
- *         String payNo = idGeneratorFacade.payNo();          // 支付流水号
+ *     public void createOrder(...) {
+ *         long pk = idFacade.nextId();              // 默认实现（按配置）
+ *         long snowflake = idFacade.snowflakeId();  // 雪花算法
+ *         UUID uuid7 = idFacade.uuidV7();           // UUID v7
+ *         String tsid = idFacade.tsidStr();         // TSID 13 位字符串
+ *         String inviteCode = idFacade.nanoId(8);   // 短邀请码
+ *         String orderNo = idFacade.orderNo("ORD"); // 业务单号
  *     }
  * }
  * }</pre>
@@ -33,67 +42,98 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class IdGeneratorFacade {
 
-    /** 支付流水号前缀 */
     private static final String PAY_PREFIX = "PAY";
-
-    /** 退款流水号前缀 */
     private static final String REFUND_PREFIX = "RFD";
 
-    private final IdGenerator snowflakeGenerator;
+    private final IdGenerator defaultGenerator;
+    private final UuidIdGenerator uuidGenerator;
+    private final TsidIdGenerator tsidGenerator;
+    private final NanoIdGenerator nanoIdGenerator;
     private final OrderNoGenerator orderNoGenerator;
 
-    /**
-     * 生成雪花算法 long 型唯一 ID。
-     *
-     * <p>适用于数据库主键、内部系统 ID 等场景。
-     *
-     * @return 全局唯一的 long 型 ID
-     */
-    public long snowflakeId() {
-        return snowflakeGenerator.nextId();
+    // ==================== 默认 IdGenerator（按 type 配置切换）====================
+
+    /** 默认 {@link IdGenerator} 生成 long ID。 */
+    public long nextId() {
+        return defaultGenerator.nextId();
     }
 
-    /**
-     * 生成带业务前缀的订单号。
-     *
-     * <p>格式：{@code {prefix}{yyyyMMdd}{9位序列}}，具有可读性，便于客服查询和对账。
-     *
-     * @param prefix 业务前缀，如 {@code "ORD"}（订单）、{@code "SHP"}（发货单）等
-     * @return 唯一订单号，如 {@code "ORD20240115123456789"}
-     */
+    /** 默认 {@link IdGenerator} 生成 String ID。 */
+    public String nextIdStr() {
+        return defaultGenerator.nextIdStr();
+    }
+
+    // ==================== Snowflake ====================
+
+    /** 雪花算法 long ID（即默认 {@code IdGenerator.nextId()}，保留语义化方法）。 */
+    public long snowflakeId() {
+        return defaultGenerator.nextId();
+    }
+
+    // ==================== UUID v7 ====================
+
+    /** UUID v7 高 64 位 long ID（趋势递增）。 */
+    public long uuidLong() {
+        return uuidGenerator.nextId();
+    }
+
+    /** 32 位 UUID v7 字符串（去连字符）。 */
+    public String uuid() {
+        return uuidGenerator.nextIdStr();
+    }
+
+    /** 原始 UUID v7 对象（含连字符的 36 位标准格式）。 */
+    public UUID uuidV7() {
+        return uuidGenerator.nextUuid();
+    }
+
+    // ==================== TSID ====================
+
+    /** TSID long 形式。 */
+    public long tsidLong() {
+        return tsidGenerator.nextId();
+    }
+
+    /** TSID 13 位 Crockford Base32 字符串。 */
+    public String tsidStr() {
+        return tsidGenerator.nextIdStr();
+    }
+
+    /** 原始 {@link Tsid} 对象。 */
+    public Tsid tsid() {
+        return tsidGenerator.nextTsid();
+    }
+
+    // ==================== NanoId ====================
+
+    /** 默认长度 NanoId（21 字符）。 */
+    public String nanoId() {
+        return nanoIdGenerator.nextId();
+    }
+
+    /** 指定长度 NanoId。 */
+    public String nanoId(int size) {
+        return nanoIdGenerator.nextId(size);
+    }
+
+    // ==================== 业务订单号 ====================
+
+    /** 带业务前缀的订单号，如 {@code "ORD20260430123456789"}。 */
     public String orderNo(String prefix) {
         return orderNoGenerator.generate(prefix);
     }
 
-    /**
-     * 生成无前缀订单号。
-     *
-     * <p>格式：{@code {yyyyMMdd}{9位序列}}，适用于无需前缀区分类型的场景。
-     *
-     * @return 唯一订单号，如 {@code "20240115123456789"}
-     */
+    /** 无前缀订单号，如 {@code "20260430123456789"}。 */
     public String orderNo() {
         return orderNoGenerator.generate();
     }
 
-    /**
-     * 生成支付流水号（前缀 {@code PAY}）。
-     *
-     * <p>格式：{@code PAY{yyyyMMdd}{9位序列}}，用于唯一标识一笔支付请求。
-     *
-     * @return 唯一支付流水号，如 {@code "PAY20240115123456789"}
-     */
+    /** 支付流水号（前缀 {@code PAY}）。 */
     public String payNo() {
         return orderNoGenerator.generate(PAY_PREFIX);
     }
 
-    /**
-     * 生成退款流水号（前缀 {@code RFD}）。
-     *
-     * <p>格式：{@code RFD{yyyyMMdd}{9位序列}}，用于唯一标识一笔退款请求。
-     *
-     * @return 唯一退款流水号，如 {@code "RFD20240115987654321"}
-     */
+    /** 退款流水号（前缀 {@code RFD}）。 */
     public String refundNo() {
         return orderNoGenerator.generate(REFUND_PREFIX);
     }
