@@ -76,6 +76,18 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
 
     @Override
     public RegisteredClient findById(String id) {
+        try {
+            RegisteredClient registeredClient = oAuthClientRepository.findById(Long.valueOf(id))
+                    .filter(OAuthClient::getEnabled)
+                    .map(this::toRegisteredClient)
+                    .orElse(null);
+            if (registeredClient != null) {
+                return registeredClient;
+            }
+        } catch (NumberFormatException ex) {
+            log.debug("RegisteredClient id is not a numeric database id, fallback to clientId lookup: {}", id);
+        }
+
         return oAuthClientRepository.findByClientId(id)
                 .filter(OAuthClient::getEnabled)
                 .map(this::toRegisteredClient)
