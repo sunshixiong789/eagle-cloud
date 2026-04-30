@@ -19,11 +19,11 @@ ext {
 
     // 数据库 / 连接池
     mysqlConnectorVersion = '9.7.0'
-    postgresqlVersion = '42.7.10'
+    postgresqlVersion = '42.7.11'
     druidVersion = '1.2.28'
 
     // Redis
-    redissonVersion = '4.3.0'
+    redissonVersion = '4.3.1'
 
     // 工具类
     hutoolVersion = '5.8.43'
@@ -33,14 +33,14 @@ ext {
     commonsIoVersion = '2.21.0'
     uuidCreatorVersion = '6.1.1'
     tsidCreatorVersion = '5.2.6'
-    caffeineVersion = '3.2.0'
+    caffeineVersion = '3.2.3'
 
     // 第三方 SDK
     wxJavaVersion = '4.8.2-20260420.104332'
     aliyunSmsVersion = '4.5.1'
 
     // API 文档
-    springdocVersion = '3.0.2'
+    springdocVersion = '3.0.3'
 
     // 消息中间件
     rocketMqVersion = '2.3.5'
@@ -65,7 +65,7 @@ ext {
     fastjson2Version = '2.0.61'
 
     // Office 文档
-    poiVersion = '5.3.0'
+    poiVersion = '5.5.1'
 
     // MapStruct
     mapstructVersion = '1.6.3'
