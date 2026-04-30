@@ -25,7 +25,7 @@
 /check-arch         Modulith 架构验证 + 模块测试 + 全量构建一键检查
 /new-module         按 Modulith + DDD 模板创建新业务模块
 /new-aggregate      在指定模块中创建聚合根 + Repository + ErrorCode + ApplicationService + Controller + DTO 全栈骨架
-/new-starter        按 Spring Boot 3 自动配置模板创建新 starter 模块
+/new-starter        按 Spring Boot 4 自动配置模板创建新 starter 模块
 /add-error-code     在指定 ErrorCode 枚举追加常量并同步在 i18n messages 文件中加翻译
 ```
 

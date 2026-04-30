@@ -1,5 +1,5 @@
 ---
-description: 按 Spring Boot 3 自动配置模板创建新 starter 模块
+description: 按 Spring Boot 4 自动配置模板创建新 starter 模块
 argument-hint: "<feature-name>，例 webhook（生成 eagle-webhook-starter）"
 ---
 

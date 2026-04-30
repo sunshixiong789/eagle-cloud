@@ -160,5 +160,5 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 | `/check-arch`     | Modulith 架构验证 + 模块测试 + 全量构建一键检查                                                 |
 | `/new-module`     | 按 DDD 模板创建新业务模块（含 `package-info.java` + 四层骨架）                                   |
 | `/new-aggregate`  | 创建聚合根全栈骨架（聚合根 + Repository + ErrorCode + ApplicationService + Controller + DTO） |
-| `/new-starter`    | 按 Spring Boot 3 模板创建新 starter 模块                                                |
+| `/new-starter`    | 按 Spring Boot 4 模板创建新 starter 模块                                                |
 | `/add-error-code` | 在 ErrorCode 枚举追加常量并同步 i18n 三语翻译                                                 |

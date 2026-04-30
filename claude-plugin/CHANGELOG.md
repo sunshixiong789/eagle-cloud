@@ -47,7 +47,7 @@
 - `/check-arch` — Modulith 架构验证 + 模块测试 + 全量构建一键检查
 - `/new-module` — 按 DDD 模板创建新业务模块
 - `/new-aggregate` — 创建聚合根全栈骨架
-- `/new-starter` — 按 Spring Boot 3 模板创建新 starter
+- `/new-starter` — 按 Spring Boot 4 模板创建新 starter
 - `/add-error-code` — 在 ErrorCode 枚举追加常量并同步 i18n 三语翻译
 
 #### Skills（22 个 starter）

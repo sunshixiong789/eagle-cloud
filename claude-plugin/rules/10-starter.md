@@ -15,7 +15,7 @@ eagle-starter/eagle-{feature}-starter/
 
 ## 自动配置类
 
-使用 `@AutoConfiguration`（Spring Boot 3.x+），禁止使用旧的 `@Configuration` + `spring.factories`：
+使用 `@AutoConfiguration`（Spring Boot 4.x），禁止使用旧的 `@Configuration` + `spring.factories`：
 
 ```java
 
