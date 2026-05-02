@@ -96,7 +96,7 @@ public class UserEventHandler {
      *
      * @param event 账号注册事件
      */
-    @Async
+    @Async("taskExecutor")
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleAccountRegistered(AccountRegisteredEvent event) {
@@ -142,7 +142,7 @@ public class UserEventHandler {
      *
      * @param event 账号删除事件
      */
-    @Async
+    @Async("taskExecutor")
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleAccountDeleted(AccountDeletedEvent event) {
