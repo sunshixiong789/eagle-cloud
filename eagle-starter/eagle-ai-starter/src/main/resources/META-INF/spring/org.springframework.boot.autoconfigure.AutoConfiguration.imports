@@ -1,1 +1,2 @@
+com.eagle.ai.config.EagleAiRedisAutoConfiguration
 com.eagle.ai.config.EagleAiAutoConfiguration
