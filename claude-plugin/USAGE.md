@@ -351,7 +351,7 @@ L1 模式即可:模型读 CLAUDE.md → 知道 Eagle 用乐观锁(`@Version`)→
 | 多租户隔离 | `eagle-tenant` |
 | 行级数据权限 | `eagle-row-security` |
 | OAuth2 资源服务器(JWT 校验) | `eagle-resource-server` |
-| Feign 远程调用(自动透传) | `eagle-feign-client` |
+| RestClient 远程调用(自动透传) | `eagle-feign-client` |
 | 链路追踪(Brave/Zipkin) | `eagle-tracing` |
 | Swagger / OpenAPI 文档 | `eagle-openapi` |
 | MinIO 对象存储 | `eagle-oss-minio` |

@@ -1,9 +1,10 @@
 dependencies {
     api project(':eagle-starter:eagle-common-starter')
-    api 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    api 'org.springframework.boot:spring-boot-restclient'
+    api 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
     api 'org.springframework.boot:spring-boot-starter-webmvc'
 
-    // FeignErrorDecoder 用 ObjectMapper 解析下游错误响应
+    // EagleResponseErrorHandler 用 ObjectMapper 解析下游错误响应
     compileOnly 'com.fasterxml.jackson.core:jackson-databind'
 
     // 可选：租户 ID 透传（eagle-tenant-starter 引入时生效）

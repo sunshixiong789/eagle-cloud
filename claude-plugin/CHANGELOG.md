@@ -23,7 +23,7 @@
 | `08-concurrency.md`             | 事务、领域事件 `@Async + AFTER_COMMIT`、缓存失效                |
 | `09-testing.md`                 | JUnit 5 + Mockito、AAA、命名、覆盖要求                       |
 | `10-starter.md`                 | `@AutoConfiguration` + Properties + imports         |
-| `11-feign.md`                   | FeignClient 位置、错误处理、`@SpringQueryMap`               |
+| `11-feign.md`                   | HTTP Service 客户端位置、错误处理、分页参数                 |
 | `12-security.md`                | OAuth2 / JWT、密码、敏感字段脱敏、审计                           |
 | `13-logging.md`                 | SLF4J 占位符、MDC、核心操作埋点 INFO/DEBUG 选择                  |
 | `14-cache.md`                   | Redis+Caffeine、Key 命名、击穿/穿透/雪崩防护                    |

@@ -84,7 +84,7 @@ add_skill "eagle-resource-server"     "eagle-resource-server-starter" \
     "Use when implementing OAuth2 resource server (JWT-protected service) in eagle-cloud projects — @EnableEagleResourceServer, EagleAuthentication, SecurityUtils (getCurrentUser/getCurrentUserId/hasRole/hasAnyRole), @PreAuthorize, EagleUser principal"
 
 add_skill "eagle-feign-client"        "http-client-starter" \
-    "Use when implementing service-to-service Feign clients in eagle-cloud projects — automatic JWT/tenant-id/Seata-XID propagation via FeignAuthInterceptor/FeignTenantInterceptor/SeataXidRequestInterceptor, FeignErrorDecoder converting downstream HTTP errors to AppException hierarchy, @SpringQueryMap for Pageable"
+    "Use when implementing service-to-service HTTP clients in eagle-cloud projects — Spring RestClient / HTTP Service Interface, automatic JWT/tenant-id/Seata-XID propagation, EagleResponseErrorHandler converting downstream HTTP errors to AppException hierarchy"
 
 add_skill "eagle-tracing"             "eagle-tracing-starter" \
     "Use when configuring distributed tracing in eagle-cloud projects — Brave/B3/Zipkin integration, traceId/spanId MDC injection for log correlation, sampling probability"

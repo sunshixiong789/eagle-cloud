@@ -95,12 +95,12 @@ CI 流水线必跑：`clean build` + `test` + Modulith 验证。
 - [ ] 提供 `@ConditionalOnMissingBean` 允许覆盖
 - [ ] `bootJar.enabled = false`、`jar.enabled = true`
 
-### Feign（11-feign.md）
+### HTTP Client（11-feign.md）
 
-- [ ] FeignClient 在 `infrastructure/remote/` 包
+- [ ] HTTP Service Interface 在 `infrastructure/remote/` 包
 - [ ] 无 fallback 默认实现
-- [ ] `Pageable` 参数加 `@SpringQueryMap`
-- [ ] 不在 FeignClient 上加 `@Transactional`
+- [ ] 分页参数显式声明 `page` / `size` / `sort`
+- [ ] 不在客户端接口上加 `@Transactional`
 
 ### 安全（12-security.md）
 

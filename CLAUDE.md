@@ -69,7 +69,7 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 | `eagle-data-jpa-starter`           | JPA/Hibernate 配置、审计、MySQL/PostgreSQL/H2 支持                                                     |
 | `eagle-redis-starter`              | Redisson + Caffeine 多级缓存                                                                       |
 | `eagle-resource-server-starter`    | OAuth2 资源服务器 JWT 验证                                                                            |
-| `eagle-feign-starter`              | OpenFeign 客户端配置（含 Seata XID 透传）                                                                |
+| `http-client-starter`              | RestClient / HTTP Service 客户端配置（含 Seata XID 透传）                                                 |
 | `eagle-tracing-starter`            | 分布式链路追踪（Brave/Zipkin）                                                                          |
 | `eagle-rocketmq-starter`           | RocketMQ v5 消息队列                                                                               |
 | `eagle-data-permission-starter`    | 行级数据权限控制（AspectJ）                                                                              |
@@ -134,7 +134,7 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 | `.claude/rules/08-concurrency.md`             | 事务、领域事件 `@Async + AFTER_COMMIT`、缓存失效          |
 | `.claude/rules/09-testing.md`                 | JUnit 5 + Mockito、AAA、命名、覆盖要求                 |
 | `.claude/rules/10-starter.md`                 | `@AutoConfiguration` + Properties + imports   |
-| `.claude/rules/11-feign.md`                   | FeignClient 位置、错误处理、`@SpringQueryMap`         |
+| `.claude/rules/11-feign.md`                   | HTTP Service 客户端位置、错误处理、分页参数       |
 | `.claude/rules/12-security.md`                | OAuth2 / JWT、密码、CORS、敏感数据脱敏、审计                |
 | `.claude/rules/13-logging.md`                 | SLF4J 占位符、MDC、异常日志、敏感字段脱敏                     |
 | `.claude/rules/14-cache.md`                   | Redis+Caffeine、Key 命名、TTL、击穿/穿透/雪崩            |

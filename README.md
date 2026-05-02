@@ -68,7 +68,7 @@ eagle-cloud/
     ├── eagle-data-jpa-starter/             # JPA / Hibernate 配置（审计、多数据库方言）
     ├── eagle-redis-starter/                # Redis + Caffeine 多级缓存（穿透 / 击穿 / 雪崩防护）
     ├── eagle-resource-server-starter/      # OAuth2 资源服务器 JWT 验证
-    ├── eagle-feign-starter/                # OpenFeign（JWT / 租户 / Seata XID 透传）
+    ├── http-client-starter/                # RestClient / HTTP Service（JWT / 租户 / Seata XID 透传）
     ├── eagle-tracing-starter/              # 分布式链路追踪（Brave / Zipkin）
     ├── eagle-openapi-starter/              # Swagger / OpenAPI 文档集成
     │

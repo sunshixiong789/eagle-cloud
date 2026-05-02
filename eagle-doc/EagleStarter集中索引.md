@@ -23,7 +23,7 @@
 | **多租户**              | [eagle-tenant-starter](../eagle-starter/eagle-tenant-starter/USAGE.md)                         | 租户上下文、`@TenantFilter`、数据源路由            |
 | **行级数据权限**           | [eagle-row-security-starter](../eagle-starter/eagle-row-security-starter/USAGE.md)             | `@DataPermission`、部门 / 本人 / 自定义范围      |
 | **OAuth2 资源服务器**     | [eagle-resource-server-starter](../eagle-starter/eagle-resource-server-starter/USAGE.md)       | JWT 鉴权、`SecurityUtils`、`@PreAuthorize` |
-| **服务间 RPC**          | [http-client-starter](../eagle-starter/http-client-starter/USAGE.md)                           | Feign、Token / 租户 / XID 自动透传、错误转换       |
+| **服务间 RPC**          | [http-client-starter](../eagle-starter/http-client-starter/USAGE.md)                           | RestClient / HTTP Service、Token / 租户 / XID 自动透传、错误转换 |
 | **链路追踪**             | [eagle-tracing-starter](../eagle-starter/eagle-tracing-starter/USAGE.md)                       | Brave / B3 / Zipkin、MDC 注入             |
 | **OpenAPI 文档**       | [eagle-openapi-starter](../eagle-starter/eagle-openapi-starter/USAGE.md)                       | SpringDoc 3.0、分组、JWT Security Scheme   |
 | **对象存储**             | [eagle-oss-minio-starter](../eagle-starter/eagle-oss-minio-starter/USAGE.md)                   | MinIO + 本地降级、签名 URL、上传校验               |
