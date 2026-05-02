@@ -10,13 +10,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.ai.chat.client.advisor.api.AdvisedRequest;
-import org.springframework.ai.chat.client.advisor.api.AdvisedResponse;
-import org.springframework.ai.chat.client.advisor.api.CallAroundAdvisorChain;
+import org.springframework.ai.chat.client.ChatClientRequest;
+import org.springframework.ai.chat.client.ChatClientResponse;
+import org.springframework.ai.chat.client.advisor.api.AdvisorChain;
 import org.springframework.ai.chat.metadata.ChatResponseMetadata;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.core.Ordered;
+
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -29,9 +31,7 @@ class TokenUsageAdvisorTest {
     private TokenUsageAdvisor advisor;
 
     @Mock
-    private AdvisedRequest request;
-    @Mock
-    private CallAroundAdvisorChain chain;
+    private AdvisorChain chain;
     @Mock
     private ChatResponse chatResponse;
     @Mock
@@ -53,59 +53,66 @@ class TokenUsageAdvisorTest {
         assertEquals(Ordered.LOWEST_PRECEDENCE - 100, advisor.getOrder());
     }
 
+    @Test
+    @DisplayName("before should return request unchanged")
+    void beforeShouldReturnRequestUnchanged() {
+        ChatClientRequest request = ChatClientRequest.builder()
+                .prompt(mock(org.springframework.ai.chat.prompt.Prompt.class))
+                .build();
+        assertSame(request, advisor.before(request, chain));
+    }
+
     @Nested
-    @DisplayName("aroundCall")
-    class AroundCall {
+    @DisplayName("after")
+    class After {
 
         @Test
         @DisplayName("should record token counters when usage data is available")
         void shouldRecordTokenCounters() {
-            AdvisedResponse response = mock(AdvisedResponse.class);
-            when(chain.nextAroundCall(request)).thenReturn(response);
-            when(response.response()).thenReturn(chatResponse);
+            ChatClientResponse response = ChatClientResponse.builder()
+                    .chatResponse(chatResponse)
+                    .build();
             when(chatResponse.getMetadata()).thenReturn(metadata);
             when(metadata.getUsage()).thenReturn(usage);
-            when(usage.getPromptTokens()).thenReturn(100L);
-            when(usage.getGenerationTokens()).thenReturn(50L);
-            when(usage.getTotalTokens()).thenReturn(150L);
+            when(usage.getPromptTokens()).thenReturn(100);
+            when(usage.getCompletionTokens()).thenReturn(50);
+            when(usage.getTotalTokens()).thenReturn(150);
 
-            advisor.aroundCall(request, chain);
+            advisor.after(response, chain);
 
-            assertEquals(100.0, meterRegistry.counter("eagle.ai.token.input", "type", "call").count());
-            assertEquals(50.0, meterRegistry.counter("eagle.ai.token.output", "type", "call").count());
-            assertEquals(150.0, meterRegistry.counter("eagle.ai.token.total", "type", "call").count());
+            assertEquals(100.0, meterRegistry.counter("eagle.ai.token.input").count());
+            assertEquals(50.0, meterRegistry.counter("eagle.ai.token.output").count());
+            assertEquals(150.0, meterRegistry.counter("eagle.ai.token.total").count());
         }
 
         @Test
         @DisplayName("should skip recording when chatResponse is null")
         void shouldSkipWhenChatResponseNull() {
-            AdvisedResponse response = mock(AdvisedResponse.class);
-            when(chain.nextAroundCall(request)).thenReturn(response);
-            when(response.response()).thenReturn(null);
+            ChatClientResponse response = ChatClientResponse.builder().build();
 
-            advisor.aroundCall(request, chain);
+            advisor.after(response, chain);
 
-            assertEquals(0.0, findCounter("eagle.ai.token.total", "call"));
+            assertEquals(0.0, findCounter("eagle.ai.token.total"));
         }
 
         @Test
         @DisplayName("should skip recording when totalTokens is zero")
         void shouldSkipWhenTotalTokensZero() {
-            AdvisedResponse response = mock(AdvisedResponse.class);
-            when(chain.nextAroundCall(request)).thenReturn(response);
-            when(response.response()).thenReturn(chatResponse);
+            ChatClientResponse response = ChatClientResponse.builder()
+                    .chatResponse(chatResponse)
+                    .build();
             when(chatResponse.getMetadata()).thenReturn(metadata);
             when(metadata.getUsage()).thenReturn(usage);
-            when(usage.getTotalTokens()).thenReturn(0L);
+            when(usage.getTotalTokens()).thenReturn(0);
 
-            advisor.aroundCall(request, chain);
+            advisor.after(response, chain);
 
-            assertEquals(0.0, findCounter("eagle.ai.token.total", "call"));
+            assertEquals(0.0, findCounter("eagle.ai.token.total"));
         }
     }
 
-    private double findCounter(String name, String callType) {
-        Counter counter = meterRegistry.find(name).tag("type", callType).counter();
+    private double findCounter(String name) {
+        Counter counter = meterRegistry.find(name).counter();
         return counter != null ? counter.count() : 0.0;
     }
 }

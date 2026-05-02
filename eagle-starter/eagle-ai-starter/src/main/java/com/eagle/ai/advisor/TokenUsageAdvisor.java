@@ -79,9 +79,9 @@ public class TokenUsageAdvisor implements BaseAdvisor {
             return;
         }
 
-        Long inputTokens = usage.getPromptTokens();
-        Long outputTokens = usage.getGenerationTokens();
-        Long totalTokens = usage.getTotalTokens();
+        Integer inputTokens = usage.getPromptTokens();
+        Integer outputTokens = usage.getCompletionTokens();
+        Integer totalTokens = usage.getTotalTokens();
 
         if (totalTokens == null || totalTokens == 0) {
             return;
