@@ -22,42 +22,22 @@
 
 ### 第 1 步:安装 plugin(强制)
 
-业务项目根目录新建或编辑 `.claude/settings.json`:
+在 Claude Code 会话中运行以下两条命令：
 
-```json
-{
-  "marketplaces": {
-    "eagle-cloud-internal": {
-      "type": "git",
-      "url": "git@gitee.com:your-org/eagle-cloud.git",
-      "path": "claude-plugin",
-      "ref": "main"
-    }
-  },
-  "enabledPlugins": {
-    "eagle-cloud@eagle-cloud-internal": true
-  }
-}
+```
+/plugin marketplace add https://gitee.com/sunjones/eagle-cloud.git
+/plugin install eagle-cloud@eagle-cloud
 ```
 
-（URL 替换为团队实际仓库地址；`ref` 填 `"main"` 跟踪最新主干。详见 `DEPLOYMENT.md`）
+> 第一条命令每台机器只需运行一次（全局生效）。
+> 第二条命令每个项目运行一次。
+> 安装后重启 Claude Code 会话即可生效。
 
 ### 第 2 步:安装 Superpowers(推荐,工程纪律)
 
-```json
-{
-  "marketplaces": {
-    ...
-    "superpowers": {
-      "type": "git",
-      "url": "git@github.com:obra/superpowers.git"
-    }
-  },
-  "enabledPlugins": {
-    "eagle-cloud@eagle-cloud-internal": true,
-    "superpowers@superpowers": true
-  }
-}
+```
+/plugin marketplace add https://github.com/obra/superpowers.git
+/plugin install superpowers@superpowers
 ```
 
 ### 第 3 步:验证安装
@@ -421,11 +401,7 @@ L3 流程的 Phase 4 / Phase 5 已自动包含以上;L1 / L2 必须手动。
 
 **Q4:Plugin 升级会破坏我的项目吗?**
 
-`"ref": "main"` 会在每次 Claude Code 启动时拉取最新主干。Plugin 团队遵循向后兼容原则，breaking change 会提前在 `CHANGELOG.md` 说明。如需冻结版本，可将 `ref` 改为具体 commit SHA：
-
-```json
-"ref": "a5e251f"   ← 锁定到某次提交，完全不受后续变更影响
-```
+Plugin 团队遵循向后兼容原则，breaking change 会提前在 `CHANGELOG.md` 说明。每次重启 Claude Code 会话会自动拉取最新版本。如需暂停升级，可临时卸载旧版并安装指定版本（需提前打 Tag 或记录 commit SHA，联系 Plugin 维护者）。
 
 详见 `CHANGELOG.md`。
 
@@ -456,16 +432,16 @@ L3 流程的 Phase 4 / Phase 5 已自动包含以上;L1 / L2 必须手动。
 
 **排查**:
 
-```bash
-# 1. 检查 plugin 是否激活
-cat .claude/settings.json | grep enabledPlugins
-# 必须有 "eagle-cloud@xxx": true
+```
+# 1. 检查 plugin 是否已安装（在 Claude Code 会话中）
+/plugin list
+# 应能看到 eagle-cloud
 
-# 2. 检查 marketplace 是否能拉到
-ls ~/.claude/plugins/eagle-cloud/commands/
-# 应有 5 个 .md 文件
+# 2. 如未安装，执行安装命令
+/plugin marketplace add https://gitee.com/sunjones/eagle-cloud.git
+/plugin install eagle-cloud@eagle-cloud
 
-# 3. 重启 Claude Code
+# 3. 重启 Claude Code 会话
 ```
 
 ---
@@ -480,7 +456,7 @@ ls ~/.claude/plugins/eagle-cloud/commands/
 
 ```
 /plugin remove eagle-cloud
-/plugin install eagle-cloud@eagle-cloud-internal
+/plugin install eagle-cloud@eagle-cloud
 ```
 
 ---

@@ -61,55 +61,26 @@ git commit -m "docs(plugin): update redis usage"
 
 ### 方式 A：私有 Marketplace（推荐团队级）
 
-1. 把 `eagle-cloud` 仓库（含 `claude-plugin/`）发布到内部 Git 服务（**GitHub / GitLab / Gitee / Gitea** 均可）
-2. 业务项目在 `.claude/settings.json` 启用（按 Git 服务选择 URL）：
+1. 把 `eagle-cloud` 仓库发布到内部 Git 服务（**GitHub / GitLab / Gitee / Gitea** 均可）
+2. 在 Claude Code 会话中运行：
 
-```json
-{
-  "marketplaces": {
-    "eagle-cloud-internal": {
-      "type": "git",
-      "url": "git@gitee.com:your-org/eagle-cloud.git",
-      "path": "claude-plugin",
-      "ref": "main"
-    }
-  },
-  "enabledPlugins": {
-    "eagle-cloud@eagle-cloud-internal": true
-  }
-}
+```
+/plugin marketplace add https://gitee.com/sunjones/eagle-cloud.git
+/plugin install eagle-cloud@eagle-cloud
 ```
 
-各 Git 服务 URL 示例：
-
-| 服务            | URL 格式                                             |
-|---------------|----------------------------------------------------|
-| Gitee（国内访问最快） | `git@gitee.com:eagle/eagle-cloud.git`              |
-| GitHub        | `git@github.com:eagle/eagle-cloud.git`             |
-| GitLab 自建     | `git@gitlab.your-domain.com:eagle/eagle-cloud.git` |
-| Gitea 自建      | `git@gitea.your-domain.com:eagle/eagle-cloud.git`  |
-
-3. Claude Code 启动时自动拉取并加载
+3. 安装完成后重启 Claude Code 会话即可加载
 
 详细部署步骤（含权限、CI 配置）见 `DEPLOYMENT.md`。
 
 ### 方式 B：本地 plugin（开发调试 / 单人项目）
 
 1. 业务项目本地 clone `eagle-cloud` 仓库
-2. `.claude/settings.json` 引用本地路径：
+2. 在 Claude Code 会话中运行：
 
-```json
-{
-  "marketplaces": {
-    "eagle-cloud-local": {
-      "type": "local",
-      "path": "/path/to/eagle-cloud/claude-plugin"
-    }
-  },
-  "enabledPlugins": {
-    "eagle-cloud@eagle-cloud-local": true
-  }
-}
+```
+/plugin marketplace add /path/to/eagle-cloud
+/plugin install eagle-cloud@eagle-cloud
 ```
 
 ### 方式 C：Submodule + 软链（兜底）

@@ -46,25 +46,17 @@ GitLab 项目设置 → **Members** → 添加团队成员（至少 Reporter 角
 
 ### 1.3 业务项目接入
 
-`.claude/settings.json`：
+在 Claude Code 会话中运行：
 
-```json
-{
-  "marketplaces": {
-    "eagle-cloud-internal": {
-      "type": "git",
-      "url": "git@gitlab.your-domain.com:eagle/eagle-cloud.git",
-      "path": "claude-plugin",
-      "ref": "main"
-    }
-  },
-  "enabledPlugins": {
-    "eagle-cloud@eagle-cloud-internal": true
-  }
-}
+```
+# 添加 marketplace（每台机器只需运行一次）
+/plugin marketplace add https://gitlab.your-domain.com/eagle/eagle-cloud.git
+
+# 在当前项目安装（每个项目运行一次）
+/plugin install eagle-cloud@eagle-cloud
 ```
 
-`ref` 填 `"main"` 即可跟踪最新主干。如需冻结版本，改为具体 commit SHA（如 `"ref": "a5e251f"`）。
+安装完成后重启 Claude Code 会话即可加载。默认跟踪 `main` 主干。如需冻结版本，可在安装后手动锁定 commit SHA。
 
 ## 选项 2：GitHub Enterprise / GitHub.com（私有仓库）
 
@@ -78,37 +70,20 @@ git push origin main
 
 ### 2.2 业务项目接入
 
-```json
-{
-  "marketplaces": {
-    "eagle-cloud-internal": {
-      "type": "git",
-      "url": "git@github.com:eagle/eagle-cloud.git",
-      "path": "claude-plugin",
-      "ref": "main"
-    }
-  },
-  "enabledPlugins": {
-    "eagle-cloud@eagle-cloud-internal": true
-  }
-}
+在 Claude Code 会话中运行：
+
+```
+/plugin marketplace add https://github.com/eagle/eagle-cloud.git
+/plugin install eagle-cloud@eagle-cloud
 ```
 
 ## 选项 3：Gitea（自托管 + 轻量）
 
 完全等价于 GitLab，仅 URL 不同：
 
-```json
-{
-  "marketplaces": {
-    "eagle-cloud-internal": {
-      "type": "git",
-      "url": "git@gitea.your-domain.com:eagle/eagle-cloud.git",
-      "path": "claude-plugin",
-      "ref": "main"
-    }
-  }
-}
+```
+/plugin marketplace add https://gitea.your-domain.com/eagle/eagle-cloud.git
+/plugin install eagle-cloud@eagle-cloud
 ```
 
 ## 选项 4：Gitee（国内推荐，访问速度快）
@@ -144,31 +119,14 @@ git push gitee main
 
 ### 4.3 业务项目接入
 
-`.claude/settings.json`：
+在 Claude Code 会话中运行：
 
-```json
-{
-  "marketplaces": {
-    "eagle-cloud-internal": {
-      "type": "git",
-      "url": "git@gitee.com:your-org/eagle-cloud.git",
-      "path": "claude-plugin",
-      "ref": "main"
-    }
-  },
-  "enabledPlugins": {
-    "eagle-cloud@eagle-cloud-internal": true
-  }
-}
+```
+/plugin marketplace add https://gitee.com/sunjones/eagle-cloud.git
+/plugin install eagle-cloud@eagle-cloud
 ```
 
-或 HTTPS 形式：
-
-```json
-{
-  "url": "https://gitee.com/your-org/eagle-cloud.git"
-}
-```
+安装完成后重启 Claude Code 会话即可加载。
 
 ### 4.4 Gitee CI 选项
 
@@ -261,20 +219,12 @@ git push gitlab plugin-only:main \
 
 ### 4.2 业务项目接入
 
-```json
-{
-  "marketplaces": {
-    "eagle-cloud-internal": {
-      "type": "git",
-      "url": "git@gitlab.your-domain.com:eagle/eagle-cloud-plugin.git",
-      "path": ".",
-      "ref": "main"
-    }
-  }
-}
+```
+/plugin marketplace add https://gitlab.your-domain.com/eagle/eagle-cloud-plugin.git
+/plugin install eagle-cloud@eagle-cloud
 ```
 
-**优点**：clone 体积小、权限隔离（业务项目无需访问主仓库）
+**优点**：clone 体积小（仅插件目录）、权限隔离（业务项目无需访问主仓库）
 **缺点**：维护双仓库同步 pipeline
 
 ## 自动同步 Pipeline（选项 4 配套）
@@ -334,17 +284,18 @@ jobs:
 
 ## CI/CD 集成（业务项目侧）
 
-业务项目 CI 中可加一个 sanity check：
+业务项目 CI 中可加一个 sanity check，确认 plugin 已安装：
 
 ```yaml
 # .github/workflows/plugin-loaded.yml
-- name: Verify plugin loaded
+- name: Verify plugin installed
   run: |
-    test -f .claude/settings.json
-    jq -e '.enabledPlugins["eagle-cloud@eagle-cloud-internal"]' .claude/settings.json
+    # 检查 plugin 是否已安装（Claude Code 安装后会在本地缓存，CI 环境跳过此检查）
+    echo "Plugin installation is managed via /plugin commands, not CI config"
 ```
 
-确保团队成员未误改配置。
+> **注意**：Plugin 通过 `/plugin` 命令安装到开发者本机，CI 环境通常无需验证。
+> 如需在 CI 中使用 plugin 内容，改用方式 C（Submodule + 软链）并在 CI 中 clone submodule。
 
 ## 升级流程
 
@@ -358,9 +309,9 @@ jobs:
 
 ### 业务项目侧
 
-1. 重启 Claude Code 会话——`"ref": "main"` 会自动拉取最新版本，无需改配置
+1. 重启 Claude Code 会话——Plugin 会自动拉取最新版本
 2. 按 `INTEGRATION-TEST.md` 阶段 1 + 阶段 2 验证关键 API
-3. 如需临时回退，将 `ref` 改为上一个稳定 commit SHA 即可
+3. 如需临时回退，可重新运行 `/plugin install eagle-cloud@eagle-cloud` 指定旧版本
 
 ## 监控与反馈
 
