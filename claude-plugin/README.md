@@ -69,9 +69,9 @@ git commit -m "docs(plugin): update redis usage"
   "marketplaces": {
     "eagle-cloud-internal": {
       "type": "git",
-      "url": "git@gitee.com:eagle/eagle-cloud.git",
+      "url": "git@gitee.com:your-org/eagle-cloud.git",
       "path": "claude-plugin",
-      "ref": "v1.0.0"
+      "ref": "main"
     }
   },
   "enabledPlugins": {
@@ -148,7 +148,7 @@ echo "
 |-----------|-------------------|-------------|------|
 | 1.0.0     | 当前主干（2026-04-30）  | 4.0.3       | 初始版本 |
 
-**业务项目应锁定 plugin 版本**：在 `marketplaces` 配置加 `branch: v1.0.0`（git tag）或 `version: 1.0.0`，避免主干变更影响稳定性。
+**`ref` 建议使用 `"main"`**，直接跟踪主干，无需提前打 Tag。如团队有版本冻结需求，也可指定 commit SHA（如 `"ref": "a5e251f"`）。
 
 ## 升级建议
 

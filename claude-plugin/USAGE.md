@@ -29,9 +29,9 @@
   "marketplaces": {
     "eagle-cloud-internal": {
       "type": "git",
-      "url": "git@gitee.com:eagle/eagle-cloud.git",
+      "url": "git@gitee.com:your-org/eagle-cloud.git",
       "path": "claude-plugin",
-      "ref": "v1.0.0"
+      "ref": "main"
     }
   },
   "enabledPlugins": {
@@ -40,7 +40,7 @@
 }
 ```
 
-(URL 与团队约定的 Git 服务一致;`ref` 锁定到 git tag 或 branch。详见 `DEPLOYMENT.md`)
+（URL 替换为团队实际仓库地址；`ref` 填 `"main"` 跟踪最新主干。详见 `DEPLOYMENT.md`）
 
 ### 第 2 步:安装 Superpowers(推荐,工程纪律)
 
@@ -421,13 +421,13 @@ L3 流程的 Phase 4 / Phase 5 已自动包含以上;L1 / L2 必须手动。
 
 **Q4:Plugin 升级会破坏我的项目吗?**
 
-不会,前提是**锁定 ref**:
+`"ref": "main"` 会在每次 Claude Code 启动时拉取最新主干。Plugin 团队遵循向后兼容原则，breaking change 会提前在 `CHANGELOG.md` 说明。如需冻结版本，可将 `ref` 改为具体 commit SHA：
 
 ```json
-"ref": "v1.0.0"   ← 锁定到 git tag,而非 main
+"ref": "a5e251f"   ← 锁定到某次提交，完全不受后续变更影响
 ```
 
-Plugin 团队按 SemVer 升级,major 版本会在 CHANGELOG 列明 breaking change。详见 `CHANGELOG.md`。
+详见 `CHANGELOG.md`。
 
 ---
 

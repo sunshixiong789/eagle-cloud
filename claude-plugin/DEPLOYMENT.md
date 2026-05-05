@@ -44,16 +44,7 @@ GitLab 项目设置 → **Members** → 添加团队成员（至少 Reporter 角
 - GitLab → User Settings → Access Tokens → 创建 `read_repository` scope token
 - 把 token 加到业务项目开发者的 `~/.netrc` 或 git credential helper
 
-### 1.3 打 Tag（推荐）
-
-业务项目应锁定 Plugin 版本，避免主干变更影响：
-
-```bash
-git tag -a v1.0.0 -m "Eagle Cloud Plugin 1.0.0"
-git push gitlab v1.0.0
-```
-
-### 1.4 业务项目接入
+### 1.3 业务项目接入
 
 `.claude/settings.json`：
 
@@ -64,7 +55,7 @@ git push gitlab v1.0.0
       "type": "git",
       "url": "git@gitlab.your-domain.com:eagle/eagle-cloud.git",
       "path": "claude-plugin",
-      "ref": "v1.0.0"
+      "ref": "main"
     }
   },
   "enabledPlugins": {
@@ -73,7 +64,7 @@ git push gitlab v1.0.0
 }
 ```
 
-升级时改 `ref: "v1.1.0"` 即可。
+`ref` 填 `"main"` 即可跟踪最新主干。如需冻结版本，改为具体 commit SHA（如 `"ref": "a5e251f"`）。
 
 ## 选项 2：GitHub Enterprise / GitHub.com（私有仓库）
 
@@ -83,7 +74,6 @@ git push gitlab v1.0.0
 gh repo create eagle/eagle-cloud --private
 git remote add origin git@github.com:eagle/eagle-cloud.git
 git push origin main
-git push origin v1.0.0
 ```
 
 ### 2.2 业务项目接入
@@ -95,7 +85,7 @@ git push origin v1.0.0
       "type": "git",
       "url": "git@github.com:eagle/eagle-cloud.git",
       "path": "claude-plugin",
-      "ref": "v1.0.0"
+      "ref": "main"
     }
   },
   "enabledPlugins": {
@@ -115,7 +105,7 @@ git push origin v1.0.0
       "type": "git",
       "url": "git@gitea.your-domain.com:eagle/eagle-cloud.git",
       "path": "claude-plugin",
-      "ref": "v1.0.0"
+      "ref": "main"
     }
   }
 }
@@ -128,15 +118,14 @@ Gitee（码云）是国内最常用的 Git 服务之一，免费私有仓库 + �
 ### 4.1 推送
 
 ```bash
-# 在 Gitee 创建仓库：eagle/eagle-cloud（私有 / 企业版）
+# 在 Gitee 创建仓库：your-org/eagle-cloud（私有 / 企业版）
 # https://gitee.com/projects/new
 
 cd /path/to/eagle-cloud
-git remote add gitee git@gitee.com:eagle/eagle-cloud.git
+git remote add gitee git@gitee.com:your-org/eagle-cloud.git
 
-# 首次推送（含 tag）
+# 首次推送
 git push gitee main
-git push gitee --tags
 ```
 
 ### 4.2 配置访问权限
@@ -162,9 +151,9 @@ git push gitee --tags
   "marketplaces": {
     "eagle-cloud-internal": {
       "type": "git",
-      "url": "git@gitee.com:eagle/eagle-cloud.git",
+      "url": "git@gitee.com:your-org/eagle-cloud.git",
       "path": "claude-plugin",
-      "ref": "v1.0.0"
+      "ref": "main"
     }
   },
   "enabledPlugins": {
@@ -177,7 +166,7 @@ git push gitee --tags
 
 ```json
 {
-  "url": "https://gitee.com/eagle/eagle-cloud.git"
+  "url": "https://gitee.com/your-org/eagle-cloud.git"
 }
 ```
 
@@ -279,7 +268,7 @@ git push gitlab plugin-only:main \
       "type": "git",
       "url": "git@gitlab.your-domain.com:eagle/eagle-cloud-plugin.git",
       "path": ".",
-      "ref": "v1.0.0"
+      "ref": "main"
     }
   }
 }
@@ -363,21 +352,15 @@ jobs:
 
 1. 修改源（`.claude/rules/` 或 `eagle-starter/*/USAGE.md`）
 2. `./claude-plugin/sync.sh`
-3. 更新版本：
-    - `claude-plugin/plugin.json` 中的 `version`
-    - `claude-plugin/marketplace.json` 中的 `version`
-    - `claude-plugin/CHANGELOG.md` 添加新条目
-4. `git commit && git tag v1.x.0 && git push --tags`
-5. CI 自动校验通过后，通知业务项目
+3. 更新 `claude-plugin/CHANGELOG.md` 添加新条目
+4. `git commit && git push origin main`
+5. CI 自动校验通过后通知业务项目（如有 breaking change）
 
 ### 业务项目侧
 
-1. 收到通知后，修改 `.claude/settings.json` 的 `ref`：
-   ```json
-   "ref": "v1.0.0"  →  "ref": "v1.1.0"
-   ```
-2. 重启 Claude Code 会话（自动拉取新版）
-3. 按 `INTEGRATION-TEST.md` 阶段 1 + 阶段 2 验证关键 API
+1. 重启 Claude Code 会话——`"ref": "main"` 会自动拉取最新版本，无需改配置
+2. 按 `INTEGRATION-TEST.md` 阶段 1 + 阶段 2 验证关键 API
+3. 如需临时回退，将 `ref` 改为上一个稳定 commit SHA 即可
 
 ## 监控与反馈
 
