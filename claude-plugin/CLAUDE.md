@@ -8,7 +8,7 @@
 
 ## 项目栈定位
 
-业务项目依赖 `eagle-cloud` 基础架子（BOM + 22 个 starter），遵循以下技术栈与约定：
+业务项目依赖 `eagle-cloud` 基础架子（BOM + 28 个 starter），遵循以下技术栈与约定：
 
 - **Java 25** / Gradle 8.x（Groovy DSL）
 - **Spring Boot 4.0.3** / Spring Cloud 2025.1.1 / Spring Cloud Alibaba 2025.1.0.0
@@ -51,6 +51,7 @@
 | `rules/18-openapi.md`                 | SpringDoc 注解、版本、错误码文档化                        |
 | `rules/19-config.md`                  | Properties、Nacos、profile、Jasypt 加密            |
 | `rules/20-i18n.md`                    | messages 组织、key 规则                            |
+| `rules/21-resilience.md`              | Resilience4J 熔断/重试/超时、Fallback、注解组合顺序        |
 | `rules/22-git.md`                     | 分支模型、Conventional Commits                     |
 | `rules/23-performance.md`             | N+1、慢 SQL、连接池、Async 池                         |
 | `rules/24-deployment.md`              | Dockerfile、K8s、健康检查、优雅停机                      |
@@ -58,18 +59,20 @@
 | `rules/26-file-storage.md`            | MinIO Bucket、Key 设计、上传校验                      |
 | `rules/27-scheduling.md`              | XXL-JOB 路由、分片、幂等                              |
 | `rules/28-migration.md`               | Flyway 命名、不可变、回滚                              |
+| `rules/29-event-driven.md`            | 领域事件 vs 集成事件、Saga 编排、Event Sourcing、幂等       |
 | `rules/30-dependency.md`              | Gradle 范围、BOM、CVE                             |
 
 ## Starter 使用（按需 skill 加载）
 
-22 个 starter 各有独立 skill，AI 在编码时会按场景自动加载相关 skill。手动列表见 `skills/` 目录：
+28 个 starter 各有独立 skill，AI 在编码时会按场景自动加载相关 skill。手动列表见 `skills/` 目录：
 
 | Skill                      | 何时触发                        |
 |----------------------------|-----------------------------|
 | `eagle-common`             | DDD 基类、异常、领域事件、分布式锁接口       |
 | `eagle-data-jpa`           | JPA Auditing + Hibernate 配置 |
 | `eagle-mybatis`            | MyBatis-Plus 增强             |
-| `eagle-dynamic-datasource` | 主从读写分离                      |
+| `eagle-dynamic-datasource` | 主从读写分离、@ReadOnly            |
+| `eagle-sharding`           | 分库分表、ShardingSphere YAML 配置 |
 | `eagle-elasticsearch`      | ES 检索 / 聚合 / 高亮             |
 | `eagle-redis`              | 缓存 / 锁 / 限流 / 布隆            |
 | `eagle-rocketmq`           | 事件发布 / 事务消息 / 死信            |
@@ -78,7 +81,7 @@
 | `eagle-tenant`             | 多租户上下文                      |
 | `eagle-row-security`       | 行级数据权限                      |
 | `eagle-resource-server`    | OAuth2 资源服务器                |
-| `eagle-feign-client`       | Feign + 自动透传                |
+| `eagle-feign-client`       | HTTP Service + 自动透传         |
 | `eagle-tracing`            | 链路追踪                        |
 | `eagle-openapi`            | SpringDoc 3                 |
 | `eagle-oss-minio`          | 对象存储                        |
@@ -88,6 +91,11 @@
 | `eagle-seata`              | 分布式事务                       |
 | `eagle-sentinel`           | 限流 / 熔断                     |
 | `eagle-websocket`          | WS / SSE / 离线消息             |
+| `eagle-excel`              | Excel 导入导出、@ExcelColumn      |
+| `eagle-resilience`         | 熔断器 / 重试 / 超时，Fallback      |
+| `eagle-encrypt`            | 字段级加密，@Convert 注解          |
+| `eagle-audit-log`          | 操作审计日志，@AuditLog            |
+| `eagle-ai`                 | ChatClient / EmbeddingClient |
 
 ## 项目级 Commands
 

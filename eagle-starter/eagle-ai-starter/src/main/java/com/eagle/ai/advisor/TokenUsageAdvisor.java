@@ -24,9 +24,12 @@ import org.springframework.core.Ordered;
  *   <li>{@code {prefix}.token.total}  — total tokens</li>
  * </ul>
  *
- * <p>指标 Tag：{@code type}（call / stream）。
- * 消费方可在此基础上叠加 {@code model}、{@code tenant} 等 Tag，
- * 只需注册自定义 {@link TokenUsageAdvisor} Bean 覆盖即可。
+ * <p>指标 Tag（按配置可选）：
+ * <ul>
+ *   <li>{@code model} — 从响应元数据提取，未知时为 {@code unknown}</li>
+ *   <li>{@code tenant} — 从 advisor context 中读取 {@code tenantId} 键，
+ *       调用方可在 {@code ChatClient.prompt().advisors(a -> a.param("tenantId", tid))} 中传入</li>
+ * </ul>
  *
  * <p>流式场景下，token 数据通常仅出现在最后一条 {@link ChatResponse}，
  * 本 Advisor 通过 {@code after} 回调在 finish reason 出现时记录。
@@ -35,15 +38,24 @@ public class TokenUsageAdvisor implements BaseAdvisor {
 
     private static final Logger log = LoggerFactory.getLogger(TokenUsageAdvisor.class);
 
-    /** 在所有 Advisor 链的最外层运行，确保最终响应已完整。 */
+    /** 在所有 Advisor 链的最内层运行（最晚 before，最早 after），确保获取到完整响应。 */
     private static final int ORDER = Ordered.LOWEST_PRECEDENCE - 100;
+
+    private static final String TAG_MODEL = "model";
+    private static final String TAG_TENANT = "tenant";
+    private static final String UNKNOWN = "unknown";
+    static final String CONTEXT_KEY_TENANT = "tenantId";
 
     private final MeterRegistry meterRegistry;
     private final String metricPrefix;
+    private final boolean includeModelTag;
+    private final boolean includeTenantTag;
 
     public TokenUsageAdvisor(MeterRegistry meterRegistry, AiProperties properties) {
         this.meterRegistry = meterRegistry;
         this.metricPrefix = properties.getMetrics().getPrefix();
+        this.includeModelTag = properties.getMetrics().isIncludeModelTag();
+        this.includeTenantTag = properties.getMetrics().isIncludeTenantTag();
     }
 
     @Override
@@ -87,15 +99,41 @@ public class TokenUsageAdvisor implements BaseAdvisor {
             return;
         }
 
-        counter("token.input").increment(inputTokens != null ? inputTokens : 0);
-        counter("token.output").increment(outputTokens != null ? outputTokens : 0);
-        counter("token.total").increment(totalTokens);
+        String model = resolveModel(chatResponse);
+        String tenant = resolveTenant(response);
 
-        log.debug("AI token usage: input={}, output={}, total={}", inputTokens, outputTokens, totalTokens);
+        counter("token.input", model, tenant).increment(inputTokens != null ? inputTokens : 0);
+        counter("token.output", model, tenant).increment(outputTokens != null ? outputTokens : 0);
+        counter("token.total", model, tenant).increment(totalTokens);
+
+        log.debug("AI token usage: input={}, output={}, total={}, model={}, tenant={}",
+                inputTokens, outputTokens, totalTokens, model, tenant);
     }
 
-    private Counter counter(String name) {
-        return Counter.builder(metricPrefix + "." + name)
-                .register(meterRegistry);
+    private String resolveModel(ChatResponse chatResponse) {
+        if (!includeModelTag) {
+            return UNKNOWN;
+        }
+        String model = chatResponse.getMetadata().getModel();
+        return (model != null && !model.isBlank()) ? model : UNKNOWN;
+    }
+
+    private String resolveTenant(ChatClientResponse response) {
+        if (!includeTenantTag) {
+            return UNKNOWN;
+        }
+        Object tenantId = response.context().get(CONTEXT_KEY_TENANT);
+        return tenantId != null ? tenantId.toString() : UNKNOWN;
+    }
+
+    private Counter counter(String name, String model, String tenant) {
+        Counter.Builder builder = Counter.builder(metricPrefix + "." + name);
+        if (includeModelTag) {
+            builder.tag(TAG_MODEL, model);
+        }
+        if (includeTenantTag) {
+            builder.tag(TAG_TENANT, tenant);
+        }
+        return builder.register(meterRegistry);
     }
 }

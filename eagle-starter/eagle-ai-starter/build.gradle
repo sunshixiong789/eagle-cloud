@@ -7,11 +7,21 @@ dependencies {
     // Micrometer：Token 用量指标（TokenUsageAdvisor 依赖）
     api 'io.micrometer:micrometer-core'
 
-    // Redis：可选，RedisChatMemoryRepository + AiRateLimitAdvisor 依赖
+    // Redis：可选，RedisChatMemoryRepository + AiRateLimitAdvisor + TokenBudgetAdvisor 依赖
     compileOnly 'org.springframework.boot:spring-boot-starter-data-redis'
 
     // Jackson：Redis 序列化依赖
     compileOnly 'com.fasterxml.jackson.core:jackson-databind'
+
+    // Bean Validation：AiProperties @Validated 依赖
+    compileOnly 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Vector Store：可选，EagleAiEmbeddingAutoConfiguration 依赖
+    compileOnly 'org.springframework.ai:spring-ai-vector-store'
+
+    // Resilience4J：可选，EagleAiResilienceAutoConfiguration 依赖
+    compileOnly 'io.github.resilience4j:resilience4j-circuitbreaker'
+    compileOnly 'io.github.resilience4j:resilience4j-timelimiter'
 
     // 以下提供商由消费方按需选择，示例：
     //   implementation 'org.springframework.ai:spring-ai-starter-model-openai'   // OpenAI / Azure OpenAI
@@ -22,4 +32,5 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'com.fasterxml.jackson.core:jackson-databind'
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }

@@ -67,18 +67,32 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 |------------------------------------|------------------------------------------------------------------------------------------------|
 | `eagle-common-starter`             | 核心基础设施：基类（BaseAggregateRoot/BaseEntity）、异常体系（AppException/ErrorCode）、领域事件（BaseEvent）、i18n、安全工具 |
 | `eagle-data-jpa-starter`           | JPA/Hibernate 配置、审计、MySQL/PostgreSQL/H2 支持                                                     |
-| `eagle-redis-starter`              | Redisson + Caffeine 多级缓存                                                                       |
+| `eagle-redis-starter`              | Redisson + Caffeine 多级缓存 + CacheProtectionUtil（穿透/击穿防护）                                        |
 | `eagle-resource-server-starter`    | OAuth2 资源服务器 JWT 验证                                                                            |
 | `http-client-starter`              | RestClient / HTTP Service 客户端配置（含 Seata XID 透传）                                                 |
 | `eagle-tracing-starter`            | 分布式链路追踪（Brave/Zipkin）                                                                          |
-| `eagle-rocketmq-starter`           | RocketMQ v5 消息队列                                                                               |
-| `eagle-data-permission-starter`    | 行级数据权限控制（AspectJ）                                                                              |
-| `eagle-dynamic-datasource-starter` | 多数据源动态路由                                                                                       |
-| `eagle-tenant-starter`             | 多租户支持（动态数据源路由）                                                                                 |
-| `eagle-oss-starter`                | 对象存储（MinIO）                                                                                    |
-| `eagle-message-starter`            | 多渠道消息（阿里云 SMS、Spring Mail）                                                                     |
-| `eagle-xxl-job-starter`            | 分布式定时任务（XXL-JOB）                                                                               |
-| `eagle-openapi-starter`            | Swagger/OpenAPI 文档集成                                                                           |
+| `eagle-rocketmq-starter`           | RocketMQ v5 消息队列（事务消息、DLQ、AbstractRocketMqListener）                                           |
+| `eagle-row-security-starter`       | 行级数据权限控制（@DataPermission，AspectJ + JPA Specification）                                          |
+| `eagle-dynamic-datasource-starter` | 多数据源动态路由（主从切换、@ReadOnly、轮询负载均衡）                                                                |
+| `eagle-tenant-starter`             | 多租户支持（COLUMN/DATABASE 隔离模式、TenantContextHolder）                                               |
+| `eagle-oss-minio-starter`          | 对象存储（MinIO 8.x，签名 URL、分片上传）                                                                    |
+| `eagle-notification-starter`       | 多渠道消息（阿里云 SMS、Spring Mail）                                                                     |
+| `eagle-scheduler-starter`          | 分布式定时任务（XXL-JOB 2.4.2）                                                                         |
+| `eagle-openapi-starter`            | Swagger/OpenAPI 文档集成（SpringDoc 3.0.2）                                                          |
+| `eagle-seata-starter`              | 分布式事务（Seata AT/TCC 2.2.0）                                                                      |
+| `eagle-sentinel-starter`           | 流量控制与熔断（Sentinel，网关层限流）                                                                        |
+| `eagle-mybatis-starter`            | MyBatis-Plus 配置（分页、逻辑删除、审计）                                                                    |
+| `eagle-id-generator-starter`       | 分布式 ID 生成（雪花算法 / Leaf 等）                                                                       |
+| `eagle-idempotency-starter`        | 接口幂等性（@Idempotent，Redis SETNX + 唯一约束双重保障）                                                      |
+| `eagle-elasticsearch-starter`      | Elasticsearch 全文检索（Spring Data ES）                                                             |
+| `eagle-payment-starter`            | 支付集成（微信支付 / 支付宝）                                                                               |
+| `eagle-websocket-starter`          | WebSocket 实时通信（STOMP + SockJS）                                                                 |
+| `eagle-sharding-starter`           | 分库分表（Apache ShardingSphere 5.5.0，YAML 驱动）                                                      |
+| `eagle-excel-starter`              | Excel 导入导出（Apache POI，@ExcelColumn，大数据流式写入）                                                    |
+| `eagle-resilience-starter`         | 容错弹性（Resilience4J，熔断器 / 重试 / 超时，eagle-default 命名实例）                                           |
+| `eagle-encrypt-starter`            | 字段级加密（AES-256，JPA AttributeConverter，@Convert 注解驱动）                                            |
+| `eagle-audit-log-starter`          | 操作审计日志（@AuditLog，AOP 切面 + 异步事件 + 可插拔 Handler）                                                 |
+| `eagle-ai-starter`                 | AI 集成（Spring AI 2.x，ChatClient、EmbeddingClient）                                               |
 
 Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖使用 `api` 范围暴露传递依赖。
 
@@ -144,6 +158,7 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 | `.claude/rules/18-openapi.md`                 | SpringDoc 注解、版本、错误码文档化                        |
 | `.claude/rules/19-config.md`                  | Properties、Nacos、profile、Jasypt 加密            |
 | `.claude/rules/20-i18n.md`                    | messages 组织、key 规则、Locale 解析                  |
+| `.claude/rules/21-resilience.md`              | Resilience4J 熔断/重试/超时、Fallback、注解组合顺序        |
 | `.claude/rules/22-git.md`                     | 分支模型、Conventional Commits、PR、Tag              |
 | `.claude/rules/23-performance.md`             | N+1、慢 SQL、连接池、Async 池、JVM                     |
 | `.claude/rules/24-deployment.md`              | Dockerfile、健康检查、优雅停机、K8s                      |
@@ -151,6 +166,7 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 | `.claude/rules/26-file-storage.md`            | MinIO Bucket、Object Key、上传校验、签名 URL           |
 | `.claude/rules/27-scheduling.md`              | XXL-JOB 路由、分片、幂等、超时                           |
 | `.claude/rules/28-migration.md`               | Flyway 命名、不可变、回滚                              |
+| `.claude/rules/29-event-driven.md`            | 领域事件 vs 集成事件、Saga 编排、Event Sourcing、幂等       |
 | `.claude/rules/30-dependency.md`              | Gradle 范围、BOM、版本升级、CVE                        |
 
 ## 项目级 Commands（slash command）

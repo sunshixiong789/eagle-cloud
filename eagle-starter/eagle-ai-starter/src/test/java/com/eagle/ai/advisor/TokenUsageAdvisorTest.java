@@ -80,9 +80,9 @@ class TokenUsageAdvisorTest {
 
             advisor.after(response, chain);
 
-            assertEquals(100.0, meterRegistry.counter("eagle.ai.token.input").count());
-            assertEquals(50.0, meterRegistry.counter("eagle.ai.token.output").count());
-            assertEquals(150.0, meterRegistry.counter("eagle.ai.token.total").count());
+            assertEquals(100.0, findCounter("eagle.ai.token.input"));
+            assertEquals(50.0, findCounter("eagle.ai.token.output"));
+            assertEquals(150.0, findCounter("eagle.ai.token.total"));
         }
 
         @Test

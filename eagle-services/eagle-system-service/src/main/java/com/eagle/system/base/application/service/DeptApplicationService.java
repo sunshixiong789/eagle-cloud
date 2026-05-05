@@ -74,7 +74,7 @@ public class DeptApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public Page<DeptResponse> queryDepts(Pageable pageable) {
+    public Page<DeptResponse> queryDept(Pageable pageable) {
         return deptRepository.findAll(pageable).map(deptMapper::toResponse);
     }
 
@@ -112,10 +112,10 @@ public class DeptApplicationService {
      * 先按 parentId 分组建立 Map，再递归设置 children，
      * 避免每层都全量过滤导致的 O(n²) 问题。
      */
-    private List<DeptResponse> buildDeptTree(List<Dept> allDepts, Long parentId) {
+    private List<DeptResponse> buildDeptTree(List<Dept> allDept, Long parentId) {
         // 按 parentId 分组，一次遍历完成，O(n)
         Map<Long, List<Dept>> childrenByParent = new HashMap<>();
-        for (Dept dept : allDepts) {
+        for (Dept dept : allDept) {
             childrenByParent
                     .computeIfAbsent(dept.getParentId(), k -> new ArrayList<>())
                     .add(dept);

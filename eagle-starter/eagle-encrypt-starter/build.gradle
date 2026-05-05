@@ -1,0 +1,8 @@
+dependencies {
+    api project(':eagle-starter:eagle-common-starter')
+
+    // JPA AttributeConverter 接口，由消费方的 data-jpa-starter 传递提供
+    compileOnly 'jakarta.persistence:jakarta.persistence-api'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}

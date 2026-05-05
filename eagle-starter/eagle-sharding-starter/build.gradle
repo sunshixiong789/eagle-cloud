@@ -1,0 +1,12 @@
+dependencies {
+    api project(':eagle-starter:eagle-common-starter')
+
+    // ShardingSphere JDBC core：含 YamlShardingSphereDataSourceFactory，不依赖 Spring Boot 自动配置
+    api 'org.apache.shardingsphere:shardingsphere-jdbc'
+
+    // 读写分离需要 spring-jdbc DataSource 接口，由消费方 spring-boot-starter 传递，这里仅 compileOnly
+    compileOnly 'org.springframework:spring-jdbc'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'com.h2database:h2'
+}

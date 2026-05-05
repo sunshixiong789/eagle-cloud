@@ -1,0 +1,8 @@
+dependencies {
+    api project(':eagle-starter:eagle-common-starter')
+    api 'org.apache.poi:poi-ooxml'
+
+    // 流式写入（SXSSFWorkbook）已包含在 poi-ooxml 中
+    // 大文件读取使用 SAX 模式，无额外依赖
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}

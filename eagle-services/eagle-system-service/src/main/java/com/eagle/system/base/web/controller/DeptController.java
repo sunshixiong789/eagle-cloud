@@ -75,10 +75,10 @@ public class DeptController {
     @Operation(summary = "查询部门列表", description = "分页查询所有部门")
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public Page<DeptResponse> queryDepts(@ParameterObject
+    public Page<DeptResponse> queryDept(@ParameterObject
                                          @Parameter(description = "分页参数（page=页码从0开始, size=每页条数, sort=排序字段）")
                                          @PageableDefault Pageable pageable) {
-        return deptApplicationService.queryDepts(pageable);
+        return deptApplicationService.queryDept(pageable);
     }
 
     @Operation(summary = "查询部门树", description = "获取完整的部门树形结构")

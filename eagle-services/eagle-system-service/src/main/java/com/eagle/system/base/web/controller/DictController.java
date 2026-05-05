@@ -83,7 +83,7 @@ public class DictController {
     @Operation(summary = "查询字典列表", description = "分页查询所有字典")
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public Page<DictResponse> queryDicts(@ParameterObject
+    public Page<DictResponse> queryDict(@ParameterObject
                                          @Parameter(description = "分页参数（page=页码从0开始, size=每页条数, sort=排序字段）")
                                          @PageableDefault Pageable pageable) {
         return dictApplicationService.queryDict(pageable);
@@ -99,7 +99,7 @@ public class DictController {
     @Operation(summary = "批量查询字典", description = "根据多个字典类型批量查询")
     @GetMapping("/types")
     @PreAuthorize("isAuthenticated()")
-    public List<DictResponse> getDictsByTypes(@Parameter(description = "字典类型列表") @RequestParam List<String> dictTypes) {
+    public List<DictResponse> getDictByTypes(@Parameter(description = "字典类型列表") @RequestParam List<String> dictTypes) {
         return dictApplicationService.getDictByTypes(dictTypes);
     }
 

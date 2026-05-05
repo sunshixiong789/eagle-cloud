@@ -24,6 +24,12 @@
 - **MyBatis-Plus 增强** — 统一分页 / 慢 SQL / 审计填充 / 链式查询条件辅助
 - **支付集成** — 支付宝 / 微信支付双网关，统一 pay / refund / transfer / notify 接口
 - **实时推送** — STOMP WebSocket + SSE 双模式，离线消息存储，Micrometer 连接指标
+- **分库分表** — Apache ShardingSphere YAML 驱动，零侵入分库分表与读写分离
+- **Excel 导入导出** — Apache POI + `@ExcelColumn` 注解，万行以上自动切换流式写入
+- **容错弹性** — Resilience4J 熔断器 / 重试 / 超时，`eagle-default` 命名实例开箱即用
+- **字段级加密** — AES-256 JPA `AttributeConverter`，`@Convert` 注解驱动，零侵入渐进迁移
+- **操作审计日志** — `@AuditLog` 注解，AOP 切面 + 异步事件 + 可插拔 Handler
+- **AI 集成** — Spring AI 2.x，ChatClient / EmbeddingClient，支持多模型切换
 - **全链路压测** — `X-Eagle-Gray` 压测流量标记，跨服务自动透传
 - **GraalVM Native Image** — 支持原生镜像编译
 
@@ -49,6 +55,10 @@
 | 对象存储          | MinIO                                         | 8.5.17                |
 | 支付            | 支付宝 SDK / 微信支付 APIv3                          | 4.39 / 0.2.14         |
 | 实时推送          | STOMP WebSocket + SSE                         | -                     |
+| 分库分表          | Apache ShardingSphere                         | 5.5.0                 |
+| Excel 处理      | Apache POI                                    | 5.x                   |
+| 容错弹性          | Resilience4J                                  | 2.2.0                 |
+| AI 集成         | Spring AI                                     | 2.x                   |
 | API 文档        | SpringDoc OpenAPI                             | 3.0.2                 |
 | 构建工具          | Gradle (Groovy DSL)                           | 9.x                   |
 
@@ -61,7 +71,7 @@ eagle-cloud/
 │   ├── eagle-gateway-server/           # API 网关
 │   └── docker-compose.yml              # 开发环境容器编排
 │
-└── eagle-starter/                          # 可复用 Starter 库
+└── eagle-starter/                          # 可复用 Starter 库（共 28 个）
     │
     │   # ── 基础能力 ──────────────────────────────────────────────────
     ├── eagle-common-starter/               # 核心基础设施（基类、异常体系、领域事件、i18n、压测流量标记）
@@ -73,27 +83,33 @@ eagle-cloud/
     ├── eagle-openapi-starter/              # Swagger / OpenAPI 文档集成
     │
     │   # ── 数据访问 ──────────────────────────────────────────────────
-    ├── eagle-dynamic-datasource-starter/   # 多数据源动态路由
+    ├── eagle-dynamic-datasource-starter/   # 多数据源动态路由（主从切换 / 多从轮询 / @ReadOnly）
+    ├── eagle-sharding-starter/             # 分库分表（Apache ShardingSphere YAML 驱动）
     ├── eagle-mybatis-starter/              # MyBatis-Plus 增强（分页 / 慢 SQL / 审计填充 / 查询辅助）
     ├── eagle-elasticsearch-starter/        # Elasticsearch（流式 DSL / 通用 Repository / 高亮 / 聚合）
     │
     │   # ── 消息与任务 ────────────────────────────────────────────────
-    ├── eagle-rocketmq-starter/             # RocketMQ v5 消息队列
-    ├── eagle-xxl-job-starter/              # 分布式定时任务（XXL-JOB）
-    ├── eagle-message-starter/              # 多渠道消息推送（阿里云 SMS / Spring Mail）
+    ├── eagle-rocketmq-starter/             # RocketMQ v5 消息队列（事务消息 / DLQ / 消费骨架）
+    ├── eagle-scheduler-starter/            # 分布式定时任务（XXL-JOB 2.4.2）
+    ├── eagle-notification-starter/         # 多渠道消息推送（阿里云 SMS / Spring Mail）
     │
-    │   # ── 高并发 ────────────────────────────────────────────────
+    │   # ── 高并发 ────────────────────────────────────────────────────
     ├── eagle-idempotency-starter/          # 接口幂等（TOKEN / BUSINESS_KEY / RESULT_CACHE 三模式）
     ├── eagle-id-generator-starter/         # 分布式 ID（Snowflake / UUID / 号段 + 订单号语义生成）
     ├── eagle-sentinel-starter/             # 流量治理（@RateLimit 注解 + 规则动态管理）
     ├── eagle-seata-starter/                # 分布式事务（AT 自动集成 + TCC 模板 + 编程式事务）
+    ├── eagle-resilience-starter/           # 容错弹性（Resilience4J 熔断器 / 重试 / 超时）
     ├── eagle-payment-starter/              # 支付集成（支付宝 / 微信双网关 + 转账 + 签名验证）
     ├── eagle-websocket-starter/            # 实时推送（STOMP WebSocket + SSE + 离线消息存储）
     │
     │   # ── 平台能力 ──────────────────────────────────────────────────
-    ├── eagle-data-permission-starter/      # 行级数据权限（AspectJ）
-    ├── eagle-tenant-starter/               # 多租户支持（动态数据源路由）
-    └── eagle-oss-starter/                  # 对象存储（MinIO）
+    ├── eagle-row-security-starter/         # 行级数据权限（@DataPermission，JPA Specification）
+    ├── eagle-tenant-starter/               # 多租户支持（COLUMN / DATABASE 隔离模式）
+    ├── eagle-oss-minio-starter/            # 对象存储（MinIO，签名 URL / 分片上传）
+    ├── eagle-excel-starter/                # Excel 导入导出（@ExcelColumn，流式写入）
+    ├── eagle-encrypt-starter/              # 字段级加密（AES-256，JPA @Convert 注解驱动）
+    ├── eagle-audit-log-starter/            # 操作审计日志（@AuditLog，AOP + 异步事件）
+    └── eagle-ai-starter/                   # AI 集成（Spring AI 2.x，ChatClient / EmbeddingClient）
 ```
 
 ### Spring Modulith 模块划分
@@ -570,8 +586,7 @@ throw PaymentErrorCode.GATEWAY_ERROR.toServiceException(cause);        // → 50
 
 ### 编码规范
 
-项目编码规范定义在 `.claude/rules/` 目录下，涵盖命名、架构分层、RESTful API、日志、安全、并发、测试、代码风格、异常处理、数据库、配置注入、模块治理等
-12 项规范。
+项目编码规范定义在 `.claude/rules/` 目录下，涵盖命名、架构分层、RESTful API、日志、安全、并发、测试、代码风格、异常处理、数据库、配置注入、模块治理、消息、多租户、数据权限、OpenAPI、i18n、容错弹性、事件驱动、Git 工作流、性能、部署、审查清单、文件存储、定时任务、迁移、依赖管理等 30 项规范。
 
 ## License
 

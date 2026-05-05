@@ -1,0 +1,13 @@
+dependencies {
+    api project(':eagle-starter:eagle-common-starter')
+
+    // AOP 切面支持
+    api 'org.springframework.boot:spring-boot-starter-aop'
+
+    // Web 上下文（获取 IP/UA），可选——无 web 环境时优雅降级
+    compileOnly 'org.springframework:spring-web'
+    // Spring Security 用户上下文，可选
+    compileOnly 'org.springframework.security:spring-security-core'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}

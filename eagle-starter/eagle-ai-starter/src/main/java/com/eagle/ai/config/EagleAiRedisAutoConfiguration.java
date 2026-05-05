@@ -1,6 +1,7 @@
 package com.eagle.ai.config;
 
 import com.eagle.ai.advisor.AiRateLimitAdvisor;
+import com.eagle.ai.advisor.TokenBudgetAdvisor;
 import com.eagle.ai.memory.RedisChatMemoryRepository;
 import com.eagle.ai.properties.AiProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,5 +60,19 @@ public class EagleAiRedisAutoConfiguration {
     public AiRateLimitAdvisor aiRateLimitAdvisor(StringRedisTemplate redisTemplate,
                                                  AiProperties properties) {
         return new AiRateLimitAdvisor(redisTemplate, properties);
+    }
+
+    /**
+     * Token 月度配额 Advisor（Redis INCR + TTL）。
+     *
+     * <p>需要 {@code eagle.ai.budget.enabled=true} 才激活。
+     * 超出月度配额后拒绝请求（90003）。
+     */
+    @Bean
+    @ConditionalOnMissingBean(TokenBudgetAdvisor.class)
+    @ConditionalOnProperty(name = "eagle.ai.budget.enabled", havingValue = "true")
+    public TokenBudgetAdvisor tokenBudgetAdvisor(StringRedisTemplate redisTemplate,
+                                                 AiProperties properties) {
+        return new TokenBudgetAdvisor(redisTemplate, properties);
     }
 }

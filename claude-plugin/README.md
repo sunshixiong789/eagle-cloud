@@ -1,15 +1,15 @@
 # Eagle Cloud Claude Code Plugin
 
-> 把 `eagle-cloud` 基础架子的开发规范、22 个 starter 使用指南、项目级脚手架命令打包为一个 Claude Code Plugin。
+> 把 `eagle-cloud` 基础架子的开发规范、28 个 starter 使用指南、项目级脚手架命令打包为一个 Claude Code Plugin。
 > 业务项目接入后，AI 在编码时自动获得全部约定与 API 知识。
 
 ## 内容清单
 
 | 类型              | 数量 | 说明                                                                            |
 |-----------------|----|-------------------------------------------------------------------------------|
-| Rules（自动注入）     | 28 | DDD / Modulith / 安全 / 日志 / 缓存 / 消息 / 事务 / 多租户 / 性能 / 部署 等全部开发规范               |
+| Rules（自动注入）     | 30 | DDD / Modulith / 安全 / 日志 / 缓存 / 消息 / 事务 / 多租户 / 性能 / 部署 / 容错弹性 / 事件驱动 等全部开发规范 |
 | Commands（slash） | 6  | `/eagle-flow` `/check-arch` `/new-module` `/new-aggregate` `/new-starter` `/add-error-code` |
-| Skills（按需加载）    | 23 | 22 个 starter skill + 1 个端到端编排 skill `eagle-feature-flow`                       |
+| Skills（按需加载）    | 29 | 28 个 starter skill + 1 个端到端编排 skill `eagle-feature-flow`                       |
 
 ## 文档导航
 
@@ -27,9 +27,9 @@ claude-plugin/
 ├── README.md                 # 本文件
 ├── CLAUDE.md                 # 注入业务项目的总入口
 ├── sync.sh                   # 从仓库源同步内容（开发期使用）
-├── rules/                    # 28 份规则文件
-├── commands/                 # 5 个 slash commands
-└── skills/                   # 22 个 starter skill
+├── rules/                    # 30 份规则文件
+├── commands/                 # 6 个 slash commands
+└── skills/                   # 28 个 starter skill
     ├── eagle-common/SKILL.md
     ├── eagle-redis/SKILL.md
     └── ...

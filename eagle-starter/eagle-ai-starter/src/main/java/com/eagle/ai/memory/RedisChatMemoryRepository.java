@@ -12,12 +12,13 @@ import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -32,6 +33,8 @@ import java.util.concurrent.TimeUnit;
  *   <li>{@code ASSISTANT} → {@link AssistantMessage}</li>
  *   <li>{@code SYSTEM} → {@link SystemMessage}</li>
  * </ul>
+ *
+ * <p>工具调用（Tool）等复杂消息类型会保留 content 文本，type 字段保存原始类型名便于扩展。
  *
  * <p>生产环境若需更换存储只需注册自定义 {@link ChatMemoryRepository} Bean 即可覆盖此实现。
  */
@@ -53,18 +56,30 @@ public class RedisChatMemoryRepository implements ChatMemoryRepository {
         this.ttlSeconds = properties.getMemory().getTtl().toSeconds();
     }
 
+    /**
+     * 列出所有 conversationId。
+     *
+     * <p>使用 Redis {@code SCAN} 游标命令替代阻塞的 {@code KEYS}，对大规模 key 空间安全。
+     */
     @Override
     public List<String> findConversationIds() {
         String pattern = keyPrefix + ":*";
-        Set<String> keys = redisTemplate.keys(pattern);
-        if (keys == null || keys.isEmpty()) {
-            return Collections.emptyList();
-        }
         int prefixLen = keyPrefix.length() + 1;
-        return keys.stream()
-                .filter(k -> k.length() > prefixLen)
-                .map(k -> k.substring(prefixLen))
-                .toList();
+        List<String> ids = new ArrayList<>();
+
+        ScanOptions options = ScanOptions.scanOptions().match(pattern).count(200).build();
+        try (Cursor<String> cursor = redisTemplate.scan(options)) {
+            while (cursor.hasNext()) {
+                String key = cursor.next();
+                if (key.length() > prefixLen) {
+                    ids.add(key.substring(prefixLen));
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to scan conversation ids, returning partial results", e);
+        }
+
+        return Collections.unmodifiableList(ids);
     }
 
     @Override
@@ -111,7 +126,8 @@ public class RedisChatMemoryRepository implements ChatMemoryRepository {
     }
 
     private MessageDto toDto(Message message) {
-        return new MessageDto(message.getMessageType().name(), message.getText());
+        String content = message.getText() != null ? message.getText() : "";
+        return new MessageDto(message.getMessageType().name(), content);
     }
 
     private Message toMessage(MessageDto dto) {
@@ -125,10 +141,15 @@ public class RedisChatMemoryRepository implements ChatMemoryRepository {
         return switch (type) {
             case ASSISTANT -> new AssistantMessage(dto.content());
             case SYSTEM -> new SystemMessage(dto.content());
+            // TOOL 等类型降级为 UserMessage 保留文本内容
             default -> new UserMessage(dto.content());
         };
     }
 
-    /** 消息序列化 DTO（仅保留类型 + 文本，工具调用等复杂内容暂不支持）。 */
+    /**
+     * 消息序列化 DTO。
+     * 保存消息类型名（type）和文本内容（content），支持 USER / ASSISTANT / SYSTEM 完整还原。
+     * 多模态内容（图片等）和工具调用元数据当前仅保留文本部分。
+     */
     record MessageDto(String type, String content) {}
 }

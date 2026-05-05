@@ -1,6 +1,7 @@
 package com.eagle.payment.event;
 
 import com.eagle.payment.model.NotifyResult;
+import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
 /**
@@ -25,10 +26,13 @@ import org.springframework.context.ApplicationEvent;
  *
  * @author eagle
  */
+@Getter
 public class PaymentNotifyEvent extends ApplicationEvent {
 
     /**
      * 支付通知解析结果
+     * -- GETTER --
+     *  获取支付通知解析结果。
      */
     private final NotifyResult result;
 
@@ -41,14 +45,5 @@ public class PaymentNotifyEvent extends ApplicationEvent {
     public PaymentNotifyEvent(Object source, NotifyResult result) {
         super(source);
         this.result = result;
-    }
-
-    /**
-     * 获取支付通知解析结果。
-     *
-     * @return 通知结果
-     */
-    public NotifyResult getResult() {
-        return result;
     }
 }
