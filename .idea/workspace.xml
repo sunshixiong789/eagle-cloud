@@ -4,20 +4,90 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2ac4c469-4850-47a3-8a94-e2acc4c9bee3" name="Changes" comment="" />
+    <list default="true" id="9aadaec5-257a-42ec-b9de-c937304314a0" name="更改" comment="fix(build): 优化依赖管理并修复构建配置问题&#10;&#10;- 将 spring-boot-starter-aop 替换为 spring-boot-starter-aspectj 以兼容 Spring Boot 4.x&#10;- 添加可选依赖 servlet API 和 Jackson 序列化支持，提升 Web 环境兼容性&#10;- 在 ShardingSphere 依赖中排除 shardingsphere-test-util 模块，解决 POM Bug 导致的错误依赖&#10;- 明确标注 compileOnly 依赖，确保依赖关系清晰且符合使用场景">
+      <change beforePath="$PROJECT_DIR$/claude-plugin/DEPLOYMENT.md" beforeDir="false" afterPath="$PROJECT_DIR$/claude-plugin/DEPLOYMENT.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/claude-plugin/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/claude-plugin/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/claude-plugin/USAGE.md" beforeDir="false" afterPath="$PROJECT_DIR$/claude-plugin/USAGE.md" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="DefaultGradleProjectSettings">
-    <option name="isMigrated" value="true" />
+  <component name="ChangesViewManager">
+    <option name="groupingKeys">
+      <option value="module" />
+      <option value="repository" />
+    </option>
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <task path="$PROJECT_DIR$">
+          <activation />
+        </task>
+        <projects_view>
+          <tree_state>
+            <expand>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="eagle-cloud" type="f1a62948:ProjectNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="eagle-cloud" type="f1a62948:ProjectNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="eagle-cloud" type="f1a62948:ProjectNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+                <item name="build" type="c8890929:TasksNode$1" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="eagle-cloud" type="f1a62948:ProjectNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+                <item name="verification" type="c8890929:TasksNode$1" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="eagle-cloud" type="f1a62948:ProjectNode" />
+                <item name="eagle-starter" type="2d1252cf:ModuleNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="eagle-cloud" type="f1a62948:ProjectNode" />
+                <item name="eagle-starter" type="2d1252cf:ModuleNode" />
+                <item name="eagle-sharding-starter" type="2d1252cf:ModuleNode" />
+              </path>
+            </expand>
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="package-info" />
+        <option value="JUnit5 Test Class" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
+    <option name="PREVIOUS_COMMIT_AUTHORS">
+      <list>
+        <option value="sunshixiong &lt;1285913468@qq.com&gt;" />
+      </list>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
-  </component>
-  <component name="GoLibraries">
-    <option name="indexEntireGoPath" value="true" />
   </component>
   <component name="GradleLocalSettings">
     <option name="myGradleUserHome" value="$USER_HOME$/.gradle" />
@@ -38,90 +108,724 @@
       </map>
     </option>
   </component>
-  <component name="JsFlowSettings">
-    <service-enabled>true</service-enabled>
-    <exe-path />
-    <other-services-enabled>true</other-services-enabled>
-    <auto-save>true</auto-save>
-  </component>
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
         <option name="alwaysUpdateSnapshots" value="true" />
-        <option name="customMavenHome" value="$USER_HOME$/softApp/apache-maven-3.9.0" />
-        <option name="localRepository" value="$USER_HOME$/repository" />
+        <option name="customMavenHome" value="/opt/homebrew/Cellar/maven/3.9.13/libexec" />
+        <option name="localRepository" value="$MAVEN_REPOSITORY$" />
         <option name="mavenHomeTypeForPersistence" value="CUSTOM" />
-        <option name="userSettingsFile" value="$USER_HOME$/softApp/apache-maven-3.9.0/conf/settings.xml" />
       </MavenGeneralSettings>
     </option>
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 3
-}]]></component>
-  <component name="ProjectId" id="2mmaKFYcG4BVvE0GejSuj3jsV8l" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="ProjectErrors" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 3
+}</component>
+  <component name="ProjectId" id="3AyOUsmtbrm2thO8i1CRccv4DFG" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="abbreviatePackageNames" value="true" />
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
     <option name="showVisibilityIcons" value="true" />
+    <option name="sortByType" value="true" />
+    <option name="sortKey" value="BY_TYPE" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.go.formatter.settings.were.checked": "true",
-    "RunOnceActivity.go.migrated.go.modules.settings": "true",
-    "git-widget-placeholder": "main",
-    "go.import.settings.migrated": "true",
-    "kotlin-language-version-configured": "true",
-    "nodejs_package_manager_path": "npm",
-    "onboarding.tips.debug.path": "/Users/sunshixiong/Work/eleganteer-cloud/src/main/java/com/eleganteer/Main.java",
-    "project.structure.last.edited": "SDKs",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.28664923",
-    "settings.editor.selected.configurable": "MavenSettings",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Gradle.eagle-cloud [:eagle-base-server:eagle-system-server:build].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.eagle-cloud [:eagle-base-server:eagle-system-server:clean].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.eagle-cloud [:eagle-services:eagle-system-service:build].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.eagle-cloud [:eagle-services:eagle-system-service:clean].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.eagle-cloud [:eagle-starter:build].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.eagle-cloud [:eagle-starter:eagle-common-starter:build].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.eagle-cloud [:eagle-starter:eagle-data-jpa-starter:build].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.eagle-cloud [:eagle-starter:eagle-resource-server-starter:build].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.eagle-cloud [:eagle-starter:eagle-resource-server-starter:dependencies].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.eagle-cloud [buildDependents].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.eagle-cloud [build].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.eagle-cloud [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.eagle-cloud [dependencies].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.eagle-cloud [dependencyUpdates].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.eagle-cloud [test].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.下载源代码.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.构建 eagle-cloud.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.整个项目.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;Spring Boot.EagleMonolithApplication.executor&quot;: &quot;Run&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrary&quot;: &quot;JUnit5&quot;,
+    &quot;com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrarySuperClass.JUnit5&quot;: &quot;&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/sunshixiong/IdeaProjects/eagle-cloud/eagle-services/eagle-monolith-service/src/main/resources&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;yarn&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;模块&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.28664923&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;run.configurations.included.in.services&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;qoder.settings.plugin&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/Applications/IntelliJ IDEA.app/Contents/plugins/javascript-plugin/jsLanguageServicesImpl/external&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
+  <component name="ReactorSettings">
+    <option name="notificationShown" value="true" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/eagle-services/eagle-monolith-service/src/main/resources" />
+      <recent name="$PROJECT_DIR$/eagle-base-server/eagle-system-server/src/main/java/com/eagle/system/base/web" />
+      <recent name="$PROJECT_DIR$/eagle-base-server/eagle-system-server/src/main/java/com/eagle/system/base/application" />
+      <recent name="$PROJECT_DIR$/eagle-base-server/eagle-system-server/src/main/java/com/eagle/system/base/infrastructure" />
+      <recent name="$PROJECT_DIR$/eagle-base-server/eagle-system-server/src/main/java/com/eagle/system/base/domain" />
+    </key>
+    <key name="CreateTestDialog.Recents.Supers">
+      <recent name="" />
+    </key>
+    <key name="CreateTestDialog.RecentsKey">
+      <recent name="com.eagle.monolith" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Gradle.eagle-cloud [test]">
+    <configuration name="eagle-cloud [:eagle-services:eagle-system-service:build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":eagle-services:eagle-system-service:build" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>false</RunAsTest>
+      <GradleProfilingDisabled>false</GradleProfilingDisabled>
+      <GradleCoverageDisabled>false</GradleCoverageDisabled>
+      <method v="2" />
+    </configuration>
+    <configuration name="eagle-cloud [:eagle-services:eagle-system-service:clean]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":eagle-services:eagle-system-service:clean" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>false</RunAsTest>
+      <GradleProfilingDisabled>false</GradleProfilingDisabled>
+      <GradleCoverageDisabled>false</GradleCoverageDisabled>
+      <method v="2" />
+    </configuration>
+    <configuration name="eagle-cloud [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="build" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>false</RunAsTest>
+      <GradleProfilingDisabled>false</GradleProfilingDisabled>
+      <GradleCoverageDisabled>false</GradleCoverageDisabled>
+      <method v="2" />
+    </configuration>
+    <configuration name="eagle-cloud [clean]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="clean" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>false</RunAsTest>
+      <GradleProfilingDisabled>false</GradleProfilingDisabled>
+      <GradleCoverageDisabled>false</GradleCoverageDisabled>
+      <method v="2" />
+    </configuration>
+    <configuration name="eagle-cloud [test]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="test" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>false</RunAsTest>
+      <GradleProfilingDisabled>false</GradleProfilingDisabled>
+      <GradleCoverageDisabled>false</GradleCoverageDisabled>
+      <method v="2" />
+    </configuration>
+    <configuration name="EagleGatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+      <module name="eagle-cloud.eagle-services.eagle-gateway-service.main" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.eagle.gateway.EagleGatewayApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="EagleMonolithApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+      <module name="eagle-cloud.eagle-services.eagle-monolith-service.main" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.eagle.monolith.EagleMonolithApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="EagleSystemApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+      <module name="eagle-cloud.eagle-services.eagle-system-service.main" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.eagle.system.EagleSystemApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Gradle.eagle-cloud [build]" />
+      <item itemvalue="Gradle.eagle-cloud [clean]" />
+      <item itemvalue="Gradle.eagle-cloud [test]" />
+      <item itemvalue="Gradle.eagle-cloud [:eagle-services:eagle-system-service:build]" />
+      <item itemvalue="Gradle.eagle-cloud [:eagle-services:eagle-system-service:clean]" />
+      <item itemvalue="Spring Boot.EagleGatewayApplication" />
+      <item itemvalue="Spring Boot.EagleMonolithApplication" />
+      <item itemvalue="Spring Boot.EagleSystemApplication" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Gradle.eagle-cloud [test]" />
+        <item itemvalue="Gradle.eagle-cloud [build]" />
+        <item itemvalue="Gradle.eagle-cloud [clean]" />
+        <item itemvalue="Gradle.eagle-cloud [:eagle-services:eagle-system-service:build]" />
+        <item itemvalue="Gradle.eagle-cloud [:eagle-services:eagle-system-service:clean]" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-28b599e66164-intellij.indexing.shared.core-IU-242.23339.11" />
-        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-IU-242.23339.11" />
+        <option value="bundled-jdk-30f59d01ecdd-2fc7cc6b9a17-intellij.indexing.shared.core-IU-253.32098.37" />
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-IU-253.32098.37" />
       </set>
     </attachedChunks>
   </component>
-  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="SshConsoleOptionsProvider">
+    <option name="myEncoding" value="UTF-8" />
+    <option name="myConnectionType" value="NONE" />
+    <option name="myConnectionId" value="" />
+  </component>
   <component name="SvnConfiguration">
     <configuration>$USER_HOME$/.subversion</configuration>
   </component>
   <component name="TaskManager">
-    <task active="true" id="Default" summary="Default task">
-      <changelist id="2ac4c469-4850-47a3-8a94-e2acc4c9bee3" name="Changes" comment="" />
-      <created>1727684141643</created>
+    <task active="true" id="Default" summary="默认任务">
+      <changelist id="9aadaec5-257a-42ec-b9de-c937304314a0" name="更改" comment="" />
+      <created>1773561362859</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1727684141643</updated>
-      <workItem from="1727684142943" duration="6000" />
+      <updated>1773561362859</updated>
+      <workItem from="1773561364489" duration="7913000" />
+      <workItem from="1773580048523" duration="6255000" />
+      <workItem from="1774276726158" duration="1297000" />
+      <workItem from="1777447852195" duration="835000" />
+      <workItem from="1777450461305" duration="6544000" />
+      <workItem from="1777516266281" duration="18535000" />
+      <workItem from="1777538595983" duration="14492000" />
+      <workItem from="1777604231379" duration="13000" />
+      <workItem from="1777604256452" duration="1560000" />
+      <workItem from="1777904008076" duration="5236000" />
+      <workItem from="1777948996670" duration="3454000" />
     </task>
+    <task id="LOCAL-00001" summary="refactor(system): 合并授权服务到系统服务并调整配置&#10;&#10;- 删除 eagle-authorization-server 模块相关代码和配置&#10;- 将授权服务器配置迁移到 eagle-system-server 模块中&#10;- 修改系统服务监听端口为 8081，统一端口管理&#10;- 调整系统模块依赖，新增 spring-boot-starter-oauth2-authorization-server 依赖&#10;- 从 docker-compose 文件中移除授权服务相关内容&#10;- 删除授权服务 Dockerfile，移除无用文件&#10;- 修改包路径，将授权服务相关代码合并并重命名至系统服务中&#10;- 在公共模块中新增单元测试依赖，补充测试覆盖&#10;- 优化主项目 build.gradle 文件，添加 JVM 参数支持重新定义删除方法">
+      <option name="closed" value="true" />
+      <created>1773562155572</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1773562155572</updated>
+    </task>
+    <task id="LOCAL-00002" summary="refactor(deps): 将starter模块依赖范围由implementation改为api&#10;&#10;- eagle-common-starter模块所有依赖改为api范围，便于传递给使用者&#10;- eagle-data-jpa-starter模块中project和spring依赖改为api范围&#10;- eagle-resource-server-starter模块将主要依赖改为api范围，新增oauth2-resource-server依赖&#10;- build.gradle中添加lombok-mapstruct-binding和mapstruct-processor注解处理器&#10;- 添加EagleDataJpaStarterApplication类作者注释&#10;- settings.gradle中移除include路径前多余的冒号，使路径标准化">
+      <option name="closed" value="true" />
+      <created>1773565027464</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1773565027464</updated>
+    </task>
+    <task id="LOCAL-00003" summary="refactor(common): 重构聚合根相关类及调整实体继承关系&#10;&#10;- 删除 AggregateRoot 接口，改用 AbstractAggregateRoot 作为聚合根基类&#10;- 将 BaseAggregate 类重命名为 BaseAggregateRoot 并继承 AbstractAggregateRoot&#10;- 省略了多余的领域事件管理代码，精简聚合根实现&#10;- 多个领域模型实体类（如 Dict、User）继承 BaseAggregateRoot，统一聚合根设计&#10;- 修正各实体类中的基础类导入路径，移除冗余导入&#10;- UserProfile 值对象中调整构造函数注解，保持 JPA 兼容性">
+      <option name="closed" value="true" />
+      <created>1773566317699</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1773566317699</updated>
+    </task>
+    <task id="LOCAL-00004" summary="refactor(common): rename BaseDomainEvent to BaseEvent and update references&#10;&#10;- 将 BaseDomainEvent 重命名为 BaseEvent，统一领域事件基类命名&#10;- 更新 BaseAggregateRoot 中的事件列表类型为 BaseEvent&#10;- 修改用户领域事件继承自 BaseEvent&#10;- 修整 UserService 中领域事件发布逻辑，移除重复事件手动发布&#10;- 调整 UserMapper 的 MapStruct 配置，忽略未映射目标属性&#10;- 删除 SecurityConfig 中的宽松 CORS 配置，简化安全配置&#10;- 添加 eagle-feign-starter 模块的空依赖块和测试示例代码填写&#10;- 新增项目说明文档 CLAUDE.md，介绍项目架构和开发规范">
+      <option name="closed" value="true" />
+      <created>1773582001097</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1773582001097</updated>
+    </task>
+    <task id="LOCAL-00005" summary="chore(config): 更新本地数据库连接和依赖配置&#10;&#10;- 修改 application-local.yml 中 H2 数据库文件路径&#10;- eagle-system-server 模块引入 thymeleaf 启动器依赖&#10;- 优化主构建文件依赖管理，调整 Lombok 和 MapStruct 配置&#10;- 增加 Spring Boot 开发工具依赖，增强开发体验&#10;- SecurityConfig 中新增 JWT 签名密钥生成的 Bean 方法，解决启动重置问题&#10;- eagle-common-starter 模块调整 BaseAggregateRoot 类，移除领域事件列表改用 JPA 主键注解&#10;- 移除 User 实体中仅供 JPA 和 MapStruct 使用的 setter 方法，简化代码&#10;- eagle-doc 中补充统一响应格式设计决策说明，说明现阶段不需要统一包装响应结果，避免过度设计">
+      <option name="closed" value="true" />
+      <created>1773584162784</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1773584162784</updated>
+    </task>
+    <task id="LOCAL-00006" summary="fix(service): 修复用户注册和用户服务设置问题&#10;&#10;- 注释掉RegisterApplicationService中设置用户名的代码，避免空用户名保存&#10;- 注释掉UserService中设置用户Profile的代码，防止错误的Profile赋值&#10;- 保持其他用户信息的正常保存和部门设置逻辑不变">
+      <option name="closed" value="true" />
+      <created>1773584260109</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1773584260109</updated>
+    </task>
+    <task id="LOCAL-00007" summary="feat(system): 重构系统模块引入领域驱动设计和新功能模块&#10;&#10;- 将密码加密器BcryptPasswordEncryptor重命名并移至config包&#10;- 引入Guava库依赖&#10;- 重构DTO和控制器包结构，统一迁移至web模块下&#10;- 新增基于WebSocket的ChatController实现消息广播与私信功能&#10;- 部门、字典、字典项模块引入充血模型设计，聚合根实现业务方法&#10;- 新增部门和字典领域应用服务，提供增删改查及激活停用能力&#10;- 新增部门、字典和字典项控制器支持相关REST接口&#10;- 添加部门、字典及字典项DTO请求和响应类，含验证注解&#10;- 字典项支持树形结构查询，业务层完成树形构造逻辑&#10;- 完善日志及异常处理策略，提升系统稳定性和可维护性">
+      <option name="closed" value="true" />
+      <created>1774277385963</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1774277385963</updated>
+    </task>
+    <task id="LOCAL-00008" summary="refactor(service): 删除 UserService 服务，精简代码结构&#10;&#10;- 移除 UserService 类及其相关方法&#10;- 删除用户管理的应用服务逻辑&#10;- 精简代码库，去除不再使用的服务层组件&#10;- 保留包声明文件便于模块划分和管理">
+      <option name="closed" value="true" />
+      <created>1774277453397</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1774277453397</updated>
+    </task>
+    <task id="LOCAL-00009" summary="refactor(system): 清理冗余代码并优化映射器配置&#10;&#10;- 删除 ChatController 和 LoginController 等冗余 REST 控制器&#10;- 移除 UserRestController，简化用户管理模块接口&#10;- UserDomainService 中注释禁用角色分配及移除功能调用&#10;- EventHandler 中删除新增用户密码加密实现&#10;- 为 DictItemMapper、MenuMapper、UserMapper 添加映射器未映射目标忽略策略&#10;- 为 DictItemMapper 添加批量转换方法以支持列表转换">
+      <option name="closed" value="true" />
+      <created>1774277996438</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1774277996438</updated>
+    </task>
+    <task id="LOCAL-00010" summary="docs(readme): add comprehensive project overview and usage instructions&#10;&#10;- Add detailed Eagle Cloud project introduction emphasizing DDD, hexagonal architecture, and Spring Modulith&#10;- Document key features including OAuth2 server, RBAC, multi-channel login, caching, and API gateway capabilities&#10;- Specify complete technology stack with versions for Java, Spring Boot, database, caching, security, and more&#10;- Describe project structure with clear module and starter separation&#10;- Explain Spring Modulith module boundaries and domain-driven design layering&#10;- Provide instructions for quick start with local H2, Docker Compose, and external MySQL/Redis setups&#10;- List frequently used commands for building, testing, running, and native image compilation&#10;-">
+      <option name="closed" value="true" />
+      <created>1777452337443</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1777452337443</updated>
+    </task>
+    <task id="LOCAL-00011" summary="feat(auth): add Account aggregate root with multiple creation methods&#10;&#10;- Implement Account entity with fields: username, password, phone, locked status, and WechatBinding&#10;- Provide factory methods for creating Account via username/password, Wechat MiniProgram, phone, Wechat Web, and Wechat H5&#10;- Implement JPA @PostPersist callback to publish AccountRegisteredEvent after insert with complete ID and profile hints&#10;- Add domain events AccountRegisteredEvent and AccountDeletedEvent for cross-domain integration&#10;- Implement methods for password change, phone binding, account lock/unlock, and various Wechat bindings&#10;- Define database indexes on username">
+      <option name="closed" value="true" />
+      <created>1777453250795</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1777453250795</updated>
+    </task>
+    <task id="LOCAL-00012" summary="chore(config): add foundational configurations and common starter setup&#10;&#10;- Add .gitignore with IDE, build, OS, and security-related exclusions&#10;- Introduce RESTful API interface specification and coding style guides&#10;- Add exception handling and Feign remote call standards&#10;- Define module boundary governance for Spring Modulith usage&#10;- Add AdminProperties and JwtKeyProperties configuration classes with validation&#10;- Provide default application.yml and application-local.yml configurations&#10;- Configure">
+      <option name="closed" value="true" />
+      <created>1777454101429</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1777454101429</updated>
+    </task>
+    <task id="LOCAL-00013" summary="feat(auth): add OAuth2 authorization with JDBC persistence and security config&#10;&#10;- Implement OAuth2AuthorizationService and OAuth2AuthorizationConsentService for JDBC-based persistence&#10;- Add SecurityConfig with OAuth2">
+      <option name="closed" value="true" />
+      <created>1777455497891</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1777455497891</updated>
+    </task>
+    <task id="LOCAL-00014" summary="删除无用文件">
+      <option name="closed" value="true" />
+      <created>1777456683178</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1777456683178</updated>
+    </task>
+    <task id="LOCAL-00015" summary="feat(auth): implement complete account management and authentication module&#10;&#10;- Add Account aggregate root to manage user credentials and account status&#10;- Implement factory methods to create accounts via username, phone, and WeChat bindings&#10;- Add domain events AccountRegisteredEvent and AccountDeletedEvent for async integration&#10;- Develop AccountApplicationService for full account lifecycle handling with transactions&#10;- Add password change, phone binding, account lock/unlock and deletion features&#10;- Implement SMS-based password reset and phone binding verification with rate limiting&#10;- Create AccountController REST endpoints for registration, password reset, binding, locking&#10;- Introduce AdminInitializer to auto-create admin account on application startup&#10;- Add configuration properties classes for admin and Aliyun SMS service setups&#10;- Implement AliyunSmsServiceImpl for sending and verifying SMS codes with caching and limits&#10;- Define AccountRepository interface with queries by username, phone, and multiple WeChat IDs&#10;- Add Address value object as embeddable JPA component for future user profile enhancement">
+      <option name="closed" value="true" />
+      <created>1777518525884</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1777518525893</updated>
+    </task>
+    <task id="LOCAL-00016" summary="refactor(build): centralize group, version, and Nexus publishing config&#10;&#10;- Remove group and version declarations in eagle-bom/build.gradle to unify under root allprojects block&#10;- Set group and version in root build.gradle allprojects block for consistent project metadata&#10;- Add centralized Nexus repository publishing configuration for all subprojects&#10;- Configure publishing credentials from project properties or environment variables&#10;- Exclude eagle-bom module from java plugin due to java">
+      <option name="closed" value="true" />
+      <created>1777519027753</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1777519027753</updated>
+    </task>
+    <task id="LOCAL-00017" summary="refactor(build): improve Gradle dependency constraints and publications&#10;&#10;- Replace 'api' with explicit 'add('api', ...)' calls in eagle-bom dependency constraints to avoid IDE DSL warnings&#10;- Use 'register' method instead of named blocks for MavenPublication in publishing to enhance IDE signature recognition&#10;- Simplify GraalVM native binaries configuration with 'binaries.named' and 'set' method for javaLauncher&#10;- Import java.time.Duration for cleaner timeout setting syntax in build.gradle&#10;- Add comprehensive Gradle publishing and usage documentation in eagle-doc for local, Nexus, and Maven Central deployments&#10;- Document consumption scenarios including BOM-only usage and multi-service version consistency guidance">
+      <option name="closed" value="true" />
+      <created>1777519607387</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1777519607387</updated>
+    </task>
+    <task id="LOCAL-00018" summary="feat(lock): add distributed lock abstraction and Redis implementation&#10;&#10;- Define DistributedLock interface with tryLock methods supporting wait and lease times&#10;- Provide default lock acquisition parameters and convenient overloads&#10;- Add LockProperties for configurable lock types, granularity, and MQ-related settings&#10;- Introduce LockAutoConfiguration to enable distributed lock configuration properties&#10;- Create LockErrorCode enum for common lock-related error codes and messages&#10;- Implement RedisDistributedLock using Redisson with tryLock logic and error handling&#10;- Add RedissonAtomicUtil component for atomic counters with typical usage examples&#10;- Provide RedisAutoConfiguration to register RedisDistributedLock bean conditionally&#10;- Add example gradle.properties for Nexus repository and credentials settings&#10;- Configure build.gradle with multi-module publishing, JVM toolchain, and dependency management">
+      <option name="closed" value="true" />
+      <created>1777520146765</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1777520146765</updated>
+    </task>
+    <task id="LOCAL-00019" summary="feat(rocketmq): implement RocketMQ-based distributed lock and token initializer&#10;&#10;- Add LockTokenInitializer to send initial lock tokens to MQ topics on startup&#10;- Implement RocketMqDistributedLock using RocketMQ SimpleConsumer for distributed locking&#10;- Provide MQ lock token automatic initialization configurable via properties&#10;- Add RocketMqAutoConfiguration to wire domain event publishers and distributed lock beans&#10;- Support per-key and shared-topic locking granularity modes&#10;- Handle lock acquisition by exclusive token message consumption with automatic recovery&#10;- Log initialization details and error handling for better observability">
+      <option name="closed" value="true" />
+      <created>1777520708018</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1777520708019</updated>
+    </task>
+    <task id="LOCAL-00020" summary="docs(security): add detailed security guidelines for OAuth2 and token management&#10;&#10;- Define authentication framework with gateway centralized authentication and JWT validation by resource server starter&#10;- Prohibit manual token parsing in business services; enforce use of JWT Decoder&#10;- Specify Access Token and Refresh Token default lifetimes and revocation through Redis&#10;- Enforce password encryption with BCrypt, deny insecure storage and exposure of credentials&#10;- Require explicit @PreAuthorize on all controllers with multi-tenant support via tenant starter&#10;- Outline sensitive data masking using custom annotations instead of manual substring&#10;- List input security risks and corresponding defenses including SQL injection, XSS, SSRF, CSRF&#10;- Mandate CORS configuration restrictions for production environments&#10;- Standardize security response headers injected by gateway&#10;- Demand audit logging for sensitive">
+      <option name="closed" value="true" />
+      <created>1777521846734</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1777521846734</updated>
+    </task>
+    <task id="LOCAL-00021" summary="feat(id-generator): add multiple ID generator implementations and facade&#10;&#10;- Add tsid-creator dependency to BOM and eagle-id-generator-starter&#10;- Provide NanoIdGenerator based on Hutool for short string IDs&#10;- Refactor SnowflakeIdGenerator to delegate to Hutool Snowflake implementation&#10;- Support UUID v7, TSID, NanoId, and Snowflake ID generators as beans&#10;- Implement IdGeneratorFacade aggregating all ID types for unified access&#10;- Enhance IdGeneratorUtil to expose static methods for all ID generators&#10;- Add IdGeneratorProperties to configure generator type and parameters&#10;- Enable switching default ID generator via configuration property&#10;- Include unit tests for IdGeneratorFacade and NanoIdGenerator&#10;- Update auto-configuration to register generators and facade conditionally">
+      <option name="closed" value="true" />
+      <created>1777522858958</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1777522858958</updated>
+    </task>
+    <task id="LOCAL-00022" summary="feat(monolith): add eagle-monolith-service as new module&#10;&#10;- Add eagle-monolith-service module to settings.gradle includes&#10;- Create basic Spring Boot application class for monolith service&#10;- Add Spring Boot web starter dependency for monolith service&#10;- Configure application.yml for monolith service with port 8080 and app name&#10;- Provide usage documentation for multiple new eagle-starters:&#10;  - eagle-notification-starter for multi-channel messaging with templates&#10;  - eagle-openapi-starter for Swagger/OpenAPI 3.0 API documentation&#10;  - eagle-oss-minio-starter for MinIO-based object storage with upload/download APIs&#10;  - eagle-payment-starter for payment gateway abstraction (Alipay/WeChat)&#10;  - eagle-resource-server-starter for OAuth2 resource server JWT authentication&#10;  - eagle-scheduler-starter for distributed scheduling with XXL-JOB&#10;  - eagle-tracing-starter for distributed tracing with Brave/Zipkin integration&#10;  - http-client-starter for RPC Feign clients with token and tenant ID propagation">
+      <option name="closed" value="true" />
+      <created>1777523320226</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1777523320226</updated>
+    </task>
+    <task id="LOCAL-00023" summary="docs(eagle-starter): add centralized eagle starter index document&#10;&#10;- Create a comprehensive index for all eagle starters with links to their USAGE.md&#10;- Provide quick lookup table for scenarios, starters and key capabilities&#10;- Recommend starter combinations for standard business, multi-tenant, high-concurrency, search, and real-time push services&#10;- Document dependencies and interactions among starters&#10;- Include quick start guide for new projects integrating eagle-cloud infrastructure&#10;- Add cross-reference of development rules associated with each starter&#10;- Encourage contribution for improvements and new examples via PRs">
+      <option name="closed" value="true" />
+      <created>1777523338836</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1777523338836</updated>
+    </task>
+    <task id="LOCAL-00024" summary="feat(monolith): add eagle-monolith service to run as standalone app&#10;&#10;- Create eagle-monolith module reusing eagle-system-service business code  &#10;- Exclude microservice dependencies like Nacos discovery for standalone use  &#10;- Add default configuration files for local, prod profiles with H2/MySQL and caching setups  &#10;- Configure JWT, WebSocket, OAuth2 clients, WeChat integrations, and audit log cleanup tasks  &#10;- Set up actuator and OpenAPI Swagger configurations per environment  &#10;- Implement EagleMonolithApplication as main entry scanning whole com.eagle package  &#10;- Add basic test for EagleMonolithApplication main method  &#10;- Provide detailed usage documentation for eagle-common-starter, eagle-data-jpa-starter,  &#10;  eagle-dynamic-datasource-starter, eagle-elasticsearch-starter, eagle-id-generator-starter, and eagle-idempotency-starter">
+      <option name="closed" value="true" />
+      <created>1777524242393</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1777524242393</updated>
+    </task>
+    <task id="LOCAL-00025" summary="docs(rules): add comprehensive Java coding and architecture guidelines&#10;&#10;- Introduce naming conventions aligned with Google Java Style Guide and DDD layering&#10;- Define detailed code style rules including formatting, comments, and Lombok usage&#10;- Establish DDD-based layering architecture for modular monolith and microservices&#10;- Specify module boundary governance using Spring Modulith annotations and tests&#10;- Provide RESTful API design standards including resource naming and security&#10;- Add database best practices focusing on entity design, indexing, and CQRS queries&#10;- Lay out standardized exception handling with unified error codes and exception types&#10;- Outline concurrency control with transaction management and event handling requirements&#10;- Set unit testing conventions emphasizing structure, naming, coverage, and mocking rules">
+      <option name="closed" value="true" />
+      <created>1777525182233</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1777525182233</updated>
+    </task>
+    <task id="LOCAL-00026" summary="chore(ci): add GitLab CI for plugin sync and metadata validation&#10;&#10;- Add .gitlab-ci.yml with validate stage for plugin sync check and metadata validation&#10;- Define rules to trigger on merge requests and main branch for relevant paths&#10;- Install dependencies and run sync.sh script to verify claude-plugin/ sync status&#10;- Validate plugin.json and marketplace.json version consistency and frontmatter in SKILL.md&#10;- Ensure USAGE.md and SKILL.md counts match to prevent missing starter registrations">
+      <option name="closed" value="true" />
+      <created>1777525976708</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1777525976708</updated>
+    </task>
+    <task id="LOCAL-00027" summary="docs(ci): add GitLab CI configuration for plugin sync and metadata validation&#10;&#10;- Add .gitlab-ci.yml with validate stage for plugin sync check and plugin metadata validation&#10;- Configure rules to run validations on merge requests and main branch when relevant files change&#10;- Include script steps to check plugin sync, version consistency, frontmatter presence, and document count matching&#10;- Install necessary tools (bash, git, jq, findutils) in CI job environment&#10;- Provide clear error messages and instructions for fixing sync issues&#10;- Ensure plugin metadata JSON files are checked for necessary fields and matching versions">
+      <option name="closed" value="true" />
+      <created>1777526470502</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1777526470502</updated>
+    </task>
+    <task id="LOCAL-00028" summary="feat(starter): add Spring Boot 4 starter auto-configuration specification and new starter command&#10;&#10;- Introduce detailed starter module structure and auto-configuration class template for Spring Boot 4&#10;- Define usage of @AutoConfiguration replacing old @Configuration + spring.factories approach&#10;- Specify common conditional annotations and registering process for starters&#10;- Provide gradle dependency scope guidelines with usage of api and compileOnly&#10;- Advocate use of ObjectProvider for optional dependency injection&#10;- Add new /new-starter command to create a Spring Boot 4 starter module using the specification&#10;- Update related changelog">
+      <option name="closed" value="true" />
+      <created>1777526739034</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1777526739034</updated>
+    </task>
+    <task id="LOCAL-00029" summary="feat(platform): add BOM platform build.gradle with dependency constraints&#10;&#10;- Add java-platform and maven-publish plugins for BOM management&#10;- Define centralized version properties for Spring Boot, Spring Cloud, databases, Redis, tools, SDKs, middleware, and more&#10;- Configure platform BOM imports for Spring Boot and related dependencies&#10;- Add api dependency constraints for various common libraries and SDKs to unify version management&#10;- Register BOM publication using MavenPublication for artifact publishing&#10;- Provide README documentation for eagle-gateway-service, eagle-monolith-service, and eagle-system-service modules&#10;- Document key features, dependencies, configuration, startup instructions, and">
+      <option name="closed" value="true" />
+      <created>1777527175029</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1777527175029</updated>
+    </task>
+    <task id="LOCAL-00030" summary="feat(monolith): add monolith startup module and improve OAuth2 tables&#10;&#10;- Create a monolith startup module reusing eagle-system-service business code  &#10;- Exclude Nacos discovery dependency for standalone monolith deployment  &#10;- Explicitly add dependencies for IDE configuration support and JPA scanning  &#10;- Add jwt-keystore.p12 resource for security  &#10;- Refactor OAuth2 authorization and consent tables SQL for compatibility and clarity  &#10;- Modify table definitions to use inline column types and constraints  &#10;- Ensure primary keys are defined with proper syntax and formatting">
+      <option name="closed" value="true" />
+      <created>1777527631115</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1777527631115</updated>
+    </task>
+    <task id="LOCAL-00031" summary="feat(jpa): add auto-configuration for JPA and security auditor support&#10;&#10;- Introduce JpaConfig to enable JPA auditing and customize Hibernate properties&#10;- Apply batch size and slow query threshold settings from JpaProperties&#10;- Provide BeanPostProcessor to inject Hibernate properties before initialization&#10;- Add SecurityAuditorAutoConfiguration active with Spring Security&#10;- Extract current user ID from SecurityContext for @CreatedBy/@LastModifiedBy&#10;- Fallback to 0L when no authenticated user is found (e.g., system tasks)&#10;- Update spring.factories import entries to include new configs&#10;- Add dependencies for websocket starter module with appropriate scopes">
+      <option name="closed" value="true" />
+      <created>1777528083349</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1777528083349</updated>
+    </task>
+    <task id="LOCAL-00032" summary="docs(rocketmq): add payment-level strong consistency consumption strategy&#10;&#10;- Introduce problem boundaries and four key attributes for guaranteed message consumption&#10;- Define core principles: local inbox table, state machine, and unique constraints&#10;- Describe pattern A: local inbox table with atomic business transaction&#10;- Describe pattern B: state machine-driven idempotent consumption&#10;- Describe pattern C: TCC with reserved resources for cross-aggregate scenarios&#10;- Classify system exceptions, business failures, and permanent failures in consumption handling&#10;- Implement dead letter queue (DLQ) persistence and replay mechanism for manual intervention&#10;- Explain reconciliation process as final guarantee for payment consistency&#10;- Provide comprehensive sample code for production-ready payment">
+      <option name="closed" value="true" />
+      <created>1777528851145</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1777528851145</updated>
+    </task>
+    <task id="LOCAL-00033" summary="feat(claude-plugin): add eagle-feature-flow for end-to-end development process&#10;&#10;- Introduce eagle-feature-flow skill coordinating 6-phase Superpowers workflow&#10;- Embed Eagle platform rules and commands in planning and coding phases&#10;- Enforce rigid sequential phase execution with explicit status announcements&#10;- Support triggering via slash command /eagle-flow with optional feature argument&#10;- Provide detailed phase descriptions: Brainstorm, Plan, TDD, Verify, Review, Finish&#10;- Automate todo creation and progress tracking for each phase&#10;- Enforce injection of specific Eagle rules and starter skills at appropriate phases&#10;- Integrate /check-arch command as mandatory verification step&#10;- Add guidance for command usage in plan and TDD phases&#10;- Document recovery, skipping, and continuation scenarios for flow control">
+      <option name="closed" value="true" />
+      <created>1777531169619</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1777531169619</updated>
+    </task>
+    <task id="LOCAL-00034" summary="chore(config): disable superpowers marketplace plugin in Claude settings&#10;&#10;- Removed &quot;superpowers@superpowers-marketplace&quot; plugin from enabledPlugins&#10;- Kept other plugins enabled for Claude functionality&#10;- Updated .claude/settings.json accordingly">
+      <option name="closed" value="true" />
+      <created>1777531346475</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1777531346475</updated>
+    </task>
+    <task id="LOCAL-00035" summary="docs(rocketmq): add comprehensive RocketMQ messaging specification document&#10;&#10;- Introduce eagle-rocketmq-starter components and usage scenarios&#10;- Specify RocketMQ topic/tag naming conventions and best practices&#10;- Define rules for message publishing including sync and transactional methods&#10;- Establish internal and external event conversion patterns for domain events&#10;- Describe consumer implementation by extending AbstractRocketMqListener&#10;- Enforce mandatory idempotency strategies for consumers&#10;- Detail dead letter queue handling and mandatory alerting policies&#10;- Explain when and how to use ordered messages with performance considerations&#10;- Outline retry and timeout configurations for producers and consumers&#10;- List required monitoring metrics for RocketMQ topics&#10;- Provide clear prohibitions on sensitive data, distributed lock misuse, and transactional wait patterns&#10;- Emphasize environment-specific consumer group naming to avoid conflicts">
+      <option name="closed" value="true" />
+      <created>1777532703197</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1777532703197</updated>
+    </task>
+    <task id="LOCAL-00036" summary="docs(messaging): enhance message handling with transaction and deduplication examples&#10;&#10;- Add transactional message example using publishInTransaction method&#10;- Introduce unique constraint based deduplication with InboxRecord entity&#10;- Provide example consumer handling duplicate events by catching DataIntegrityViolationException&#10;- Include high-throughput Redis SETNX deduplication implementation&#10;- Emphasize using event">
+      <option name="closed" value="true" />
+      <created>1777533155127</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1777533155127</updated>
+    </task>
+    <task id="LOCAL-00037" summary="feat(monolith): add startup banner and app info logging on ready event&#10;&#10;- Added colorful ASCII art banner for the Eagle Enterprise Platform&#10;- Implemented ApplicationReadyEvent listener to log key application URLs&#10;- Displayed Swagger UI, API Docs, and OAuth2 Token endpoints dynamically&#10;- Included server port and context path environment properties with defaults&#10;- Added utility method to format log output for consistent alignment&#10;- Expanded component scanning to include entity and JPA repository scanning">
+      <option name="closed" value="true" />
+      <created>1777533444255</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1777533444255</updated>
+    </task>
+    <task id="LOCAL-00038" summary="feat(auth): add Account aggregate root and Account application service&#10;&#10;- Implement Account aggregate root with username, password, phone, and lock status&#10;- Support creation of Account from username/password, WeChat, phone, and WeChat web/H5&#10;- Add domain events AccountRegisteredEvent and AccountDeletedEvent for account lifecycle&#10;- Implement password change, phone binding, and lock/unlock operations with domain validations&#10;- Add AccountApplicationService to manage Account lifecycle and credential operations&#10;- Implement user registration, admin account creation, password reset, lock/unlock, and deletion&#10;- Support find-or-create Account by phone or WeChat openid with transactional guarantees&#10;- Add SMS verification for password reset and phone binding scenarios&#10;- Integrate Aliyun SMS service to send and verify SMS codes with caching and rate limiting&#10;- Define AuthErrorCode enum for comprehensive authentication and account management error codes">
+      <option name="closed" value="true" />
+      <created>1777534304052</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1777534304052</updated>
+    </task>
+    <task id="LOCAL-00039" summary="docs(repo): add repository guidelines and project documentation structure&#10;&#10;- Introduce detailed project structure for Eagle Cloud multi-module Gradle Java/Spring project&#10;- Provide build, test, and development commands usage and recommendations&#10;- Define coding style, naming conventions, and module organization standards&#10;- Outline testing guidelines including naming, scope, and running requirements&#10;- Specify Git commit and pull request conventions following Conventional Commits with scope usage&#10;- Include security notes regarding credential management and sensitive information">
+      <option name="closed" value="true" />
+      <created>1777540275014</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1777540275014</updated>
+    </task>
+    <task id="LOCAL-00040" summary="docs(codex-plugin): add comprehensive coding rules and guidelines documentation&#10;&#10;- Added 00-demo.md detailing applicable scenarios, basic principles, command examples, and output requirements for Codex modifications&#10;- Added 01-naming.md specifying naming conventions aligned with Google Java Style and DDD layering&#10;- Added 02-code-style.md enforcing Google Java Style Guide for formatting, comments, Lombok usage, null safety, and code quality&#10;- Added 03-architecture.md providing DDD architecture layering, module boundaries, event handling, and best practices&#10;- Added 04-modulith.md describing Spring Modulith module boundary governance, testing, error handling, and module declaration standards&#10;- Added 05-api.md defining RESTful API resource naming, permission control, CORS config, response format, and error handling specifications&#10;- Added 06-database.md outlining database entity mapping rules, index naming conventions, cross-aggregate ID references, and batch write optimization&#10;- Added 07-exception">
+      <option name="closed" value="true" />
+      <created>1777541294311</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1777541294311</updated>
+    </task>
+    <task id="LOCAL-00041" summary="docs(skills): 更新规则文件路径为相对路径&#10;&#10;- 将规则文件路径由 ../../rules/ 改为 ../rules/&#10;- 使规则文件路径更简洁，便于管理和引用&#10;- 保持文档内容和格式不变，只调整路径指向">
+      <option name="closed" value="true" />
+      <created>1777544867614</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1777544867614</updated>
+    </task>
+    <task id="LOCAL-00042" summary="feat(system-service): 增加字典、岗位、角色、用户与监控管理控制器&#10;&#10;- 新增 DictController，支持字典及字典项的增删改查与启用禁用操作&#10;- 新增 PostController，实现岗位管理的增删改查及启用禁用功能&#10;- 新增 RoleController，提供角色管理及状态控制接口，包含角色用户查询&#10;- 新增 UserController，支持用户档案更新、查询、角色/部门/岗位分配等组织信息管理&#10;- 新增 MonitorController，实现在线用户查看、强制下线和登录日志查询功能&#10;- 统一所有分页接口增加 @ParameterObject、@Parameter(description) 和 @PageableDefault 注解规范&#10;- 更新 DeptController、LogController">
+      <option name="closed" value="true" />
+      <created>1777550090928</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1777550090928</updated>
+    </task>
+    <task id="LOCAL-00043" summary="feat(auth): 实现基于JPA的RegisteredClientRepository&#10;&#10;- 实现JpaRegisteredClientRepository用于桥接Spring Authorization Server和JPA实体&#10;- 支持保存和更新OAuth客户端信息，包括认证方法、授权类型、重定向URI和作用域&#10;- 实现根据数据库ID或客户端ID查询启用状态的RegisteredClient&#10;- 支持Token和客户端设置的同步更新&#10;- 添加单元测试验证通过数据库ID查找RegisteredClient功能">
+      <option name="closed" value="true" />
+      <created>1777555620332</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1777555620332</updated>
+    </task>
+    <task id="LOCAL-00044" summary="feat(ai-starter): 新增 Eagle AI Starter 模块，集成 Spring AI 框架能力&#10;&#10;- 新增 eagle-ai-starter 模块，提供 AI 相关配置与自动装配&#10;- 定义 AiProperties，支持系统提示词和对话记忆窗口配置&#10;- 实现 EagleAiAutoConfiguration，自动装配 ChatClient、ChatMemory 及存储仓库&#10;- 支持多轮对话记忆及自定义系统提示词功能&#10;- 依赖 Spring AI 相关类，仅在满足条件时启用自动配置&#10;- 配置 Mock 项目依赖，方便接入不同 AI 提供商starter&#10;- 添加 spring.factories 文件声明自动配置类&#10;&#10;config(build): 新增项目构建和依赖管理配置&#10;&#10;- 配置根 build.gradle，定义插件及公共仓库&#10;- 配置子项目及 bom 项目通用发布到 Nexus 的 Maven 发布设置&#10;- 定义各子项目 Java 工具链版本（Java 25）&#10;- 配置编译器选项、测试与打包任务参数&#10;- 统一注入 BOM 依赖管理，简化依赖版本控制&#10;- 新增 eagle-bom 模块，集中管理依赖版本约束&#10;- 配置 Spring Boot、Spring Cloud 及多项第三方库版本&#10;&#10;config(settings):">
+      <option name="closed" value="true" />
+      <created>1777563802142</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1777563802142</updated>
+    </task>
+    <task id="LOCAL-00045" summary="docs(rules): 添加容错与弹性及事件驱动架构规范文档&#10;&#10;- 新增容错与弹性规范（Resilience），覆盖熔断器、重试、超时与Fallback使用指南&#10;- 详细说明CircuitBreaker、Retry、TimeLimiter注解及配置规范与组合顺序&#10;- 新增事件驱动架构规范，包含领域事件和集成事件设计发布消费流程&#10;- 说明事件处理器异步事务及Saga编排、事件溯源、幂等及顺序交易实践&#10;- 增加禁用和警告清单，防止错误使用容错与事件机制&#10;- 新增 ChatClientResponse 记录类，封装AI聊天响应及上下文数据&#10;- 更新项目CLAUDE.md，完善Eagle Cloud开发规范及项目结构说明">
+      <option name="closed" value="true" />
+      <created>1777949403735</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1777949403735</updated>
+    </task>
+    <task id="LOCAL-00046" summary="fix(build): 优化依赖管理并修复构建配置问题&#10;&#10;- 将 spring-boot-starter-aop 替换为 spring-boot-starter-aspectj 以兼容 Spring Boot 4.x&#10;- 添加可选依赖 servlet API 和 Jackson 序列化支持，提升 Web 环境兼容性&#10;- 在 ShardingSphere 依赖中排除 shardingsphere-test-util 模块，解决 POM Bug 导致的错误依赖&#10;- 明确标注 compileOnly 依赖，确保依赖关系清晰且符合使用场景">
+      <option name="closed" value="true" />
+      <created>1777949987265</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1777949987265</updated>
+    </task>
+    <option name="localTasksCounter" value="47" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
-  <component name="VgoProject">
-    <integration-enabled>false</integration-enabled>
-    <settings-migrated>true</settings-migrated>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/com/eleganteer/Main.java</url>
-          <line>13</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="feat(monolith): add eagle-monolith-service as new module&#10;&#10;- Add eagle-monolith-service module to settings.gradle includes&#10;- Create basic Spring Boot application class for monolith service&#10;- Add Spring Boot web starter dependency for monolith service&#10;- Configure application.yml for monolith service with port 8080 and app name&#10;- Provide usage documentation for multiple new eagle-starters:&#10;  - eagle-notification-starter for multi-channel messaging with templates&#10;  - eagle-openapi-starter for Swagger/OpenAPI 3.0 API documentation&#10;  - eagle-oss-minio-starter for MinIO-based object storage with upload/download APIs&#10;  - eagle-payment-starter for payment gateway abstraction (Alipay/WeChat)&#10;  - eagle-resource-server-starter for OAuth2 resource server JWT authentication&#10;  - eagle-scheduler-starter for distributed scheduling with XXL-JOB&#10;  - eagle-tracing-starter for distributed tracing with Brave/Zipkin integration&#10;  - http-client-starter for RPC Feign clients with token and tenant ID propagation" />
+    <MESSAGE value="docs(eagle-starter): add centralized eagle starter index document&#10;&#10;- Create a comprehensive index for all eagle starters with links to their USAGE.md&#10;- Provide quick lookup table for scenarios, starters and key capabilities&#10;- Recommend starter combinations for standard business, multi-tenant, high-concurrency, search, and real-time push services&#10;- Document dependencies and interactions among starters&#10;- Include quick start guide for new projects integrating eagle-cloud infrastructure&#10;- Add cross-reference of development rules associated with each starter&#10;- Encourage contribution for improvements and new examples via PRs" />
+    <MESSAGE value="feat(monolith): add eagle-monolith service to run as standalone app&#10;&#10;- Create eagle-monolith module reusing eagle-system-service business code  &#10;- Exclude microservice dependencies like Nacos discovery for standalone use  &#10;- Add default configuration files for local, prod profiles with H2/MySQL and caching setups  &#10;- Configure JWT, WebSocket, OAuth2 clients, WeChat integrations, and audit log cleanup tasks  &#10;- Set up actuator and OpenAPI Swagger configurations per environment  &#10;- Implement EagleMonolithApplication as main entry scanning whole com.eagle package  &#10;- Add basic test for EagleMonolithApplication main method  &#10;- Provide detailed usage documentation for eagle-common-starter, eagle-data-jpa-starter,  &#10;  eagle-dynamic-datasource-starter, eagle-elasticsearch-starter, eagle-id-generator-starter, and eagle-idempotency-starter" />
+    <MESSAGE value="docs(rules): add comprehensive Java coding and architecture guidelines&#10;&#10;- Introduce naming conventions aligned with Google Java Style Guide and DDD layering&#10;- Define detailed code style rules including formatting, comments, and Lombok usage&#10;- Establish DDD-based layering architecture for modular monolith and microservices&#10;- Specify module boundary governance using Spring Modulith annotations and tests&#10;- Provide RESTful API design standards including resource naming and security&#10;- Add database best practices focusing on entity design, indexing, and CQRS queries&#10;- Lay out standardized exception handling with unified error codes and exception types&#10;- Outline concurrency control with transaction management and event handling requirements&#10;- Set unit testing conventions emphasizing structure, naming, coverage, and mocking rules" />
+    <MESSAGE value="chore(ci): add GitLab CI for plugin sync and metadata validation&#10;&#10;- Add .gitlab-ci.yml with validate stage for plugin sync check and metadata validation&#10;- Define rules to trigger on merge requests and main branch for relevant paths&#10;- Install dependencies and run sync.sh script to verify claude-plugin/ sync status&#10;- Validate plugin.json and marketplace.json version consistency and frontmatter in SKILL.md&#10;- Ensure USAGE.md and SKILL.md counts match to prevent missing starter registrations" />
+    <MESSAGE value="docs(ci): add GitLab CI configuration for plugin sync and metadata validation&#10;&#10;- Add .gitlab-ci.yml with validate stage for plugin sync check and plugin metadata validation&#10;- Configure rules to run validations on merge requests and main branch when relevant files change&#10;- Include script steps to check plugin sync, version consistency, frontmatter presence, and document count matching&#10;- Install necessary tools (bash, git, jq, findutils) in CI job environment&#10;- Provide clear error messages and instructions for fixing sync issues&#10;- Ensure plugin metadata JSON files are checked for necessary fields and matching versions" />
+    <MESSAGE value="feat(starter): add Spring Boot 4 starter auto-configuration specification and new starter command&#10;&#10;- Introduce detailed starter module structure and auto-configuration class template for Spring Boot 4&#10;- Define usage of @AutoConfiguration replacing old @Configuration + spring.factories approach&#10;- Specify common conditional annotations and registering process for starters&#10;- Provide gradle dependency scope guidelines with usage of api and compileOnly&#10;- Advocate use of ObjectProvider for optional dependency injection&#10;- Add new /new-st" />
+    <MESSAGE value="feat(platform): add BOM platform build.gradle with dependency constraints&#10;&#10;- Add java-platform and maven-publish plugins for BOM management&#10;- Define centralized version properties for Spring Boot, Spring Cloud, databases, Redis, tools, SDKs, middleware, and more&#10;- Configure platform BOM imports for Spring Boot and related dependencies&#10;- Add api dependency constraints for various common libraries and SDKs to unify version management&#10;- Register BOM publication using MavenPublication for artifact publishing&#10;- Provide README documentation for eagle-gateway-service, eagle-mon" />
+    <MESSAGE value="feat(monolith): add monolith startup module and improve OAuth2 tables&#10;&#10;- Create a monolith startup module reusing eagle-system-service business code  &#10;- Exclude Nacos discovery dependency for standalone monolith deployment  &#10;- Explicitly add dependencies for IDE configuration support and JPA scanning  &#10;- Add jwt-keystore.p12 resource for security  &#10;- Refactor OAuth2 authorization and consent tables SQL for compatibility and clarity  &#10;- Modify table definitions to use inline column types and constraints  &#10;- Ensure primary keys are defined with proper syntax and formatting" />
+    <MESSAGE value="feat(jpa): add auto-configuration for JPA and security auditor support&#10;&#10;- Introduce JpaConfig to enable JPA auditing and customize Hibernate properties&#10;- Apply batch size and slow query threshold settings from JpaProperties&#10;- Provide BeanPostProcessor to inject Hibernate properties before initialization&#10;- Add SecurityAuditorAutoConfiguration active with Spring Security&#10;- Extract current user ID from SecurityContext for @CreatedBy/@LastModifiedBy&#10;- Fallback to 0L when no authenticated user is found (e.g., system tasks)&#10;- Update spring.factories import entries to include new configs&#10;- Add dependencies for websocket starter module with appropriate scopes" />
+    <MESSAGE value="docs(rocketmq): add payment-level strong consistency consumption strategy&#10;&#10;- Introduce problem boundaries and four key attributes for guaranteed message consumption&#10;- Define core principles: local inbox table, state machine, and unique constraints&#10;- Describe pattern A: local inbox table with atomic business transaction&#10;- Describe pattern B: state machine-driven idempotent consumption&#10;- Describe pattern C: TCC with reserved resources for cross-aggregate scenarios&#10;- Classify system exceptions, business failures, and permanent failures in consumption handling&#10;- Implement dead letter queue (DLQ) persistence and replay mechanism for manual intervention&#10;- Explain reconciliation process as final guarantee for payment consistency&#10;- Provide comprehensive sample code for production-ready payment" />
+    <MESSAGE value="feat(claude-plugin): add eagle-feature-flow for end-to-end development process&#10;&#10;- Introduce eagle-feature-flow skill coordinating 6-phase Superpowers workflow&#10;- Embed Eagle platform rules and commands in planning and coding phases&#10;- Enforce rigid sequential phase execution with explicit status announcements&#10;- Support triggering via slash command /eagle-flow with optional feature argument&#10;- Provide detailed phase descriptions: Brainstorm, Plan, TDD, Verify, Review, Finish&#10;- Automate todo creation and progress tracking for each phase&#10;- Enforce injection of specific Eagle rules and starter skills at appropriate phases&#10;- Integrate /check-arch command as mandatory verification step&#10;- Add guidance for command usage in plan and TDD phases&#10;- Document recovery, skipping, and continuation scenarios for flow control" />
+    <MESSAGE value="chore(config): disable superpowers marketplace plugin in Claude settings&#10;&#10;- Removed &quot;superpowers@superpowers-marketplace&quot; plugin from enabledPlugins&#10;- Kept other plugins enabled for Claude functionality&#10;- Updated .claude/settings.json accordingly" />
+    <MESSAGE value="docs(rocketmq): add comprehensive RocketMQ messaging specification document&#10;&#10;- Introduce eagle-rocketmq-starter components and usage scenarios&#10;- Specify RocketMQ topic/tag naming conventions and best practices&#10;- Define rules for message publishing including sync and transactional methods&#10;- Establish internal and external event conversion patterns for domain events&#10;- Describe consumer implementation by extending AbstractRocketMqListener&#10;- Enforce mandatory idempotency strategies for consumers&#10;- Detail dead letter queue handling and mandatory alerting policies&#10;- Explain when and how to use ordered messages with performance considerations&#10;- Outline retry and timeout configurations for producers and consumers&#10;- List required monitoring metrics for RocketMQ topics&#10;- Provide clear prohibitions on sensitive data, distributed lock misuse, and transactional wait patterns&#10;- Emphasize environment-specific consumer group naming to avoid conflicts" />
+    <MESSAGE value="docs(messaging): enhance message handling with transaction and deduplication examples&#10;&#10;- Add transactional message example using publishInTransaction method&#10;- Introduce unique constraint based deduplication with InboxRecord entity&#10;- Provide example consumer handling duplicate events by catching DataIntegrityViolationException&#10;- Include high-through" />
+    <MESSAGE value="feat(monolith): add startup banner and app info logging on ready event&#10;&#10;- Added colorful ASCII art banner for the Eagle Enterprise Platform&#10;- Implemented ApplicationReadyEvent listener to log key application URLs&#10;- Displayed Swagger UI, API Docs, and OAuth2 Token endpoints dynamically&#10;- Included server port and context path environment properties with defaults&#10;- Added utility method to format log output for consistent alignment&#10;- Expanded component scanning to include entity and JPA repository scanning" />
+    <MESSAGE value="feat(auth): add Account aggregate root and Account application service&#10;&#10;- Implement Account aggregate root with username, password, phone, and lock status&#10;- Support creation of Account from username/password, WeChat, phone, and WeChat web/H5&#10;- Add domain events AccountRegisteredEvent and AccountDeletedEvent for account lifecycle&#10;- Implement password change, phone binding, and lock/unlock operations with domain validations&#10;- Add AccountApplicationService to manage Account lifecycle and credential operations&#10;- Implement user registration, admin account creation, password reset, lock/unlock, and deletion&#10;- Support find-or-create Account by phone or WeChat openid with transactional guarantees&#10;- Add SMS verification for password reset and phone binding scenarios&#10;- Integrate Aliyun SMS service to send and verify SMS codes with caching and rate limiting&#10;- Define AuthErrorCode enum for comprehensive authentication and account management error codes" />
+    <MESSAGE value="docs(repo): add repository guidelines and project documentation structure&#10;&#10;- Introduce detailed project structure for Eagle Cloud multi-module Gradle Java/Spring project&#10;- Provide build, test, and development commands usage and recommendations&#10;- Define coding style, naming conventions, and module organization standards&#10;- Outline testing guidelines including naming, scope, and running requirements&#10;- Specify Git commit and pull request conventions following Conventional Commits with scope usage&#10;- Include security" />
+    <MESSAGE value="docs(codex-plugin): add comprehensive coding rules and guidelines documentation&#10;&#10;- Added 00-demo.md detailing applicable scenarios, basic principles, command examples, and output requirements for Codex modifications&#10;- Added 01-naming.md specifying naming conventions aligned with Google Java Style and DDD layering&#10;- Added 02-code-style.md enforcing Google Java Style Guide for formatting, comments, Lombok usage, null safety, and code quality&#10;- Added 03-architecture.md providing DDD architecture layering, module boundaries, event handling, and best practices&#10;- Added 04-modulith.md describing Spring Modulith module boundary governance, testing, error handling, and module declaration standards&#10;- Added 05-api.md defining RESTful API resource naming, permission control, CORS config, response format, and error handling specifications&#10;- Added 06-database.md outlining database entity mapping rules, index naming conventions, cross-aggregate ID references" />
+    <MESSAGE value="docs(skills): 更新规则文件路径为相对路径&#10;&#10;- 将规则文件路径由 ../../rules/ 改为 ../rules/&#10;- 使规则文件路径更简洁，便于管理和引用&#10;- 保持文档内容和格式不变，只调整路径指向" />
+    <MESSAGE value="feat(system-service): 增加字典、岗位、角色、用户与监控管理控制器&#10;&#10;- 新增 DictController，支持字典及字典项的增删改查与启用禁用操作&#10;- 新增 PostController，实现岗位管理的增删改查及启用禁用功能&#10;- 新增 RoleController，提供角色管理及状态控制接口，包含角色用户查询&#10;- 新增 UserController，支持用户档案更新、查询、角色/部门/岗位分配等组织信息管理&#10;- 新增 MonitorController，实现在线用户查看、强制下线和登录日志查询功能&#10;- 统一所有分页接口增加 @ParameterObject、@Parameter(description" />
+    <MESSAGE value="feat(auth): 实现基于JPA的RegisteredClientRepository&#10;&#10;- 实现JpaRegisteredClientRepository用于桥接Spring Authorization Server和JPA实体&#10;- 支持保存和更新OAuth客户端信息，包括认证方法、授权类型、重定向URI和作用域&#10;- 实现根据数据库ID或客户端ID查询启用状态的RegisteredClient&#10;- 支持Token和客户端设置的同步更新&#10;- 添加单元测试验证通过数据库ID查找RegisteredClient功能" />
+    <MESSAGE value="feat(ai-starter): 新增 Eagle AI Starter 模块，集成 Spring AI 框架能力&#10;&#10;- 新增 eagle-ai-starter 模块，提供 AI 相关配置与自动装配&#10;- 定义 AiProperties，支持系统提示词和对话记忆窗口配置&#10;- 实现 EagleAiAutoConfiguration，自动装配 ChatClient、ChatMemory 及存储仓库&#10;- 支持多轮对话记忆及自定义系统提示词功能&#10;- 依赖 Spring AI 相关类，仅在满足条件时启用自动配置&#10;- 配置 Mock 项目依赖，方便接入不同 AI 提供商starter&#10;- 添加 spring.factories 文件声明自动配置类&#10;&#10;config(build): 新增项目构建和依赖管理配置&#10;&#10;- 配置根 build.gradle，定义插件及公共仓库&#10;- 配置子项目及 bom 项目通用发布到 Nexus 的 Maven 发布设置&#10;- 定义各子项目 Java 工具链版本（Java 25）&#10;- 配置编译器选项、测试与打包任务参数&#10;- 统一注入 BOM 依赖管理，简化依赖版本控制&#10;- 新增 eagle-bom 模块，集中管理依" />
+    <MESSAGE value="docs(rules): 添加容错与弹性及事件驱动架构规范文档&#10;&#10;- 新增容错与弹性规范（Resilience），覆盖熔断器、重试、超时与Fallback使用指南&#10;- 详细说明CircuitBreaker、Retry、TimeLimiter注解及配置规范与组合顺序&#10;- 新增事件驱动架构规范，包含领域事件和集成事件设计发布消费流程&#10;- 说明事件处理器异步事务及Saga编排、事件溯源、幂等及顺序交易实践&#10;- 增加禁用和警告清单，防止错误使用容错与事件机制&#10;- 新增 ChatClientResponse 记录类，封装AI聊天响应及上下文数据&#10;- 更新项目CLAUDE.md，完善Eagle Cloud开发规范及项目结构说明" />
+    <MESSAGE value="fix(build): 优化依赖管理并修复构建配置问题&#10;&#10;- 将 spring-boot-starter-aop 替换为 spring-boot-starter-aspectj 以兼容 Spring Boot 4.x&#10;- 添加可选依赖 servlet API 和 Jackson 序列化支持，提升 Web 环境兼容性&#10;- 在 ShardingSphere 依赖中排除 shardingsphere-test-util 模块，解决 POM Bug 导致的错误依赖&#10;- 明确标注 compileOnly 依赖，确保依赖关系清晰且符合使用场景" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix(build): 优化依赖管理并修复构建配置问题&#10;&#10;- 将 spring-boot-starter-aop 替换为 spring-boot-starter-aspectj 以兼容 Spring Boot 4.x&#10;- 添加可选依赖 servlet API 和 Jackson 序列化支持，提升 Web 环境兼容性&#10;- 在 ShardingSphere 依赖中排除 shardingsphere-test-util 模块，解决 POM Bug 导致的错误依赖&#10;- 明确标注 compileOnly 依赖，确保依赖关系清晰且符合使用场景" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

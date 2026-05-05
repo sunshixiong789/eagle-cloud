@@ -1,12 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
         <option name="distributionType" value="LOCAL" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="gradleHome" value="/usr/local/Cellar/gradle/8.10/libexec" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/eagle-bom" />
+            <option value="$PROJECT_DIR$/eagle-services" />
+            <option value="$PROJECT_DIR$/eagle-services/eagle-gateway-service" />
+            <option value="$PROJECT_DIR$/eagle-services/eagle-monolith-service" />
+            <option value="$PROJECT_DIR$/eagle-services/eagle-system-service" />
+            <option value="$PROJECT_DIR$/eagle-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-ai-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-audit-log-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-common-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-data-jpa-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-dynamic-datasource-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-elasticsearch-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-encrypt-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-excel-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-id-generator-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-idempotency-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-mybatis-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-notification-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-openapi-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-oss-minio-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-payment-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-redis-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-resilience-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-resource-server-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-rocketmq-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-row-security-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-scheduler-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-seata-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-sentinel-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-sharding-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-tenant-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-tracing-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/eagle-websocket-starter" />
+            <option value="$PROJECT_DIR$/eagle-starter/http-client-starter" />
+          </set>
+        </option>
+        <option name="myGradleHome" value="/opt/homebrew/Cellar/gradle/9.5.0/libexec" />
       </GradleProjectSettings>
     </option>
+    <option name="parallelModelFetch" value="true" />
   </component>
 </project>

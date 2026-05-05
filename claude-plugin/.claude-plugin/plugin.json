@@ -1,0 +1,24 @@
+{
+  "name": "eagle-cloud",
+  "version": "1.0.0",
+  "description": "Eagle Cloud Spring Boot 4 + DDD + Spring Modulith 开发规范、22 个 starter 使用指南、项目级脚手架命令",
+  "author": {
+    "name": "Eagle Cloud Team"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "spring-boot",
+    "spring-modulith",
+    "ddd",
+    "hexagonal-architecture",
+    "java",
+    "oauth2",
+    "rocketmq",
+    "redis",
+    "seata",
+    "multitenancy"
+  ],
+  "engines": {
+    "claude-code": ">=1.0.0"
+  }
+}
