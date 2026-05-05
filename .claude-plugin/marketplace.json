@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "eagle-cloud",
-      "source": "./",
+      "source": "./claude-plugin",
       "description": "Eagle Cloud 开发规范 + Starter 使用指南 + 脚手架命令",
       "version": "1.0.0",
       "author": {
