@@ -21,6 +21,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class WechatWebProperties {
 
     /**
+     * 是否启用微信网页登录（PC 扫码 / H5 授权），默认关闭
+     */
+    private boolean enabled = false;
+
+    /**
      * PC 扫码登录（微信开放平台网站应用）配置
      */
     private Pc pc = new Pc();

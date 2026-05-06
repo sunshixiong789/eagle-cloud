@@ -58,12 +58,16 @@ public class LoginController {
      */
     @GetMapping
     public String login(Model model, HttpSession session) {
-        String state = UUID.randomUUID().toString();
-        session.setAttribute(STATE_SESSION_KEY, state);
-        WechatWebProperties.Pc pc = wechatWebProperties.getPc();
-        model.addAttribute("wechatAppId", pc.getAppId());
-        model.addAttribute("wechatRedirectUri", pc.getRedirectUri());
-        model.addAttribute("wechatState", state);
+        boolean wechatEnabled = wechatWebProperties.isEnabled();
+        model.addAttribute("wechatEnabled", wechatEnabled);
+        if (wechatEnabled) {
+            String state = UUID.randomUUID().toString();
+            session.setAttribute(STATE_SESSION_KEY, state);
+            WechatWebProperties.Pc pc = wechatWebProperties.getPc();
+            model.addAttribute("wechatAppId", pc.getAppId());
+            model.addAttribute("wechatRedirectUri", pc.getRedirectUri());
+            model.addAttribute("wechatState", state);
+        }
         return "login";
     }
 

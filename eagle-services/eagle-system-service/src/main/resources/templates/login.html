@@ -212,6 +212,10 @@
             transform: translateX(200%);
         }
 
+        .tab-nav.tabs-two .tab-indicator {
+            width: calc(50% - 2px);
+        }
+
         /* ── Tab Panels ── */
         .tab-panel {
             display: none;
@@ -741,11 +745,11 @@
         </div>
 
         <!-- Tab Navigation -->
-        <div class="tab-nav">
+        <div class="tab-nav" th:classappend="${wechatEnabled} ? '' : ' tabs-two'">
             <div class="tab-indicator" data-tab="1"></div>
             <button class="tab-btn active" data-target="tab-password" type="button">密码登录</button>
             <button class="tab-btn" data-target="tab-sms" type="button">短信登录</button>
-            <button class="tab-btn" data-target="tab-wechat" type="button">微信登录</button>
+            <button class="tab-btn" data-target="tab-wechat" th:if="${wechatEnabled}" type="button">微信登录</button>
         </div>
 
         <!-- ═══════ Tab 1: Password Login ═══════ -->
@@ -785,7 +789,7 @@
                 </div>
                 <div class="field-helper" id="password-error"></div>
 
-                <!-- Remember me + Forgot -->
+                <!-- Remember me -->
                 <div class="bottom-row">
                     <label class="cb-wrap">
                         <input name="remember-me" type="checkbox">
@@ -797,15 +801,10 @@
                         </div>
                         <span class="cb-label">记住我</span>
                     </label>
-                    <a class="forgot" th:href="@{/login/reset-password}">忘记密码?</a>
                 </div>
 
                 <button class="btn-primary" type="submit">登 录</button>
             </form>
-
-            <div class="register-link">
-                没有账号？<a th:href="@{/login/register}">立即注册</a>
-            </div>
         </div>
 
         <!-- ═══════ Tab 2: SMS Login ═══════ -->
@@ -844,14 +843,10 @@
 
                 <button class="btn-primary" style="margin-top: 10px;" type="submit">登 录</button>
             </form>
-
-            <div class="register-link">
-                没有账号？<a th:href="@{/login/register}">立即注册</a>
-            </div>
         </div>
 
         <!-- ═══════ Tab 3: WeChat Login (Embedded QR) ═══════ -->
-        <div class="tab-panel" id="tab-wechat">
+        <div class="tab-panel" id="tab-wechat" th:if="${wechatEnabled}">
             <div class="wechat-panel">
                 <div class="wechat-qr-wrap" id="wechat-qr-container">
                     <div class="wechat-qr-loading" id="wechat-qr-loading">加载中...</div>
@@ -865,16 +860,17 @@
 
 <script th:inline="javascript">
     (function () {
-        /* ── 微信内置浏览器自动跳转 H5 授权 ── */
-        if (/micromessenger/i.test(navigator.userAgent)) {
-            window.location.replace('/login/wechat/h5');
-            return;
-        }
-
         /* ── 服务端注入的微信配置 ── */
+        var wechatEnabled = /*[[${wechatEnabled}]]*/ false;
         var wechatAppId = /*[[${wechatAppId}]]*/ '';
         var wechatRedirectUri = /*[[${wechatRedirectUri}]]*/ '';
         var wechatState = /*[[${wechatState}]]*/ '';
+
+        /* ── 微信内置浏览器自动跳转 H5 授权（仅在微信登录启用时） ── */
+        if (wechatEnabled && /micromessenger/i.test(navigator.userAgent)) {
+            window.location.replace('/login/wechat/h5');
+            return;
+        }
 
         /* ══════════════════════════════════════
            Tab Switching
@@ -882,8 +878,12 @@
         var tabBtns = document.querySelectorAll('.tab-btn');
         var tabPanels = document.querySelectorAll('.tab-panel');
         var indicator = document.querySelector('.tab-indicator');
-        var tabMap = {'tab-password': '1', 'tab-sms': '2', 'tab-wechat': '3'};
-        var hashMap = {'#password': 'tab-password', '#sms': 'tab-sms', '#wechat': 'tab-wechat'};
+        var tabMap = wechatEnabled
+            ? {'tab-password': '1', 'tab-sms': '2', 'tab-wechat': '3'}
+            : {'tab-password': '1', 'tab-sms': '2'};
+        var hashMap = wechatEnabled
+            ? {'#password': 'tab-password', '#sms': 'tab-sms', '#wechat': 'tab-wechat'}
+            : {'#password': 'tab-password', '#sms': 'tab-sms'};
         var wechatQrLoaded = false;
 
         function switchTab(targetId) {
