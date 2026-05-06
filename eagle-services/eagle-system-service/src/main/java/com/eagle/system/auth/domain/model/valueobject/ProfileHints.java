@@ -1,7 +1,5 @@
 package com.eagle.system.auth.domain.model.valueobject;
 
-import java.util.Set;
-
 /**
  * 用户画像提示（瞬态值对象）
  * <p>
@@ -12,27 +10,23 @@ import java.util.Set;
  * @param nickname 昵称（微信登录或管理员填写）
  * @param avatar   头像 URL（微信登录时携带）
  * @param email    邮箱（管理员创建时填写）
- * @param deptId   初始部门 ID（管理员创建时指定）
- * @param roleIds  初始角色 ID 集合（管理员创建时指定）
  * @author sunshixiong
  */
 public record ProfileHints(
         String nickname,
         String avatar,
-        String email,
-        Long deptId,
-        Set<Long> roleIds
+        String email
 ) {
 
     /**
      * 空画像提示（社交/短信登录自动注册时使用）
      */
-    public static final ProfileHints EMPTY = new ProfileHints(null, null, null, null, Set.of());
+    public static final ProfileHints EMPTY = new ProfileHints(null, null, null);
 
     /**
      * 微信登录专用（仅携带昵称和头像）
      */
     public static ProfileHints ofWechat(String nickname, String avatar) {
-        return new ProfileHints(nickname, avatar, null, null, Set.of());
+        return new ProfileHints(nickname, avatar, null);
     }
 }

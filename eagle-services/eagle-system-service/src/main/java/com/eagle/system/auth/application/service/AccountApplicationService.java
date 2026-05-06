@@ -10,8 +10,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Set;
-
 /**
  * 账号应用服务
  * <p>
@@ -31,49 +29,29 @@ public class AccountApplicationService {
 
     /**
      * 用户自主注册
-     * <p>
-     * 业务规则:
-     * <ul>
-     *   <li>检查用户名是否已存在,防止重复注册</li>
-     *   <li>密码使用 BCrypt 加密存储</li>
-     *   <li>发布 AccountRegisteredEvent 事件,system 域异步创建 User</li>
-     * </ul>
-     *
-     * @param username    用户名
-     * @param rawPassword 明文密码
-     * @param phone       手机号(可选)
-     * @param email       邮箱(可选)
-     * @param nickname    昵称(可选)
-     * @return 新创建的账号 ID
      */
     @Transactional(rollbackFor = Exception.class)
     public Long register(String username, String rawPassword, String phone,
                          String email, String nickname) {
-        // 检查用户名唯一性
         if (accountRepository.findByUsername(username).isPresent()) {
             throw AuthErrorCode.ACCOUNT_ALREADY_EXISTS.toConflictException();
         }
-        // 构建 ProfileHints,传递给 system 域创建 User 时使用
-        ProfileHints hints = new ProfileHints(nickname, null, email, null, Set.of());
+        ProfileHints hints = new ProfileHints(nickname, null, email);
         Account account = Account.create(
                 username, passwordEncoder.encode(rawPassword), phone, hints);
-        // save 时会触发 @PostPersist 回调,发布 AccountRegisteredEvent
         return accountRepository.save(account).getId();
     }
 
     /**
-     * 管理员创建账号（含 profile hints）
-     * <p>
-     * profileHints 通过事件传递给 system 域，使其创建带部门和角色的 User。
+     * 管理员创建账号
      */
     @Transactional(rollbackFor = Exception.class)
     public Long createAccount(String username, String rawPassword, String phone,
-                              String nickname, String name,
-                              String email, Long deptId, Set<Long> roleIds) {
+                              String nickname, String name, String email) {
         if (accountRepository.findByUsername(username).isPresent()) {
             throw AuthErrorCode.ACCOUNT_ALREADY_EXISTS.toConflictException();
         }
-        ProfileHints hints = new ProfileHints(nickname, null, email, deptId, roleIds);
+        ProfileHints hints = new ProfileHints(nickname, null, email);
         Account account = Account.create(
                 username, passwordEncoder.encode(rawPassword), phone, hints);
         return accountRepository.save(account).getId();

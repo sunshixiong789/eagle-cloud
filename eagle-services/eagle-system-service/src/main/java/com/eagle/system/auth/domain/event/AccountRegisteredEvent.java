@@ -1,15 +1,10 @@
 package com.eagle.system.auth.domain.event;
 
-import java.util.Set;
-
 /**
  * 账号注册事件（跨域集成事件）
  * <p>
  * auth 域创建 Account 后发布此事件，system 域订阅后创建对应的 User。
  * 事件类放在 auth 域的 domain/event 包中，通过 Named Interface "event" 暴露给其他模块。
- * <p>
- * profileHints 字段为可选项，用于管理员创建用户时携带组织信息（部门、角色），
- * system 域的事件处理器可据此直接创建带部门和角色的 User。
  *
  * @author sunshixiong
  */
@@ -29,15 +24,7 @@ public record AccountRegisteredEvent(
         // 头像 URL（微信登录时可能有值）
         String avatar,
 
-        // ==================== Profile Hints（可选，管理员创建时传入）====================
-
         // 邮箱（可选，传入时写入 User）
-        String email,
-
-        // 部门 ID（可选，传入时自动分配部门）
-        Long deptId,
-
-        // 角色 ID 集合（可选，传入时自动分配角色）
-        Set<Long> roleIds
+        String email
 ) {
 }

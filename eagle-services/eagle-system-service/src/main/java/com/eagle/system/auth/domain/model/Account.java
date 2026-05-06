@@ -207,7 +207,7 @@ public class Account extends BaseAggregateRoot<Account> {
             registerEvent(new AccountRegisteredEvent(
                     getId(), username, phone,
                     profileHints.nickname(), profileHints.avatar(),
-                    profileHints.email(), profileHints.deptId(), profileHints.roleIds()
+                    profileHints.email()
             ));
             profileHints = null;
         }

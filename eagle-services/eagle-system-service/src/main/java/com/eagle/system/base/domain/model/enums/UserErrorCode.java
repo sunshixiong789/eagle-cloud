@@ -8,8 +8,7 @@ import com.eagle.common.exception.ErrorCode;
 public enum UserErrorCode implements ErrorCode {
 
     USER_NOT_FOUND(10001, "error.user.not_found", "用户不存在"),
-    USERNAME_REQUIRED(10007, "error.user.username_required", "用户名不能为空"),
-    MAX_ROLES_EXCEEDED(10013, "error.user.max_roles_exceeded", "用户最多分配 10 个角色");
+    USERNAME_REQUIRED(10007, "error.user.username_required", "用户名不能为空");
 
     private final int code;
     private final String messageKey;

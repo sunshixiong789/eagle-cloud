@@ -11,7 +11,6 @@ import lombok.Data;
  * 创建用户请求
  *
  * @author 孙士雄
- * @since 1.0.0
  */
 @Data
 @Schema(description = "创建用户请求")
@@ -44,10 +43,4 @@ public class CreateUserRequest {
 
     @Schema(description = "头像URL", example = "https://example.com/avatar.jpg")
     private String avatar;
-
-    @Schema(description = "部门ID", example = "1")
-    private Long departmentId;
-
-    @Schema(description = "角色ID列表", example = "[1, 2]")
-    private Long[] roleIds;
 }

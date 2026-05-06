@@ -29,7 +29,6 @@ import java.util.Map;
  * 账号管理控制器
  * <p>
  * 所有认证凭据相关操作（注册、密码、锁定、删除）归属 auth 域。
- * 用户档案、角色、部门等组织信息归属 system 域的 UserController。
  *
  * @author sunshixiong
  */
@@ -41,12 +40,7 @@ public class AccountController {
 
     private final AccountApplicationService accountApplicationService;
 
-    /**
-     * 用户自主注册
-     * <p>
-     * 创建 Account 后发布 AccountRegisteredEvent，system 域异步创建 User。
-     */
-    @Operation(summary = "用户自主注册", description = "创建账号后发布 AccountRegisteredEvent，system 域异步创建用户")
+    @Operation(summary = "用户自主注册")
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("permitAll()")
@@ -57,28 +51,18 @@ public class AccountController {
         return Map.of("accountId", accountId);
     }
 
-    /**
-     * 管理员创建账号（含 profileHints）
-     * <p>
-     * profileHints（部门、角色、邮箱）通过事件传递给 system 域。
-     */
-    @Operation(summary = "管理员创建账号", description = "包含 profileHints（部门、角色、邮箱），通过事件传递给 system 域")
+    @Operation(summary = "管理员创建账号")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('admin')")
-    public Map<String, Long> createAccount(
-            @Valid @RequestBody CreateAccountRequest request) {
+    @PreAuthorize("isAuthenticated()")
+    public Map<String, Long> createAccount(@Valid @RequestBody CreateAccountRequest request) {
         Long accountId = accountApplicationService.createAccount(
                 request.getUsername(), request.getPassword(), request.getPhone(),
-                request.getNickname(), request.getName(),
-                request.getEmail(), request.getDeptId(), request.getRoleIds());
+                request.getNickname(), request.getName(), request.getEmail());
         return Map.of("accountId", accountId);
     }
 
-    /**
-     * 短信验证码重置密码（忘记密码，未认证）
-     */
-    @Operation(summary = "短信验证码重置密码", description = "忘记密码场景，未认证状态下通过手机验证码重置")
+    @Operation(summary = "短信验证码重置密码")
     @PostMapping("/password/reset")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("permitAll()")
@@ -87,10 +71,7 @@ public class AccountController {
                 request.getPhone(), request.getCode(), request.getNewPassword());
     }
 
-    /**
-     * 绑定手机号（微信登录后，已认证）
-     */
-    @Operation(summary = "绑定手机号", description = "微信登录后绑定手机号")
+    @Operation(summary = "绑定手机号")
     @PostMapping("/{accountId}/phone")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("#accountId == authentication.principal.id")
@@ -100,49 +81,35 @@ public class AccountController {
                 accountId, request.getPhone(), request.getCode());
     }
 
-    /**
-     * 修改密码
-     */
-    @Operation(summary = "修改密码", description = "管理员可修改任意账号密码，用户只能修改自己的密码")
+    @Operation(summary = "修改密码")
     @PutMapping("/{accountId}/password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('admin') or #accountId == authentication.principal.id")
+    @PreAuthorize("isAuthenticated()")
     public void changePassword(@Parameter(description = "账号ID") @PathVariable Long accountId,
                                @Valid @RequestBody ChangePasswordRequest request) {
         accountApplicationService.changePassword(accountId, request.getNewPassword());
     }
 
-    /**
-     * 锁定账号
-     */
-    @Operation(summary = "锁定账号", description = "管理员锁定指定账号")
+    @Operation(summary = "锁定账号")
     @PatchMapping("/{accountId}/lock")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("isAuthenticated()")
     public void lockAccount(@Parameter(description = "账号ID") @PathVariable Long accountId) {
         accountApplicationService.lockAccount(accountId);
     }
 
-    /**
-     * 解锁账号
-     */
-    @Operation(summary = "解锁账号", description = "管理员解锁指定账号")
+    @Operation(summary = "解锁账号")
     @PatchMapping("/{accountId}/unlock")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("isAuthenticated()")
     public void unlockAccount(@Parameter(description = "账号ID") @PathVariable Long accountId) {
         accountApplicationService.unlockAccount(accountId);
     }
 
-    /**
-     * 删除账号
-     * <p>
-     * 发布 AccountDeletedEvent，system 域异步级联删除 User。
-     */
-    @Operation(summary = "删除账号", description = "发布 AccountDeletedEvent，system 域异步级联删除用户")
+    @Operation(summary = "删除账号")
     @DeleteMapping("/{accountId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("isAuthenticated()")
     public void deleteAccount(@Parameter(description = "账号ID") @PathVariable Long accountId) {
         accountApplicationService.deleteAccount(accountId);
     }
