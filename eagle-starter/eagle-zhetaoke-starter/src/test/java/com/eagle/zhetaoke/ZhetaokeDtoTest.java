@@ -467,4 +467,99 @@ class ZhetaokeDtoTest {
         assertThat(response.isSuccess()).isTrue();
         assertThat(response.getContent()).containsExactly("手机", "壳", "保护", "套");
     }
+
+    // ==================== TbOrderDetail 测试 ====================
+
+    @Test
+    void shouldDeserializeTbOrderDetail() throws JsonProcessingException {
+        String json = """
+                {
+                    "trade_id": "294159887445064307",
+                    "tk_status": 13,
+                    "pay_price": "9.11",
+                    "item_title": "测试商品",
+                    "item_id": 590141576510,
+                    "pub_share_pre_fee": "0.91",
+                    "tk_create_time": "2019-04-22 15:15:05",
+                    "relation_id": 2323,
+                    "special_id": 2323
+                }
+                """;
+
+        TbOrderDetail order = mapper.readValue(json, TbOrderDetail.class);
+        assertThat(order.getTradeId()).isEqualTo("294159887445064307");
+        assertThat(order.getTkStatus()).isEqualTo(13);
+        assertThat(order.getItemTitle()).isEqualTo("测试商品");
+        assertThat(order.getItemId()).isEqualTo(590141576510L);
+        assertThat(order.getRelationId()).isEqualTo(2323);
+    }
+
+    // ==================== TklResult 测试 ====================
+
+    @Test
+    void shouldDeserializeTklResult() throws JsonProcessingException {
+        String json = """
+                {
+                    "model": "￥D4A8bKYVD4h￥"
+                }
+                """;
+
+        TklResult result = mapper.readValue(json, TklResult.class);
+        assertThat(result.getModel()).isEqualTo("￥D4A8bKYVD4h￥");
+    }
+
+    // ==================== TbActivity 测试 ====================
+
+    @Test
+    void shouldDeserializeTbActivity() throws JsonProcessingException {
+        String json = """
+                {
+                    "activityId": "123",
+                    "activityName": "双十一活动",
+                    "startTime": "2024-11-01",
+                    "endTime": "2024-11-11",
+                    "activityUrl": "https://example.com"
+                }
+                """;
+
+        TbActivity activity = mapper.readValue(json, TbActivity.class);
+        assertThat(activity.getActivityName()).isEqualTo("双十一活动");
+        assertThat(activity.getActivityUrl()).isEqualTo("https://example.com");
+    }
+
+    // ==================== PublisherInfo 测试 ====================
+
+    @Test
+    void shouldDeserializePublisherInfo() throws JsonProcessingException {
+        String json = """
+                {
+                    "relation_id": "12345",
+                    "special_id": "67890",
+                    "account_name": "测试账户",
+                    "invite_code": "ABC123"
+                }
+                """;
+
+        PublisherInfo info = mapper.readValue(json, PublisherInfo.class);
+        assertThat(info.getRelationId()).isEqualTo("12345");
+        assertThat(info.getAccountName()).isEqualTo("测试账户");
+    }
+
+    // ==================== AdzoneInfo 测试 ====================
+
+    @Test
+    void shouldDeserializeAdzoneInfo() throws JsonProcessingException {
+        String json = """
+                {
+                    "adzone_id": 123456,
+                    "adzone_name": "测试推广位",
+                    "site_id": 789,
+                    "site_name": "测试站点"
+                }
+                """;
+
+        AdzoneInfo info = mapper.readValue(json, AdzoneInfo.class);
+        assertThat(info.getAdzoneId()).isEqualTo(123456);
+        assertThat(info.getAdzoneName()).isEqualTo("测试推广位");
+    }
 }

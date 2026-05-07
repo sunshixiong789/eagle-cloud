@@ -206,14 +206,115 @@ class ZhetaokeRequestTest {
         assertThat(request.getPlatform()).isEqualTo("jd");
     }
 
+    // ==================== TbOrderQueryRequest ====================
+
+    @Test
+    void shouldSetTbOrderQueryValues() {
+        TbOrderQueryRequest request = new TbOrderQueryRequest();
+        request.setStartTime("2024-01-01 00:00:00");
+        request.setEndTime("2024-01-31 23:59:59");
+        request.setQueryType("1");
+        request.setPositionIndex("idx");
+        request.setMemberType("2");
+        request.setTkStatus("12");
+        request.setJumpType("1");
+        request.setPageNo("1");
+        request.setOrderScene("2");
+        request.setSignurl(1);
+
+        assertThat(request.getStartTime()).isEqualTo("2024-01-01 00:00:00");
+        assertThat(request.getQueryType()).isEqualTo("1");
+        assertThat(request.getTkStatus()).isEqualTo("12");
+        assertThat(request.getOrderScene()).isEqualTo("2");
+        assertThat(request.getSignurl()).isEqualTo(1);
+    }
+
+    // ==================== HighCommissionConvertRequest ====================
+
+    @Test
+    void shouldSetHighCommissionValues() {
+        HighCommissionConvertRequest request = new HighCommissionConvertRequest();
+        request.setNumIid("123456");
+        request.setTkl("￥ABC￥");
+        request.setRelationId("rid");
+        request.setSpecialId("sid");
+        request.setSignurl(5);
+
+        assertThat(request.getNumIid()).isEqualTo("123456");
+        assertThat(request.getTkl()).isEqualTo("￥ABC￥");
+        assertThat(request.getRelationId()).isEqualTo("rid");
+        assertThat(request.getSignurl()).isEqualTo(5);
+    }
+
+    // ==================== TklCreateRequest ====================
+
+    @Test
+    void shouldSetTklCreateValues() {
+        TklCreateRequest request = new TklCreateRequest();
+        request.setText("弹框内容");
+        request.setUrl("https://example.com");
+        request.setLogo("https://logo.jpg");
+        request.setSignurl(0);
+        request.setType("1");
+
+        assertThat(request.getText()).isEqualTo("弹框内容");
+        assertThat(request.getUrl()).isEqualTo("https://example.com");
+        assertThat(request.getSignurl()).isEqualTo(0);
+    }
+
+    // ==================== ActivityLinkRequest ====================
+
+    @Test
+    void shouldSetActivityLinkValues() {
+        ActivityLinkRequest request = new ActivityLinkRequest();
+        request.setActivityId("act-123");
+        request.setAdzoneId("adz-1");
+        request.setRelationId("rid");
+        request.setSpecialId("sid");
+
+        assertThat(request.getActivityId()).isEqualTo("act-123");
+        assertThat(request.getAdzoneId()).isEqualTo("adz-1");
+    }
+
+    // ==================== PublisherSaveRequest ====================
+
+    @Test
+    void shouldSetPublisherSaveValues() {
+        PublisherSaveRequest request = new PublisherSaveRequest();
+        request.setRelationId("123");
+        request.setAccountName("测试账户");
+        request.setAccountType("1");
+        request.setInviteCode("ABC");
+        request.setRemark("备注");
+        request.setInfoType("1");
+
+        assertThat(request.getAccountName()).isEqualTo("测试账户");
+        assertThat(request.getInviteCode()).isEqualTo("ABC");
+    }
+
+    // ==================== CreatePidRequest ====================
+
+    @Test
+    void shouldSetCreatePidValues() {
+        CreatePidRequest request = new CreatePidRequest();
+        request.setAdzoneName("新推广位");
+        request.setSiteId("123");
+        request.setMediaType("2");
+
+        assertThat(request.getAdzoneName()).isEqualTo("新推广位");
+        assertThat(request.getSiteId()).isEqualTo("123");
+    }
+
     // ==================== 继承关系测试 ====================
 
     @Test
     void shouldBeInstanceOfBaseQueryRequest() {
         ItemFilterRequest filterRequest = new ItemFilterRequest();
         SearchRequest searchRequest = new SearchRequest();
+        TbOrderQueryRequest tbOrderRequest = new TbOrderQueryRequest();
 
         assertThat(filterRequest).isInstanceOf(BaseQueryRequest.class);
         assertThat(searchRequest).isInstanceOf(BaseQueryRequest.class);
+        assertThat(tbOrderRequest).isInstanceOf(BaseQueryRequest.class);
     }
 }
