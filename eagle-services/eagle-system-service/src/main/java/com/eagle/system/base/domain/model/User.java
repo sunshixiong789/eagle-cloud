@@ -7,13 +7,20 @@ import com.eagle.system.base.domain.event.UserUpdatedEvent;
 import com.eagle.system.base.domain.model.valueobject.Address;
 import com.eagle.system.base.domain.model.valueobject.UserProfile;
 import com.eagle.system.base.domain.model.enums.UserErrorCode;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * 用户聚合根（充血模型）
@@ -21,7 +28,13 @@ import lombok.NoArgsConstructor;
  * 聚合边界：
  * <ul>
  *   <li>聚合内部：UserProfile（值对象）、Address（值对象）</li>
- *   <li>聚合外部引用：AccountId（只保存 ID）</li>
+ *   <li>聚合外部引用：AccountId、DeptId、RoleIds、PostIds（只保存 ID）</li>
+ * </ul>
+ * <p>
+ * 业务不变性：
+ * <ul>
+ *   <li>accountId 必填（关联认证账号）</li>
+ *   <li>用户最多分配 10 个角色</li>
  * </ul>
  * <p>
  * 认证相关字段（password、phone、locked、wechatBinding）已迁移至 auth 域的 Account 聚合。
@@ -34,7 +47,8 @@ import lombok.NoArgsConstructor;
 @Table(name = "sys_user", comment = "系统用户表", indexes = {
         @Index(name = "idx_account_id", columnList = "account_id", unique = true),
         @Index(name = "idx_username", columnList = "username"),
-        @Index(name = "idx_email", columnList = "email")
+        @Index(name = "idx_email", columnList = "email"),
+        @Index(name = "idx_user_dept_id", columnList = "dept_id")
 })
 public class User extends BaseAggregateRoot<User> {
 
@@ -57,10 +71,33 @@ public class User extends BaseAggregateRoot<User> {
     @Column(length = 100, comment = "邮箱")
     private String email;
 
+    // ==================== 聚合外部引用（只保存 ID）====================
+
+    @Column(name = "dept_id", comment = "部门 ID")
+    private Long deptId;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "sys_user_role",
+            joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "role_id")
+    private Set<Long> roleIds = new HashSet<>();
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "sys_user_post",
+            joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "post_id")
+    private Set<Long> postIds = new HashSet<>();
+
     // ==================== 业务方法（充血模型）====================
 
     /**
      * 创建新用户（静态工厂方法）
+     * <p>
+     * 业务规则：
+     * <ul>
+     *   <li>accountId 必填（关联认证账号）</li>
+     *   <li>新用户默认无部门、无角色</li>
+     * </ul>
      *
      * @param accountId 关联的 Account ID（必填）
      * @param username  用户名（冗余，来源于 Account）
@@ -84,6 +121,12 @@ public class User extends BaseAggregateRoot<User> {
 
     /**
      * 从 AccountCreatedEvent 创建用户（社交/短信登录自动注册）
+     *
+     * @param accountId 关联的 Account ID
+     * @param username  用户名（冗余）
+     * @param phone     手机号（仅用于事件，User 不存储）
+     * @param profile   用户资料（可选）
+     * @return 新创建的用户
      */
     public static User createForAccount(Long accountId, String username,
                                         String phone, UserProfile profile) {
@@ -106,10 +149,56 @@ public class User extends BaseAggregateRoot<User> {
 
     /**
      * 更新联系方式
+     *
+     * @param email 邮箱（可选）
      */
     public void updateContact(String email) {
         if (email != null) {
             this.email = email;
+        }
+        this.registerEvent(new UserUpdatedEvent(this.getId(), this.username));
+    }
+
+    /**
+     * 分配角色
+     * <p>
+     * 业务规则：
+     * <ul>
+     *   <li>用户最多分配 10 个角色（防止权限过度膨胀）</li>
+     *   <li>传入 null 表示清空所有角色</li>
+     * </ul>
+     *
+     * @param roleIds 角色 ID 集合（null 表示清空角色）
+     * @throws DomainException 当角色数量超过 10 个时
+     */
+    public void assignRoles(Set<Long> roleIds) {
+        // 校验业务不变性：用户最多分配 10 个角色
+        if (roleIds != null && roleIds.size() > 10) {
+            throw UserErrorCode.MAX_ROLES_EXCEEDED.toDomainException();
+        }
+        // 在原 JPA 托管集合上操作，避免替换 PersistentSet 导致变更丢失
+        this.roleIds.clear();
+        if (roleIds != null) {
+            this.roleIds.addAll(roleIds);
+        }
+        this.registerEvent(new UserUpdatedEvent(this.getId(), this.username));
+    }
+
+    /**
+     * 分配部门
+     */
+    public void assignDept(Long deptId) {
+        this.deptId = deptId;
+        this.registerEvent(new UserUpdatedEvent(this.getId(), this.username));
+    }
+
+    /**
+     * 分配岗位
+     */
+    public void assignPosts(Set<Long> postIds) {
+        this.postIds.clear();
+        if (postIds != null) {
+            this.postIds.addAll(postIds);
         }
         this.registerEvent(new UserUpdatedEvent(this.getId(), this.username));
     }

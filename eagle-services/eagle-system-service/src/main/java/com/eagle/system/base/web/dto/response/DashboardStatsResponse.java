@@ -31,6 +31,18 @@ public class DashboardStatsResponse {
     private long userCountLast7Days;
 
     /**
+     * 角色总数
+     */
+    @Schema(description = "角色总数")
+    private long roleCount;
+
+    /**
+     * 启用角色数
+     */
+    @Schema(description = "启用角色数")
+    private long roleEnabledCount;
+
+    /**
      * 今日登录次数
      */
     @Schema(description = "今日登录次数")

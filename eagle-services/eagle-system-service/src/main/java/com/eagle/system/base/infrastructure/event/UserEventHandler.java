@@ -85,6 +85,16 @@ public class UserEventHandler {
 
     /**
      * 处理账号注册事件(来自 auth 域,通过 auth::event Named Interface)
+     * <p>
+     * 跨域协作机制:
+     * <ul>
+     *   <li>auth 域创建 Account 后发布 AccountRegisteredEvent</li>
+     *   <li>system 域监听事件并自动创建对应的 User</li>
+     *   <li>使用 REQUIRES_NEW 事务传播,确保 User 创建失败不影响 Account 创建</li>
+     *   <li>profileHints(部门、角色、邮箱)由管理员创建时携带,自主注册时为空</li>
+     * </ul>
+     *
+     * @param event 账号注册事件
      */
     @Async("taskExecutor")
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
@@ -104,6 +114,7 @@ public class UserEventHandler {
         // 创建 User
         User user = User.createForAccount(
                 event.accountId(), event.username(), event.phone(), profile);
+        // 应用 profile hints (邮箱)
         if (event.email() != null) {
             user.updateContact(event.email());
         }
