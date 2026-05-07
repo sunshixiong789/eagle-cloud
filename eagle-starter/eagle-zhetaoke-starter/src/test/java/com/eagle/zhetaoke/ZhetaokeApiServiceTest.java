@@ -680,6 +680,201 @@ class ZhetaokeApiServiceTest {
         assertThat(apiService.queryDouyinOrders("2024-01-01", "2024-01-31", 1, 20).isSuccess()).isTrue();
     }
 
+    // ==================== 淘宝订单中心 API ====================
+
+    @Test
+    void shouldQueryTbOrders() {
+        ZhetaokeResponse<List<TbOrderDetail>> mockResponse = createSuccessResponse(List.of());
+
+        when(client.queryTbOrders(eq("test-appkey"), eq("test-sid"), eq("2024-01-01"), eq("2024-01-31"),
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
+                .thenReturn(mockResponse);
+
+        assertThat(apiService.queryTbOrders("2024-01-01", "2024-01-31").isSuccess()).isTrue();
+    }
+
+    @Test
+    void shouldQueryTbOrdersWithRequest() {
+        ZhetaokeResponse<List<TbOrderDetail>> mockResponse = createSuccessResponse(List.of());
+
+        when(client.queryTbOrders(eq("test-appkey"), eq("test-sid"), eq("2024-01-01"), eq("2024-01-31"),
+                eq("1"), isNull(), eq("20"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
+                .thenReturn(mockResponse);
+
+        TbOrderQueryRequest request = new TbOrderQueryRequest();
+        request.setStartTime("2024-01-01");
+        request.setEndTime("2024-01-31");
+        request.setQueryType("1");
+
+        assertThat(apiService.queryTbOrders(request).isSuccess()).isTrue();
+    }
+
+    @Test
+    void shouldConvertHighCommission() {
+        ZhetaokeResponse<ZhetaokeItem> mockResponse = new ZhetaokeResponse<>();
+        mockResponse.setStatus(200);
+
+        when(client.convertHighCommission(eq("test-appkey"), eq("test-sid"), eq("mm_1_2_3"),
+                eq("123456"), isNull(), isNull(), eq(5)))
+                .thenReturn(mockResponse);
+
+        assertThat(apiService.convertHighCommission("123456").isSuccess()).isTrue();
+    }
+
+    @Test
+    void shouldCreateTkl() {
+        ZhetaokeResponse<TklResult> mockResponse = new ZhetaokeResponse<>();
+        mockResponse.setStatus(200);
+        mockResponse.setContent(new TklResult());
+
+        when(client.createTkl(eq("test-appkey"), eq("test-sid"), isNull(),
+                eq("https://example.com"), isNull(), eq(0), isNull()))
+                .thenReturn(mockResponse);
+
+        assertThat(apiService.createTkl("https://example.com").isSuccess()).isTrue();
+    }
+
+    @Test
+    void shouldParseItemId() {
+        ZhetaokeResponse<ZhetaokeItem> mockResponse = new ZhetaokeResponse<>();
+        mockResponse.setStatus(200);
+
+        when(client.parseItemId(eq("test-appkey"), eq("https://item.taobao.com/item.htm?id=123")))
+                .thenReturn(mockResponse);
+
+        assertThat(apiService.parseItemId("https://item.taobao.com/item.htm?id=123").isSuccess()).isTrue();
+    }
+
+    @Test
+    void shouldConvertShortUrl() {
+        ZhetaokeResponse<ZhetaokeLinkResult> mockResponse = new ZhetaokeResponse<>();
+        mockResponse.setStatus(200);
+
+        when(client.convertShortUrl(eq("test-appkey"), eq("https://long.url")))
+                .thenReturn(mockResponse);
+
+        assertThat(apiService.convertShortUrl("https://long.url").isSuccess()).isTrue();
+    }
+
+    @Test
+    void shouldConvertShopLink() {
+        ZhetaokeResponse<ZhetaokeLinkResult> mockResponse = new ZhetaokeResponse<>();
+        mockResponse.setStatus(200);
+
+        when(client.convertShopLink(eq("test-appkey"), eq("test-sid"), eq("mm_1_2_3"), eq("https://shop.com")))
+                .thenReturn(mockResponse);
+
+        assertThat(apiService.convertShopLink("https://shop.com").isSuccess()).isTrue();
+    }
+
+    @Test
+    void shouldGetInviteCode() {
+        ZhetaokeResponse<PublisherInfo> mockResponse = new ZhetaokeResponse<>();
+        mockResponse.setStatus(200);
+
+        when(client.getInviteCode(eq("test-appkey"), eq("test-sid")))
+                .thenReturn(mockResponse);
+
+        assertThat(apiService.getInviteCode().isSuccess()).isTrue();
+    }
+
+    @Test
+    void shouldSavePublisher() {
+        ZhetaokeResponse<PublisherInfo> mockResponse = new ZhetaokeResponse<>();
+        mockResponse.setStatus(200);
+
+        when(client.savePublisher(eq("test-appkey"), eq("test-sid"), eq("rid"), isNull(),
+                eq("name"), isNull(), isNull(), isNull(), isNull()))
+                .thenReturn(mockResponse);
+
+        PublisherSaveRequest request = new PublisherSaveRequest();
+        request.setRelationId("rid");
+        request.setAccountName("name");
+
+        assertThat(apiService.savePublisher(request).isSuccess()).isTrue();
+    }
+
+    @Test
+    void shouldGetPublisherInfo() {
+        ZhetaokeResponse<List<PublisherInfo>> mockResponse = createSuccessResponse(List.of());
+
+        when(client.getPublisherInfo(eq("test-appkey"), eq("test-sid"), eq("123"), eq("456"), isNull()))
+                .thenReturn(mockResponse);
+
+        assertThat(apiService.getPublisherInfo("123", "456").isSuccess()).isTrue();
+    }
+
+    @Test
+    void shouldGetItemInfoBatch() {
+        ZhetaokeResponse<List<ZhetaokeItem>> mockResponse = createSuccessResponse(List.of());
+
+        when(client.getItemInfoBatch(eq("test-appkey"), eq("test-sid"), eq("mm_1_2_3"), eq("1,2,3")))
+                .thenReturn(mockResponse);
+
+        assertThat(apiService.getItemInfoBatch("1,2,3").isSuccess()).isTrue();
+    }
+
+    @Test
+    void shouldGetGuessLikeItems2() {
+        ZhetaokeResponse<List<ZhetaokeItem>> mockResponse = createSuccessResponse(List.of());
+
+        when(client.getGuessLikeItems2(eq("test-appkey"), eq("test-sid"), eq("mm_1_2_3"), eq(1), eq(20)))
+                .thenReturn(mockResponse);
+
+        assertThat(apiService.getGuessLikeItems2(1, 20).isSuccess()).isTrue();
+    }
+
+    @Test
+    void shouldConvertActivityLink() {
+        ZhetaokeResponse<ZhetaokeLinkResult> mockResponse = new ZhetaokeResponse<>();
+        mockResponse.setStatus(200);
+
+        when(client.convertActivityLink(eq("test-appkey"), eq("test-sid"), eq("mm_1_2_3"),
+                eq("act-123"), isNull(), isNull(), isNull(), isNull()))
+                .thenReturn(mockResponse);
+
+        assertThat(apiService.convertActivityLink("act-123").isSuccess()).isTrue();
+    }
+
+    @Test
+    void shouldGetActivityList() {
+        ZhetaokeResponse<List<TbActivity>> mockResponse = createSuccessResponse(List.of());
+
+        when(client.getActivityList(eq("test-appkey"))).thenReturn(mockResponse);
+
+        assertThat(apiService.getActivityList().isSuccess()).isTrue();
+    }
+
+    @Test
+    void shouldCreatePid() {
+        ZhetaokeResponse<AdzoneInfo> mockResponse = new ZhetaokeResponse<>();
+        mockResponse.setStatus(200);
+
+        when(client.createPid(eq("test-appkey"), eq("test-sid"), eq("新推广位"), isNull(), isNull()))
+                .thenReturn(mockResponse);
+
+        assertThat(apiService.createPid("新推广位").isSuccess()).isTrue();
+    }
+
+    @Test
+    void shouldAuthorizeTaokeAccount() {
+        ZhetaokeResponse<String> mockResponse = new ZhetaokeResponse<>();
+        mockResponse.setStatus(200);
+
+        when(client.authorizeTaokeAccount(eq("test-appkey"))).thenReturn(mockResponse);
+
+        assertThat(apiService.authorizeTaokeAccount().isSuccess()).isTrue();
+    }
+
+    @Test
+    void shouldGetAuthorizationList() {
+        ZhetaokeResponse<List<String>> mockResponse = createSuccessResponse(List.of());
+
+        when(client.getAuthorizationList(eq("test-appkey"))).thenReturn(mockResponse);
+
+        assertThat(apiService.getAuthorizationList().isSuccess()).isTrue();
+    }
+
     // ==================== 辅助方法 ====================
 
     private <T> ZhetaokeResponse<T> createSuccessResponse(T content) {

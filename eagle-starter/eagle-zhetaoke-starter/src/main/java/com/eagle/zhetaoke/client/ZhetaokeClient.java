@@ -922,4 +922,414 @@ public interface ZhetaokeClient {
             @RequestParam("endTime") String endTime,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "page_size", required = false) Integer pageSize);
+
+    // ==================== 淘宝订单中心 API ====================
+
+    /**
+     * 新订单查询 API（淘宝联盟）。
+     *
+     * @param appkey       折淘客对接秘钥
+     * @param sid          淘客账号授权 ID
+     * @param startTime    开始时间
+     * @param endTime      结束时间
+     * @param queryType    查询时间类型
+     * @param positionIndex 位点
+     * @param pageSize     页大小
+     * @param memberType   推广者角色类型
+     * @param tkStatus     淘客订单状态
+     * @param jumpType     跳转类型
+     * @param pageNo       第几页
+     * @param orderScene   场景订单场景类型
+     * @param signurl      返回值类型
+     * @return 淘宝订单列表响应
+     */
+    @GetExchange("/api/open_dingdanchaxun2.ashx")
+    ZhetaokeResponse<List<TbOrderDetail>> queryTbOrders(
+            @RequestParam("appkey") String appkey,
+            @RequestParam("sid") String sid,
+            @RequestParam("start_time") String startTime,
+            @RequestParam("end_time") String endTime,
+            @RequestParam(value = "query_type", required = false) String queryType,
+            @RequestParam(value = "position_index", required = false) String positionIndex,
+            @RequestParam(value = "page_size", required = false) String pageSize,
+            @RequestParam(value = "member_type", required = false) String memberType,
+            @RequestParam(value = "tk_status", required = false) String tkStatus,
+            @RequestParam(value = "jump_type", required = false) String jumpType,
+            @RequestParam(value = "page_no", required = false) String pageNo,
+            @RequestParam(value = "order_scene", required = false) String orderScene,
+            @RequestParam(value = "signurl", required = false) Integer signurl);
+
+    /**
+     * 淘宝维权订单查询 API。
+     *
+     * @param appkey    折淘客对接秘钥
+     * @param sid       淘客账号授权 ID
+     * @param startTime 开始时间
+     * @param endTime   结束时间
+     * @param pageSize  页大小
+     * @param pageNo    第几页
+     * @param refundType 维权类型
+     * @param bizType   业务类型
+     * @param simplify  是否简化
+     * @return 淘宝维权订单列表响应
+     */
+    @GetExchange("/Api/open_dingdanchaxun2_refund.ashx")
+    ZhetaokeResponse<List<TbOrderDetail>> queryTbRefundOrders(
+            @RequestParam("appkey") String appkey,
+            @RequestParam("sid") String sid,
+            @RequestParam("start_time") String startTime,
+            @RequestParam("end_time") String endTime,
+            @RequestParam(value = "page_size", required = false) String pageSize,
+            @RequestParam(value = "page_no", required = false) String pageNo,
+            @RequestParam(value = "refund_type", required = false) String refundType,
+            @RequestParam(value = "biz_type", required = false) String bizType,
+            @RequestParam(value = "simplify", required = false) String simplify);
+
+    /**
+     * 高佣转链 API（商品 ID）。
+     *
+     * @param appkey     折淘客对接秘钥
+     * @param sid        淘客账号授权 ID
+     * @param pid        淘客 PID
+     * @param numIid     商品 ID
+     * @param relationId 渠道关系 ID
+     * @param specialId  会员运营 ID
+     * @param signurl    返回值类型
+     * @return 转链结果
+     */
+    @GetExchange("/api/open_gaoyongzhuanlian.ashx")
+    ZhetaokeResponse<ZhetaokeItem> convertHighCommission(
+            @RequestParam("appkey") String appkey,
+            @RequestParam("sid") String sid,
+            @RequestParam("pid") String pid,
+            @RequestParam("num_iid") String numIid,
+            @RequestParam(value = "relation_id", required = false) String relationId,
+            @RequestParam(value = "special_id", required = false) String specialId,
+            @RequestParam(value = "signurl", required = false) Integer signurl);
+
+    /**
+     * 高佣转链 API（淘口令）。
+     *
+     * @param appkey     折淘客对接秘钥
+     * @param sid        淘客账号授权 ID
+     * @param pid        淘客 PID
+     * @param tkl        淘口令
+     * @param relationId 渠道关系 ID
+     * @param specialId  会员运营 ID
+     * @param signurl    返回值类型
+     * @return 转链结果
+     */
+    @GetExchange("/api/open_gaoyongzhuanlian_tkl.ashx")
+    ZhetaokeResponse<ZhetaokeItem> convertHighCommissionByTkl(
+            @RequestParam("appkey") String appkey,
+            @RequestParam("sid") String sid,
+            @RequestParam("pid") String pid,
+            @RequestParam("tkl") String tkl,
+            @RequestParam(value = "relation_id", required = false) String relationId,
+            @RequestParam(value = "special_id", required = false) String specialId,
+            @RequestParam(value = "signurl", required = false) Integer signurl);
+
+    /**
+     * 批量高佣转链 API（商品 ID）。
+     *
+     * @param appkey  折淘客对接秘钥
+     * @param sid     淘客账号授权 ID
+     * @param pid     淘客 PID
+     * @param numIids 多个商品 ID，逗号分隔
+     * @param signurl 返回值类型
+     * @return 转链结果列表
+     */
+    @GetExchange("/api/open_gaoyongzhuanlian_piliang.ashx")
+    ZhetaokeResponse<List<ZhetaokeItem>> batchConvertHighCommission(
+            @RequestParam("appkey") String appkey,
+            @RequestParam("sid") String sid,
+            @RequestParam("pid") String pid,
+            @RequestParam("num_iids") String numIids,
+            @RequestParam(value = "signurl", required = false) Integer signurl);
+
+    /**
+     * 批量高佣转链 API（淘口令）。
+     *
+     * @param appkey  折淘客对接秘钥
+     * @param sid     淘客账号授权 ID
+     * @param pid     淘客 PID
+     * @param tkls    多个淘口令，逗号分隔
+     * @param signurl 返回值类型
+     * @return 转链结果列表
+     */
+    @GetExchange("/api/open_gaoyongzhuanlian_tkl_piliang.ashx")
+    ZhetaokeResponse<List<ZhetaokeItem>> batchConvertHighCommissionByTkl(
+            @RequestParam("appkey") String appkey,
+            @RequestParam("sid") String sid,
+            @RequestParam("pid") String pid,
+            @RequestParam("tkls") String tkls,
+            @RequestParam(value = "signurl", required = false) Integer signurl);
+
+    /**
+     * 淘口令创建 API。
+     *
+     * @param appkey  折淘客对接秘钥
+     * @param sid     淘客账号授权 ID
+     * @param text    口令弹框内容
+     * @param url     口令跳转目标页 URL
+     * @param logo    口令弹框 logo URL
+     * @param signurl 返回值类型
+     * @param type    结果类型
+     * @return 淘口令结果
+     */
+    @GetExchange("/api/open_tkl_create.ashx")
+    ZhetaokeResponse<TklResult> createTkl(
+            @RequestParam("appkey") String appkey,
+            @RequestParam("sid") String sid,
+            @RequestParam(value = "text", required = false) String text,
+            @RequestParam("url") String url,
+            @RequestParam(value = "logo", required = false) String logo,
+            @RequestParam(value = "signurl", required = false) Integer signurl,
+            @RequestParam(value = "type", required = false) String type);
+
+    /**
+     * 解析商品编号 API。
+     *
+     * @param appkey 折淘客对接秘钥
+     * @param url    商品链接或淘口令
+     * @return 商品编号信息
+     */
+    @GetExchange("/api/open_shangpin_id.ashx")
+    ZhetaokeResponse<ZhetaokeItem> parseItemId(
+            @RequestParam("appkey") String appkey,
+            @RequestParam("url") String url);
+
+    /**
+     * 淘宝短链接转换 API。
+     *
+     * @param appkey 折淘客对接秘钥
+     * @param url    原始链接
+     * @return 短链接结果
+     */
+    @GetExchange("/api/open_shorturl_taobao_get.ashx")
+    ZhetaokeResponse<ZhetaokeLinkResult> convertShortUrl(
+            @RequestParam("appkey") String appkey,
+            @RequestParam("url") String url);
+
+    /**
+     * 店铺链接转换 API。
+     *
+     * @param appkey 折淘客对接秘钥
+     * @param sid    淘客账号授权 ID
+     * @param pid    淘客 PID
+     * @param url    店铺链接
+     * @return 转链结果
+     */
+    @GetExchange("/api/open_shop_convert.ashx")
+    ZhetaokeResponse<ZhetaokeLinkResult> convertShopLink(
+            @RequestParam("appkey") String appkey,
+            @RequestParam("sid") String sid,
+            @RequestParam("pid") String pid,
+            @RequestParam("url") String url);
+
+    /**
+     * 淘礼金创建 API。
+     *
+     * @param appkey    折淘客对接秘钥
+     * @param sid       淘客账号授权 ID
+     * @param itemId    商品 ID
+     * @param totalNum  淘礼金总个数
+     * @param totalAmount 淘礼金总面额
+     * @param name      淘礼金名称
+     * @param perFace   单个淘礼金面额
+     * @param winNum    中奖概率
+     * @return 淘礼金结果
+     */
+    @GetExchange("/api/open_taolijin2_create.ashx")
+    ZhetaokeResponse<ZhetaokeLinkResult> createTaoLiJin(
+            @RequestParam("appkey") String appkey,
+            @RequestParam("sid") String sid,
+            @RequestParam("item_id") String itemId,
+            @RequestParam("total_num") String totalNum,
+            @RequestParam("total_amount") String totalAmount,
+            @RequestParam("name") String name,
+            @RequestParam(value = "per_face", required = false) String perFace,
+            @RequestParam(value = "win_num", required = false) String winNum);
+
+    /**
+     * 渠道邀请码生成 API。
+     *
+     * @param appkey 折淘客对接秘钥
+     * @param sid    淘客账号授权 ID
+     * @return 邀请码结果
+     */
+    @GetExchange("/api/open_sc_invitecode_get.ashx")
+    ZhetaokeResponse<PublisherInfo> getInviteCode(
+            @RequestParam("appkey") String appkey,
+            @RequestParam("sid") String sid);
+
+    /**
+     * 渠道备案 API。
+     *
+     * @param appkey     折淘客对接秘钥
+     * @param sid        淘客账号授权 ID
+     * @param relationId 渠道关系 ID
+     * @param specialId  会员运营 ID
+     * @param accountName 账户名称
+     * @param accountType 账户类型
+     * @param inviteCode  邀请码
+     * @param remark     备注
+     * @param infoType   信息类型
+     * @return 备案结果
+     */
+    @GetExchange("/api/open_sc_publisher_save.ashx")
+    ZhetaokeResponse<PublisherInfo> savePublisher(
+            @RequestParam("appkey") String appkey,
+            @RequestParam("sid") String sid,
+            @RequestParam(value = "relation_id", required = false) String relationId,
+            @RequestParam(value = "special_id", required = false) String specialId,
+            @RequestParam(value = "account_name", required = false) String accountName,
+            @RequestParam(value = "account_type", required = false) String accountType,
+            @RequestParam(value = "invite_code", required = false) String inviteCode,
+            @RequestParam(value = "remark", required = false) String remark,
+            @RequestParam(value = "info_type", required = false) String infoType);
+
+    /**
+     * 渠道信息查询 API。
+     *
+     * @param appkey     折淘客对接秘钥
+     * @param sid        淘客账号授权 ID
+     * @param relationId 渠道关系 ID
+     * @param specialId  会员运营 ID
+     * @param infoType   信息类型
+     * @return 渠道信息列表
+     */
+    @GetExchange("/api/open_sc_publisher_get.ashx")
+    ZhetaokeResponse<List<PublisherInfo>> getPublisherInfo(
+            @RequestParam("appkey") String appkey,
+            @RequestParam("sid") String sid,
+            @RequestParam(value = "relation_id", required = false) String relationId,
+            @RequestParam(value = "special_id", required = false) String specialId,
+            @RequestParam(value = "info_type", required = false) String infoType);
+
+    /**
+     * 接口调用日志 API。
+     *
+     * @param appkey   折淘客对接秘钥
+     * @param sid      淘客账号授权 ID
+     * @param startTime 开始时间
+     * @param endTime   结束时间
+     * @param page     分页页码
+     * @param pageSize 每页条数
+     * @return 日志列表
+     */
+    @GetExchange("/api/open_log.ashx")
+    ZhetaokeResponse<List<String>> getApiLogs(
+            @RequestParam("appkey") String appkey,
+            @RequestParam("sid") String sid,
+            @RequestParam("start_time") String startTime,
+            @RequestParam("end_time") String endTime,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "page_size", required = false) Integer pageSize);
+
+    /**
+     * 批量全网商品详情（简版）API。
+     *
+     * @param appkey  折淘客对接秘钥
+     * @param sid     淘客账号授权 ID
+     * @param pid     淘客 PID
+     * @param numIids 多个商品 ID，逗号分隔
+     * @return 商品详情列表
+     */
+    @GetExchange("/api/open_item_info.ashx")
+    ZhetaokeResponse<List<ZhetaokeItem>> getItemInfoBatch(
+            @RequestParam("appkey") String appkey,
+            @RequestParam("sid") String sid,
+            @RequestParam("pid") String pid,
+            @RequestParam("num_iids") String numIids);
+
+    /**
+     * 淘宝联盟猜你喜欢商品 API。
+     *
+     * @param appkey   折淘客对接秘钥
+     * @param sid      淘客账号授权 ID
+     * @param pid      淘客 PID
+     * @param page     分页页码
+     * @param pageSize 每页条数
+     * @return 商品列表响应
+     */
+    @GetExchange("/api/open_item_guess_like2.ashx")
+    ZhetaokeResponse<List<ZhetaokeItem>> getGuessLikeItems2(
+            @RequestParam("appkey") String appkey,
+            @RequestParam("sid") String sid,
+            @RequestParam("pid") String pid,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "page_size", required = false) Integer pageSize);
+
+    /**
+     * 淘宝联盟官方活动转链 API。
+     *
+     * @param appkey     折淘客对接秘钥
+     * @param sid        淘客账号授权 ID
+     * @param pid        淘客 PID
+     * @param activityId 官方活动 ID
+     * @param adzoneId   推广位 ID
+     * @param relationId 渠道关系 ID
+     * @param specialId  会员运营 ID
+     * @param unionId    会场 ID
+     * @return 转链结果
+     */
+    @GetExchange("/api/open_activitylink_get.ashx")
+    ZhetaokeResponse<ZhetaokeLinkResult> convertActivityLink(
+            @RequestParam("appkey") String appkey,
+            @RequestParam("sid") String sid,
+            @RequestParam("pid") String pid,
+            @RequestParam("activity_id") String activityId,
+            @RequestParam(value = "adzone_id", required = false) String adzoneId,
+            @RequestParam(value = "relation_id", required = false) String relationId,
+            @RequestParam(value = "special_id", required = false) String specialId,
+            @RequestParam(value = "union_id", required = false) String unionId);
+
+    /**
+     * 淘宝联盟官方活动列表 API。
+     *
+     * @param appkey 折淘客对接秘钥
+     * @return 活动列表响应
+     */
+    @GetExchange("/api/open_activity_list.ashx")
+    ZhetaokeResponse<List<TbActivity>> getActivityList(
+            @RequestParam("appkey") String appkey);
+
+    /**
+     * 创建推广位 API。
+     *
+     * @param appkey      折淘客对接秘钥
+     * @param sid         淘客账号授权 ID
+     * @param adzoneName  推广位名称
+     * @param siteId      站点 ID
+     * @param mediaType   媒体类型
+     * @return 推广位信息
+     */
+    @GetExchange("/api/open_create_pid2.ashx")
+    ZhetaokeResponse<AdzoneInfo> createPid(
+            @RequestParam("appkey") String appkey,
+            @RequestParam("sid") String sid,
+            @RequestParam("adzone_name") String adzoneName,
+            @RequestParam(value = "site_id", required = false) String siteId,
+            @RequestParam(value = "media_type", required = false) String mediaType);
+
+    /**
+     * 淘客账号授权 API。
+     *
+     * @param appkey 折淘客对接秘钥
+     * @return 授权结果
+     */
+    @GetExchange("/api/open_taokeshouquan.ashx")
+    ZhetaokeResponse<String> authorizeTaokeAccount(
+            @RequestParam("appkey") String appkey);
+
+    /**
+     * 获取账户授权列表 API。
+     *
+     * @param appkey 折淘客对接秘钥
+     * @return 授权列表
+     */
+    @GetExchange("/api/open_taokeshouquaninfo.ashx")
+    ZhetaokeResponse<List<String>> getAuthorizationList(
+            @RequestParam("appkey") String appkey);
 }

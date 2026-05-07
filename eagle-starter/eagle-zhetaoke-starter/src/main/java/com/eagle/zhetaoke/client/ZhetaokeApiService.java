@@ -850,6 +850,282 @@ public class ZhetaokeApiService {
                 request.getPage(), request.getPageSize());
     }
 
+    // ==================== 淘宝订单中心 API ====================
+
+    /**
+     * 查询淘宝联盟订单。
+     *
+     * @param startTime 开始时间
+     * @param endTime   结束时间
+     * @return 淘宝订单列表响应
+     */
+    public ZhetaokeResponse<List<TbOrderDetail>> queryTbOrders(String startTime, String endTime) {
+        return client.queryTbOrders(properties.getAppkey(), properties.getSid(),
+                startTime, endTime, null, null, null, null, null, null, null, null, null);
+    }
+
+    /**
+     * 查询淘宝联盟订单（请求对象版本）。
+     *
+     * @param request 淘宝订单查询请求
+     * @return 淘宝订单列表响应
+     */
+    public ZhetaokeResponse<List<TbOrderDetail>> queryTbOrders(TbOrderQueryRequest request) {
+        return client.queryTbOrders(
+                coalesce(request.getAppkey(), properties.getAppkey()),
+                coalesce(request.getSid(), properties.getSid()),
+                request.getStartTime(), request.getEndTime(),
+                request.getQueryType(), request.getPositionIndex(),
+                request.getPageSize() != null ? String.valueOf(request.getPageSize()) : null,
+                request.getMemberType(), request.getTkStatus(), request.getJumpType(),
+                request.getPageNo(), request.getOrderScene(), request.getSignurl());
+    }
+
+    /**
+     * 查询淘宝维权订单。
+     *
+     * @param startTime 开始时间
+     * @param endTime   结束时间
+     * @return 维权订单列表响应
+     */
+    public ZhetaokeResponse<List<TbOrderDetail>> queryTbRefundOrders(String startTime, String endTime) {
+        return client.queryTbRefundOrders(properties.getAppkey(), properties.getSid(),
+                startTime, endTime, null, null, null, null, null);
+    }
+
+    /**
+     * 淘宝高佣转链（商品 ID）。
+     *
+     * @param numIid 商品 ID
+     * @return 转链结果
+     */
+    public ZhetaokeResponse<ZhetaokeItem> convertHighCommission(String numIid) {
+        return client.convertHighCommission(properties.getAppkey(), properties.getSid(), properties.getPid(),
+                numIid, null, null, 5);
+    }
+
+    /**
+     * 淘宝高佣转链（请求对象版本）。
+     *
+     * @param request 高佣转链请求
+     * @return 转链结果
+     */
+    public ZhetaokeResponse<ZhetaokeItem> convertHighCommission(HighCommissionConvertRequest request) {
+        return client.convertHighCommission(
+                coalesce(request.getAppkey(), properties.getAppkey()),
+                coalesce(request.getSid(), properties.getSid()),
+                coalesce(request.getPid(), properties.getPid()),
+                request.getNumIid(), request.getRelationId(), request.getSpecialId(), request.getSignurl());
+    }
+
+    /**
+     * 批量高佣转链（商品 ID）。
+     *
+     * @param numIids 多个商品 ID，逗号分隔
+     * @return 转链结果列表
+     */
+    public ZhetaokeResponse<List<ZhetaokeItem>> batchConvertHighCommission(String numIids) {
+        return client.batchConvertHighCommission(properties.getAppkey(), properties.getSid(), properties.getPid(),
+                numIids, 5);
+    }
+
+    /**
+     * 创建淘口令。
+     *
+     * @param url 跳转 URL
+     * @return 淘口令结果
+     */
+    public ZhetaokeResponse<TklResult> createTkl(String url) {
+        return client.createTkl(properties.getAppkey(), properties.getSid(), null, url, null, 0, null);
+    }
+
+    /**
+     * 创建淘口令（请求对象版本）。
+     *
+     * @param request 淘口令创建请求
+     * @return 淘口令结果
+     */
+    public ZhetaokeResponse<TklResult> createTkl(TklCreateRequest request) {
+        return client.createTkl(
+                coalesce(request.getAppkey(), properties.getAppkey()),
+                coalesce(request.getSid(), properties.getSid()),
+                request.getText(), request.getUrl(), request.getLogo(),
+                request.getSignurl(), request.getType());
+    }
+
+    /**
+     * 解析商品编号。
+     *
+     * @param url 商品链接或淘口令
+     * @return 商品信息
+     */
+    public ZhetaokeResponse<ZhetaokeItem> parseItemId(String url) {
+        return client.parseItemId(properties.getAppkey(), url);
+    }
+
+    /**
+     * 淘宝短链接转换。
+     *
+     * @param url 原始链接
+     * @return 短链接结果
+     */
+    public ZhetaokeResponse<ZhetaokeLinkResult> convertShortUrl(String url) {
+        return client.convertShortUrl(properties.getAppkey(), url);
+    }
+
+    /**
+     * 店铺链接转换。
+     *
+     * @param url 店铺链接
+     * @return 转链结果
+     */
+    public ZhetaokeResponse<ZhetaokeLinkResult> convertShopLink(String url) {
+        return client.convertShopLink(properties.getAppkey(), properties.getSid(), properties.getPid(), url);
+    }
+
+    /**
+     * 渠道邀请码生成。
+     *
+     * @return 邀请码信息
+     */
+    public ZhetaokeResponse<PublisherInfo> getInviteCode() {
+        return client.getInviteCode(properties.getAppkey(), properties.getSid());
+    }
+
+    /**
+     * 渠道备案。
+     *
+     * @param request 渠道备案请求
+     * @return 备案结果
+     */
+    public ZhetaokeResponse<PublisherInfo> savePublisher(PublisherSaveRequest request) {
+        return client.savePublisher(
+                coalesce(request.getAppkey(), properties.getAppkey()),
+                coalesce(request.getSid(), properties.getSid()),
+                request.getRelationId(), request.getSpecialId(),
+                request.getAccountName(), request.getAccountType(),
+                request.getInviteCode(), request.getRemark(), request.getInfoType());
+    }
+
+    /**
+     * 渠道信息查询。
+     *
+     * @param relationId 渠道关系 ID
+     * @param specialId  会员运营 ID
+     * @return 渠道信息列表
+     */
+    public ZhetaokeResponse<List<PublisherInfo>> getPublisherInfo(String relationId, String specialId) {
+        return client.getPublisherInfo(properties.getAppkey(), properties.getSid(), relationId, specialId, null);
+    }
+
+    /**
+     * 接口调用日志。
+     *
+     * @param startTime 开始时间
+     * @param endTime   结束时间
+     * @return 日志列表
+     */
+    public ZhetaokeResponse<List<String>> getApiLogs(String startTime, String endTime) {
+        return client.getApiLogs(properties.getAppkey(), properties.getSid(), startTime, endTime, 1, 20);
+    }
+
+    /**
+     * 批量商品详情（简版）。
+     *
+     * @param numIids 多个商品 ID，逗号分隔
+     * @return 商品详情列表
+     */
+    public ZhetaokeResponse<List<ZhetaokeItem>> getItemInfoBatch(String numIids) {
+        return client.getItemInfoBatch(properties.getAppkey(), properties.getSid(), properties.getPid(), numIids);
+    }
+
+    /**
+     * 猜你喜欢商品。
+     *
+     * @param page     分页页码
+     * @param pageSize 每页条数
+     * @return 商品列表响应
+     */
+    public ZhetaokeResponse<List<ZhetaokeItem>> getGuessLikeItems2(Integer page, Integer pageSize) {
+        return client.getGuessLikeItems2(properties.getAppkey(), properties.getSid(), properties.getPid(), page, pageSize);
+    }
+
+    /**
+     * 官方活动转链。
+     *
+     * @param activityId 活动 ID
+     * @return 转链结果
+     */
+    public ZhetaokeResponse<ZhetaokeLinkResult> convertActivityLink(String activityId) {
+        return client.convertActivityLink(properties.getAppkey(), properties.getSid(), properties.getPid(),
+                activityId, null, null, null, null);
+    }
+
+    /**
+     * 官方活动转链（请求对象版本）。
+     *
+     * @param request 活动转链请求
+     * @return 转链结果
+     */
+    public ZhetaokeResponse<ZhetaokeLinkResult> convertActivityLink(ActivityLinkRequest request) {
+        return client.convertActivityLink(
+                coalesce(request.getAppkey(), properties.getAppkey()),
+                coalesce(request.getSid(), properties.getSid()),
+                coalesce(request.getPid(), properties.getPid()),
+                request.getActivityId(), request.getAdzoneId(),
+                request.getRelationId(), request.getSpecialId(), request.getUnionId());
+    }
+
+    /**
+     * 官方活动列表。
+     *
+     * @return 活动列表响应
+     */
+    public ZhetaokeResponse<List<TbActivity>> getActivityList() {
+        return client.getActivityList(properties.getAppkey());
+    }
+
+    /**
+     * 创建推广位。
+     *
+     * @param adzoneName 推广位名称
+     * @return 推广位信息
+     */
+    public ZhetaokeResponse<AdzoneInfo> createPid(String adzoneName) {
+        return client.createPid(properties.getAppkey(), properties.getSid(), adzoneName, null, null);
+    }
+
+    /**
+     * 创建推广位（请求对象版本）。
+     *
+     * @param request 创建推广位请求
+     * @return 推广位信息
+     */
+    public ZhetaokeResponse<AdzoneInfo> createPid(CreatePidRequest request) {
+        return client.createPid(
+                coalesce(request.getAppkey(), properties.getAppkey()),
+                coalesce(request.getSid(), properties.getSid()),
+                request.getAdzoneName(), request.getSiteId(), request.getMediaType());
+    }
+
+    /**
+     * 淘客账号授权。
+     *
+     * @return 授权结果
+     */
+    public ZhetaokeResponse<String> authorizeTaokeAccount() {
+        return client.authorizeTaokeAccount(properties.getAppkey());
+    }
+
+    /**
+     * 获取账户授权列表。
+     *
+     * @return 授权列表
+     */
+    public ZhetaokeResponse<List<String>> getAuthorizationList() {
+        return client.getAuthorizationList(properties.getAppkey());
+    }
+
     // ==================== 私有工具方法 ====================
 
     /**
