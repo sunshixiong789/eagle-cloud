@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.eagle.common.exception.NotFoundException;
-import com.eagle.common.exception.codes.CommonErrorCode;
 import com.eagle.mybatis.model.EaglePageQuery;
 import com.eagle.mybatis.model.EaglePageResult;
 import org.springframework.util.StringUtils;
@@ -99,46 +98,4 @@ public class EagleServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M,
         return saveOrUpdateBatch(list, batchSize);
     }
 
-    /**
-     * 内部用于将任意错误消息文本包装为 {@link com.eagle.common.exception.ErrorCode} 的轻量实现。
-     *
-     * <p>此类避免为每个 "记录不存在" 场景单独定义 ErrorCode 枚举常量，
-     * 仅在 {@link #getByIdOrThrow(Serializable, String)} 中使用。
-     */
-    private static final class SimpleErrorCode implements com.eagle.common.exception.ErrorCode {
-
-        /**
-         * 固定错误码，复用 NOT_FOUND 语义
-         */
-        private static final int CODE = CommonErrorCode.NOT_FOUND.getCode();
-
-        /**
-         * 固定 i18n key，复用通用 NOT_FOUND key
-         */
-        private static final String MESSAGE_KEY = CommonErrorCode.NOT_FOUND.getMessageKey();
-
-        /**
-         * 业务层传入的实际错误描述文本
-         */
-        private final String defaultMessage;
-
-        private SimpleErrorCode(String defaultMessage) {
-            this.defaultMessage = defaultMessage;
-        }
-
-        @Override
-        public int getCode() {
-            return CODE;
-        }
-
-        @Override
-        public String getMessageKey() {
-            return MESSAGE_KEY;
-        }
-
-        @Override
-        public String getDefaultMessage() {
-            return defaultMessage;
-        }
-    }
 }
