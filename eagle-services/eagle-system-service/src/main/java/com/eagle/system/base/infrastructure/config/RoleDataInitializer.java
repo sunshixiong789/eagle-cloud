@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -73,8 +74,11 @@ public class RoleDataInitializer {
         for (int attempt = 1; attempt <= MAX_RETRY; attempt++) {
             Boolean assigned = tx.execute(status ->
                     userRepository.findByUsername(ADMIN_USERNAME).map(user -> {
-                        if (user.getRoleIds().isEmpty()) {
-                            user.assignRoles(Set.of(adminRoleId));
+                        // 保留 UserEventHandler 已分配的默认 user 角色, 仅在缺失 admin 角色时追加
+                        if (!user.getRoleIds().contains(adminRoleId)) {
+                            Set<Long> mergedRoleIds = new HashSet<>(user.getRoleIds());
+                            mergedRoleIds.add(adminRoleId);
+                            user.assignRoles(mergedRoleIds);
                             userRepository.save(user);
                             log.info("已为管理员用户分配 admin 角色, username: {}", ADMIN_USERNAME);
                         }
