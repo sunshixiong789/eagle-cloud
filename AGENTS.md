@@ -9,7 +9,7 @@ Eagle Cloud 是一个基于 DDD + 六边形架构 + Spring Modulith 模块化单
 ## 技术栈
 
 - Java 25 / Gradle 8.x（Groovy DSL）
-- Spring Boot 4.0.3 / Spring Cloud 2025.1.1 / Spring Cloud Alibaba 2025.1.0.0
+- Spring Boot 4.0.6 / Spring Cloud 2025.1.1 / Spring Cloud Alibaba 2025.1.0.0
 - Spring Modulith 2.0.5
 - Hibernate 7.2.6 / JPA / MySQL / PostgreSQL / Druid
 - Spring Security + OAuth2 Authorization Server / Resource Server

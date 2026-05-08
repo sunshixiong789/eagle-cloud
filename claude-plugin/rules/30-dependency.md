@@ -75,7 +75,7 @@ javaPlatform {
 }
 
 dependencies {
-    api platform('org.springframework.boot:spring-boot-dependencies:4.0.3')
+    api platform('org.springframework.boot:spring-boot-dependencies:4.0.6')
     api platform('org.springframework.cloud:spring-cloud-dependencies:2025.1.1')
 
     constraints {
