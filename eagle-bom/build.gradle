@@ -155,6 +155,37 @@ dependencies {
         // 支付 SDK
         add('api', "com.alipay.sdk:alipay-sdk-java:${alipayVersion}")
         add('api', "com.github.wechatpay-apiv3:wechatpay-java:${wechatpayVersion}")
+
+        // 内部 Starter 模块（消费方引用时无需写版本）
+        add('api', "com.eagle:eagle-common-starter:${project.version}")
+        add('api', "com.eagle:eagle-data-jpa-starter:${project.version}")
+        add('api', "com.eagle:http-client-starter:${project.version}")
+        add('api', "com.eagle:eagle-openapi-starter:${project.version}")
+        add('api', "com.eagle:eagle-redis-starter:${project.version}")
+        add('api', "com.eagle:eagle-resource-server-starter:${project.version}")
+        add('api', "com.eagle:eagle-tracing-starter:${project.version}")
+        add('api', "com.eagle:eagle-rocketmq-starter:${project.version}")
+        add('api', "com.eagle:eagle-dynamic-datasource-starter:${project.version}")
+        add('api', "com.eagle:eagle-row-security-starter:${project.version}")
+        add('api', "com.eagle:eagle-oss-minio-starter:${project.version}")
+        add('api', "com.eagle:eagle-notification-starter:${project.version}")
+        add('api', "com.eagle:eagle-scheduler-starter:${project.version}")
+        add('api', "com.eagle:eagle-tenant-starter:${project.version}")
+        add('api', "com.eagle:eagle-sharding-starter:${project.version}")
+        add('api', "com.eagle:eagle-excel-starter:${project.version}")
+        add('api', "com.eagle:eagle-resilience-starter:${project.version}")
+        add('api', "com.eagle:eagle-encrypt-starter:${project.version}")
+        add('api', "com.eagle:eagle-audit-log-starter:${project.version}")
+        add('api', "com.eagle:eagle-idempotency-starter:${project.version}")
+        add('api', "com.eagle:eagle-id-generator-starter:${project.version}")
+        add('api', "com.eagle:eagle-sentinel-starter:${project.version}")
+        add('api', "com.eagle:eagle-seata-starter:${project.version}")
+        add('api', "com.eagle:eagle-elasticsearch-starter:${project.version}")
+        add('api', "com.eagle:eagle-mybatis-starter:${project.version}")
+        add('api', "com.eagle:eagle-payment-starter:${project.version}")
+        add('api', "com.eagle:eagle-websocket-starter:${project.version}")
+        add('api', "com.eagle:eagle-ai-starter:${project.version}")
+        add('api', "com.eagle:eagle-zhetaoke-starter:${project.version}")
     }
 }
 
