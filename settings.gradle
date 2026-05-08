@@ -3,14 +3,13 @@ rootProject.name = 'eagle-cloud'
 // 依赖版本管理 BOM
 include 'eagle-bom'
 
-    // 基础服务模块
-    include 'eagle-services:eagle-gateway-service'
-    include 'eagle-services:eagle-system-service'
-    include 'eagle-services:eagle-monolith-service'
+// 基础服务模块
+include 'eagle-services:eagle-gateway-service'
+include 'eagle-services:eagle-system-service'
+include 'eagle-services:eagle-monolith-service'
 
-    // Starter 模块
-    include 'eagle-starter:eagle-ai-starter'
-    include 'eagle-starter:eagle-zhetaoke-starter'
+// Starter 模块
+include 'eagle-starter:eagle-ai-starter'
 include 'eagle-starter:eagle-common-starter'
 include 'eagle-starter:eagle-data-jpa-starter'
 include 'eagle-starter:http-client-starter'
