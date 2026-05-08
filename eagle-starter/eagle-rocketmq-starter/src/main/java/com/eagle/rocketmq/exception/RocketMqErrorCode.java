@@ -3,7 +3,7 @@ package com.eagle.rocketmq.exception;
 import com.eagle.common.exception.ErrorCode;
 
 /**
- * RocketMQ 错误码（16001–16010）。
+ * RocketMQ 错误码（16001–16004）。
  *
  * @author 孙士雄
  */
@@ -14,28 +14,14 @@ public enum RocketMqErrorCode implements ErrorCode {
     PUBLISH_FAILED(16003, "error.rocketmq.publish_failed", "消息发布失败"),
     PUBLISH_TIMEOUT(16004, "error.rocketmq.publish_timeout", "消息发布超时");
 
-    private final int code;
-    private final String messageKey;
-    private final String defaultMessage;
+    private final ErrorCode.Meta meta;
 
     RocketMqErrorCode(int code, String messageKey, String defaultMessage) {
-        this.code = code;
-        this.messageKey = messageKey;
-        this.defaultMessage = defaultMessage;
+        this.meta = new ErrorCode.Meta(code, messageKey, defaultMessage);
     }
 
     @Override
-    public int getCode() {
-        return code;
-    }
-
-    @Override
-    public String getMessageKey() {
-        return messageKey;
-    }
-
-    @Override
-    public String getDefaultMessage() {
-        return defaultMessage;
+    public ErrorCode.Meta meta() {
+        return meta;
     }
 }

@@ -17,28 +17,14 @@ public enum CommonErrorCode implements ErrorCode {
     INTERNAL_SERVER_ERROR(500, "error.server.internal_error", "服务器内部错误"),
     SERVICE_UNAVAILABLE(503, "error.server.service_unavailable", "服务暂时不可用");
 
-    private final int code;
-    private final String messageKey;
-    private final String defaultMessage;
+    private final ErrorCode.Meta meta;
 
     CommonErrorCode(int code, String messageKey, String defaultMessage) {
-        this.code = code;
-        this.messageKey = messageKey;
-        this.defaultMessage = defaultMessage;
+        this.meta = new ErrorCode.Meta(code, messageKey, defaultMessage);
     }
 
     @Override
-    public int getCode() {
-        return code;
-    }
-
-    @Override
-    public String getMessageKey() {
-        return messageKey;
-    }
-
-    @Override
-    public String getDefaultMessage() {
-        return defaultMessage;
+    public ErrorCode.Meta meta() {
+        return meta;
     }
 }

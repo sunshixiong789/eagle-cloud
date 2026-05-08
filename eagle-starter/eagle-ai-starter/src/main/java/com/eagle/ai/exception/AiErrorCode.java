@@ -3,7 +3,7 @@ package com.eagle.ai.exception;
 import com.eagle.common.exception.ErrorCode;
 
 /**
- * AI 模块错误码。
+ * AI 模块错误码（90001–90005）。
  *
  * <p>错误码范围 90001–90099，对应 i18n key 前缀 {@code error.ai.*}。
  */
@@ -24,28 +24,14 @@ public enum AiErrorCode implements ErrorCode {
     /** 对话上下文长度超出模型限制。 */
     AI_CONTEXT_LENGTH_EXCEEDED(90005, "error.ai.context_length_exceeded", "对话上下文过长，请开启新会话或缩减历史消息");
 
-    private final int code;
-    private final String messageKey;
-    private final String defaultMessage;
+    private final ErrorCode.Meta meta;
 
     AiErrorCode(int code, String messageKey, String defaultMessage) {
-        this.code = code;
-        this.messageKey = messageKey;
-        this.defaultMessage = defaultMessage;
+        this.meta = new ErrorCode.Meta(code, messageKey, defaultMessage);
     }
 
     @Override
-    public int getCode() {
-        return code;
-    }
-
-    @Override
-    public String getMessageKey() {
-        return messageKey;
-    }
-
-    @Override
-    public String getDefaultMessage() {
-        return defaultMessage;
+    public ErrorCode.Meta meta() {
+        return meta;
     }
 }
