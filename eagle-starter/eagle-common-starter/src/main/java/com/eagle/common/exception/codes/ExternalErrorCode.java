@@ -6,6 +6,7 @@ import com.eagle.common.exception.ErrorCode;
  * 外部服务错误码（15001–15003）
  */
 public enum ExternalErrorCode implements ErrorCode {
+
     EXTERNAL_SERVICE_ERROR(15001, "error.external.service_error", "外部服务调用失败"),
     EXTERNAL_SERVICE_TIMEOUT(15002, "error.external.service_timeout", "外部服务调用超时"),
     /**
@@ -14,28 +15,14 @@ public enum ExternalErrorCode implements ErrorCode {
      */
     EXTERNAL_SERVICE_DETAIL(15003, "error.external.service_detail", "外部服务调用失败");
 
-    private final int code;
-    private final String messageKey;
-    private final String defaultMessage;
+    private final ErrorCode.Meta meta;
 
     ExternalErrorCode(int code, String messageKey, String defaultMessage) {
-        this.code = code;
-        this.messageKey = messageKey;
-        this.defaultMessage = defaultMessage;
+        this.meta = new ErrorCode.Meta(code, messageKey, defaultMessage);
     }
 
     @Override
-    public int getCode() {
-        return code;
-    }
-
-    @Override
-    public String getMessageKey() {
-        return messageKey;
-    }
-
-    @Override
-    public String getDefaultMessage() {
-        return defaultMessage;
+    public ErrorCode.Meta meta() {
+        return meta;
     }
 }

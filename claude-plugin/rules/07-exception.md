@@ -33,8 +33,31 @@ toServiceException(cause);    // → 500
 在对应枚举文件加一行常量 + i18n 消息文件加翻译：
 
 ```java
-ORDER_ITEM_LIMIT_EXCEEDED(30005,"error.order.item_limit","订单项超出上限");
+ORDER_ITEM_LIMIT_EXCEEDED(30005, "error.order.item_limit", "订单项超出上限");
 ```
+
+## 创建新的 ErrorCode 枚举
+
+每个实现类只需三个固定元素，**无需**单独声明字段或覆写 getter：
+
+```java
+public enum OrderErrorCode implements ErrorCode {
+
+    ORDER_NOT_FOUND(30001, "error.order.not_found", "订单不存在"),
+    ORDER_ALREADY_PAID(30002, "error.order.already_paid", "订单已支付");
+
+    private final ErrorCode.Meta meta;   // 唯一字段
+
+    OrderErrorCode(int code, String messageKey, String defaultMessage) {
+        this.meta = new ErrorCode.Meta(code, messageKey, defaultMessage);
+    }
+
+    @Override
+    public ErrorCode.Meta meta() { return meta; }   // 唯一覆写
+}
+```
+
+`getCode()` / `getMessageKey()` / `getDefaultMessage()` 由接口的 default 方法委托给 `Meta` Record，实现类不覆写。
 
 ## 各层异常职责
 

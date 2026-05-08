@@ -52,28 +52,14 @@ public enum AuthErrorCode implements ErrorCode {
     SMS_CODE_INVALID(11032, "error.auth.sms_code_invalid", "短信验证码错误或已过期"),
     ACCOUNT_PHONE_ALREADY_SET(11033, "error.account.phone_already_set", "该账号已绑定手机号");
 
-    private final int code;
-    private final String messageKey;
-    private final String defaultMessage;
+    private final ErrorCode.Meta meta;
 
     AuthErrorCode(int code, String messageKey, String defaultMessage) {
-        this.code = code;
-        this.messageKey = messageKey;
-        this.defaultMessage = defaultMessage;
+        this.meta = new ErrorCode.Meta(code, messageKey, defaultMessage);
     }
 
     @Override
-    public int getCode() {
-        return code;
-    }
-
-    @Override
-    public String getMessageKey() {
-        return messageKey;
-    }
-
-    @Override
-    public String getDefaultMessage() {
-        return defaultMessage;
+    public ErrorCode.Meta meta() {
+        return meta;
     }
 }
