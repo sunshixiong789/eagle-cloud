@@ -274,7 +274,7 @@ rootProject.name = 'my-business-app'
 ```groovy
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '4.0.3'
+    id 'org.springframework.boot' version '4.0.6'
 }
 
 group = 'com.example'

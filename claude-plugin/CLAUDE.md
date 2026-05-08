@@ -11,7 +11,7 @@
 业务项目依赖 `eagle-cloud` 基础架子（BOM + 28 个 starter），遵循以下技术栈与约定：
 
 - **Java 25** / Gradle 8.x（Groovy DSL）
-- **Spring Boot 4.0.3** / Spring Cloud 2025.1.1 / Spring Cloud Alibaba 2025.1.0.0
+- **Spring Boot 4.0.6** / Spring Cloud 2025.1.1 / Spring Cloud Alibaba 2025.1.0.0
 - **Spring Modulith 2.0.5** — 模块化单体边界静态验证
 - **DDD + 六边形架构**（领域层稳定，infrastructure 可拆分微服务）
 - **Hibernate 7.2.6** / MySQL / PostgreSQL / Druid

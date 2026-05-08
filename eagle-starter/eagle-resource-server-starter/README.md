@@ -288,7 +288,7 @@ curl -X GET http://localhost:8081/api/users/me \
 
 ## 版本兼容性
 
-- Spring Boot: 4.0.3
+- Spring Boot: 4.0.6
 - Spring Security: 7.x
 - Java: 25
 

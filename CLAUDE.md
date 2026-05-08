@@ -10,7 +10,7 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 ## 技术栈
 
 - **Java 25** / Gradle 8.x (Groovy DSL)
-- **Spring Boot 4.0.3** / Spring Cloud 2025.1.1 / Spring Cloud Alibaba 2025.1.0.0
+- **Spring Boot 4.0.6** / Spring Cloud 2025.1.1 / Spring Cloud Alibaba 2025.1.0.0
 - **Spring Modulith 2.0.5** — 模块边界静态验证
 - **Hibernate 7.2.6** (JPA) / MySQL 9.6.0 / PostgreSQL 42.7.10 / Druid 1.2.28
 - **Spring Security + OAuth2 Authorization Server**

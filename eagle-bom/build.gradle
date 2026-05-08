@@ -12,7 +12,7 @@ javaPlatform {
 
 ext {
     // Spring 系
-    springBootVersion = '4.0.3'
+    springBootVersion = '4.0.6'
     springCloudVersion = '2025.1.1'
     springCloudAlibabaVersion = '2025.1.0.0'
     springModulithVersion = '2.0.5'
