@@ -112,9 +112,11 @@ services:
       - .env
     # environment 优先级高于 env_file，写容器网络强约束（即使 .env 误填 localhost 也能兜底）
     # SPRING_PROFILES_ACTIVE 通过 .env 注入（默认 prod；dev/local 可选）
+    # AUTH_SERVER_URL 强约束 system 容器端口为 8082，覆盖 .env 的 :80 默认
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - NACOS_SERVER_ADDR=nacos:8848
+      - AUTH_SERVER_URL=http://system:8082
       - JAVA_OPTS=-server -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health" ]
@@ -146,9 +148,11 @@ services:
       - .env
     # environment 优先级高于 env_file，强约束 nacos 容器内主机名
     # SPRING_PROFILES_ACTIVE 通过 .env 注入（默认 prod；dev/local 可选）
+    # SERVER_PORT 强约束容器内监听 8082，与 ports 主机映射 8082:8082 对齐（覆盖 application.yml 默认 80）
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - NACOS_SERVER_ADDR=nacos:8848
+      - SERVER_PORT=8082
       - JAVA_OPTS=-server -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8082/actuator/health" ]
