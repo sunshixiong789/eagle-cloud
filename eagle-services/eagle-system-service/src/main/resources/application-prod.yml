@@ -1,0 +1,32 @@
+# ===========================================
+# 生产环境差异配置（system-service）
+# 与基线相比的强制锁定：
+#   - Swagger 强制关闭（即使 SPRINGDOC_ENABLED env 误开也无效）
+#   - Flyway baseline-on-migrate=false（避免误对已有库自动 baseline）
+#   - 日志 root=WARN（防止 INFO 噪声占满磁盘）
+#   - HikariCP 泄漏检测开启
+# 其余生产参数（SQL 关闭、details=never、JPA validate）已是基线默认，无需重复声明。
+# ===========================================
+
+spring:
+  flyway:
+    baseline-on-migrate: false
+  datasource:
+    hikari:
+      connection-timeout: 5000              # 生产快速失败（5s）
+      leak-detection-threshold: 60000       # 60s 未归还连接告警
+
+# 强制关闭 Swagger（即使 ${SPRINGDOC_ENABLED:true} 默认值或环境变量被误设为 true）
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+# 生产强制收紧日志
+logging:
+  level:
+    root: WARN
+    com.eagle: INFO
+    org.springframework: WARN
+    org.springframework.security: WARN
