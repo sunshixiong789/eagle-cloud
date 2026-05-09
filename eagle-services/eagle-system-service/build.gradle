@@ -14,6 +14,8 @@ dependencies {
     // 微信/第三方 SDK
     implementation "com.github.binarywang:weixin-java-miniapp"
     implementation "com.aliyun:dysmsapi20170525"
+    // 阿里云号码认证 / 一键登录
+    implementation "com.aliyun:dypnsapi20170525"
 
     implementation "com.github.ben-manes.caffeine:caffeine"
     implementation "org.apache.poi:poi-ooxml"

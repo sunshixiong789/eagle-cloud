@@ -50,7 +50,14 @@ public enum AuthErrorCode implements ErrorCode {
     PHONE_NOT_BOUND(11030, "error.account.phone_not_bound", "该手机号未绑定任何账号"),
     PHONE_ALREADY_BOUND(11031, "error.account.phone_already_bound", "该手机号已绑定其他账号"),
     SMS_CODE_INVALID(11032, "error.auth.sms_code_invalid", "短信验证码错误或已过期"),
-    ACCOUNT_PHONE_ALREADY_SET(11033, "error.account.phone_already_set", "该账号已绑定手机号");
+    ACCOUNT_PHONE_ALREADY_SET(11033, "error.account.phone_already_set", "该账号已绑定手机号"),
+
+    // ==================== 手机号一键登录（11034–11037）====================
+
+    ONE_CLICK_TOKEN_REQUIRED(11034, "error.auth.one_click_token_required", "一键登录 access_token 不能为空"),
+    ONE_CLICK_VERIFY_FAILED(11035, "error.auth.one_click_verify_failed", "一键登录校验失败"),
+    ONE_CLICK_PROVIDER_DISABLED(11036, "error.auth.one_click_provider_disabled", "一键登录服务未启用"),
+    ONE_CLICK_PHONE_PARSE_FAILED(11037, "error.auth.one_click_phone_parse_failed", "一键登录获取手机号失败");
 
     private final ErrorCode.Meta meta;
 

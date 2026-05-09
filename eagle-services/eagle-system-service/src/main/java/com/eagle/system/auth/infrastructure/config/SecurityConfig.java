@@ -6,6 +6,8 @@ import com.eagle.system.auth.infrastructure.security.BlacklistAwareJwtDecoder;
 import com.eagle.system.auth.infrastructure.security.EagleUserAuthenticationToken;
 import com.eagle.system.auth.infrastructure.security.JwtKeyProperties;
 import com.eagle.system.auth.infrastructure.security.LoginRateLimitFilter;
+import com.eagle.system.auth.infrastructure.security.PhoneOneClickAuthenticationConverter;
+import com.eagle.system.auth.infrastructure.security.PhoneOneClickAuthenticationProvider;
 import com.eagle.system.auth.infrastructure.security.SmsCodeAuthenticationConverter;
 import com.eagle.system.auth.infrastructure.security.SmsCodeAuthenticationProvider;
 import com.eagle.system.auth.infrastructure.security.TokenTrackingHandler;
@@ -137,6 +139,7 @@ public class SecurityConfig {
                                            OAuth2TokenGenerator<?> tokenGenerator,
                                            WechatMiniProgramAuthenticationProvider wechatProvider,
                                            SmsCodeAuthenticationProvider smsProvider,
+                                           PhoneOneClickAuthenticationProvider phoneOneClickProvider,
                                            SecurityContextRepository securityContextRepository,
                                            TokenTrackingHandler tokenTrackingHandler) throws Exception {
         http
@@ -151,6 +154,8 @@ public class SecurityConfig {
                                     .authenticationProvider(wechatProvider)
                                     .accessTokenRequestConverter(new SmsCodeAuthenticationConverter())
                                     .authenticationProvider(smsProvider)
+                                    .accessTokenRequestConverter(new PhoneOneClickAuthenticationConverter())
+                                    .authenticationProvider(phoneOneClickProvider)
                                     .accessTokenResponseHandler(tokenTrackingHandler)
                             )
                             .oidc(Customizer.withDefaults());
