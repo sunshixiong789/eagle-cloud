@@ -1,9 +1,14 @@
 # -------只适用于开发环境----------
-version: '3.8'
 # 网络配置
 networks:
   eagle-network:
     driver: bridge
+
+# 数据卷（named volumes，由 docker 自动创建并持久化）
+volumes:
+  mysql-data:
+  redis-data:
+  nacos-data:
 
 services:
   # MySQL 数据库
@@ -59,7 +64,8 @@ services:
     container_name: eagle-nacos
     restart: always
     ports:
-      - "8080:8080"
+      # Nacos v3 新版控制台容器内端口 8080；为避免与 gateway 主机 8080 冲突，主机映射为 8090
+      - "8090:8080"
       - "8848:8848"
       - "9848:9848"
     networks:
@@ -73,6 +79,13 @@ services:
       - TZ=Asia/Shanghai
     volumes:
       - nacos-data:/home/nacos/data
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:8848/nacos/v1/console/health/readiness || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
   # 网关服务
   gateway:
     build:
@@ -95,7 +108,7 @@ services:
       retries: 3
       start_period: 60s
     depends_on:
-      authorization:
+      nacos:
         condition: service_healthy
       system:
         condition: service_healthy
