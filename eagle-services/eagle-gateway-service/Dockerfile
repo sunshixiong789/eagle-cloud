@@ -12,8 +12,10 @@ RUN apk add --no-cache tzdata && \
 
 WORKDIR /usr/app
 
-# 复制 JAR 文件
-COPY --chown=spring:spring /build/libs/eagle-gateway-server-0.0.1-SNAPSHOT.jar /usr/app/app.jar
+# 复制 JAR 文件（构建前需先在宿主机执行 gradle :eagle-services:eagle-gateway-service:bootJar）
+# 通配 *-SNAPSHOT.jar 以兼容版本变更；plain.jar 不会被匹配
+ARG JAR_FILE=build/libs/eagle-gateway-service-*-SNAPSHOT.jar
+COPY --chown=spring:spring ${JAR_FILE} /usr/app/app.jar
 
 # 创建配置卷
 VOLUME /usr/app/config

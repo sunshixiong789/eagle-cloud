@@ -89,7 +89,7 @@ services:
   # 网关服务
   gateway:
     build:
-      context: ./eagle-gateway-server
+      context: ./eagle-gateway-service
       dockerfile: Dockerfile
     image: eagle-gateway:1.0.0
     container_name: eagle-gateway
@@ -116,7 +116,7 @@ services:
   # 系统服务
   system:
     build:
-      context: ./eagle-system-server
+      context: ./eagle-system-service
       dockerfile: Dockerfile
     image: eagle-system:1.0.0
     container_name: eagle-system
