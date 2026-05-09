@@ -43,3 +43,9 @@ bin/
 *.p12
 *.jks
 /eagle-services/eagle-system-service/db/
+
+# 环境变量文件：禁止任何 .env 进 git；.env.example 模板可提交
+.env
+.env.local
+.env.*.local
+!.env.example
