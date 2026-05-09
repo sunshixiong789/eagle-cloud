@@ -110,14 +110,18 @@ services:
     # .env 用于敏感凭证 / 可调项（OAuth2 回调、第三方 secret 等），见 .env.example
     env_file:
       - .env
+    # 开发环境内存上限：堆 512m + 元空间 192m + 直接内存 + 线程栈 → 容器留 768m 余量
+    mem_limit: 768m
+    mem_reservation: 384m
     # environment 优先级高于 env_file，写容器网络强约束（即使 .env 误填 localhost 也能兜底）
     # SPRING_PROFILES_ACTIVE 通过 .env 注入（默认 prod；dev/local 可选）
     # AUTH_SERVER_URL 强约束 system 容器端口为 8082，覆盖 .env 的 :80 默认
+    # JAVA_OPTS 开发环境固定堆 256m–512m + G1GC + OOM heap dump
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - NACOS_SERVER_ADDR=nacos:8848
       - AUTH_SERVER_URL=http://system:8082
-      - JAVA_OPTS=-server -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0
+      - JAVA_OPTS=-server -XX:+UseG1GC -Xms256m -Xmx512m -XX:MaxMetaspaceSize=192m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health" ]
       interval: 30s
@@ -146,14 +150,19 @@ services:
     # .env 提供敏感凭证 / 可调项（admin 密码、JWT keystore 密码、微信 secret 等），见 .env.example
     env_file:
       - .env
+    # 开发环境内存上限：system 跑 OAuth2/JPA/Hibernate/MapStruct，堆需 768m
+    # 容器总量 1.5g = 堆 768m + 元空间 256m + 直接内存 + 线程栈 + 余量
+    mem_limit: 1536m
+    mem_reservation: 768m
     # environment 优先级高于 env_file，强约束 nacos 容器内主机名
     # SPRING_PROFILES_ACTIVE 通过 .env 注入（默认 prod；dev/local 可选）
     # SERVER_PORT 强约束容器内监听 8082，与 ports 主机映射 8082:8082 对齐（覆盖 application.yml 默认 80）
+    # JAVA_OPTS 开发环境固定堆 384m–768m + G1GC + OOM heap dump
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - NACOS_SERVER_ADDR=nacos:8848
       - SERVER_PORT=8082
-      - JAVA_OPTS=-server -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0
+      - JAVA_OPTS=-server -XX:+UseG1GC -Xms384m -Xmx768m -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8082/actuator/health" ]
       interval: 30s
