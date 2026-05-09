@@ -1,20 +1,26 @@
 # ===========================================
-# 开发/测试差异配置（system-service）
-# 与基线相比的开发便利覆盖：
-#   - SQL 打印开启（便于排查）
-#   - Actuator 暴露更多端点 + 返回 health 详情
-#   - com.eagle 日志降到 DEBUG，参数绑定打到 TRACE
-# 其余配置（数据源、Redis、JPA 主体）使用基线 + 环境变量。
+# 开发/测试差异（system-service）
+# 与基线相比的覆盖：
+#   - Flyway 启用 + baseline-on-migrate=true（兼容已有库）
+#   - ddl-auto=update + show-sql 便于排查
+#   - Actuator 暴露调试端点 + details=always
+#   - 日志 com.eagle=DEBUG，SQL=DEBUG，参数绑定=TRACE
+# 数据源 / Redis 连接信息使用基线 + 环境变量注入。
 # ===========================================
 
 spring:
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
   jpa:
     show-sql: true
+    hibernate:
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
 
-# Actuator：dev 暴露常用端点 + 返回 health 详情
 management:
   endpoints:
     web:
@@ -28,7 +34,6 @@ management:
     env:
       enabled: true
 
-# dev 日志级别
 logging:
   level:
     com.eagle: DEBUG
