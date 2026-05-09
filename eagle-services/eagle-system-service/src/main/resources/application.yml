@@ -1,22 +1,24 @@
 # ===========================================
-# Eagle System Server · 基线配置（所有环境共用）
+# Eagle System Server · 基线配置（承载全部默认）
 # 设计原则：
-#   - 公共配置全部在此，通过 ${VAR:default} 占位符让环境变量按需覆盖
+#   - application.yml 承载完整配置；profile 文件只声明"开发/线上不一样"的差异
+#   - 环境变量仅暴露外部接入字段：数据源/Redis/Nacos 连接信息、凭证、白名单
 #   - 默认值取"生产安全"基线（validate / show-sql=false / details=never / WARN 日志）
-#   - 各 profile（local / dev / prod）只声明与基线"不一样"的部分
+#     dev/local profile 显式打开调试便利
 # ===========================================
 
 server:
-  port: ${SERVER_PORT:80}                    # 容器/物理机均默认 80；如需改用 SERVER_PORT 注入
+  port: ${SERVER_PORT:80}
   shutdown: graceful
 
 spring:
   application:
     name: eagle-system-server
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}  # 不指定则按本地开发处理
+    active: ${SPRING_PROFILES_ACTIVE:local}
   lifecycle:
     timeout-per-shutdown-phase: 30s
+
   cloud:
     nacos:
       discovery:
@@ -24,40 +26,39 @@ spring:
         namespace: ${NACOS_NAMESPACE:}
         group: ${NACOS_GROUP:DEFAULT_GROUP}
 
-  # ---- Flyway（生产部署应该启用：FLYWAY_ENABLED=true）----
+  # ---- Flyway：基线默认关闭，dev/prod profile 显式打开 ----
   flyway:
-    enabled: ${FLYWAY_ENABLED:false}
-    baseline-on-migrate: ${FLYWAY_BASELINE_ON_MIGRATE:true}
+    enabled: false
+    baseline-on-migrate: true
     validate-on-migrate: true
     out-of-order: false
 
-  # ---- 数据源（默认 MySQL；local profile 覆盖为 H2）----
+  # ---- 数据源：默认 MySQL（环境变量驱动连接信息）；local profile 覆盖为 H2 ----
   datasource:
-    driver-class-name: ${DB_DRIVER:com.mysql.cj.jdbc.Driver}
-    url: ${DB_URL:jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:eagle}?useSSL=false&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:eagle}?useSSL=false&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:}
     hikari:
       pool-name: EagleHikariPool
-      connection-timeout: ${DB_POOL_CONNECTION_TIMEOUT:30000}
-      maximum-pool-size: ${DB_POOL_MAX:20}
-      minimum-idle: ${DB_POOL_MIN:5}
+      connection-timeout: 30000
+      maximum-pool-size: 20
+      minimum-idle: 5
       idle-timeout: 300000
       max-lifetime: 1200000
       auto-commit: true
       connection-test-query: SELECT 1
-      leak-detection-threshold: ${DB_POOL_LEAK_DETECTION:0}
 
-  # ---- JPA / Hibernate ----
+  # ---- JPA：生产安全默认（validate / 不打印 SQL）；dev/local profile 覆盖 ----
   jpa:
-    database-platform: ${JPA_DIALECT:org.hibernate.dialect.MySQLDialect}
-    show-sql: ${JPA_SHOW_SQL:false}
-    open-in-view: false                       # 生产/开发都关闭视图层延迟加载
+    database-platform: org.hibernate.dialect.MySQLDialect
+    show-sql: false
+    open-in-view: false
     hibernate:
-      ddl-auto: ${JPA_DDL_AUTO:validate}
+      ddl-auto: validate
     properties:
       hibernate:
-        format_sql: ${JPA_FORMAT_SQL:false}
+        format_sql: false
         jdbc:
           batch_size: 100
           fetch_size: 100
@@ -65,9 +66,9 @@ spring:
         order_updates: true
         default_batch_fetch_size: 16
 
-  # ---- 缓存（默认 Redis；local profile 覆盖为 Caffeine）----
+  # ---- 缓存：默认 Redis；local profile 覆盖为 Caffeine ----
   cache:
-    type: ${CACHE_TYPE:redis}
+    type: redis
     redis:
       time-to-live: 30m
       key-prefix: "eagle:"
@@ -84,18 +85,18 @@ spring:
       timeout: 3000ms
       lettuce:
         pool:
-          max-active: ${REDIS_POOL_MAX:16}
-          max-idle: ${REDIS_POOL_IDLE_MAX:8}
-          min-idle: ${REDIS_POOL_IDLE_MIN:2}
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
           max-wait: 2000ms
         shutdown-timeout: 1000ms
 
 # ===========================================
-# Eagle 自定义配置
+# Eagle 业务配置
 # ===========================================
 eagle:
   jwt:
-    keystore-location: ${EAGLE_JWT_KEYSTORE_LOCATION:classpath:jwt-keystore.p12}
+    keystore-location: classpath:jwt-keystore.p12
     keystore-password: ${EAGLE_JWT_KEYSTORE_PASSWORD:eagle-jwt-dev-2026}
     key-alias: eagle-jwt
   websocket:
@@ -115,7 +116,6 @@ eagle:
       client-name: Eagle Web 前端应用
       client-authentication-methods: none
       authorization-grant-types: authorization_code,refresh_token,wechat_mini_program,sms_code
-      # OAuth2 / Swagger 回调白名单（绝对 URL；Swagger UI 与外部 host 必须精确匹配）
       redirect-uris: >
         http://localhost:8080/auth/oauth2/callback,
         ${SYSTEM_SERVER_URL:http://localhost:80}/swagger-ui/oauth2-redirect.html,
@@ -123,8 +123,8 @@ eagle:
       scopes: openid,profile,email,address,phone
       require-proof-key: true
       require-authorization-consent: false
-      access-token-ttl-seconds: ${EAGLE_ACCESS_TOKEN_TTL:3600}
-      refresh-token-ttl-seconds: ${EAGLE_REFRESH_TOKEN_TTL:2592000}
+      access-token-ttl-seconds: 3600
+      refresh-token-ttl-seconds: 2592000
   wechat:
     mini-program:
       app-id: ${WECHAT_MINI_APP_ID:}
@@ -141,7 +141,7 @@ eagle:
   log:
     cleanup:
       enabled: true
-      retention-days: ${EAGLE_LOG_RETENTION_DAYS:90}
+      retention-days: 90
       cron: "0 0 2 * * ?"
   sms:
     aliyun:
@@ -151,18 +151,19 @@ eagle:
       template-code: ${ALIYUN_SMS_TEMPLATE_CODE:}
 
 # ===========================================
-# Spring Boot Actuator（默认按生产安全：仅暴露 health/info/prometheus，不返回详情）
+# Actuator：生产安全基线（仅 health/info/prometheus，无详情）
+# dev/local profile 暴露调试端点 + 详情
 # ===========================================
 management:
   endpoints:
     web:
       exposure:
-        include: ${ACTUATOR_EXPOSE:health,info,prometheus}
+        include: health,info,prometheus
       base-path: /actuator
   endpoint:
     health:
-      show-details: ${ACTUATOR_HEALTH_DETAILS:never}
-      show-components: ${ACTUATOR_HEALTH_COMPONENTS:never}
+      show-details: never
+      show-components: never
       probes:
         enabled: true
     metrics:
@@ -171,20 +172,22 @@ management:
     db:
       enabled: true
     redis:
-      enabled: ${ACTUATOR_REDIS_HEALTH:true}
+      enabled: true
   info:
     env:
-      enabled: ${ACTUATOR_INFO_ENV:false}      # 默认关闭，防止 env 经 /info 泄漏
+      enabled: false
 
 # ===========================================
-# Swagger / OpenAPI（默认开启；prod profile 强制关闭）
+# Springdoc / Swagger：基线开启（dev/local 用），prod profile 强制关闭
 # ===========================================
 springdoc:
   api-docs:
-    enabled: ${SPRINGDOC_ENABLED:true}
+    enabled: true
+    path: /v3/api-docs
   show-oauth2-endpoints: true
   swagger-ui:
-    enabled: ${SPRINGDOC_ENABLED:true}
+    enabled: true
+    path: /swagger-ui.html
     oauth:
       app-name: Eagle
       client-id: eagleWeb
@@ -198,11 +201,11 @@ springdoc:
     persist-authorization: true
 
 # ===========================================
-# 日志（默认 INFO 基线；profile 各自调整级别）
+# 日志：生产安全默认 INFO；dev/local 调到 DEBUG，prod 调到 WARN
 # ===========================================
 logging:
   level:
-    root: ${LOG_LEVEL_ROOT:INFO}
-    com.eagle: ${LOG_LEVEL_EAGLE:INFO}
-    org.hibernate.SQL: ${LOG_LEVEL_SQL:WARN}
-    org.hibernate.orm.jdbc.bind: ${LOG_LEVEL_SQL_BIND:WARN}
+    root: INFO
+    com.eagle: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: WARN

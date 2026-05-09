@@ -1,9 +1,9 @@
 # ===========================================
-# Eagle Gateway · 基线配置（所有环境共用）
+# Eagle Gateway · 基线配置（承载全部默认）
 # 设计原则：
-#   - 公共配置全部在此，通过 ${VAR:default} 占位符让环境变量按需覆盖
-#   - 默认值取"开发友好"基线（CORS=*，Swagger 开启），prod profile 强制收紧
-#   - 各 profile（local / dev / prod）只声明与基线"不一样"的部分
+#   - application.yml 承载完整配置；profile 文件只声明"开发/线上不一样"的差异
+#   - 环境变量仅暴露外部接入字段：Nacos 地址、CORS 白名单、Sentinel dashboard 等
+#   - 默认值取"生产安全"基线（CORS 默认 *，prod 覆盖；Swagger 默认开，prod 关闭）
 # ===========================================
 
 server:
@@ -17,6 +17,7 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE:local}
   lifecycle:
     timeout-per-shutdown-phase: 30s
+
   cloud:
     nacos:
       discovery:
@@ -24,11 +25,19 @@ spring:
         namespace: ${NACOS_NAMESPACE:}
         group: ${NACOS_GROUP:DEFAULT_GROUP}
 
+    # Sentinel：dashboard 留空时不连接，避免无意义超时；prod 注入并 eager=true
+    sentinel:
+      transport:
+        dashboard: ${SENTINEL_DASHBOARD:}
+      eager: false
+      filter:
+        enabled: false                          # Gateway 用 SentinelGatewayFilter，关闭 Servlet Filter
+
     gateway:
       # Spring Cloud Gateway 4.3+：spring.cloud.gateway.server.webflux.*
       server:
         webflux:
-          # 全局 CORS（dev/容器默认放开 *；prod profile 必须显式注入 CORS_ALLOWED_ORIGINS）
+          # 全局 CORS（基线放开 *；prod profile 强制注入 CORS_ALLOWED_ORIGINS）
           globalcors:
             cors-configurations:
               '[/**]':
@@ -46,12 +55,11 @@ spring:
                 maxAge: 3600
 
           httpclient:
-            connect-timeout: ${GATEWAY_CONNECT_TIMEOUT:3000}
-            response-timeout: ${GATEWAY_RESPONSE_TIMEOUT:30s}
+            connect-timeout: 3000
+            response-timeout: 30s
 
-          # 基于服务发现的路由（local profile 用静态 URL 覆盖）
+          # 默认基于服务发现的 lb 路由；local profile 覆盖为静态地址
           routes:
-            # API Docs 聚合代理路由（必须排在 system-server 通配路由前）
             - id: system-server-api-docs
               uri: lb://eagle-system-server
               predicates:
@@ -59,7 +67,6 @@ spring:
               filters:
                 - SetPath=/v3/api-docs
 
-            # 系统服务（认证授权 + 用户权限管理）
             - id: system-server
               uri: lb://eagle-system-server
               predicates:
@@ -67,53 +74,13 @@ spring:
               filters:
                 - StripPrefix=0
 
-            # 默认兜底路由
             - id: default
               uri: lb://eagle-system-server
               predicates:
                 - Path=/**
 
-# Sentinel（dashboard 留空时不连接，避免无意义超时；prod 必须注入 SENTINEL_DASHBOARD）
-spring.cloud.sentinel:
-  transport:
-    dashboard: ${SENTINEL_DASHBOARD:}
-  eager: ${SENTINEL_EAGER:false}
-  filter:
-    enabled: false                          # Gateway 用 SentinelGatewayFilter，关闭 Servlet Filter
-
 # ===========================================
-# Springdoc 聚合（默认开启；prod profile 强制关闭）
-# ===========================================
-springdoc:
-  api-docs:
-    enabled: ${SPRINGDOC_ENABLED:true}
-    path: /v3/api-docs
-  swagger-ui:
-    enabled: ${SPRINGDOC_ENABLED:true}
-    path: /swagger-ui
-    config-url: /v3/api-docs/swagger-config
-
-# ===========================================
-# Actuator（默认按生产安全基线）
-# ===========================================
-management:
-  endpoints:
-    web:
-      exposure:
-        include: ${ACTUATOR_EXPOSE:health,info,prometheus,gateway}
-      base-path: /actuator
-  endpoint:
-    health:
-      show-details: ${ACTUATOR_HEALTH_DETAILS:never}
-      show-components: ${ACTUATOR_HEALTH_COMPONENTS:never}
-      probes:
-        enabled: true
-  health:
-    redis:
-      enabled: ${ACTUATOR_REDIS_HEALTH:false}   # gateway 默认不强依赖 Redis
-
-# ===========================================
-# Eagle Gateway 自定义配置
+# Eagle Gateway 业务配置
 # ===========================================
 eagle:
   gateway:
@@ -132,14 +99,50 @@ eagle:
         - /login
         - /error
     openapi:
-      discovery-enabled: ${EAGLE_OPENAPI_DISCOVERY_ENABLED:true}
+      discovery-enabled: true                   # 默认走服务发现聚合；local 关闭
 
 # ===========================================
-# 日志（默认 INFO 基线；profile 各自调整级别）
+# Actuator：生产安全基线
+# ===========================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,gateway
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
+      probes:
+        enabled: true
+  health:
+    redis:
+      enabled: false                            # gateway 默认不强依赖 Redis
+
+# ===========================================
+# Springdoc / Swagger：基线开启（dev/local 用），prod profile 强制关闭
+# ===========================================
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  show-oauth2-endpoints: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui
+    config-url: /v3/api-docs/swagger-config
+    csrf:
+      enabled: true
+    doc-expansion: none
+    persist-authorization: true
+
+# ===========================================
+# 日志：默认 INFO 基线；profile 各自调整级别
 # ===========================================
 logging:
   level:
-    root: ${LOG_LEVEL_ROOT:INFO}
-    com.eagle: ${LOG_LEVEL_EAGLE:INFO}
-    org.springframework.cloud.gateway: ${LOG_LEVEL_GATEWAY:INFO}
-    reactor.netty: ${LOG_LEVEL_NETTY:WARN}
+    root: INFO
+    com.eagle: INFO
+    org.springframework.cloud.gateway: INFO
+    reactor.netty: WARN

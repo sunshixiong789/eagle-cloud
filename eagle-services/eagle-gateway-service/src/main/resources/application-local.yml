@@ -1,6 +1,12 @@
 # ===========================================
-# Gateway 本地开发环境配置
-# 不依赖 Nacos / Sentinel，路由直接指向本地服务
+# Gateway 本地开发差异
+# 与基线相比的覆盖：
+#   - 关闭 Nacos / Sentinel
+#   - 路由从 lb:// 切换为本地静态地址 http://localhost:80
+#   - 关闭 OpenAPI 服务发现聚合，手动配置 swagger urls
+#   - Actuator 暴露调试端点 + details=always
+#   - 日志 com.eagle=DEBUG
+# 其余（CORS=* / httpclient / Swagger 开 等）使用基线默认。
 # ===========================================
 
 spring:
@@ -8,11 +14,12 @@ spring:
     nacos:
       discovery:
         enabled: false
+    sentinel:
+      enabled: false
     gateway:
-      # Spring Cloud Gateway 4.3+ (2025.x) 路由配置前缀：spring.cloud.gateway.server.webflux.*
       server:
         webflux:
-          # 本地环境使用固定地址路由（不依赖服务发现）
+          # 本地用静态地址路由（覆盖基线的 lb://）
           routes:
             - id: system-server-api-docs
               uri: http://localhost:80
@@ -31,26 +38,28 @@ spring:
               predicates:
                 - Path=/**
 
-# Sentinel 控制台（本地不启用）
-spring.cloud.sentinel:
-  enabled: false
-
-# 本地无 Redis，禁用 Redis 健康检查
 management:
-  health:
-    redis:
-      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,loggers,env,beans,mappings,prometheus,gateway
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
 
-# 手动配置聚合文档（本地无 Nacos，关闭自动发现）
 eagle:
   gateway:
     openapi:
-      discovery-enabled: false
+      discovery-enabled: false                  # 本地无 Nacos，关闭服务发现聚合
 
-# SpringDoc 手动聚合
+# 本地手动聚合 Swagger 文档源
 springdoc:
   swagger-ui:
-    path: /swagger-ui
     urls:
       - name: 系统服务
         url: /v3/api-docs/eagle-system-server
+
+logging:
+  level:
+    com.eagle: DEBUG
