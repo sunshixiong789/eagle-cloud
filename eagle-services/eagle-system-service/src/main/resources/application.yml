@@ -80,7 +80,10 @@ spring:
   # ---- Redis 连接（type=redis 时生效）----
   data:
     redis:
-      url: redis://${REDIS_PASSWORD:}@${REDIS_HOST:127.0.0.1}:${REDIS_PORT:6379}/${REDIS_DATABASE:0}
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
       connect-timeout: 3000ms
       timeout: 3000ms
       lettuce:
