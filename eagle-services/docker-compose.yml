@@ -80,10 +80,18 @@ services:
     volumes:
       - nacos-data:/home/nacos/data
     healthcheck:
-      test: [ "CMD-SHELL", "curl -fsS http://localhost:8090/nacos/v1/console/health/readiness || exit 1" ]
+      # Nacos v3.x 把控制台拆成独立 Tomcat：
+      #   - 容器内 8080：新版 Console（context path 是 /，无 /nacos 前缀）
+      #   - 容器内 8848：Server OpenAPI（保留 /nacos 前缀）
+      # 旧的 /nacos/v1/console/health/readiness 在 v3 已移除（启动日志：No mapping for GET ...）；
+      # actuator 端点默认未暴露（启动日志：Exposing 0 endpoints beneath base path '/actuator'）。
+      # healthcheck 在容器内执行，必须用容器内端口（不是 ports 映射出去的主机端口 8090）。
+      # 直接探容器内 8080 的根路径——Tomcat 启动后稳定返回 200，且 standalone 模式下
+      # Console 与 Server 同进程同启动，Console 就绪即代表 Nacos 可用。
+      test: [ "CMD-SHELL", "curl -fsS -o /dev/null -m 3 http://127.0.0.1:8080/ || exit 1" ]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 20
       start_period: 60s
 
   # 网关服务
