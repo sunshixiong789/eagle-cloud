@@ -50,7 +50,7 @@ public class OAuthClientProperties {
      * 授权类型
      */
     private Set<String> authorizationGrantTypes = Set.of(
-            "authorization_code", "refresh_token", "wechat_mini_program", "sms_code");
+            "authorization_code", "refresh_token", "wechat_mini_program", "sms_code", "phone_one_click");
 
     /**
      * 重定向 URI
