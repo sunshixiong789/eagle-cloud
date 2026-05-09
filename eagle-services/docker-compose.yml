@@ -80,7 +80,7 @@ services:
     volumes:
       - nacos-data:/home/nacos/data
     healthcheck:
-      test: [ "CMD-SHELL", "curl -fsS http://localhost:8848/nacos/v1/console/health/readiness || exit 1" ]
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:8090/nacos/v1/console/health/readiness || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 10
