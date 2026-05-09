@@ -1,0 +1,42 @@
+# ===========================================
+# 生产环境差异配置（gateway-service）
+# 与基线相比的强制锁定：
+#   - Swagger 强制关闭（防止 schema 泄漏）
+#   - CORS 必须显式注入 CORS_ALLOWED_ORIGINS（无默认；缺失即启动失败）
+#   - Sentinel 启动时立即建立心跳（eager=true）
+#   - 日志 root=WARN
+# ===========================================
+
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                # 覆盖基线 ${CORS_ALLOWED_ORIGINS:*} 默认值，强制注入；缺失即 fail-fast
+                allowedOriginPatterns: ${CORS_ALLOWED_ORIGINS}
+                exposedHeaders:
+                  - Authorization
+                  - X-Request-Id
+                  - X-Trace-Id
+
+# 强制启用 Sentinel eager 心跳（即使 SENTINEL_EAGER env 未设也启用）
+spring.cloud.sentinel:
+  eager: true
+
+# 强制关闭 Swagger / api-docs
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+# 生产收紧日志
+logging:
+  level:
+    root: WARN
+    com.eagle: INFO
+    org.springframework.cloud.gateway: WARN
+    reactor.netty: WARN

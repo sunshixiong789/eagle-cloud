@@ -1,0 +1,17 @@
+# ===========================================
+# 开发/测试差异配置（gateway-service）
+# 与基线相比的开发便利覆盖：
+#   - Actuator 返回 health 详情，便于排查
+#   - com.eagle 日志降到 DEBUG
+# 其余使用基线 + 环境变量；CORS 保持基线默认 "*"，便于联调。
+# ===========================================
+
+management:
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+
+logging:
+  level:
+    com.eagle: DEBUG
