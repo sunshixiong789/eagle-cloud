@@ -1,7 +1,6 @@
 package com.eagle.system.base.domain.repository;
 
 import com.eagle.system.base.domain.model.User;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -25,12 +24,13 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
 
     /**
-     * 通过用户名查找用户
+     * 通过用户名查找用户。
+     * <p>不走缓存：User 含 lazy {@code roleIds} 集合，缓存实体会触发反序列化时
+     * 的 LazyInitializationException。如确需缓存，应缓存 DTO 而不是实体。
      *
      * @param username 用户名
      * @return 用户实体
      */
-    @Cacheable(value = "USER_NAME", key = "#username")
     Optional<User> findByUsername(String username);
 
     /**
