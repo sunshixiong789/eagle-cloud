@@ -7,7 +7,7 @@ Eagle 平台**系统服务**，承载认证授权、OAuth2 授权服务器与用
 
 - **OAuth2 授权服务器**（基于 Spring Authorization Server）
 - **RBAC 权限管理**：用户、角色、权限、部门、菜单、岗位、字典
-- **多种登录方式**：用户名密码 / 微信小程序 / PC 扫码 / H5 / 短信验证码
+- **多种登录方式**：用户名密码 / 微信小程序 / PC 扫码 / H5 / 短信验证码 / 手机号一键登录
 - **行级数据权限**（基于 `eagle-row-security-starter` 切面注入）
 - **WebSocket 实时推送**（STOMP 端点）
 - 注册到 Nacos 作为微服务节点（默认监听 `:80`）
@@ -41,6 +41,7 @@ spring-boot-starter-flyway + flyway-mysql
 spring-cloud-starter-alibaba-nacos-discovery   # 服务注册发现
 weixin-java-miniapp                            # 微信小程序 SDK
 dysmsapi20170525                               # 阿里云短信 SDK
+dypnsapi20170525                               # 阿里云号码认证 / 一键登录 SDK
 caffeine                                       # 本地缓存
 poi-ooxml                                      # Excel 导入导出
 fastjson2                                      # 限流过滤器 / Token 跟踪
@@ -80,11 +81,95 @@ spring-dotenv                                  # 本地 .env 自动加载
 | `eagle.wechat.mini-program.*`    | env `WECHAT_MINI_APP_*`             | 微信小程序 AppID / Secret            |
 | `eagle.wechat.web.pc/h5.*`       | env `WECHAT_WEB_*` / `WECHAT_MP_*`  | 微信网页/H5 登录                      |
 | `eagle.sms.aliyun.*`             | env `ALIYUN_SMS_*`                  | 阿里云短信 AccessKey / 签名 / 模板       |
+| `eagle.auth.one-click.*`         | provider 默认 `mock`                  | 一键登录提供方 / 阿里云 dypnsapi 配置       |
 | `eagle.log.cleanup.cron`         | `0 0 2 * * ?`                       | 审计日志每日清理                        |
 | `eagle.websocket.endpoint`       | `/ws-stomp`                         | STOMP 握手路径                      |
 | `spring.cloud.nacos.discovery.*` | env `NACOS_SERVER_ADDR / NAMESPACE` | Nacos 注册中心地址 / 命名空间             |
 
 完整字段见 `src/main/resources/application.yml` 与 `application-{profile}.yml`。
+
+## 登录认证流程
+
+所有登录方式最终都通过 OAuth2 授权服务器签发 access_token + refresh_token。下表汇总现有 grant_type：
+
+| grant_type            | 用途           | 关键参数                                          | Provider                                  |
+|-----------------------|--------------|-----------------------------------------------|-------------------------------------------|
+| `authorization_code`  | 标准授权码 + PKCE | `code` / `code_verifier`                      | Spring Authorization Server 内置            |
+| `refresh_token`       | 刷新令牌         | `refresh_token`                               | Spring Authorization Server 内置            |
+| `wechat_mini_program` | 微信小程序登录      | `js_code`                                     | `WechatMiniProgramAuthenticationProvider` |
+| `sms_code`            | 短信验证码登录      | `phone` / `code`                              | `SmsCodeAuthenticationProvider`           |
+| `phone_one_click`     | 手机号一键登录      | `access_token`（运营商 / 阿里云 dypnsapi 颁发的短期凭证） | `PhoneOneClickAuthenticationProvider`     |
+
+### 手机号一键登录
+
+由运营商在网络层识别 SIM 卡持有人后下发短期 token，服务端凭 token 反查真实手机号，无需用户输入手机号或验证码。
+
+**请求示例**
+
+```http
+POST /oauth2/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=phone_one_click
+&client_id=eagleWeb
+&access_token=运营商SDK返回的token
+```
+
+**端到端时序**
+
+```
+端 SDK            授权服务器                                   阿里云 dypnsapi          DB
+  │                 │                                            │                  │
+  │── access_token ─▶ Converter (PhoneOneClickAuthenticationConverter)              │
+  │                 │  解析 grant_type / access_token                                │
+  │                 ▼                                                                │
+  │                Provider (PhoneOneClickAuthenticationProvider)                    │
+  │                 │  ① 校验客户端是否声明 phone_one_click                              │
+  │                 │  ② PhoneOneClickService.verifyAndGetPhone(token) ──▶ getMobile │
+  │                 │                                            │                  │
+  │                 │  ◀── 真实手机号 ─────────────────────────────│                  │
+  │                 │  ③ AccountApplicationService.findOrCreateByPhone(phone) ─▶  │
+  │                 │  ④ 构建 EagleUser + 生成 OAuth2 Token + 保存授权                 │
+  │ ◀── access_token + refresh_token ──┤                                            │
+```
+
+**关键组件**
+
+- `auth/domain/service/PhoneOneClickService` — 领域接口（token → phone）
+- `auth/infrastructure/external/PhoneOneClickServiceImpl` — `mock` / `aliyun` 双分支适配
+- `auth/infrastructure/security/PhoneOneClickAuthenticationConverter` — 解析 token endpoint 参数
+- `auth/infrastructure/security/PhoneOneClickAuthenticationProvider` — 校验 + 找/建账号 + 签发 Token
+
+**配置示例**
+
+```yaml
+eagle:
+  auth:
+    one-click:
+      enabled: true
+      provider: aliyun                # mock（默认） | aliyun
+      endpoint: dypnsapi.aliyuncs.com
+      access-key-id: ENC(...)         # 必须 Jasypt 加密
+      access-key-secret: ENC(...)
+```
+
+- `provider=mock`（默认）：access_token 直接当作手机号使用，仅用于开发联调；非 11 位号码格式的 token 会被拒绝。
+- `provider=aliyun`：调用 `dypnsapi.GetMobile`，期望响应 `code=OK` 且 `getMobileResultDTO.mobile` 为 11 位手机号。
+
+**默认客户端的 grant_types**
+
+`OAuthClientProperties.authorizationGrantTypes` 默认已包含 `phone_one_click`；通过 `OAuthClientInitializer` 在启动时同步到 DB，旧环境重启即可生效。
+
+**错误码（11034–11037）**
+
+| 错误码 | 含义                                |
+|--------|-----------------------------------|
+| 11034  | 一键登录 access_token 不能为空            |
+| 11035  | 一键登录校验失败（运营商接口异常 / 业务码非 OK）       |
+| 11036  | 一键登录服务未启用（开关关闭或未配置 AccessKey）    |
+| 11037  | 一键登录获取手机号失败（响应缺失 mobile 或格式异常）   |
+
+i18n 消息见 `messages_zh_CN.properties` / `messages_en.properties` 中的 `error.auth.one_click_*`。
 
 ## Profile
 
