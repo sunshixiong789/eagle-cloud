@@ -44,10 +44,75 @@ private String passwordHash;
 
 ## 权限控制
 
-- 所有 Controller 方法必须显式 `@PreAuthorize`（详见 `05-api.md`）
-- 数据级越权使用 SpEL：`@PreAuthorize("hasRole('admin') or #userId == authentication.principal.id")`
+`eagle-resource-server-starter` 的 `SecurityFilterChain` 配置为
+`requestMatchers(permitPaths).permitAll() + anyRequest().authenticated()`，
+**默认就要求登录**。`permitPaths = DEFAULT_PERMIT_PATHS + eagle.resource-server.permit-paths`，
+默认放行 `/public/**`、`/actuator/health|info`、`/swagger-ui/**`、`/v3/api-docs/**` 等。
+
+由此推导出两条强制约定：
+
+### 1) 禁止 `@PreAuthorize("isAuthenticated()")`
+
+filter chain 已在请求进入 controller 之前拦掉未认证请求，方法层再判一次纯属冗余、误导读者
+（让人以为不写就会变成公开接口）。
+
+```java
+// ❌ 多余：filter chain 已经强制登录
+@PreAuthorize("isAuthenticated()")
+@GetMapping("/me")
+public UserResponse me() { ... }
+
+// ✅ 直接写
+@GetMapping("/me")
+public UserResponse me() { ... }
+```
+
+### 2) 禁止 `@PreAuthorize("permitAll()")`，公开接口走 yml 配置
+
+`@PreAuthorize("permitAll()")` 不会让接口变公开 —— 只要路径不在 `permit-paths` 白名单里，
+filter chain 仍会 401。**真正决定能否匿名访问的是 yml**：
+
+```yaml
+eagle:
+  resource-server:
+    permit-paths:
+      - /products/**
+      - /banners
+      - /invitations/bind
+      - /internal/orders/callback
+```
+
+Controller 上仅以一行注释标识公开身份（信息只在 yml 一处维护，避免双源不一致）：
+
+```java
+// ✅ 公开接口控制器：放行规则见 application.yml → eagle.resource-server.permit-paths
+@RestController
+@RequestMapping("/products")
+public class ProductController {
+
+    @GetMapping
+    public Page<ProductResponse> list(Pageable pageable) { ... }
+}
+```
+
+### 仍然必须显式声明的场景
+
+只有「角色 / SpEL / 数据级」判断才写 `@PreAuthorize`：
+
+```java
+@PreAuthorize("hasAnyRole('super_admin','operator')")        // 类级别
+@PreAuthorize("hasRole('admin') or #userId == authentication.principal.id")
+```
+
 - 多租户场景额外通过 `eagle-tenant-starter` 强制租户 ID 过滤（详见 `17-tenant-permission.md`）
 - 行级数据权限通过 `eagle-row-security-starter` 注解声明，**禁止**在 SQL 中手动拼接
+
+### 公开路径前缀约定
+
+- 业务公开接口：直接用业务前缀（`/products/**`、`/banners`），并保证管理接口
+  统一收敛到 `/admin/**` 命名空间，避免前缀通配开放管理端点
+- 内部回调 / webhook：放在 `/internal/**`，并配合网关 IP 白名单 / 签名校验，
+  仅 yml 放行不足以构成完整防护
 
 ## 敏感数据脱敏
 

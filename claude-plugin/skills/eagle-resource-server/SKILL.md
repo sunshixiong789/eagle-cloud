@@ -51,6 +51,49 @@ public class OrderServerApplication {
 
 **默认放行**（无需配置）：`/public/**` / `/actuator/health` / `/actuator/info` / `/swagger-ui/**` / `/v3/api-docs/**` 等。
 
+## 关键认知：filter chain 已经强制登录
+
+starter 内 `SecurityFilterChain` 实际配置：
+
+```java
+http.authorizeHttpRequests(a -> a
+    .requestMatchers(DEFAULT_PERMIT_PATHS + eagle.resource-server.permit-paths).permitAll()
+    .anyRequest().authenticated());
+```
+
+由此衍生两条强制约定（与 `rules/12-security.md` 同步）：
+
+### ❌ 禁止 `@PreAuthorize("isAuthenticated()")` —— 冗余
+
+filter chain 已经拦掉未认证请求，方法层再判一次毫无意义，且会误导读者以为不写就会
+变成公开接口。Controller 默认即「需登录」。
+
+### ❌ 禁止 `@PreAuthorize("permitAll()")` —— 不起作用
+
+它**不会**让接口变公开。只要路径不在 `permit-paths` 白名单里，filter chain 仍 401。
+**公开接口必须在 yml 显式放行**：
+
+```yaml
+eagle:
+  resource-server:
+    permit-paths:
+      - /products/**
+      - /banners
+      - /invitations/bind
+```
+
+Controller 仅加一行注释标识身份（避免与 yml 双源不一致）：
+
+```java
+// 公开接口控制器：放行规则见 application.yml → eagle.resource-server.permit-paths
+@RestController
+@RequestMapping("/products")
+public class ProductController { ... }
+```
+
+`@PreAuthorize` 仅用于角色 / SpEL / 数据级判断（如 `hasAnyRole('admin')`、
+`hasRole('admin') or #userId == authentication.principal.id`）。
+
 ## 核心 API
 
 | 类 / 注解                            | 说明                                                                                                                                                  |
@@ -80,7 +123,6 @@ public class OrderController {
     private final OrderService orderService;
 
     @Operation(summary = "我的订单")
-    @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
     public List<OrderResponse> mine() {
         Long userId = SecurityUtils.getCurrentUserId();
@@ -149,7 +191,10 @@ JWT 解码走 `spring.security.oauth2.resourceserver.jwt.issuer-uri` 或 `jwk-se
 
 ## 常见错误
 
-- ❌ Controller 漏 `@PreAuthorize` → ✅ 必须显式声明
+- ❌ `@PreAuthorize("isAuthenticated()")` → ✅ 直接删掉，filter chain 已强制登录
+- ❌ `@PreAuthorize("permitAll()")` 想公开接口 → ✅ 把路径加到 `permit-paths`，注解删除
+- ❌ 公开路径与管理路径共用前缀（如 `/products` 公开 + `/products/admin/**` 管理）→
+   ✅ 管理接口统一 `/admin/**` 前缀，避免通配放行误开放
 - ❌ 自己 `request.getHeader("Authorization")` 解析 → ✅ `SecurityUtils.getCurrentUser()`
 - ❌ Token 放 URL → ✅ 仅 `Authorization: Bearer xxx`
 - ❌ Feign 调用 Token 不透传 → ✅ 引入 `http-client-starter`
