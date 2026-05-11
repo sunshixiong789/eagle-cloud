@@ -16,6 +16,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Objects;
 
 /**
  * 请求日志全局过滤器。
@@ -65,7 +66,7 @@ public class RequestLoggingGlobalFilter implements GlobalFilter, Ordered {
         if (tracer == null || tracer.currentSpan() == null) {
             return "-";
         }
-        return tracer.currentSpan().context().traceId();
+        return Objects.requireNonNull(tracer.currentSpan()).context().traceId();
     }
 
     /**
