@@ -13,9 +13,12 @@ dependencies {
     // Nacos 服务发现（接入动态路由）
     implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery'
 
-    // Sentinel 网关限流
+    // Sentinel 网关限流 + Nacos 持久化规则
+    // sentinel-datasource-nacos 自动激活 spring.cloud.sentinel.datasource.* 配置,
+    // 实现流控/降级规则从 Nacos 热加载与刷新,避免 Dashboard 推送的规则在客户端重启后丢失。
     implementation 'com.alibaba.cloud:spring-cloud-alibaba-sentinel-gateway'
     implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-sentinel'
+    implementation 'com.alibaba.csp:sentinel-datasource-nacos'
 
     // 链路追踪
     implementation project(':eagle-starter:eagle-tracing-starter')
