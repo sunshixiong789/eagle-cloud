@@ -21,22 +21,35 @@ spring:
         webflux:
           # 本地用静态地址路由（覆盖基线的 lb://）
           routes:
+            - id: system-server-ws
+              uri: ws://localhost:80
+              predicates:
+                - Path=/ws-stomp/**
             - id: system-server-api-docs
               uri: http://localhost:80
               predicates:
                 - Path=/v3/api-docs/eagle-system-server
               filters:
                 - SetPath=/v3/api-docs
+              metadata:
+                response-timeout: 10000
+                connect-timeout: 3000
             - id: system-server
               uri: http://localhost:80
               predicates:
                 - Path=/api/system/**,/oauth2/**,/login,/logout
               filters:
                 - StripPrefix=0
+              metadata:
+                response-timeout: 30000
+                connect-timeout: 3000
             - id: default
               uri: http://localhost:80
               predicates:
                 - Path=/**
+              metadata:
+                response-timeout: 30000
+                connect-timeout: 3000
 
 management:
   endpoints:

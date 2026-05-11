@@ -9,6 +9,11 @@
 server:
   port: ${SERVER_PORT:8080}
   shutdown: graceful
+  # 响应压缩：JSON/XML/HTML 体积 ≥ 1KB 自动 gzip，减少带宽
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
+    min-response-size: 1024
 
 spring:
   application:
@@ -17,6 +22,10 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE:local}
   lifecycle:
     timeout-per-shutdown-phase: 30s
+
+  # 限制 WebFlux 在内存中暂存请求体的最大字节数，防止超大 Body 攻击拖垮网关
+  codec:
+    max-in-memory-size: 2MB
 
   cloud:
     nacos:
@@ -32,6 +41,25 @@ spring:
       eager: false
       filter:
         enabled: false                          # Gateway 用 SentinelGatewayFilter，关闭 Servlet Filter
+      # Sentinel 规则持久化到 Nacos：客户端启动时从 Nacos 拉取规则，Dashboard 修改后实时下发
+      # 需要在 Nacos 中预创建对应 dataId 的 JSON 配置（首次启动会因找不到配置 warn 一次，可忽略）
+      datasource:
+        ds-flow:
+          nacos:
+            server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+            namespace: ${NACOS_NAMESPACE:}
+            group-id: SENTINEL_GROUP
+            data-id: ${spring.application.name}-flow-rules
+            data-type: json
+            rule-type: flow
+        ds-degrade:
+          nacos:
+            server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+            namespace: ${NACOS_NAMESPACE:}
+            group-id: SENTINEL_GROUP
+            data-id: ${spring.application.name}-degrade-rules
+            data-type: json
+            rule-type: degrade
 
     gateway:
       # Spring Cloud Gateway 4.3+：spring.cloud.gateway.server.webflux.*
@@ -54,18 +82,30 @@ spring:
                 allowCredentials: true
                 maxAge: 3600
 
+          # Reactor Netty 客户端：全局超时 + gzip 解压上游响应（与下游 server.compression 互不影响）
           httpclient:
             connect-timeout: 3000
             response-timeout: 30s
+            compression: true
 
           # 默认基于服务发现的 lb 路由；local profile 覆盖为静态地址
+          # WebSocket 路由独立配置（lb:ws://）：system-server 通过 /ws-stomp 端点提供 STOMP
+          # metadata 路由级超时优先于 httpclient 全局超时；高延迟接口可单独放宽
           routes:
+            - id: system-server-ws
+              uri: lb:ws://eagle-system-server
+              predicates:
+                - Path=/ws-stomp/**
+
             - id: system-server-api-docs
               uri: lb://eagle-system-server
               predicates:
                 - Path=/v3/api-docs/eagle-system-server
               filters:
                 - SetPath=/v3/api-docs
+              metadata:
+                response-timeout: 10000           # ms：文档拉取应快速完成
+                connect-timeout: 3000
 
             - id: system-server
               uri: lb://eagle-system-server
@@ -73,11 +113,28 @@ spring:
                 - Path=/api/system/**,/oauth2/**,/login,/logout
               filters:
                 - StripPrefix=0
+                # 仅对幂等的 GET 重试；上游不可达 / 网关超时 / 服务下线场景指数退避重试 2 次
+                - name: Retry
+                  args:
+                    retries: 2
+                    methods: GET
+                    statuses: BAD_GATEWAY,GATEWAY_TIMEOUT,SERVICE_UNAVAILABLE
+                    backoff:
+                      firstBackoff: 100ms
+                      maxBackoff: 500ms
+                      factor: 2
+                      basedOnPreviousValue: false
+              metadata:
+                response-timeout: 30000
+                connect-timeout: 3000
 
             - id: default
               uri: lb://eagle-system-server
               predicates:
                 - Path=/**
+              metadata:
+                response-timeout: 30000
+                connect-timeout: 3000
 
 # ===========================================
 # Eagle Gateway 业务配置
