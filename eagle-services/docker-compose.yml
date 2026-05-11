@@ -1,5 +1,10 @@
 # -------只适用于开发环境----------
-# 网络配置
+# 变量管理约定：
+#   1. environment 显式枚举所有变量，统一 ${VAR:-default} 形式 —— compose.yml 是"变量清单 + 默认值"，.env 是"差异值表"
+#   2. compose 启动时自动加载本文件同目录的 .env 用于 ${VAR} 插值，无需声明 env_file（声明反而冗余）
+#   3. 优先级（高 → 低）：shell 环境变量 > .env 文件 > environment 默认值
+#   4. healthcheck / command 中引用敏感字段（密码）也采用 ${VAR:-default} 插值，确保 .env 覆盖后整体一致
+#   5. 新增凭证：在 .env 写入值 + 在 environment 加 `KEY=${KEY}` 占位即可（让 compose.yml 始终是变量清单）
 networks:
   eagle-network:
     driver: bridge
@@ -24,9 +29,9 @@ services:
     networks:
       - eagle-network
     environment:
-      - MYSQL_ROOT_PASSWORD=root123456
-      - MYSQL_DATABASE=eagle
-      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root123456}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-eagle}
+      - TZ=${TZ:-Asia/Shanghai}
     volumes:
       - mysql-data:/var/lib/mysql
     command:
@@ -34,7 +39,7 @@ services:
       - --collation-server=utf8mb4_unicode_ci
       - --default-authentication-plugin=mysql_native_password
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123456" ]
+      test: [ "CMD-SHELL", "mysqladmin ping -h localhost -uroot -p${MYSQL_ROOT_PASSWORD:-root123456}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -50,12 +55,13 @@ services:
     networks:
       - eagle-network
     environment:
-      - TZ=Asia/Shanghai
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis123456}
+      - TZ=${TZ:-Asia/Shanghai}
     volumes:
       - redis-data:/data
-    command: redis-server --appendonly yes --requirepass redis123456
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123456}
     healthcheck:
-      test: [ "CMD", "redis-cli", "-a", "redis123456", "ping" ]
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis123456}", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -74,12 +80,12 @@ services:
     networks:
       - eagle-network
     environment:
-      - PREFER_HOST_MODE=hostname
-      - MODE=standalone
-      - NACOS_AUTH_IDENTITY_KEY=serverIdentity
-      - NACOS_AUTH_IDENTITY_VALUE=security
-      - NACOS_AUTH_TOKEN=VGhpc0lzTXlDdXN0b21TZWNyZXRLZXkwMTIzNDU2Nzg=
-      - TZ=Asia/Shanghai
+      - PREFER_HOST_MODE=${NACOS_PREFER_HOST_MODE:-hostname}
+      - MODE=${NACOS_MODE:-standalone}
+      - NACOS_AUTH_IDENTITY_KEY=${NACOS_AUTH_IDENTITY_KEY:-serverIdentity}
+      - NACOS_AUTH_IDENTITY_VALUE=${NACOS_AUTH_IDENTITY_VALUE:-security}
+      - NACOS_AUTH_TOKEN=${NACOS_AUTH_TOKEN:-VGhpc0lzTXlDdXN0b21TZWNyZXRLZXkwMTIzNDU2Nzg=}
+      - TZ=${TZ:-Asia/Shanghai}
     volumes:
       - nacos-data:/home/nacos/data
     healthcheck:
@@ -117,8 +123,8 @@ services:
       # 启动参数：固定监听 8858 + dashboard 自监控地址 + project.name 区分集群
       # 1.8.6+ 默认开启鉴权（账号/密码 sentinel/sentinel），如需自定义加：
       # -Dsentinel.dashboard.auth.username=xxx -Dsentinel.dashboard.auth.password=xxx
-      - JAVA_OPTS=-server -Xms256m -Xmx512m -Dserver.port=8858 -Dcsp.sentinel.dashboard.server=localhost:8858 -Dproject.name=sentinel-dashboard
-      - TZ=Asia/Shanghai
+      - JAVA_OPTS=${SENTINEL_JAVA_OPTS:--server -Xms256m -Xmx512m -Dserver.port=8858 -Dcsp.sentinel.dashboard.server=localhost:8858 -Dproject.name=sentinel-dashboard}
+      - TZ=${TZ:-Asia/Shanghai}
     mem_limit: 768m
     mem_reservation: 256m
     healthcheck:
@@ -141,8 +147,8 @@ services:
       - eagle-network
     environment:
       # NameServer 资源消耗低，限制内存避免占用过多开发机资源
-      - JAVA_OPT_EXT=-server -Xms512m -Xmx512m -Xmn256m
-      - TZ=Asia/Shanghai
+      - JAVA_OPT_EXT=${ROCKETMQ_NAMESRV_JAVA_OPT_EXT:--server -Xms512m -Xmx512m -Xmn256m}
+      - TZ=${TZ:-Asia/Shanghai}
     command: sh mqnamesrv
     mem_limit: 768m
     mem_reservation: 384m
@@ -168,10 +174,10 @@ services:
     depends_on:
       - rocketmq-namesrv
     environment:
-      - NAMESRV_ADDR=rocketmq-namesrv:9876
+      - NAMESRV_ADDR=${ROCKETMQ_NAMESRV_ADDR:-rocketmq-namesrv:9876}
       # Broker 默认堆 8g 太大；开发机收紧到 1g
-      - JAVA_OPT_EXT=-server -Xms1g -Xmx1g -Xmn512m
-      - TZ=Asia/Shanghai
+      - JAVA_OPT_EXT=${ROCKETMQ_BROKER_JAVA_OPT_EXT:--server -Xms1g -Xmx1g -Xmn512m}
+      - TZ=${TZ:-Asia/Shanghai}
     # 内联生成 broker.conf：单机 master + 自动建 Topic/订阅组；brokerIP1 指向容器服务名
     # storePathRootDir 必须显式声明,否则某些代码路径派生 null → shutdown NPE
     # namesrvAddr 写进 conf 兜底(避免环境变量在派生进程里丢失)
@@ -198,23 +204,17 @@ services:
       - "8080:8080"
     networks:
       - eagle-network
-    # .env 用于敏感凭证 / 可调项（OAuth2 回调、第三方 secret 等），见 .env.example
-    env_file:
-      - .env
     # 开发环境内存上限：堆 512m + 元空间 192m + 直接内存 + 线程栈 → 容器留 768m 余量
     mem_limit: 768m
     mem_reservation: 384m
-    # environment 优先级高于 env_file，写容器网络强约束（即使 .env 误填 localhost 也能兜底）
-    # SPRING_PROFILES_ACTIVE 通过 .env 注入（默认 prod；dev/local 可选）
-    # AUTH_SERVER_URL 强约束 system 容器端口为 8082，覆盖 .env 的 :80 默认
-    # SENTINEL_DASHBOARD 强约束容器服务名，覆盖 .env 空值默认（application.yml 中 ${SENTINEL_DASHBOARD:} 为空时不连）
-    # JAVA_OPTS 开发环境固定堆 256m–512m + G1GC + OOM heap dump
+    # environment 显式枚举所有关键变量，统一 ${VAR:-default} 插值
+    # 默认值已包含容器网络约束（nacos:8848 / system:8082 / sentinel-dashboard:8858），.env 可整体覆盖
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
-      - NACOS_SERVER_ADDR=nacos:8848
-      - AUTH_SERVER_URL=http://system:8082
-      - SENTINEL_DASHBOARD=sentinel-dashboard:8858
-      - JAVA_OPTS=-server -XX:+UseG1GC -Xms256m -Xmx512m -XX:MaxMetaspaceSize=192m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai
+      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
+      - AUTH_SERVER_URL=${AUTH_SERVER_URL:-http://system:8082}
+      - SENTINEL_DASHBOARD=${SENTINEL_DASHBOARD:-sentinel-dashboard:8858}
+      - JAVA_OPTS=${GATEWAY_JAVA_OPTS:--server -XX:+UseG1GC -Xms256m -Xmx512m -XX:MaxMetaspaceSize=192m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health" ]
       interval: 30s
@@ -242,22 +242,17 @@ services:
       - "8082:8082"
     networks:
       - eagle-network
-    # .env 提供敏感凭证 / 可调项（admin 密码、JWT keystore 密码、微信 secret 等），见 .env.example
-    env_file:
-      - .env
     # 开发环境内存上限：system 跑 OAuth2/JPA/Hibernate/MapStruct，堆需 768m
     # 容器总量 1.5g = 堆 768m + 元空间 256m + 直接内存 + 线程栈 + 余量
     mem_limit: 1536m
     mem_reservation: 768m
-    # environment 优先级高于 env_file，强约束 nacos 容器内主机名
-    # SPRING_PROFILES_ACTIVE 通过 .env 注入（默认 prod；dev/local 可选）
-    # SERVER_PORT 强约束容器内监听 8082，与 ports 主机映射 8082:8082 对齐（覆盖 application.yml 默认 80）
-    # JAVA_OPTS 开发环境固定堆 384m–768m + G1GC + OOM heap dump
+    # environment 显式枚举所有关键变量，统一 ${VAR:-default} 插值
+    # 默认值已包含容器网络约束（nacos:8848 / SERVER_PORT=8082），.env 可整体覆盖
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
-      - NACOS_SERVER_ADDR=nacos:8848
-      - SERVER_PORT=8082
-      - JAVA_OPTS=-server -XX:+UseG1GC -Xms384m -Xmx768m -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai
+      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
+      - SERVER_PORT=${SERVER_PORT:-8082}
+      - JAVA_OPTS=${SYSTEM_JAVA_OPTS:--server -XX:+UseG1GC -Xms384m -Xmx768m -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8082/actuator/health" ]
       interval: 30s
