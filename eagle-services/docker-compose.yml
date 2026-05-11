@@ -99,8 +99,14 @@ services:
 
   # Sentinel Dashboard（开发环境单机，控制台 8858；默认账号 sentinel/sentinel）
   # 客户端通过 SENTINEL_DASHBOARD=sentinel-dashboard:8858 上报心跳与拉取规则
+  # 镜像来源：本地 Dockerfile 拉取 Alibaba 官方发布的 fat jar（不依赖第三方 docker hub 镜像）
   sentinel-dashboard:
-    image: bladex/sentinel-dashboard:1.8.8
+    build:
+      context: ./sentinel-dashboard
+      args:
+        SENTINEL_VERSION: 1.8.9
+    image: eagle-sentinel-dashboard:1.8.9
+    pull_policy: build           # 本地构建镜像，禁止 docker compose up 时去 registry 拉
     container_name: eagle-sentinel
     restart: always
     ports:
@@ -108,7 +114,9 @@ services:
     networks:
       - eagle-network
     environment:
-      # 启动参数：固定监听 8858 + 关闭授权登录提示 + project.name 区分集群
+      # 启动参数：固定监听 8858 + dashboard 自监控地址 + project.name 区分集群
+      # 1.8.6+ 默认开启鉴权（账号/密码 sentinel/sentinel），如需自定义加：
+      # -Dsentinel.dashboard.auth.username=xxx -Dsentinel.dashboard.auth.password=xxx
       - JAVA_OPTS=-server -Xms256m -Xmx512m -Dserver.port=8858 -Dcsp.sentinel.dashboard.server=localhost:8858 -Dproject.name=sentinel-dashboard
       - TZ=Asia/Shanghai
     mem_limit: 768m
