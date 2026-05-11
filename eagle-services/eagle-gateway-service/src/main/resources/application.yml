@@ -81,23 +81,12 @@ spring:
 
 # ===========================================
 # Eagle Gateway 业务配置
+# 注意：网关不再做 JWT 鉴权（JwtAuthenticationGlobalFilter 已移除），
+#       JWT 验签与权限校验下沉到下游业务服务（eagle-resource-server-starter）。
+#       公开路径白名单由各下游服务通过 eagle.resource-server.permit-paths 各自维护。
 # ===========================================
 eagle:
   gateway:
-    security:
-      auth-server-url: ${AUTH_SERVER_URL:http://localhost:80}
-      public-paths:
-        - /public/**
-        - /actuator/health
-        - /actuator/info
-        - /swagger-ui.html
-        - /swagger-ui/**
-        - /v3/api-docs/**
-        - /swagger-resources/**
-        - /webjars/**
-        - /oauth2/**
-        - /login
-        - /error
     openapi:
       discovery-enabled: true                   # 默认走服务发现聚合；local 关闭
 

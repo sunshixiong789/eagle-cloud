@@ -3,6 +3,7 @@ package com.eagle.gateway.handler;
 import com.eagle.common.dto.ErrorResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
@@ -38,7 +39,7 @@ public class GatewayWebExceptionHandler implements WebExceptionHandler {
     private final ObjectMapper objectMapper;
 
     @Override
-    public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
+    public @NonNull Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
         ServerHttpResponse response = exchange.getResponse();
         // 响应已提交（如流式响应中途断开），无法再写入，直接传播异常
         if (response.isCommitted()) {

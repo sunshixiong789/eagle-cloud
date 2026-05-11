@@ -1,8 +1,11 @@
 dependencies {
     implementation project(':eagle-starter:eagle-common-starter')
     implementation 'org.springframework.cloud:spring-cloud-starter-gateway-server-webflux'
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
+
+    // 网关定位：纯路由 + 限流 + CORS + 链路追踪 + Header 透传。
+    // 不引入 Spring Security / OAuth2 资源服务器依赖 —— JWT 验签与用户身份提取统一由下游
+    // 业务服务通过 eagle-resource-server-starter 处理。OAuth2 授权端点（/oauth2/**、/login）
+    // 由 system-service 的 OAuth2 Authorization Server SecurityFilterChain 自带放行规则处理。
 
     // SpringDoc OpenAPI 网关聚合
     implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui'
