@@ -3,6 +3,7 @@ package com.eagle.common.config;
 import com.eagle.common.handler.GlobalExceptionHandler;
 import com.eagle.common.i18n.MessageSourceUtil;
 import com.eagle.common.metrics.BusinessMetrics;
+import com.eagle.common.observability.RequestIdMdcFilter;
 import com.eagle.common.pressuretest.PressureTestFilter;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
@@ -62,6 +63,22 @@ public class EagleCommonAutoConfiguration implements InitializingBean {
             FilterRegistrationBean<PressureTestFilter> bean = new FilterRegistrationBean<>();
             bean.setFilter(new PressureTestFilter());
             bean.setOrder(Ordered.HIGHEST_PRECEDENCE + 20);
+            bean.addUrlPatterns("/*");
+            return bean;
+        }
+
+        /**
+         * Request ID 解析 + MDC 注入过滤器。
+         *
+         * <p>order = HIGHEST_PRECEDENCE：必须最先执行,确保后续所有过滤器、业务代码、
+         * 异常处理（{@code ErrorResult.of} 内部读 MDC）都能拿到 requestId。
+         */
+        @Bean
+        @ConditionalOnMissingBean
+        public FilterRegistrationBean<RequestIdMdcFilter> requestIdMdcFilter() {
+            FilterRegistrationBean<RequestIdMdcFilter> bean = new FilterRegistrationBean<>();
+            bean.setFilter(new RequestIdMdcFilter());
+            bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
             bean.addUrlPatterns("/*");
             return bean;
         }
