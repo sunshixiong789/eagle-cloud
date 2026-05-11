@@ -9,6 +9,9 @@ volumes:
   mysql-data:
   redis-data:
   nacos-data:
+  rocketmq-namesrv-logs:
+  rocketmq-broker-logs:
+  rocketmq-broker-store:
 
 services:
   # MySQL 数据库
@@ -94,6 +97,80 @@ services:
       retries: 20
       start_period: 60s
 
+  # Sentinel Dashboard（开发环境单机，控制台 8858；默认账号 sentinel/sentinel）
+  # 客户端通过 SENTINEL_DASHBOARD=sentinel-dashboard:8858 上报心跳与拉取规则
+  sentinel-dashboard:
+    image: bladex/sentinel-dashboard:1.8.8
+    container_name: eagle-sentinel
+    restart: always
+    ports:
+      - "8858:8858"
+    networks:
+      - eagle-network
+    environment:
+      # 启动参数：固定监听 8858 + 关闭授权登录提示 + project.name 区分集群
+      - JAVA_OPTS=-server -Xms256m -Xmx512m -Dserver.port=8858 -Dcsp.sentinel.dashboard.server=localhost:8858 -Dproject.name=sentinel-dashboard
+      - TZ=Asia/Shanghai
+    mem_limit: 768m
+    mem_reservation: 256m
+    healthcheck:
+      # Sentinel Dashboard 是 Spring Boot 应用，根路径返回 200 即视为就绪
+      test: [ "CMD-SHELL", "wget -qO- http://127.0.0.1:8858/ > /dev/null 2>&1 || exit 1" ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # RocketMQ NameServer（开发环境单机，9876）
+  # 仅做路由注册；Broker 启动后向其汇报，客户端通过它发现 Broker 地址
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.3.2
+    container_name: eagle-rocketmq-namesrv
+    restart: always
+    ports:
+      - "9876:9876"
+    networks:
+      - eagle-network
+    environment:
+      # NameServer 资源消耗低，限制内存避免占用过多开发机资源
+      - JAVA_OPT_EXT=-server -Xms512m -Xmx512m -Xmn256m
+      - TZ=Asia/Shanghai
+    command: sh mqnamesrv
+    mem_limit: 768m
+    mem_reservation: 384m
+    volumes:
+      - rocketmq-namesrv-logs:/home/rocketmq/logs
+
+  # RocketMQ Broker（开发环境单机 master，无 slave）
+  # brokerIP1 必须指定为容器服务名（rocketmq-broker），否则其他容器拿到默认宿主 IP 后无法连上
+  # autoCreateTopicEnable=true：开发环境允许首次发送时自动建 Topic（生产应关闭，由运维预创建）
+  rocketmq-broker:
+    image: apache/rocketmq:5.3.2
+    container_name: eagle-rocketmq-broker
+    restart: always
+    ports:
+      - "10909:10909"   # VIP channel
+      - "10911:10911"   # Broker 主端口（客户端读写）
+      - "10912:10912"   # HA 同步端口（单机也开放，便于后续扩主从）
+    networks:
+      - eagle-network
+    depends_on:
+      - rocketmq-namesrv
+    environment:
+      - NAMESRV_ADDR=rocketmq-namesrv:9876
+      # Broker 默认堆 8g 太大；开发机收紧到 1g
+      - JAVA_OPT_EXT=-server -Xms1g -Xmx1g -Xmn512m
+      - TZ=Asia/Shanghai
+    # 内联生成 broker.conf：单机 master + 自动建 Topic/订阅组；brokerIP1 指向容器服务名
+    command: >
+      sh -c "printf 'brokerIP1=rocketmq-broker\nbrokerName=broker-a\nbrokerId=0\nbrokerClusterName=DefaultCluster\nautoCreateTopicEnable=true\nautoCreateSubscriptionGroup=true\n' > /home/rocketmq/broker.conf
+      && sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/broker.conf"
+    mem_limit: 1536m
+    mem_reservation: 768m
+    volumes:
+      - rocketmq-broker-logs:/home/rocketmq/logs
+      - rocketmq-broker-store:/home/rocketmq/store
+
   # 网关服务
   gateway:
     build:
@@ -116,11 +193,13 @@ services:
     # environment 优先级高于 env_file，写容器网络强约束（即使 .env 误填 localhost 也能兜底）
     # SPRING_PROFILES_ACTIVE 通过 .env 注入（默认 prod；dev/local 可选）
     # AUTH_SERVER_URL 强约束 system 容器端口为 8082，覆盖 .env 的 :80 默认
+    # SENTINEL_DASHBOARD 强约束容器服务名，覆盖 .env 空值默认（application.yml 中 ${SENTINEL_DASHBOARD:} 为空时不连）
     # JAVA_OPTS 开发环境固定堆 256m–512m + G1GC + OOM heap dump
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - NACOS_SERVER_ADDR=nacos:8848
       - AUTH_SERVER_URL=http://system:8082
+      - SENTINEL_DASHBOARD=sentinel-dashboard:8858
       - JAVA_OPTS=-server -XX:+UseG1GC -Xms256m -Xmx512m -XX:MaxMetaspaceSize=192m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health" ]
@@ -133,6 +212,8 @@ services:
         condition: service_healthy
       system:
         condition: service_healthy
+      sentinel-dashboard:
+        condition: service_started
 
   # 系统服务
   system:
@@ -176,4 +257,6 @@ services:
         condition: service_healthy
       nacos:
         condition: service_healthy
+      rocketmq-broker:
+        condition: service_started
 
