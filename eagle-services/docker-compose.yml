@@ -156,6 +156,9 @@ services:
     image: apache/rocketmq:5.3.2
     container_name: eagle-rocketmq-broker
     restart: always
+    # user: root —— named volume 首次挂载属主是 root:root,镜像内默认 rocketmq 用户(uid=3000)
+    # 无法写入 /home/rocketmq/store,会触发"createBrokerController 失败 → shutdown NPE"假象
+    user: root
     ports:
       - "10909:10909"   # VIP channel
       - "10911:10911"   # Broker 主端口（客户端读写）
@@ -170,9 +173,12 @@ services:
       - JAVA_OPT_EXT=-server -Xms1g -Xmx1g -Xmn512m
       - TZ=Asia/Shanghai
     # 内联生成 broker.conf：单机 master + 自动建 Topic/订阅组；brokerIP1 指向容器服务名
+    # storePathRootDir 必须显式声明,否则某些代码路径派生 null → shutdown NPE
+    # namesrvAddr 写进 conf 兜底(避免环境变量在派生进程里丢失)
     command: >
-      sh -c "printf 'brokerIP1=rocketmq-broker\nbrokerName=broker-a\nbrokerId=0\nbrokerClusterName=DefaultCluster\nautoCreateTopicEnable=true\nautoCreateSubscriptionGroup=true\n' > /home/rocketmq/broker.conf
-      && sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/broker.conf"
+      sh -c "mkdir -p /home/rocketmq/store /home/rocketmq/logs &&
+      printf 'brokerIP1=rocketmq-broker\nbrokerName=broker-a\nbrokerId=0\nbrokerClusterName=DefaultCluster\nnamesrvAddr=rocketmq-namesrv:9876\nstorePathRootDir=/home/rocketmq/store\nautoCreateTopicEnable=true\nautoCreateSubscriptionGroup=true\n' > /home/rocketmq/broker.conf &&
+      sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/broker.conf"
     mem_limit: 1536m
     mem_reservation: 768m
     volumes:
