@@ -48,8 +48,13 @@ public class RequestEnrichmentGlobalFilter implements GlobalFilter, Ordered {
         exchange.getAttributes().put(REQUEST_ID_ATTRIBUTE, requestId);
         exchange.getAttributes().put(CLIENT_IP_ATTRIBUTE, clientIp);
 
-        // 响应头也带上 requestId,前端可直接读到用于问题定位
-        exchange.getResponse().getHeaders().add(REQUEST_ID_HEADER, requestId);
+        // 响应提交前注入 X-Request-Id（set 覆盖语义）：
+        // SCG 默认透传上游响应头,若上游 system / tracing-starter 也注入了 X-Request-Id,
+        // 直接 add 会导致响应头出现多个值;set 在 beforeCommit 阶段执行,保证最终唯一。
+        exchange.getResponse().beforeCommit(() -> {
+            exchange.getResponse().getHeaders().set(REQUEST_ID_HEADER, requestId);
+            return Mono.empty();
+        });
 
         return chain.filter(exchange.mutate().request(mutatedRequest).build());
     }

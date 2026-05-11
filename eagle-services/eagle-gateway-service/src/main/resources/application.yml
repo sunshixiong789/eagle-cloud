@@ -82,11 +82,12 @@ spring:
                 allowCredentials: true
                 maxAge: 3600
 
-          # Reactor Netty 客户端：全局超时 + gzip 解压上游响应（与下游 server.compression 互不影响）
+          # Reactor Netty 客户端全局超时（路由 metadata 可覆盖）。
+          # 不开 httpclient.compression：避免"上游 → 网关解压 → 网关重压"的 CPU 浪费,
+          # 仅依赖 server.compression 对最终客户端响应压缩一次即可。
           httpclient:
             connect-timeout: 3000
             response-timeout: 30s
-            compression: true
 
           # 默认基于服务发现的 lb 路由；local profile 覆盖为静态地址
           # WebSocket 路由独立配置（lb:ws://）：system-server 通过 /ws-stomp 端点提供 STOMP
@@ -114,11 +115,17 @@ spring:
               filters:
                 - StripPrefix=0
                 # 仅对幂等的 GET 重试；上游不可达 / 网关超时 / 服务下线场景指数退避重试 2 次
+                # methods / statuses 用显式 list,避免 Spring Boot Binder 对 "GET" / "A,B,C" 单值字符串
+                # 转 Set<HttpMethod> / Set<HttpStatus> 的 relaxed binding 行为不稳定
                 - name: Retry
                   args:
                     retries: 2
-                    methods: GET
-                    statuses: BAD_GATEWAY,GATEWAY_TIMEOUT,SERVICE_UNAVAILABLE
+                    methods:
+                      - GET
+                    statuses:
+                      - BAD_GATEWAY
+                      - GATEWAY_TIMEOUT
+                      - SERVICE_UNAVAILABLE
                     backoff:
                       firstBackoff: 100ms
                       maxBackoff: 500ms

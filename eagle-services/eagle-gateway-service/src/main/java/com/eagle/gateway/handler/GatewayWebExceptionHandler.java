@@ -1,6 +1,7 @@
 package com.eagle.gateway.handler;
 
 import com.eagle.common.dto.ErrorResult;
+import com.eagle.gateway.filter.RequestEnrichmentGlobalFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -56,6 +57,11 @@ public class GatewayWebExceptionHandler implements WebExceptionHandler {
         }
 
         ErrorResult body = ErrorResult.of(status, resolveMessage(status), path);
+        // WebFlux 不使用 MDC,显式从 RequestEnrichmentGlobalFilter 写入的 attribute 取 requestId
+        Object requestId = exchange.getAttribute(RequestEnrichmentGlobalFilter.REQUEST_ID_ATTRIBUTE);
+        if (requestId instanceof String rid && !rid.isBlank()) {
+            body.setRequestId(rid);
+        }
         byte[] bytes;
         try {
             bytes = objectMapper.writeValueAsBytes(body);
