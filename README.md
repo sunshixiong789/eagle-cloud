@@ -14,7 +14,7 @@
 - **RBAC 权限体系** — 用户、角色、权限、部门、菜单、岗位、字典完整管理
 - **行级数据权限** — 基于 AspectJ 的细粒度数据访问控制
 - **多级缓存** — Redis (Redisson) + Caffeine 两级缓存，内置缓存穿透 / 击穿 / 雪崩三重防护
-- **API 网关** — Spring Cloud Gateway + Sentinel 限流 + JWT 鉴权 + 链路追踪
+- **API 网关** — Spring Cloud Gateway + Sentinel 限流（Nacos 持久化）+ Request ID 全链路注入 + 链路追踪
 - **统一异常体系** — 类型化异常 + ErrorCode 枚举 + i18n 国际化消息
 - **接口幂等** — TOKEN / BUSINESS_KEY / RESULT_CACHE 三种模式，注解驱动零侵入
 - **分布式 ID** — Snowflake / UUID / 号段三策略，内置订单号 / 支付单号语义生成器
@@ -548,15 +548,20 @@ gradle nativeCompile
 
 ## API 网关
 
-网关提供统一入口，核心功能：
+网关提供统一入口，**仅做路由 + 流量治理**；所有 JWT 验签与用户身份提取由下游 `eagle-resource-server-starter` 负责。
 
-- **JWT 鉴权** — 全局过滤器校验 Token，将用户信息（`X-User-Id`、`X-Username`、`X-Roles`）透传到下游服务
+核心功能：
+
+- **请求增强** — `RequestEnrichmentGlobalFilter` 注入 `X-Request-Id`（UUID v4，全链路追溯）+ `X-Real-IP`（从 XFF / RemoteAddress 提取）
 - **请求日志** — 记录请求方法、路径、状态码、耗时、客户端 IP、链路 Trace ID
-- **Sentinel 限流** — 集成 Sentinel 网关限流
+- **Sentinel 限流** — 网关流控规则 + 降级规则，通过 sentinel-datasource-nacos 持久化到 Nacos，重启不丢规则
 - **Seata 事务透传** — 自动传递分布式事务 XID
+- **路由级超时与重试** — `routes[].metadata` 定义路由级超时；GET 幂等接口配 Retry filter 指数退避重试
+- **WebSocket 路由** — 通过 `lb:ws://` 转发 STOMP（如 `/ws-stomp/**`）
+- **统一错误响应** — `GatewayWebExceptionHandler` 输出 `ErrorResult` JSON，含 requestId，前端可与响应头 `X-Request-Id` 对照
 - **API 文档聚合** — 通过 Nacos 动态发现各服务的 OpenAPI 文档
 
-公开路径（无需认证）：`/public/**`、`/oauth2/**`、`/login`、`/swagger-ui/**`、`/v3/api-docs/**`、`/actuator/health`
+详细配置与运维场景见 `eagle-services/eagle-gateway-service/README.md`。
 
 ## 开发指南
 
