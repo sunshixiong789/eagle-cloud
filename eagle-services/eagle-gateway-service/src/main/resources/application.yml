@@ -157,6 +157,9 @@ eagle:
       # 不在此声明的服务，按默认规则自动生成 alias
       mappings:
         system: eagle-system-server
+        user: user-service
+        trade: trade-service
+        product: product-service
 
 # ===========================================
 # Actuator：生产安全基线
