@@ -183,7 +183,9 @@ springdoc:
   show-oauth2-endpoints: true
   swagger-ui:
     enabled: true
-    path: /swagger-ui
+    # 不自定义 path：保留 SpringDoc 默认 /swagger-ui.html。
+    # 若改成 /swagger-ui，访问 /swagger-ui.html 会因无 Handler 落入 WebFlux 静态资源
+    # 处理器并返回 404（"No static resource swagger-ui.html"）。
     config-url: /v3/api-docs/swagger-config
     csrf:
       enabled: true
