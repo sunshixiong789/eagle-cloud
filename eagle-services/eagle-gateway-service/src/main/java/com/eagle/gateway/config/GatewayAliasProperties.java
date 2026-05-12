@@ -14,12 +14,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * 在运行时为每个注册到 Nacos 的服务自动生成路由 {@code /api/{alias}/**} →
  * {@code lb://{serviceId}}。
  *
- * <p>未显式配置 mapping 的服务按默认规则推导别名：
+ * <p>未显式配置 mapping 的服务按默认规则推导别名：先剥离可选的 {@code eagle-} 前缀，
+ * 再剥离 {@code -server} / {@code -service} 后缀（二者择一，均不必需）。示例：
  * <ul>
  *   <li>{@code eagle-system-server} → {@code system}</li>
  *   <li>{@code eagle-order-service} → {@code order}</li>
- *   <li>其他原样保留</li>
+ *   <li>{@code product-service}     → {@code product}</li>
+ *   <li>{@code payment-server}      → {@code payment}</li>
+ *   <li>{@code payment-gw}          → {@code payment-gw}（无可剥离后缀时原样保留）</li>
  * </ul>
+ * 若推导结果与期望不符，在 {@link #mappings} 中显式声明覆盖即可。
  *
  * @author 孙士雄
  */
