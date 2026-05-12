@@ -212,8 +212,12 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
+      - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
+      - NACOS_GROUP=${NACOS_GROUP:-DEFAULT_GROUP}
       - AUTH_SERVER_URL=${AUTH_SERVER_URL:-http://system:8082}
       - SENTINEL_DASHBOARD=${SENTINEL_DASHBOARD:-sentinel-dashboard:8858}
+      - ROCKETMQ_NAME_SERVER=${ROCKETMQ_NAME_SERVER:-rocketmq-namesrv:9876}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-}
       - JAVA_OPTS=${GATEWAY_JAVA_OPTS:--server -XX:+UseG1GC -Xms256m -Xmx512m -XX:MaxMetaspaceSize=192m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health" ]
@@ -247,11 +251,55 @@ services:
     mem_limit: 1536m
     mem_reservation: 768m
     # environment 显式枚举所有关键变量，统一 ${VAR:-default} 插值
-    # 默认值已包含容器网络约束（nacos:8848 / SERVER_PORT=8082），.env 可整体覆盖
+    # 默认值已包含容器网络约束（mysql:3306 / redis:6379 / nacos:8848 / SERVER_PORT=8082），.env 可整体覆盖
+    # 注意：.env 文件中的变量仅用于 compose.yml 的 ${VAR} 插值，必须在此 environment 段显式声明才会注入容器
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
-      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
       - SERVER_PORT=${SERVER_PORT:-8082}
+      # Nacos 注册中心
+      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
+      - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
+      - NACOS_GROUP=${NACOS_GROUP:-DEFAULT_GROUP}
+      # MySQL 数据源（application.yml 占位符：${DB_HOST}/${DB_PORT}/${DB_NAME}/${DB_USERNAME}/${DB_PASSWORD}）
+      - DB_HOST=${DB_HOST:-mysql}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_NAME=${DB_NAME:-eagle}
+      - DB_USERNAME=${DB_USERNAME:-root}
+      - DB_PASSWORD=${DB_PASSWORD:-root123456}
+      - DB_POOL_MAX=${DB_POOL_MAX:-50}
+      - DB_POOL_MIN=${DB_POOL_MIN:-10}
+      # Redis（application.yml 占位符：${REDIS_HOST}/${REDIS_PORT}/${REDIS_PASSWORD}/${REDIS_DATABASE}）
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis123456}
+      - REDIS_DATABASE=${REDIS_DATABASE:-0}
+      # RocketMQ（消息组件）
+      - ROCKETMQ_NAME_SERVER=${ROCKETMQ_NAME_SERVER:-rocketmq-namesrv:9876}
+      # 初始管理员（application.yml 中 EAGLE_ADMIN_PASSWORD 无默认值，缺失即 fail-fast）
+      - EAGLE_ADMIN_USERNAME=${EAGLE_ADMIN_USERNAME:-admin}
+      - EAGLE_ADMIN_PASSWORD=${EAGLE_ADMIN_PASSWORD}
+      - EAGLE_ADMIN_NAME=${EAGLE_ADMIN_NAME:-系统管理员}
+      - EAGLE_ADMIN_EMAIL=${EAGLE_ADMIN_EMAIL:-admin@eagle.com}
+      # JWT keystore
+      - EAGLE_JWT_KEYSTORE_LOCATION=${EAGLE_JWT_KEYSTORE_LOCATION:-classpath:jwt-keystore.p12}
+      - EAGLE_JWT_KEYSTORE_PASSWORD=${EAGLE_JWT_KEYSTORE_PASSWORD:-eagle-jwt-dev-2026}
+      # OAuth2 / Swagger 回调对外地址（浏览器侧可访问的 URL）
+      - SYSTEM_SERVER_URL=${SYSTEM_SERVER_URL:-http://localhost:8082}
+      - GATEWAY_URL=${GATEWAY_URL:-http://localhost:8080}
+      # 第三方登录（按需启用，留空 = 禁用）
+      - WECHAT_MINI_APP_ID=${WECHAT_MINI_APP_ID:-}
+      - WECHAT_MINI_APP_SECRET=${WECHAT_MINI_APP_SECRET:-}
+      - WECHAT_WEB_APP_ID=${WECHAT_WEB_APP_ID:-}
+      - WECHAT_WEB_APP_SECRET=${WECHAT_WEB_APP_SECRET:-}
+      - WECHAT_WEB_REDIRECT_URI=${WECHAT_WEB_REDIRECT_URI:-}
+      - WECHAT_MP_APP_ID=${WECHAT_MP_APP_ID:-}
+      - WECHAT_MP_APP_SECRET=${WECHAT_MP_APP_SECRET:-}
+      - WECHAT_MP_REDIRECT_URI=${WECHAT_MP_REDIRECT_URI:-}
+      # 阿里云短信
+      - ALIYUN_SMS_ACCESS_KEY_ID=${ALIYUN_SMS_ACCESS_KEY_ID:-}
+      - ALIYUN_SMS_ACCESS_KEY_SECRET=${ALIYUN_SMS_ACCESS_KEY_SECRET:-}
+      - ALIYUN_SMS_SIGN_NAME=${ALIYUN_SMS_SIGN_NAME:-}
+      - ALIYUN_SMS_TEMPLATE_CODE=${ALIYUN_SMS_TEMPLATE_CODE:-}
       - JAVA_OPTS=${SYSTEM_JAVA_OPTS:--server -XX:+UseG1GC -Xms384m -Xmx768m -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8082/actuator/health" ]
