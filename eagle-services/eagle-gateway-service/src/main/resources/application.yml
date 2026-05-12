@@ -28,6 +28,17 @@ spring:
     max-in-memory-size: 2MB
 
   cloud:
+    # Spring Cloud LoadBalancer 缓存：默认 TTL 35s 偏长，
+    # 在"gateway 启动早于下游服务注册到 Nacos"的场景下会缓存空实例列表 35s，
+    # 期间所有 lb:// 路由返回 "Unable to find instance for X" 503。
+    # 缩短到 5s 让 LB 快速感知 Nacos 实例变化；Spring Cloud Alibaba Nacos
+    # discovery 不会向 LoadBalancer 主动推送事件，只能靠 TTL 过期重拉。
+    loadbalancer:
+      cache:
+        enabled: true
+        ttl: 5s
+        capacity: 256
+
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
