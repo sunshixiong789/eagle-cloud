@@ -7,6 +7,7 @@
 #   5. 新增凭证：在 .env 写入值 + 在 environment 加 `KEY=${KEY}` 占位即可（让 compose.yml 始终是变量清单）
 networks:
   eagle-network:
+    name: eagle-network
     driver: bridge
 
 # 数据卷（named volumes，由 docker 自动创建并持久化）
