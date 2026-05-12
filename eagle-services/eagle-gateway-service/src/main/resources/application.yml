@@ -108,15 +108,15 @@ spring:
                 response-timeout: 10000           # ms：文档拉取应快速完成
                 connect-timeout: 3000
 
-            - id: system-server
+            # OAuth2 授权服务器的固定端点（/oauth2/**、/login、/logout 由规范决定，
+            # 不能套入 /api/{alias}/** 别名规则），独立路由保留。
+            # 仅幂等 GET 重试；methods / statuses 用 list 形式：避免 Spring Boot Binder
+            # 对 "GET" / "A,B,C" 单值字符串 → Set<HttpMethod> 的 relaxed binding 不稳定。
+            - id: system-server-oauth2
               uri: lb://eagle-system-server
               predicates:
-                - Path=/api/system/**,/oauth2/**,/login,/logout
+                - Path=/oauth2/**,/login,/logout
               filters:
-                - StripPrefix=0
-                # 仅对幂等的 GET 重试；上游不可达 / 网关超时 / 服务下线场景指数退避重试 2 次
-                # methods / statuses 用显式 list,避免 Spring Boot Binder 对 "GET" / "A,B,C" 单值字符串
-                # 转 Set<HttpMethod> / Set<HttpStatus> 的 relaxed binding 行为不稳定
                 - name: Retry
                   args:
                     retries: 2
@@ -135,13 +135,9 @@ spring:
                 response-timeout: 30000
                 connect-timeout: 3000
 
-            - id: default
-              uri: lb://eagle-system-server
-              predicates:
-                - Path=/**
-              metadata:
-                response-timeout: 30000
-                connect-timeout: 3000
+            # 业务 API 路由（/api/{alias}/**）由 AliasRouteDefinitionLocator 基于 Nacos
+            # 自动生成；新服务上线只需在 eagle.gateway.alias.mappings 加一行别名（或沿用
+            # 默认推导规则：eagle-{name}-server → {name}），无需在此显式声明。
 
 # ===========================================
 # Eagle Gateway 业务配置
@@ -153,6 +149,14 @@ eagle:
   gateway:
     openapi:
       discovery-enabled: true                   # 默认走服务发现聚合；local 关闭
+    alias:
+      enabled: true                             # 基于 DiscoveryClient 自动为每个下游服务生成 /api/{alias}/** 路由
+      path-prefix: /api
+      self-service-id: eagle-gateway-server
+      # 显式覆盖默认推导规则（eagle-{name}-server / -service → {name}）；
+      # 不在此声明的服务，按默认规则自动生成 alias
+      mappings:
+        system: eagle-system-server
 
 # ===========================================
 # Actuator：生产安全基线

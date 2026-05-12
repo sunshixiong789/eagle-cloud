@@ -46,7 +46,7 @@ spring:
             - id: default
               uri: http://localhost:80
               predicates:
-                - Path=/**
+                - Path=/api/**
               metadata:
                 response-timeout: 30000
                 connect-timeout: 3000
@@ -65,6 +65,8 @@ eagle:
   gateway:
     openapi:
       discovery-enabled: false                  # 本地无 Nacos，关闭服务发现聚合
+    alias:
+      enabled: false                            # 本地无 Nacos，关闭别名自动路由；走上方静态路由
 
 # 本地手动聚合 Swagger 文档源
 springdoc:
