@@ -6,12 +6,29 @@
 # 其余（Nacos / Sentinel transport / lb 路由 / CORS=* / Swagger 开）使用基线 + 环境变量。
 # ===========================================
 
+spring:
+  # dev 环境用独立 Nacos namespace 隔离（需先在 Nacos 控制台创建 ID 为 dev 的命名空间）
+  cloud:
+    nacos:
+      discovery:
+        namespace: ${NACOS_NAMESPACE:dev}
+    sentinel:
+      datasource:
+        ds-flow:
+          nacos:
+            namespace: ${NACOS_NAMESPACE:dev}
+        ds-degrade:
+          nacos:
+            namespace: ${NACOS_NAMESPACE:dev}
+
 management:
   endpoints:
     web:
       exposure:
         include: health,info,metrics,loggers,env,beans,mappings,prometheus,gateway
   endpoint:
+    gateway:
+      access: read-only
     health:
       show-details: always
       show-components: always

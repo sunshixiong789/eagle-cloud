@@ -9,6 +9,12 @@
 # ===========================================
 
 spring:
+  # dev 环境用独立 Nacos namespace 隔离（需先在 Nacos 控制台创建 ID 为 dev 的命名空间）
+  cloud:
+    nacos:
+      discovery:
+        namespace: ${NACOS_NAMESPACE:dev}
+
   flyway:
     enabled: true
     baseline-on-migrate: true
