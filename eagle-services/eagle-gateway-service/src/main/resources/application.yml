@@ -28,13 +28,6 @@ spring:
     max-in-memory-size: 2MB
 
   cloud:
-    # Nacos 3.x + Gateway WebFlux 场景下，阻塞式 DiscoveryClient 可见实例但
-    # Reactive LoadBalancer 偶发拿到空列表时，关闭 reactive discovery，复用
-    # NacosDiscoveryClient 作为 LoadBalancer 的实例来源。
-    discovery:
-      reactive:
-        enabled: false
-
     # Spring Cloud LoadBalancer 缓存：默认 TTL 35s 偏长，
     # 在"gateway 启动早于下游服务注册到 Nacos"的场景下会缓存空实例列表 35s，
     # 期间所有 lb:// 路由返回 "Unable to find instance for X" 503。
