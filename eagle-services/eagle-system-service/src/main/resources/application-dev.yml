@@ -9,11 +9,14 @@
 # ===========================================
 
 spring:
-  # dev 环境用独立 Nacos namespace 隔离（需先在 Nacos 控制台创建 ID 为 dev 的命名空间）
+  # dev 环境默认沿用 Nacos 内置 public 命名空间。
+  # 注意：Spring Boot 4 占位符行为变化——${VAR:default} 在 VAR 已定义但为空时也会用 default，
+  # 因此默认值必须是 Nacos 已存在的 namespace ID。若改为不存在的 ID（如 dev），Nacos 3 对注册
+  # 路径会 fallback 到 public、查询路径不 fallback，导致 gateway/system 错位看不到彼此。
   cloud:
     nacos:
       discovery:
-        namespace: ${NACOS_NAMESPACE:dev}
+        namespace: ${NACOS_NAMESPACE:public}
 
   flyway:
     enabled: true
