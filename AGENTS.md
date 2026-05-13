@@ -147,76 +147,75 @@ PR 应包含简明摘要、受影响模块、关联 issue 或背景说明，以�
 <claude-mem-context>
 # Memory Context
 
-# [eagle-cloud] recent context, 2026-05-13 9:46am GMT+8
+# [eagle-cloud] recent context, 2026-05-13 12:08pm GMT+8
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (20,466t read) | 494,880t work | 96% savings
+Stats: 50 obs (18,228t read) | 625,041t work | 97% savings
 
-### May 12, 2026
-734 5:29p ✅ docker-compose.yml: Gateway Service Environment Variables Expanded
-735 " 🔴 Fixed: system Service Missing DB/Redis/Admin Environment Variables in docker-compose.yml
-737 5:40p 🔵 Gateway Uses Dynamic AliasRouteDefinitionLocator — 503 Means eagle-system-server Not in Nacos
-738 " 🔵 GatewayWebExceptionHandler: 503 Means ConnectException — System Container Registered But Not Listening
-739 5:44p 🔵 GatewayOpenApiConfig Aggregates Downstream Swagger Docs at ApplicationReadyEvent
-740 " 🔵 Gateway 503 on /v3/api-docs/eagle-system-server — Nacos Has No Live Instance
-741 5:51p ✅ Add SENTINEL_DASHBOARD env var to .env
-742 5:57p ✅ Configure SENTINEL_DASHBOARD in eagle-services .env
-751 " 🔵 Nacos confirms eagle-system-server is healthy and registered
-S236 Apply Spring Cloud LoadBalancer cache TTL fix (5s) to gateway application.yml to resolve 503 "Unable to find instance" on startup race condition (May 12 at 6:11 PM)
-S237 Clarification on gateway request pipeline — confirmed alias mapping was always correct, LoadBalancer TTL was the only root cause (May 12 at 6:12 PM)
-S234 Root cause confirmed: Spring Cloud LoadBalancer 35s cache caches empty instance list at gateway startup — fix by reducing TTL to 5s (May 12 at 6:12 PM)
-S235 User approved applying LoadBalancer cache TTL fix to gateway application.yml — proceeding to edit the file (May 12 at 6:12 PM)
-754 6:17p 🔴 Fix gateway 503 "Unable to find instance" — reduce Spring Cloud LoadBalancer cache TTL from 35s to 5s
-S238 Debug persistent 503 "Unable to find instance for eagle-system-server" on gateway routes after applying LB cache TTL fix, and diagnose 404 /system/userinfo errors (May 12 at 6:18 PM)
-755 6:27p 🔵 Post-deployment gateway still has two active issues: 503 LB cache and 404 wrong URL path
-756 " 🔵 Gateway 503 persists post-fix — LB cache TTL change likely not compiled into JAR
-S239 Persistent 503 "Unable to find instance for eagle-system-server" on gateway — diagnosing whether LB cache TTL fix was compiled into JAR, and confirming /api prefix fixes 404 (May 12 at 6:27 PM)
-S241 Add Nacos 3.2.1 client connection to eagle-cloud — completed with single BOM change and verified via Gradle dependency insight (May 12 at 6:32 PM)
-757 6:42p 🔵 Gateway 503 Despite Healthy Nacos Registration for eagle-system-server
-758 6:44p 🔵 Root Cause Confirmed: Spring Cloud LoadBalancer 35s Cache TTL Causes Gateway 503 on Startup
-759 6:45p 🔵 Gateway AliasRouteDefinitionLocator and GatewayOpenApiConfig Source Architecture Confirmed
-760 " 🔵 AliasRouteDefinitionLocator Does Not StripPrefix — Full /api/system/** Path Passes Through to eagle-system-server
-761 " 🔵 Docker Compose Deploy Config: Gateway and System Both Default to prod Profile; System on Port 8082
-762 " 🔵 Docker Daemon Not Accessible from Codex Execution Environment
-763 " 🔵 Nacos Confirms eagle-system-server Healthy from Inside Gateway Container
-764 6:46p 🔵 Spring Cloud Gateway Version Confirmed: 5.0.1 via spring-cloud-dependencies 2025.1.1
-765 " 🔵 Gateway JAR Contains Actuator and Reactive LB Auto-Configuration Classes
-766 6:54p 🔵 GatewayControllerEndpoint Has defaultAccess=NONE in Spring Cloud Gateway 5.0.1
-767 6:55p 🔵 Spring Boot Actuator Access Enum Values Confirmed: NONE, READ_ONLY, UNRESTRICTED
 ### May 13, 2026
-768 9:22a 🔵 Nacos 3.2.1 Already Configured in eagle-cloud Project
-769 " 🔵 Spring Cloud Alibaba BOM Manages Nacos Client Version in eagle-bom
-770 " 🔵 eagle-bom Uses Spring Cloud Alibaba 2025.1.0.0 Compatible with Nacos 3.2.1
-771 9:23a 🔵 No Explicit nacos-client Version Pinned Anywhere in Project
-772 " 🔵 Nacos Client Configuration Pattern in eagle-gateway-service
-773 " 🔵 eagle-system-service Nacos Discovery Configuration Matches Gateway Pattern
-774 9:24a 🔵 eagle-bom Referenced Only from Root build.gradle and settings.gradle
-775 " 🔵 Root build.gradle Auto-Applies eagle-bom as Platform to All Subprojects
-776 9:25a ✅ Added nacosClientVersion = '3.2.1' Version Variable to eagle-bom
-778 " 🟣 Gradle Dependency Resolution Confirms nacos-client 3.2.1 Enforced Across All Transitive Dependencies
-777 " 🟣 Nacos Client Version Hard-Pinned to 3.2.1 in eagle-bom with Gradle strictly Constraint
-779 " 🟣 nacos-client 3.2.1 Constraint Verified in eagle-system-service as Well
-S240 Add Nacos 3.2.1 client connection to eagle-cloud project (May 13 at 9:25 AM)
-S243 Nacos 3.2.1 client connection — investigating auth requirements and proposing credential configuration changes (May 13 at 9:26 AM)
-780 9:27a 🔵 Nacos 3.0+ Enables Console Authentication by Default — Client Config May Need username/password
-781 " 🔵 Nacos 3.x Default Credentials Are nacos/nacos — Spring Cloud Alibaba YAML Supports username/password Under discovery
-S242 Add Nacos 3.2.1 client connection — extended to include Nacos 3.x authentication requirements investigation (May 13 at 9:28 AM)
-782 9:29a 🔵 docker-compose Already Has Nacos Auth Token Configured but Client Services Miss NACOS_USERNAME/PASSWORD
-783 9:30a 🔵 application-local.yml Disables Nacos Discovery — Auth Credentials Only Needed for Non-Local Profiles
-784 9:34a 🔵 eagle-system-service application-local.yml Also Disables Nacos Discovery
-785 " 🟣 Nacos Auth Credentials Added to eagle-gateway-service application.yml
-786 " 🟣 Nacos Auth Credentials Added to Sentinel Datasource Nacos Connections in Gateway
-787 9:35a 🟣 Nacos Auth Credentials Added to eagle-system-service application.yml
-788 " 🔴 eagle-services/.env Confirmed Missing NACOS_USERNAME and NACOS_PASSWORD
-789 9:36a 🔵 NACOS_USERNAME/PASSWORD Defined Only in application.yml — Missing from .env and docker-compose.yml
-790 " 🟣 NACOS_USERNAME and NACOS_PASSWORD Added to eagle-services/.env
-791 " 🟣 NACOS_USERNAME and NACOS_PASSWORD Added to eagle-services/.env.example
-792 " 🔵 docker-compose.yml Gateway and System Service Environment Sections Confirmed Missing Nacos Auth Vars
-793 " 🟣 NACOS_USERNAME and NACOS_PASSWORD Added to Gateway Service Container in docker-compose.yml
-794 " 🟣 NACOS_USERNAME and NACOS_PASSWORD Added to System Service Container in docker-compose.yml
+810 9:51a 🔵 eagle-cloud 两个服务均无显式 application-dev profile 引用
+811 9:52a 🟣 gateway 和 system 服务 dev profile 均已写入 Nacos namespace 隔离配置并验证
+812 9:59a 🔵 Gateway 503 — 无法路由到 eagle-system-server 实例
+813 10:18a 🔵 Nacos 注册 IP 策略：内网 IP vs 外网 IP 的多服务器场景分析
+814 10:20a ✅ gateway application.yml 新增 NACOS_REGISTER_IP 多机部署支持
+815 " ✅ gateway 和 system 两服务 application.yml 均新增 NACOS_REGISTER_IP 多机注册 IP 支持
+816 " ✅ .env 新增 NACOS_REGISTER_IP 变量并附带使用说明注释
+817 " ✅ docker-compose.yml gateway 环境变量新增 NACOS_REGISTER_IP 注入，.env.example 同步更新
+818 10:21a 🔵 docker-compose.yml system 服务缺少 NACOS_REGISTER_IP 注入
+819 " 🔴 docker-compose.yml system 服务补全 NACOS_REGISTER_IP 注入
+820 " 🟣 NACOS_REGISTER_IP 多机部署支持完整落地，6处验证全通过
+821 10:27a 🔵 docker compose up -d gateway 触发其他容器重建的原因分析
+822 10:38a 🔵 Nacos v3 服务目录 API 路径与 v1 不同，/nacos/v3/ns/catalog/services 返回 404
+823 " 🔵 Nacos 3.x API 路径体系：三套端点分别对应 admin/client/console 三种角色
+824 " 🔵 Nacos 3.x 服务列表查询正确 API 路径确认
+825 10:46a 🔵 docker exec sh -c 多行管道命令报 "unexpected |" 语法错误
+S253 Nacos 实例 IP 已回到 172.19.0.8，进一步诊断 gateway→system 路由链路 (May 13 at 10:50 AM)
+S254 503 根因进一步缩小：gateway 路由配置已确认正常，等待 TCP 连通性和端口配置诊断 (May 13 at 10:58 AM)
+S255 503 根因锁定：gateway LoadBalancer 看不到 system，强怀疑 namespace 错位（dev vs public） (May 13 at 11:00 AM)
+S257 503 根因再次确认（重复摘要）：Spring Boot 4 占位符行为变更 + Nacos namespace 错位，等待用户决策修复方式 (May 13 at 11:04 AM)
+S258 503 根本修复完成：application-dev.yml Nacos namespace 默认值全部从 dev 改为 public (May 13 at 11:06 AM)
+S256 503 根因 100% 确认：Spring Boot 4 占位符行为变更导致 gateway/system 分属不同 namespace (May 13 at 11:06 AM)
+826 11:08a 🔵 gateway application-dev.yml 确认含三处 ${NACOS_NAMESPACE:dev} 配置待修复
+827 11:09a 🔴 gateway application-dev.yml 修复 Nacos namespace 默认值 dev→public，附 Spring Boot 4 警告注释
+828 " 🔵 system-service application-dev.yml 同样含 ${NACOS_NAMESPACE:dev}，需同步修复
+829 11:10a 🔴 gateway 和 system 两服务 application-dev.yml Nacos namespace 默认值全部修复为 public
+S259 503 在代码修复后仍持续，验证服务器端 .env 和容器是否已同步更新 (May 13 at 11:10 AM)
+830 11:14a 🔵 503 在代码修复后仍持续——服务器容器尚未 force-recreate 生效
+S260 新根因发现：spring.cloud.discovery.reactive.enabled=false 导致 gateway ReactiveLoadBalancer 永远找不到实例 (May 13 at 11:15 AM)
+831 11:19a 🔵 NACOS_NAMESPACE=public 已生效，但 gateway discoveryClient 仍只看到自身——namespace 来源为旧 jar 中的 application-dev.yml
+S261 503 最终根因修复：删除 spring.cloud.discovery.reactive.enabled=false，需重新 build jar + docker image (May 13 at 11:21 AM)
+832 11:22a 🔵 application.yml 确认 spring.cloud.discovery.reactive.enabled=false 的注释揭示了错误的设计决策
+833 " 🔴 删除 spring.cloud.discovery.reactive.enabled=false，修复 Spring Cloud Gateway 4.x lb:// 路由永久 503
+834 11:23a 🔴 确认 spring.cloud.discovery.reactive.enabled=false 已从 application.yml 彻底删除
+835 11:26a 🔵 Docker Compose `up` Recreates Already-Running Containers
+S262 Docker Compose `up -d gateway` causes already-running dependency containers (system, nacos, etc.) to be recreated — how to prevent this in eagle-services project (May 13 at 11:26 AM)
+836 " 🔵 eagle-services docker-compose.yml: Dependency Chain Causes Cascading Restarts
+837 11:40a 🔵 Spring Cloud Gateway 503 - Unable to Find Instance for eagle-system-server
+838 11:42a 🔵 Project Uses Superpowers Skill Framework with Chinese Routing Rules
+840 " 🔵 Root Cause Identified: LoadBalancer Caches Empty Instance List for 35s on Gateway Startup Race
+841 " 🔵 eagle-cloud Architecture: Gateway Uses AliasRouteDefinitionLocator for Dynamic lb:// Routing
+844 11:43a 🔵 Actual .env Config: dev Profile + NACOS_NAMESPACE=public on Remote Server 139.155.104.132
+845 " 🔵 AliasRouteDefinitionLocator Does NOT Strip Prefix — Full Path Forwarded to eagle-system-server
+846 " 🔵 docker-compose.yml: gateway depends_on nacos Only, NOT system — Startup Race Confirmed
+849 11:44a 🔵 Dependency Versions: Spring Cloud Gateway 5.0.1 + Spring Cloud Alibaba 2025.1.0.0 with Nacos-LB Integration
+850 " 🔵 CachingServiceInstanceListSupplier Does NOT Cache Empty Lists — Persistent 503 Means System Service Never Registers
+851 11:45a 🔵 NacosServiceDiscovery Filters Out Unhealthy Instances — Registered But Unhealthy = 503
+852 11:46a 🔵 Services Run on Remote Server 139.155.104.132 — Local Nacos/Gateway Not Accessible
+853 " 🔵 Critical Dependency Conflict: sentinel-datasource-nacos:1.8.9 Requires nacos-client:1.4.2 But Gets 3.1.1
+854 " 🔵 Root Cause Found: gateway depends_on system Removed in Uncommitted docker-compose.yml Change
+864 " 🔵 eagle-system-server IS Registered and Healthy in Nacos — Not a Registration Problem
+865 11:53a 🔵 503 Root Cause Pivoted: System IS Healthy in Nacos — Issue Is in Gateway LoadBalancer Pipeline
+866 " 🔵 NacosDiscoveryClient Has failure-tolerance-enabled Property with ServiceCache Fallback
+867 " 🔵 Confirmed Uncommitted Changes: nacos-client Strict Pin and Startup depends_on Both Removed
+868 11:55a 🔵 Spring Cloud Gateway Uses NacosReactiveDiscoveryClient via Auto-Configuration — No Custom LB Config in Gateway Code
+874 12:04p 🔵 Definitive Smoking Gun: Gateway Container Can Query Nacos Directly But Spring Cloud LoadBalancer Still Returns 503
+875 12:05p 🔵 ConditionalOnReactiveDiscoveryEnabled Requires WebClient on Classpath — Both Discovery Modes Active by Default
+876 " 🔵 SCA 2025.1.0.0 Registers LoadBalancerNacosAutoConfiguration — Potential Custom LB Override
+877 12:06p 🔵 NacosLoadBalancerClientConfiguration Overrides Default LB Chain — Installs NacosLoadBalancer WITHOUT Caching
+878 12:07p 🔵 @ConditionalOnLoadBalancerNacos Requires Explicit spring.cloud.loadbalancer.nacos.enabled=true — NacosLoadBalancer is NOT Active by Default
 
-Access 495k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 625k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
