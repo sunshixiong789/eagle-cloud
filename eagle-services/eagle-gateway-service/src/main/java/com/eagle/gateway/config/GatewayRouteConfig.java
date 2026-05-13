@@ -118,6 +118,16 @@ public class GatewayRouteConfig {
              * {@code /.well-known/**} 等），不能套 alias 前缀；每条生成 lb:// 路由。
              */
             private List<String> fixedPaths = new ArrayList<>();
+            /**
+             * 仅作用于"业务别名路由"的 filter 短 DSL 列表，格式：{@code Name=arg1,arg2,...}。
+             *
+             * <p>示例：{@code "Retry=3,BAD_GATEWAY|GATEWAY_TIMEOUT|SERVICE_UNAVAILABLE,GET"}
+             *
+             * <p>不应用于 ws / fixed / api-docs：fixed 多为 OAuth2 POST 不可重试，ws 是长连接，
+             * api-docs 无重试必要。需要更复杂的 filter（嵌套 args / 多 backoff 参数）请退化到
+             * {@code spring.cloud.gateway.server.webflux.routes} 单独声明该路由。
+             */
+            private List<String> filters = new ArrayList<>();
         }
     }
 
@@ -144,10 +154,11 @@ public class GatewayRouteConfig {
                     continue;
                 }
                 String alias = properties.resolveAlias(serviceId);
-                defs.add(buildBusiness(serviceId, alias));
+                RouteProperties.ServiceRoute cfg = properties.getServiceRoute(serviceId);
+
+                defs.add(buildBusiness(serviceId, alias, cfg));
                 defs.add(buildApiDocs(serviceId, alias));
 
-                RouteProperties.ServiceRoute cfg = properties.getServiceRoute(serviceId);
                 if (cfg == null) {
                     continue;
                 }
@@ -163,10 +174,19 @@ public class GatewayRouteConfig {
             return Flux.fromIterable(defs);
         }
 
-        private RouteDefinition buildBusiness(String serviceId, String alias) {
+        private RouteDefinition buildBusiness(String serviceId, String alias, RouteProperties.ServiceRoute cfg) {
             String pattern = properties.getPathPrefix() + "/" + alias + "/**";
             RouteDefinition r = newRoute(BIZ_PREFIX + alias, "lb://" + serviceId, pattern);
-            log.info("Alias route: {} → lb://{}", pattern, serviceId);
+            if (cfg != null && !cfg.getFilters().isEmpty()) {
+                List<FilterDefinition> filters = new ArrayList<>(cfg.getFilters().size());
+                for (String dsl : cfg.getFilters()) {
+                    filters.add(new FilterDefinition(dsl));
+                }
+                r.setFilters(filters);
+                log.info("Alias route: {} → lb://{} (filters={})", pattern, serviceId, cfg.getFilters());
+            } else {
+                log.info("Alias route: {} → lb://{}", pattern, serviceId);
+            }
             return r;
         }
 
