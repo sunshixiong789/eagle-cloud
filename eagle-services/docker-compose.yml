@@ -7,6 +7,7 @@
 #   5. 新增凭证：在 .env 写入值 + 在 environment 加 `KEY=${KEY}` 占位即可（让 compose.yml 始终是变量清单）
 networks:
   eagle-network:
+    name: eagle-network
     driver: bridge
 
 # 数据卷（named volumes，由 docker 自动创建并持久化）
@@ -69,7 +70,7 @@ services:
 
   # Nacos 注册中心
   nacos:
-    image: nacos/nacos-server:v3.2.1
+    image: nacos/nacos-server:v3.1.1
     container_name: eagle-nacos
     restart: always
     ports:
@@ -233,10 +234,6 @@ services:
     depends_on:
       nacos:
         condition: service_healthy
-      system:
-        condition: service_healthy
-      sentinel-dashboard:
-        condition: service_started
 
   # 系统服务
   system:
@@ -326,4 +323,3 @@ services:
         condition: service_healthy
       rocketmq-broker:
         condition: service_started
-
