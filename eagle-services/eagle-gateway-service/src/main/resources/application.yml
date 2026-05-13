@@ -101,10 +101,11 @@ spring:
             connect-timeout: 3000
             response-timeout: 30s
 
-          # 业务路由由 AliasRouteDefinitionLocator 基于 DiscoveryClient 自动生成 /api/{alias}/**。
+          # AliasRouteDefinitionLocator 基于 DiscoveryClient 自动生成两类路由：
+          #   - 业务别名：/api/{alias}/**       → lb://{serviceId}（整段透传）
+          #   - OpenAPI 聚合：/v3/api-docs/{alias} → lb://{serviceId} + SetPath=/v3/api-docs
           # 此处仅声明 alias 规则无法覆盖的特殊路径：
           #   - WebSocket：lb:ws:// 协议
-          #   - OpenAPI 聚合：/v3/api-docs/{serviceId} 需 SetPath 还原
           #   - OAuth2/OIDC：协议固定路径（/oauth2/**、/login、/logout、/.well-known/**）不能套别名前缀
           routes:
             - id: system-server-ws

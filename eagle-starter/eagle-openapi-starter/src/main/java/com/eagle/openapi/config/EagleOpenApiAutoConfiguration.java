@@ -11,6 +11,7 @@ import io.swagger.v3.oas.models.security.OAuthFlows;
 import io.swagger.v3.oas.models.security.Scopes;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -58,6 +59,11 @@ public class EagleOpenApiAutoConfiguration {
     @ConditionalOnMissingBean
     public OpenAPI customOpenApi() {
         return new OpenAPI()
+                // servers 显式置为相对路径 "/"，覆盖 SpringDoc 根据请求 URL 自动生成的内网绝对地址。
+                // 通过网关聚合访问时 Swagger UI 加载 doc 的 origin 即 gateway host，
+                // Try-it-out 调用前缀自动随 origin 走；直接访问下游服务时同理用本地 host。
+                // Controller 路径本身已含 /api/{alias} 前缀，server.url 不需要重复。
+                .servers(List.of(new Server().url("/")))
                 .info(new Info()
                         .title(properties.getTitle())
                         .version(properties.getVersion())

@@ -28,13 +28,18 @@ import java.util.Set;
 @ConditionalOnProperty(name = "eagle.gateway.openapi.discovery-enabled", havingValue = "true", matchIfMissing = true)
 public class GatewayOpenApiConfig implements ApplicationListener<ApplicationReadyEvent> {
 
-    private static final String GATEWAY_NAME = "eagle-gateway-server";
     private static final String API_DOCS_PATH = "/v3/api-docs";
+
     private final DiscoveryClient discoveryClient;
     private final SwaggerUiConfigProperties swaggerUiConfigProperties;
+    private final GatewayAliasProperties aliasProperties;
 
     /**
      * 应用完全就绪后从 Nacos 发现服务，注册到 Swagger UI 聚合 URLs。
+     *
+     * <p>SwaggerUrl 的 {@code name} 与 {@code url} 段均使用 alias（与
+     * {@link AliasRouteDefinitionLocator} 生成的 api-docs 聚合路由对齐），
+     * 例如 {@code eagle-system-server} → {@code /v3/api-docs/system}。
      *
      * <p>使用 {@link ApplicationReadyEvent} 而非 {@code @PostConstruct}，
      * 保证 Nacos 客户端已完成服务订阅，不会因启动时序问题返回空列表。
@@ -49,7 +54,7 @@ public class GatewayOpenApiConfig implements ApplicationListener<ApplicationRead
 
         Set<SwaggerUiConfigProperties.SwaggerUrl> urls = new HashSet<>();
         for (String serviceId : services) {
-            if (GATEWAY_NAME.equals(serviceId)) {
+            if (serviceId.equalsIgnoreCase(aliasProperties.getSelfServiceId())) {
                 continue;
             }
             List<ServiceInstance> instances = discoveryClient.getInstances(serviceId);
@@ -57,11 +62,10 @@ public class GatewayOpenApiConfig implements ApplicationListener<ApplicationRead
                 continue;
             }
 
-            // name 作为 Swagger UI 下拉框的唯一 key，displayName 作为展示标签
-            String name = serviceId;
+            String alias = aliasProperties.resolveAlias(serviceId);
+            String url = API_DOCS_PATH + "/" + alias;
             String displayName = formatServiceName(serviceId);
-            String url = API_DOCS_PATH + "/" + serviceId;
-            urls.add(new SwaggerUiConfigProperties.SwaggerUrl(name, url, displayName));
+            urls.add(new SwaggerUiConfigProperties.SwaggerUrl(alias, url, displayName));
             log.info("OpenAPI aggregated service: {} -> {}", displayName, url);
         }
 
@@ -75,7 +79,7 @@ public class GatewayOpenApiConfig implements ApplicationListener<ApplicationRead
      * 将服务 ID 转为可读展示名，如 "eagle-system-server" → "System Server"。
      */
     private String formatServiceName(String serviceId) {
-        String stripped = serviceId.replace("eagle-", "").replace("-server", "");
+        String stripped = serviceId.replace("eagle-", "").replace("-server", "").replace("-service", "");
         String[] parts = stripped.split("-");
         StringBuilder sb = new StringBuilder();
         for (String part : parts) {
