@@ -158,6 +158,9 @@ spring:
             # 业务 API 路由（/api/{alias}/**）由 AliasRouteDefinitionLocator 基于 Nacos
             # 自动生成；新服务上线只需在 eagle.gateway.alias.mappings 加一行别名（或沿用
             # 默认推导规则：eagle-{name}-server → {name}），无需在此显式声明。
+          discovery:
+            locator:
+              enabled: true
 
 # ===========================================
 # Eagle Gateway 业务配置
