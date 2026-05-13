@@ -10,6 +10,10 @@
 server:
   port: ${SERVER_PORT:80}
   shutdown: graceful
+  # 信任网关注入的 X-Forwarded-* 头，让 Spring Authorization Server 的 issuer 与
+  # OIDC discovery 文档自动使用网关对外的 host/scheme，而不是 system 自身内网地址。
+  # 仅在通过网关或可信反向代理访问时启用；直连调试不受影响（无 X-Forwarded-* 时退化）。
+  forward-headers-strategy: framework
 
 spring:
   application:
