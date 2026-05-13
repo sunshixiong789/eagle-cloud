@@ -214,6 +214,9 @@ services:
       - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
       - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
       - NACOS_GROUP=${NACOS_GROUP:-DEFAULT_GROUP}
+      # Nacos 3.0+ 默认开启鉴权，客户端必须传账号密码
+      - NACOS_USERNAME=${NACOS_USERNAME:-nacos}
+      - NACOS_PASSWORD=${NACOS_PASSWORD:-}
       - AUTH_SERVER_URL=${AUTH_SERVER_URL:-http://system:8082}
       - SENTINEL_DASHBOARD=${SENTINEL_DASHBOARD:-sentinel-dashboard:8858}
       - ROCKETMQ_NAME_SERVER=${ROCKETMQ_NAME_SERVER:-rocketmq-namesrv:9876}
@@ -260,6 +263,9 @@ services:
       - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
       - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
       - NACOS_GROUP=${NACOS_GROUP:-DEFAULT_GROUP}
+      # Nacos 3.0+ 默认开启鉴权，客户端必须传账号密码
+      - NACOS_USERNAME=${NACOS_USERNAME:-nacos}
+      - NACOS_PASSWORD=${NACOS_PASSWORD:-}
       # MySQL 数据源（application.yml 占位符：${DB_HOST}/${DB_PORT}/${DB_NAME}/${DB_USERNAME}/${DB_PASSWORD}）
       - DB_HOST=${DB_HOST:-mysql}
       - DB_PORT=${DB_PORT:-3306}
