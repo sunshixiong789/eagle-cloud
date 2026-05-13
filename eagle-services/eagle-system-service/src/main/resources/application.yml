@@ -17,7 +17,7 @@ server:
 
 spring:
   application:
-    name: eagle-system-server
+    name: system
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
   lifecycle:

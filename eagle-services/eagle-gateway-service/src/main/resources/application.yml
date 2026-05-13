@@ -17,15 +17,11 @@ server:
 
 spring:
   application:
-    name: eagle-gateway-server
+    name: gateway-server
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
   lifecycle:
     timeout-per-shutdown-phase: 30s
-
-  # 限制 WebFlux 在内存中暂存请求体的最大字节数，防止超大 Body 攻击拖垮网关
-  codec:
-    max-in-memory-size: 2MB
 
   cloud:
     # Spring Cloud LoadBalancer 缓存：默认 TTL 35s 偏长，
@@ -100,6 +96,9 @@ spring:
           httpclient:
             connect-timeout: 3000
             response-timeout: 30s
+          discovery:
+            locator:
+              enabled: true
 
           # 协议固定路径：OAuth2 / OIDC 规范要求客户端按 discovery 中发布的
           # 字面 URL（authorization_endpoint / token_endpoint / jwks_uri 等）发起请求，
@@ -131,9 +130,6 @@ management:
       show-components: never
       probes:
         enabled: true
-  health:
-    redis:
-      enabled: false                            # gateway 默认不强依赖 Redis
 
 # ===========================================
 # Springdoc / Swagger：基线开启（dev/local 用），prod profile 强制关闭
