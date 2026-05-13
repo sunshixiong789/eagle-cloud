@@ -90,74 +90,33 @@ spring:
             cors-configurations:
               '[/**]':
                 allowedOriginPatterns: ${CORS_ALLOWED_ORIGINS:*}
-                allowedMethods:
-                  - GET
-                  - POST
-                  - PUT
-                  - DELETE
-                  - PATCH
-                  - OPTIONS
-                allowedHeaders:
-                  - "*"
+                allowedMethods: [GET, POST, PUT, DELETE, PATCH, OPTIONS]
+                allowedHeaders: ["*"]
                 allowCredentials: true
                 maxAge: 3600
 
-          # Reactor Netty 客户端全局超时（路由 metadata 可覆盖）。
-          # 不开 httpclient.compression：避免"上游 → 网关解压 → 网关重压"的 CPU 浪费,
-          # 仅依赖 server.compression 对最终客户端响应压缩一次即可。
+          # Reactor Netty 客户端全局超时：不开 httpclient.compression 避免
+          # "上游 → 网关解压 → 网关重压"的 CPU 浪费，仅依赖 server.compression 末端压缩一次
           httpclient:
             connect-timeout: 3000
             response-timeout: 30s
 
-          # 默认基于服务发现的 lb 路由；local profile 覆盖为静态地址
-          # WebSocket 路由独立配置（lb:ws://）：system-server 通过 /ws-stomp 端点提供 STOMP
-          # metadata 路由级超时优先于 httpclient 全局超时；高延迟接口可单独放宽
+          # 业务路由由 AliasRouteDefinitionLocator 基于 DiscoveryClient 自动生成 /api/{alias}/**。
+          # 此处仅声明 alias 规则无法覆盖的特殊路径：
+          #   - WebSocket：lb:ws:// 协议
+          #   - OpenAPI 聚合：/v3/api-docs/{serviceId} 需 SetPath 还原
+          #   - OAuth2/OIDC：协议固定路径（/oauth2/**、/login、/logout、/.well-known/**）不能套别名前缀
           routes:
             - id: system-server-ws
               uri: lb:ws://eagle-system-server
               predicates:
                 - Path=/ws-stomp/**
 
-            - id: system-server-api-docs
-              uri: lb://eagle-system-server
-              predicates:
-                - Path=/v3/api-docs/eagle-system-server
-              filters:
-                - SetPath=/v3/api-docs
-              metadata:
-                response-timeout: 10000           # ms：文档拉取应快速完成
-                connect-timeout: 3000
-
-            # OAuth2 授权服务器的固定端点（/oauth2/**、/login、/logout 由规范决定，
-            # 不能套入 /api/{alias}/** 别名规则），独立路由保留。
-            # 仅幂等 GET 重试；methods / statuses 用 list 形式：避免 Spring Boot Binder
-            # 对 "GET" / "A,B,C" 单值字符串 → Set<HttpMethod> 的 relaxed binding 不稳定。
             - id: system-server-oauth2
               uri: lb://eagle-system-server
               predicates:
-                - Path=/oauth2/**,/login,/logout
-              filters:
-                - name: Retry
-                  args:
-                    retries: 2
-                    methods:
-                      - GET
-                    statuses:
-                      - BAD_GATEWAY
-                      - GATEWAY_TIMEOUT
-                      - SERVICE_UNAVAILABLE
-                    backoff:
-                      firstBackoff: 100ms
-                      maxBackoff: 500ms
-                      factor: 2
-                      basedOnPreviousValue: false
-              metadata:
-                response-timeout: 30000
-                connect-timeout: 3000
+                - Path=/oauth2/**,/login,/logout,/.well-known/**
 
-            # 业务 API 路由（/api/{alias}/**）由 AliasRouteDefinitionLocator 基于 Nacos
-            # 自动生成；新服务上线只需在 eagle.gateway.alias.mappings 加一行别名（或沿用
-            # 默认推导规则：eagle-{name}-server → {name}），无需在此显式声明。
           discovery:
             locator:
               enabled: true
