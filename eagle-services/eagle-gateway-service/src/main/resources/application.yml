@@ -134,38 +134,10 @@ eagle:
             - /login
             - /logout
             - /.well-known/**
-          filters:
-            # 仅幂等 GET 在网关瞬时不可用时重试 3 次
-            - name: Retry
-              args:
-                retries: 3
-                statuses:
-                  - BAD_GATEWAY
-                  - GATEWAY_TIMEOUT
-                  - SERVICE_UNAVAILABLE
-                methods: [GET]
         user-service:
           alias: user
-          filters:
-            - name: Retry
-              args:
-                retries: 2
-                statuses:
-                  - BAD_GATEWAY
-                  - GATEWAY_TIMEOUT
-                  - SERVICE_UNAVAILABLE
-                methods: [GET]
         product-service:
           alias: product
-          filters:
-            - name: Retry
-              args:
-                retries: 2
-                statuses:
-                  - BAD_GATEWAY
-                  - GATEWAY_TIMEOUT
-                  - SERVICE_UNAVAILABLE
-                methods: [GET]
         trade-service:
           alias: trade
           # 交易接口绝大多数为 POST（下单/支付/退款），自动重试可能重复扣款 — 不开 Retry，

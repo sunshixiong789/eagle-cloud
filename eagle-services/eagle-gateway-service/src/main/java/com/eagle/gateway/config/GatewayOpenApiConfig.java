@@ -32,7 +32,6 @@ public class GatewayOpenApiConfig implements ApplicationListener<ApplicationRead
 
     private final DiscoveryClient discoveryClient;
     private final SwaggerUiConfigProperties swaggerUiConfigProperties;
-    private final GatewayRouteConfig.RouteProperties routeProperties;
 
     /**
      * 应用完全就绪后从 Nacos 发现服务，注册到 Swagger UI 聚合 URLs。
