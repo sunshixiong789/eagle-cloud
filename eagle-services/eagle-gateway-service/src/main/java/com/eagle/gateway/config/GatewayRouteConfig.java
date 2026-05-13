@@ -119,15 +119,36 @@ public class GatewayRouteConfig {
              */
             private List<String> fixedPaths = new ArrayList<>();
             /**
-             * 仅作用于"业务别名路由"的 filter 短 DSL 列表，格式：{@code Name=arg1,arg2,...}。
+             * 仅作用于"业务别名路由"的 filter 声明列表，结构化为 {@link FilterSpec}（name + args）。
              *
-             * <p>示例：{@code "Retry=3,BAD_GATEWAY|GATEWAY_TIMEOUT|SERVICE_UNAVAILABLE,GET"}
+             * <p>YAML 示例（Retry 多值数组自动展开为 {@code statuses[0]} / {@code statuses[1]} ...，
+             * SCG 短 DSL 的 {@code ,} 分隔不支持数组多值，这里用结构化形式直接绑定到 Factory Config）：
+             * <pre>{@code
+             * filters:
+             *   - name: Retry
+             *     args:
+             *       retries: 3
+             *       statuses: [BAD_GATEWAY, GATEWAY_TIMEOUT, SERVICE_UNAVAILABLE]
+             *       methods: [GET]
+             * }</pre>
              *
              * <p>不应用于 ws / fixed / api-docs：fixed 多为 OAuth2 POST 不可重试，ws 是长连接，
-             * api-docs 无重试必要。需要更复杂的 filter（嵌套 args / 多 backoff 参数）请退化到
-             * {@code spring.cloud.gateway.server.webflux.routes} 单独声明该路由。
+             * api-docs 无重试必要。
              */
-            private List<String> filters = new ArrayList<>();
+            private List<FilterSpec> filters = new ArrayList<>();
+        }
+
+        /**
+         * 结构化 Filter 声明：name 对应 SCG GatewayFilterFactory 名称，args 直接绑定到 Factory Config。
+         * args 的 value 支持标量（String / Number / Boolean）与 List；List 在转 {@link FilterDefinition}
+         * 时自动展开为 {@code key[0]} / {@code key[1]} ... 满足 SCG 数组参数绑定语义。
+         */
+        @Data
+        public static class FilterSpec {
+            /** Filter 名称（如 {@code Retry} / {@code AddRequestHeader}） */
+            private String name;
+            /** Filter 参数：List 值会被自动展开为带下标的字符串参数 */
+            private Map<String, Object> args = new LinkedHashMap<>();
         }
     }
 
@@ -179,15 +200,36 @@ public class GatewayRouteConfig {
             RouteDefinition r = newRoute(BIZ_PREFIX + alias, "lb://" + serviceId, pattern);
             if (cfg != null && !cfg.getFilters().isEmpty()) {
                 List<FilterDefinition> filters = new ArrayList<>(cfg.getFilters().size());
-                for (String dsl : cfg.getFilters()) {
-                    filters.add(new FilterDefinition(dsl));
+                for (RouteProperties.FilterSpec spec : cfg.getFilters()) {
+                    filters.add(toFilterDefinition(spec));
                 }
                 r.setFilters(filters);
-                log.info("Alias route: {} → lb://{} (filters={})", pattern, serviceId, cfg.getFilters());
+                log.info("Alias route: {} → lb://{} (filters={})", pattern, serviceId, filters);
             } else {
                 log.info("Alias route: {} → lb://{}", pattern, serviceId);
             }
             return r;
+        }
+
+        /**
+         * 把结构化 {@link RouteProperties.FilterSpec} 转为 {@link FilterDefinition}：标量直接 toString，
+         * List 展开为 {@code key[0]} / {@code key[1]} ... 以匹配 SCG ConfigurationService 的索引绑定。
+         */
+        private FilterDefinition toFilterDefinition(RouteProperties.FilterSpec spec) {
+            FilterDefinition fd = new FilterDefinition();
+            fd.setName(spec.getName());
+            for (Map.Entry<String, Object> entry : spec.getArgs().entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                if (value instanceof List<?> list) {
+                    for (int i = 0; i < list.size(); i++) {
+                        fd.addArg(key + "[" + i + "]", String.valueOf(list.get(i)));
+                    }
+                } else if (value != null) {
+                    fd.addArg(key, String.valueOf(value));
+                }
+            }
+            return fd;
         }
 
         private RouteDefinition buildApiDocs(String serviceId, String alias) {

@@ -110,7 +110,9 @@ spring:
 # 未声明的服务自动按命名规则推导 alias（剥离 eagle- 前缀与 -server/-service 后缀），
 # 仅生成业务别名 + OpenAPI 聚合两条基础路由。
 #
-# filters 短 DSL 格式：Name=arg1,arg2,...   仅作用于业务别名路由（不作用于 ws/fixed/api-docs）。
+# filters 结构化格式（- name + args），仅作用于业务别名路由（不作用于 ws/fixed/api-docs）。
+# SCG 短 DSL 不支持单参数多值（comma 已是参数分隔符，pipe 不被识别），数组参数请用 YAML 列表，
+# 由 ServiceRouteLocator.toFilterDefinition() 自动展开为 statuses[0]/statuses[1] 等索引参数。
 # 限流不在此处声明 —— 走 Sentinel Dashboard（spring.cloud.sentinel.datasource.ds-flow 已接入），
 # 规则按 routeId（alias-{alias}/api-docs-{alias}）或 API 分组配置，秒级下发，无需重启网关。
 # ===========================================
@@ -133,16 +135,37 @@ eagle:
             - /logout
             - /.well-known/**
           filters:
-            # 仅幂等 GET 在网关瞬时不可用时重试 3 次（短 DSL 5 参：retries,statuses,methods,backoff?）
-            - "Retry=3,BAD_GATEWAY|GATEWAY_TIMEOUT|SERVICE_UNAVAILABLE,GET"
+            # 仅幂等 GET 在网关瞬时不可用时重试 3 次
+            - name: Retry
+              args:
+                retries: 3
+                statuses:
+                  - BAD_GATEWAY
+                  - GATEWAY_TIMEOUT
+                  - SERVICE_UNAVAILABLE
+                methods: [GET]
         user-service:
           alias: user
           filters:
-            - "Retry=2,BAD_GATEWAY|GATEWAY_TIMEOUT|SERVICE_UNAVAILABLE,GET"
+            - name: Retry
+              args:
+                retries: 2
+                statuses:
+                  - BAD_GATEWAY
+                  - GATEWAY_TIMEOUT
+                  - SERVICE_UNAVAILABLE
+                methods: [GET]
         product-service:
           alias: product
           filters:
-            - "Retry=2,BAD_GATEWAY|GATEWAY_TIMEOUT|SERVICE_UNAVAILABLE,GET"
+            - name: Retry
+              args:
+                retries: 2
+                statuses:
+                  - BAD_GATEWAY
+                  - GATEWAY_TIMEOUT
+                  - SERVICE_UNAVAILABLE
+                methods: [GET]
         trade-service:
           alias: trade
           # 交易接口绝大多数为 POST（下单/支付/退款），自动重试可能重复扣款 — 不开 Retry，
