@@ -23,10 +23,6 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 30s
 
-  # 限制 WebFlux 在内存中暂存请求体的最大字节数，防止超大 Body 攻击拖垮网关
-  codec:
-    max-in-memory-size: 2MB
-
   cloud:
     # Spring Cloud LoadBalancer 缓存：默认 TTL 35s 偏长，
     # 在"gateway 启动早于下游服务注册到 Nacos"的场景下会缓存空实例列表 35s，
@@ -100,6 +96,9 @@ spring:
           httpclient:
             connect-timeout: 3000
             response-timeout: 30s
+          discovery:
+            locator:
+              enabled: true
 
 # ===========================================
 # Actuator：生产安全基线
@@ -116,9 +115,6 @@ management:
       show-components: never
       probes:
         enabled: true
-  health:
-    redis:
-      enabled: false                            # gateway 默认不强依赖 Redis
 
 # ===========================================
 # Springdoc / Swagger：基线开启（dev/local 用），prod profile 强制关闭
