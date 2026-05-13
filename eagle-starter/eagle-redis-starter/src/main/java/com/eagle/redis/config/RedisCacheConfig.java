@@ -26,9 +26,16 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.lang.reflect.Modifier;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Redis 缓存自动配置。
@@ -68,6 +75,14 @@ public class RedisCacheConfig {
 
     /**
      * Redis JSON 序列化器（共享，避免重复创建 ObjectMapper）。
+     *
+     * <p>写入前对根值做一次浅 normalize：把 {@code java.util.ImmutableCollections}
+     * 系列（{@code List.of() / Map.of() / Set.of() / Stream.toList()} 的返回值）
+     * 替换成 {@link ArrayList} / {@link LinkedHashMap} / {@link LinkedHashSet}。
+     * 原因：{@code DefaultTyping.NON_FINAL} 不给 final 类写类型包装，
+     * 直接写出来的 {@code []} 在以 {@code Object} 反序列化时会撞
+     * {@code AsArrayTypeDeserializer} 期望的 {@code [type_id, value]} 格式而报错。
+     * POJO 字段里的不可变集合不受影响，Jackson 用声明类型静态推断。
      */
     @Bean("redisJsonSerializer")
     @ConditionalOnMissingBean(name = "redisJsonSerializer")
@@ -81,7 +96,7 @@ public class RedisCacheConfig {
                     return null;
                 }
                 try {
-                    return redisObjectMapper.writeValueAsBytes(value);
+                    return redisObjectMapper.writeValueAsBytes(normalizeRoot(value));
                 } catch (JsonProcessingException e) {
                     throw new SerializationException("Redis JSON serialize failed", e);
                 }
@@ -95,10 +110,57 @@ public class RedisCacheConfig {
                 try {
                     return redisObjectMapper.readValue(bytes, Object.class);
                 } catch (IOException e) {
+                    // 兼容 fix 前老数据：被 NON_FINAL 跳过类型包装的裸空集合
+                    Object fallback = tryFallback(bytes);
+                    if (fallback != null) {
+                        return fallback;
+                    }
                     throw new SerializationException("Redis JSON deserialize failed", e);
                 }
             }
         };
+    }
+
+    /**
+     * 把 final 实现的根级集合替换成 Jackson 可识别的可变实现。
+     *
+     * <p>仅当根值是 final {@link Collection} / {@link Map} 时替换：
+     * {@code List.of() / Map.of() / Set.of() / Stream.toList() /
+     * Collections.empty*() / Collections.singleton*()} 等返回的都是 final 类，
+     * 无 public 构造器，Jackson 既写不出可还原的类型包装、也无法直接构造。
+     * 非 final 实现（{@code ArrayList / HashMap / TreeMap / LinkedHashSet} 等）原样放行，
+     * 由 {@code DefaultTyping.NON_FINAL} 正常处理。
+     *
+     * <p>嵌套集合作为 POJO 字段时由 Jackson 声明类型静态推断，无需深拷贝。
+     */
+    private static Object normalizeRoot(Object value) {
+        if (!Modifier.isFinal(value.getClass().getModifiers())) {
+            return value;
+        }
+        if (value instanceof Map<?, ?> m) {
+            return new LinkedHashMap<>(m);
+        }
+        if (value instanceof Set<?> s) {
+            return new LinkedHashSet<>(s);
+        }
+        if (value instanceof Collection<?> c) {
+            return new ArrayList<>(c);
+        }
+        return value;
+    }
+
+    /**
+     * 老数据兼容：识别 fix 前写入 Redis 的裸空 {@code []} / {@code {}}。
+     */
+    private static @Nullable Object tryFallback(byte[] bytes) {
+        String json = new String(bytes, StandardCharsets.UTF_8).trim();
+        if ("[]".equals(json)) {
+            return new ArrayList<>();
+        }
+        if ("{}".equals(json)) {
+            return new LinkedHashMap<>();
+        }
+        return null;
     }
 
     /**
