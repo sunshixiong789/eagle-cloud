@@ -54,6 +54,8 @@ spring:
         # Nacos 3.0+ 默认开启鉴权（nacos.core.auth.enabled=true），客户端必须传账号密码
         username: ${NACOS_USERNAME:nacos}
         password: ${NACOS_PASSWORD:}
+        # 多机部署时显式注入宿主机/可达 IP；单机 docker 部署留空，客户端自动取容器 IP
+        ip: ${NACOS_REGISTER_IP:}
 
     # Sentinel：dashboard 留空时不连接，避免无意义超时；prod 注入并 eager=true
     sentinel:
