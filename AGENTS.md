@@ -142,3 +142,81 @@ PR 应包含简明摘要、受影响模块、关联 issue 或背景说明，以�
 - 保持改动聚焦，避免无关重构和格式化噪音。
 - 不覆盖用户已有改动，不执行破坏性 Git 命令。
 - 完成前运行能证明变更有效的验证命令；若无法运行，说明原因。
+
+
+<claude-mem-context>
+# Memory Context
+
+# [eagle-cloud] recent context, 2026-05-12 6:53pm GMT+8
+
+Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
+Format: ID TIME TYPE TITLE
+Fetch details: get_observations([IDs]) | Search: mem-search skill
+
+Stats: 50 obs (21,645t read) | 654,072t work | 97% savings
+
+### May 11, 2026
+705 9:23a 🟣 Sentinel Dashboard and RocketMQ Services Added to eagle-services docker-compose.yml
+704 9:25a ✅ Added RocketMQ Named Volumes to docker-compose.yml
+706 " ✅ Gateway Service Wired to Sentinel Dashboard in docker-compose.yml
+707 9:26a ✅ Service Startup Dependencies Added for Sentinel and RocketMQ
+708 " ✅ Updated .env.example with Sentinel Dashboard Value and New RocketMQ Variable
+709 " 🔵 Gateway Health Check Failing After Docker Compose Deployment
+710 9:49a 🔵 Root Cause Found: Gateway Missing spring-boot-starter-actuator Dependency
+711 " 🔵 Actuator IS Available Transitively via eagle-tracing-starter — Root Cause Likely Security or Route Interception
+712 " 🔵 JwtAuthenticationGlobalFilter Correctly Bypasses /actuator/health — Not the Cause
+714 " 🔵 Gateway Has No Custom SecurityWebFilterChain — OAuth2 Resource Server Auto-Config May Block /actuator/health
+715 " 🔵 Gradle Dependency Analysis Commands Return Empty — Build Tooling Investigation Blocked
+713 9:50a 🔵 System Service Has Actuator via eagle-resource-server-starter Transitive Dependency
+716 9:51a 🔵 Gradle Wrapper Not at Project Root — gradlew Commands Were Silently Failing
+717 " 🔵 Project Has settings.gradle But No gradlew Wrapper — System Gradle Required
+719 9:52a 🔵 Correct Gradle Module Path Confirmed: :eagle-services:eagle-gateway-service
+720 " 🔴 Fixed Gateway Health Check 401 by Replacing spring-boot-starter-oauth2-resource-server with Core Library
+718 " 🔵 System Gradle Found at /opt/homebrew/bin/gradle — Dependency Analysis Now Possible
+721 10:02a 🔵 system-service exposes active WebSocket endpoints via STOMP/eagle-websocket-starter
+722 " 🔵 eagle-tenant-starter TenantIdFilter reads X-Tenant-Id from request headers directly
+723 10:10a 🔵 system-service WebSocket STOMP endpoint confirmed at /ws-stomp with specific prefixes
+724 " 🔵 TenantIdFilter reads from X-Tenant-Id header only, falls back to defaultTenantId — no JWT involvement
+725 10:37a 🔵 Docker Image Pull Failure: bladex/sentinel-dashboard:1.8.8 via DaoCloud Mirror
+726 " 🔵 Sentinel Dashboard Configuration in eagle-cloud docker-compose
+727 11:19a 🔵 RocketMQ Broker Startup Fails with NullPointerException in ScheduleMessageService
+728 11:20a 🔵 RocketMQ Docker Compose Configuration in eagle-cloud Project
+729 " 🔴 Fixed RocketMQ Broker Startup NPE by Adding user:root and Explicit storePathRootDir
+### May 12, 2026
+730 5:24p 🔵 Eagle System Module Startup Failure — MySQL Connection Refused
+731 " 🔵 Eagle Cloud Project Structure — Config and Docker-Compose Layout
+732 " 🔵 Root Cause Identified: DB_HOST=mysql Is Docker-Internal Hostname
+733 5:25p 🔵 eagle-system-service Config Architecture and .env Active Profile Mismatch
+734 5:29p ✅ docker-compose.yml: Gateway Service Environment Variables Expanded
+735 " 🔴 Fixed: system Service Missing DB/Redis/Admin Environment Variables in docker-compose.yml
+736 " 🔵 Gateway Returns 503 for /api/system/* — System Service Not Reachable via Nacos
+737 5:40p 🔵 Gateway Uses Dynamic AliasRouteDefinitionLocator — 503 Means eagle-system-server Not in Nacos
+738 " 🔵 GatewayWebExceptionHandler: 503 Means ConnectException — System Container Registered But Not Listening
+739 5:44p 🔵 GatewayOpenApiConfig Aggregates Downstream Swagger Docs at ApplicationReadyEvent
+740 " 🔵 Gateway 503 on /v3/api-docs/eagle-system-server — Nacos Has No Live Instance
+741 5:51p ✅ Add SENTINEL_DASHBOARD env var to .env
+742 5:57p ✅ Configure SENTINEL_DASHBOARD in eagle-services .env
+751 " 🔵 Nacos confirms eagle-system-server is healthy and registered
+S230 Nacos screenshot confirms eagle-system-server is healthy — diagnosing why gateway still returns 503 "Unable to find instance" (May 12 at 6:01 PM)
+S231 Nacos shows eagle-system-server healthy but gateway still 503 — diagnosing Spring Cloud LoadBalancer client-side cache issue (May 12 at 6:06 PM)
+S232 Nacos instance IP 172.19.0.3 confirmed correct — narrowing 503 cause to Spring Cloud LoadBalancer client-side subscription issue (May 12 at 6:06 PM)
+S233 Fix "docker compose exec" command failing — user running from wrong directory, switching to docker exec with container name (May 12 at 6:09 PM)
+S236 Apply Spring Cloud LoadBalancer cache TTL fix (5s) to gateway application.yml to resolve 503 "Unable to find instance" on startup race condition (May 12 at 6:11 PM)
+S237 Clarification on gateway request pipeline — confirmed alias mapping was always correct, LoadBalancer TTL was the only root cause (May 12 at 6:12 PM)
+S234 Root cause confirmed: Spring Cloud LoadBalancer 35s cache caches empty instance list at gateway startup — fix by reducing TTL to 5s (May 12 at 6:12 PM)
+S235 User approved applying LoadBalancer cache TTL fix to gateway application.yml — proceeding to edit the file (May 12 at 6:12 PM)
+754 6:17p 🔴 Fix gateway 503 "Unable to find instance" — reduce Spring Cloud LoadBalancer cache TTL from 35s to 5s
+S238 Debug persistent 503 "Unable to find instance for eagle-system-server" on gateway routes after applying LB cache TTL fix, and diagnose 404 /system/userinfo errors (May 12 at 6:18 PM)
+755 6:27p 🔵 Post-deployment gateway still has two active issues: 503 LB cache and 404 wrong URL path
+756 " 🔵 Gateway 503 persists post-fix — LB cache TTL change likely not compiled into JAR
+S239 Persistent 503 "Unable to find instance for eagle-system-server" on gateway — diagnosing whether LB cache TTL fix was compiled into JAR, and confirming /api prefix fixes 404 (May 12 at 6:32 PM)
+757 6:42p 🔵 Gateway 503 Despite Healthy Nacos Registration for eagle-system-server
+758 6:44p 🔵 Root Cause Confirmed: Spring Cloud LoadBalancer 35s Cache TTL Causes Gateway 503 on Startup
+759 6:45p 🔵 Gateway AliasRouteDefinitionLocator and GatewayOpenApiConfig Source Architecture Confirmed
+760 " 🔵 AliasRouteDefinitionLocator Does Not StripPrefix — Full /api/system/** Path Passes Through to eagle-system-server
+761 " 🔵 Docker Compose Deploy Config: Gateway and System Both Default to prod Profile; System on Port 8082
+762 " 🔵 Docker Daemon Not Accessible from Codex Execution Environment
+763 " 🔵 Nacos Confirms eagle-system-server Healthy from Inside Gateway Container
+
+Access 654k tokens of past work via get_observations([IDs]) or mem-search skill.
+</claude-mem-context>

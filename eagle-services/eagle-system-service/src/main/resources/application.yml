@@ -25,6 +25,9 @@ spring:
         server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
         namespace: ${NACOS_NAMESPACE:}
         group: ${NACOS_GROUP:DEFAULT_GROUP}
+        # Nacos 3.0+ 默认开启鉴权（nacos.core.auth.enabled=true），客户端必须传账号密码
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:}
 
   # ---- Flyway：基线默认关闭，dev/prod profile 显式打开 ----
   flyway:
