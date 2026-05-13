@@ -22,8 +22,18 @@ description: Use when implementing OAuth2 resource server (JWT-protected service
 implementation project(':eagle-starter:eagle-resource-server-starter')
 ```
 
+### ⚠️ 必填:JWT 解码源(issuer-uri / jwk-set-uri)
+
+只要引入了 starter **并挂上 `@EnableEagleResourceServer`**,就**必须**在 yml 配
+`spring.security.oauth2.resourceserver.jwt.issuer-uri` 或 `jwk-set-uri` 之一,
+否则 Spring Security 找不到 `JwtDecoder`,启动直接失败。
+
+`issuer-uri` 是**启动时立即**型(Spring 会同步去拉 `/.well-known/openid-configuration`
+探测 JWK URL),所以 auth-server 必须可达;`jwk-set-uri` 是懒加载(首次收到 JWT 才拉),
+本地联调更友好。**值必须是完整 URL,带 `http://` / `https://` 前缀**,裸 `host:port` 启动会失败。
+
 ```yaml
-# JWT 解码走 Spring Boot 标准配置
+# JWT 解码走 Spring Boot 标准配置 —— issuer-uri 与 jwk-set-uri 二选一,必填
 spring.security.oauth2.resourceserver.jwt:
   issuer-uri: ${OAUTH2_ISSUER:http://eagle-system-server:8081}
 
@@ -191,6 +201,9 @@ JWT 解码走 `spring.security.oauth2.resourceserver.jwt.issuer-uri` 或 `jwk-se
 
 ## 常见错误
 
+- ❌ 引入 starter + `@EnableEagleResourceServer` 却**没配 issuer-uri / jwk-set-uri** → ✅ 必须二选一,
+  否则启动失败(找不到 `JwtDecoder`)
+- ❌ `issuer-uri: 172.27.0.155:8081`(裸 host:port) → ✅ 必须带 scheme:`http://172.27.0.155:8081`
 - ❌ `@PreAuthorize("isAuthenticated()")` → ✅ 直接删掉，filter chain 已强制登录
 - ❌ `@PreAuthorize("permitAll()")` 想公开接口 → ✅ 把路径加到 `permit-paths`，注解删除
 - ❌ 公开路径与管理路径共用前缀（如 `/products` 公开 + `/products/admin/**` 管理）→
