@@ -101,48 +101,6 @@ spring:
             connect-timeout: 3000
             response-timeout: 30s
 
-          # 所有业务路由由 GatewayRouteConfig.ServiceRouteLocator 基于 Nacos DiscoveryClient
-          # 与 eagle.gateway.routes.services.* 自动生成，此处不再声明任何静态 routes 条目。
-
-# ===========================================
-# Eagle 网关路由声明：alias + 协议固定端点 + WebSocket + 路由级 filter
-# 每个下游服务的 serviceId 在 services 下声明 alias / wsPaths / fixedPaths / filters；
-# 未声明的服务自动按命名规则推导 alias（剥离 eagle- 前缀与 -server/-service 后缀），
-# 仅生成业务别名 + OpenAPI 聚合两条基础路由。
-#
-# filters 结构化格式（- name + args），仅作用于业务别名路由（不作用于 ws/fixed/api-docs）。
-# SCG 短 DSL 不支持单参数多值（comma 已是参数分隔符，pipe 不被识别），数组参数请用 YAML 列表，
-# 由 ServiceRouteLocator.toFilterDefinition() 自动展开为 statuses[0]/statuses[1] 等索引参数。
-# 限流不在此处声明 —— 走 Sentinel Dashboard（spring.cloud.sentinel.datasource.ds-flow 已接入），
-# 规则按 routeId（alias-{alias}/api-docs-{alias}）或 API 分组配置，秒级下发，无需重启网关。
-# ===========================================
-eagle:
-  gateway:
-    openapi:
-      discovery-enabled: true                   # Swagger UI 通过 Nacos 服务发现聚合下游 OpenAPI
-    routes:
-      enabled: true                             # 启用服务发现路由（本地无 Nacos 场景用 profile 覆盖为 false）
-      path-prefix: /api
-      self-service-id: eagle-gateway-server
-      services:
-        eagle-system-server:
-          alias: system
-          ws-paths:
-            - /ws-stomp/**                      # STOMP over WebSocket
-          fixed-paths:                          # OAuth2/OIDC 标准路径，不能套 /api/system/ 前缀
-            - /oauth2/**
-            - /login
-            - /logout
-            - /.well-known/**
-        user-service:
-          alias: user
-        product-service:
-          alias: product
-        trade-service:
-          alias: trade
-          # 交易接口绝大多数为 POST（下单/支付/退款），自动重试可能重复扣款 — 不开 Retry，
-          # 由 Sentinel 熔断 + 应用层幂等键（eagle-idempotency-starter）兜底
-
 # ===========================================
 # Actuator：生产安全基线
 # ===========================================
