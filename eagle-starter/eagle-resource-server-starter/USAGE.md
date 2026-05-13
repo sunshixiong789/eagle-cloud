@@ -17,8 +17,14 @@
 implementation project(':eagle-starter:eagle-resource-server-starter')
 ```
 
+> ⚠️ **必填**:挂上 `@EnableEagleResourceServer` 后,`spring.security.oauth2.resourceserver.jwt.issuer-uri`
+> 或 `jwk-set-uri` 必须配其一,否则 Spring 找不到 `JwtDecoder`,启动失败。
+> `issuer-uri` 启动时立即拉 `/.well-known/openid-configuration`(auth-server 必须可达);
+> `jwk-set-uri` 懒加载,本地联调更友好。**值必须是完整 URL(带 `http://` / `https://`)**,
+> 裸 `host:port` 启动会失败。
+
 ```yaml
-# JWT 解码走 Spring Boot 标准配置
+# JWT 解码走 Spring Boot 标准配置 —— issuer-uri 与 jwk-set-uri 二选一,必填
 spring.security.oauth2.resourceserver.jwt:
   issuer-uri: ${OAUTH2_ISSUER:http://eagle-system-server:8081}
 
@@ -144,6 +150,9 @@ JWT 解码走 `spring.security.oauth2.resourceserver.jwt.issuer-uri` 或 `jwk-se
 
 ## 常见错误
 
+- ❌ 引入 starter + `@EnableEagleResourceServer` 却**没配 issuer-uri / jwk-set-uri** → ✅ 必须二选一,
+  否则启动失败(找不到 `JwtDecoder`)
+- ❌ `issuer-uri: 172.27.0.155:8081`(裸 host:port) → ✅ 必须带 scheme:`http://172.27.0.155:8081`
 - ❌ Controller 漏 `@PreAuthorize` → ✅ 必须显式声明
 - ❌ 自己 `request.getHeader("Authorization")` 解析 → ✅ `SecurityUtils.getCurrentUser()`
 - ❌ Token 放 URL → ✅ 仅 `Authorization: Bearer xxx`
