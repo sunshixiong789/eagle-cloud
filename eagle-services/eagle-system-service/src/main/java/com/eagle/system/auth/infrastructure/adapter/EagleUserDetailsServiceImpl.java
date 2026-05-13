@@ -1,5 +1,6 @@
 package com.eagle.system.auth.infrastructure.adapter;
 
+import com.eagle.common.constant.SecurityConstants;
 import com.eagle.common.dto.EagleUser;
 import com.eagle.system.auth.domain.model.Account;
 import com.eagle.system.auth.domain.port.AuthorizationInfo;
@@ -8,12 +9,15 @@ import com.eagle.system.auth.domain.repository.AccountRepository;
 import com.eagle.system.auth.domain.AuthErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
-import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.stream.Collectors;
 
 /**
  * Spring Security UserDetailsService 实现
@@ -57,8 +61,10 @@ public class EagleUserDetailsServiceImpl implements UserDetailsService {
                 true,
                 true,
                 !Boolean.TRUE.equals(account.getLocked()),
-                AuthorityUtils.createAuthorityList(
-                        authInfo.roleCodes().toArray(new String[0]))
+                authInfo.roleCodes().stream()
+                        .<GrantedAuthority>map(code ->
+                                new SimpleGrantedAuthority(SecurityConstants.ROLE_START + code))
+                        .collect(Collectors.toList())
         );
     }
 }

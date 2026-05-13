@@ -1,13 +1,9 @@
 package com.eagle.system.base.web.controller;
 
 import com.eagle.system.base.application.service.UserApplicationService;
-import com.eagle.system.base.web.dto.request.AssignDeptRequest;
-import com.eagle.system.base.web.dto.request.AssignPostsRequest;
 import com.eagle.system.base.web.dto.request.AssignRolesRequest;
 import com.eagle.system.base.web.dto.request.UpdateUserRequest;
 import com.eagle.system.base.web.dto.request.UserQueryRequest;
-import com.eagle.system.base.web.dto.response.AssignedDeptResponse;
-import com.eagle.system.base.web.dto.response.AssignedPostResponse;
 import com.eagle.system.base.web.dto.response.AssignedRoleResponse;
 import com.eagle.system.base.web.dto.response.UserResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,7 +16,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,12 +32,12 @@ import java.util.List;
 /**
  * 用户管理控制器
  * <p>
- * 管理用户档案、角色分配、部门分配、岗位分配等组织信息。
- * 认证凭据操作（注册、密码、锁定、删除）由 auth 域的 AccountController 处理。
+ * 管理用户档案和角色分配。
+ * 部门/岗位管理已下线;认证凭据操作由 auth 域的 AccountController 处理。
  *
  * @author sunshixiong
  */
-@Tag(name = "用户管理", description = "用户档案、角色分配、部门分配、岗位分配等组织信息管理")
+@Tag(name = "用户管理", description = "用户档案和角色分配管理")
 @RestController
 @RequestMapping("users")
 @RequiredArgsConstructor
@@ -117,36 +112,6 @@ public class UserController {
     }
 
     /**
-     * 分配部门
-     *
-     * @param id      用户 ID
-     * @param request 分配部门请求
-     */
-    @Operation(summary = "分配部门", description = "为用户分配部门")
-    @PatchMapping("/{id}/dept")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('admin')")
-    public void assignDept(@Parameter(description = "用户ID") @PathVariable Long id,
-                           @Valid @RequestBody AssignDeptRequest request) {
-        userApplicationService.assignDept(id, request.getDeptId());
-    }
-
-    /**
-     * 分配岗位
-     *
-     * @param id      用户 ID
-     * @param request 分配岗位请求
-     */
-    @Operation(summary = "分配岗位", description = "为用户分配岗位")
-    @PatchMapping("/{id}/posts")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('admin')")
-    public void assignPosts(@Parameter(description = "用户ID") @PathVariable Long id,
-                            @Valid @RequestBody AssignPostsRequest request) {
-        userApplicationService.assignPosts(id, request.getPostIds());
-    }
-
-    /**
      * 获取用户已分配角色列表
      *
      * @param id 用户 ID
@@ -159,31 +124,4 @@ public class UserController {
         return userApplicationService.getUserRoles(id);
     }
 
-    /**
-     * 获取用户已分配岗位列表
-     *
-     * @param id 用户 ID
-     * @return 已分配岗位列表
-     */
-    @Operation(summary = "获取用户已分配岗位")
-    @GetMapping("/{id}/posts")
-    @PreAuthorize("isAuthenticated()")
-    public List<AssignedPostResponse> getUserPosts(@Parameter(description = "用户ID") @PathVariable Long id) {
-        return userApplicationService.getUserPosts(id);
-    }
-
-    /**
-     * 获取用户所属部门
-     *
-     * @param id 用户 ID
-     * @return 所属部门，未分配时返回 204 No Content
-     */
-    @Operation(summary = "获取用户所属部门")
-    @GetMapping("/{id}/dept")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<AssignedDeptResponse> getUserDept(@Parameter(description = "用户ID") @PathVariable Long id) {
-        return userApplicationService.getUserDept(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.noContent().build());
-    }
 }

@@ -12,8 +12,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Set;
-
 /**
  * 管理员账号初始化器
  * <p>
@@ -57,7 +55,7 @@ public class AdminInitializer implements ApplicationRunner {
         // 处理可选字段(空字符串转为 null)
         String email = adminProperties.getEmail().isBlank()
                 ? null : adminProperties.getEmail();
-        ProfileHints hints = new ProfileHints(null, null, email, null, Set.of());
+        ProfileHints hints = new ProfileHints(null, null, email);
 
         // 创建管理员 Account (会触发 @PostPersist 发布 AccountRegisteredEvent)
         Account account = Account.create(

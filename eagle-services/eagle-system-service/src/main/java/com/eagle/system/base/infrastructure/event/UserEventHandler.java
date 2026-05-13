@@ -8,6 +8,7 @@ import com.eagle.system.base.domain.event.UserPasswordChangedEvent;
 import com.eagle.system.base.domain.event.UserUpdatedEvent;
 import com.eagle.system.base.domain.model.User;
 import com.eagle.system.base.domain.model.valueobject.UserProfile;
+import com.eagle.system.base.domain.repository.RoleRepository;
 import com.eagle.system.base.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,8 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+
+import java.util.Set;
 
 /**
  * 用户领域事件处理器
@@ -37,8 +40,15 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @RequiredArgsConstructor
 public class UserEventHandler {
 
+    /**
+     * 默认普通用户角色码,新注册用户自动分配该角色。
+     * 与 RoleDataInitializer 中预置的系统角色 roleCode 保持一致。
+     */
+    private static final String DEFAULT_USER_ROLE_CODE = "user";
+
     private final CacheManager cacheManager;
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
 
     /**
      * 处理用户创建事件
@@ -114,16 +124,16 @@ public class UserEventHandler {
         // 创建 User
         User user = User.createForAccount(
                 event.accountId(), event.username(), event.phone(), profile);
-        // 应用 profile hints (管理员创建时携带的部门、角色、邮箱)
+        // 应用 profile hints (邮箱)
         if (event.email() != null) {
             user.updateContact(event.email());
         }
-        if (event.deptId() != null) {
-            user.assignDept(event.deptId());
-        }
-        if (event.roleIds() != null && !event.roleIds().isEmpty()) {
-            user.assignRoles(event.roleIds());
-        }
+        // 默认分配普通用户角色 (找不到则降级跳过, 适配 RoleDataInitializer 尚未执行的启动期场景)
+        roleRepository.findByRoleCode(DEFAULT_USER_ROLE_CODE).ifPresentOrElse(
+                role -> user.assignRoles(Set.of(role.getId())),
+                () -> log.warn("默认普通用户角色 [{}] 不存在, 跳过为新用户分配默认角色, username: {}",
+                        DEFAULT_USER_ROLE_CODE, event.username())
+        );
         userRepository.save(user);
         log.info("User created from AccountRegisteredEvent, accountId: {}, username: {}",
                 event.accountId(), event.username());

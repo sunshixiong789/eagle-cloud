@@ -2,10 +2,8 @@ package com.eagle.system.base.infrastructure.adapter;
 
 import com.eagle.system.auth.domain.port.AuthorizationInfo;
 import com.eagle.system.auth.domain.port.AuthorizationPort;
-import com.eagle.system.base.domain.model.Dept;
 import com.eagle.system.base.domain.model.Role;
 import com.eagle.system.base.domain.model.User;
-import com.eagle.system.base.domain.repository.DeptRepository;
 import com.eagle.system.base.domain.repository.RoleRepository;
 import com.eagle.system.base.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,10 +35,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class AuthorizationAdapter implements AuthorizationPort {
 
-    private static final String ROLE_PREFIX = "ROLE_";
-
     private final UserRepository userRepository;
-    private final DeptRepository deptRepository;
     private final RoleRepository roleRepository;
 
     /**
@@ -50,7 +45,7 @@ public class AuthorizationAdapter implements AuthorizationPort {
      * 用于构建 JWT Token 中的权限声明(claims)。
      *
      * @param accountId 认证账号 ID
-     * @return 授权信息(包含姓名、部门、角色码)
+     * @return 授权信息(包含姓名、部门 ID、角色码)
      */
     @Override
     public Optional<AuthorizationInfo> findAuthorizationInfo(Long accountId) {
@@ -64,8 +59,8 @@ public class AuthorizationAdapter implements AuthorizationPort {
      * 组装用户的完整授权信息:
      * <ul>
      *   <li>姓名:从 UserProfile 值对象中提取</li>
-     *   <li>部门:根据 deptId 查询部门名称</li>
-     *   <li>角色:根据 roleIds 批量查询角色码,添加 ROLE_ 前缀(Spring Security 规范)</li>
+     *   <li>部门 ID:User 上的外部引用 ID(部门管理已下线,部门名称留空)</li>
+     *   <li>角色:返回 roleCode 业务标识（不带 ROLE_ 前缀,前缀由 Spring Security 适配层添加）</li>
      * </ul>
      *
      * @param user 用户聚合根
@@ -75,23 +70,17 @@ public class AuthorizationAdapter implements AuthorizationPort {
         // 提取用户姓名
         String name = user.getProfile() != null ? user.getProfile().getName() : null;
 
-        // 查询部门名称
-        String deptName = null;
-        if (user.getDeptId() != null) {
-            deptName = deptRepository.findById(user.getDeptId())
-                    .map(Dept::getName)
-                    .orElse(null);
-        }
-
-        // 批量查询角色码并添加 ROLE_ 前缀(Spring Security 角色规范)
+        // 批量查询角色码（业务标识,不带前缀; ROLE_ 前缀由 EagleJwtAuthenticationConverter
+        // 和 EagleUserDetailsServiceImpl 在转换为 GrantedAuthority 时统一添加）
         Set<String> roleCodes = Set.of();
         if (!user.getRoleIds().isEmpty()) {
             List<Role> roles = roleRepository.findAllById(user.getRoleIds());
             roleCodes = roles.stream()
-                    .map(r -> ROLE_PREFIX + r.getRoleCode())
+                    .map(Role::getRoleCode)
                     .collect(Collectors.toSet());
         }
 
-        return new AuthorizationInfo(name, user.getDeptId(), deptName, roleCodes);
+        // 部门管理已下线,deptName 留 null;deptId 仍透传作为外部 ID 引用
+        return new AuthorizationInfo(name, user.getDeptId(), null, roleCodes);
     }
 }

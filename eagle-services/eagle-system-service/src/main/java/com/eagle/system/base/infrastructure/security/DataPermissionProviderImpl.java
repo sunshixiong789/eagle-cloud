@@ -5,10 +5,7 @@ import com.eagle.common.dto.EagleUser;
 import com.eagle.datapermission.enums.DataScope;
 import com.eagle.datapermission.provider.DataPermissionProvider;
 import com.eagle.resource.server.util.SecurityUtils;
-import com.eagle.system.base.domain.model.Dept;
 import com.eagle.system.base.domain.model.Role;
-import com.eagle.system.base.domain.repository.DeptRepository;
-import com.eagle.system.base.domain.repository.RoleDeptRepository;
 import com.eagle.system.base.domain.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,14 +15,15 @@ import org.springframework.stereotype.Component;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * 数据权限提供者实现。
  *
- * <p>基于 system-server 的用户-角色-部门模型提供数据权限信息。
+ * <p>基于 system-server 的用户-角色模型提供数据权限信息。
+ * <p>部门管理已下线，CUSTOM/DEPT/DEPT_AND_CHILD 范围在缺少部门数据时退化为空集合，
+ * 由 datapermission 切面回退到 SELF 范围。
  *
  * @author 孙士雄
  */
@@ -45,8 +43,6 @@ public class DataPermissionProviderImpl implements DataPermissionProvider {
     }
 
     private final RoleRepository roleRepository;
-    private final RoleDeptRepository roleDeptRepository;
-    private final DeptRepository deptRepository;
 
     @Override
     public DataScope getCurrentUserDataScope() {
@@ -77,31 +73,17 @@ public class DataPermissionProviderImpl implements DataPermissionProvider {
 
     @Override
     public Set<Long> getCurrentUserCustomDeptIds() {
-        Set<String> roleCodes = extractRoleCodes();
-        Set<Long> roleIds = roleRepository.findAll().stream()
-                .filter(r -> roleCodes.contains(r.getRoleCode()))
-                .map(Role::getId)
-                .collect(Collectors.toSet());
-
-        if (roleIds.isEmpty()) {
-            return Set.of();
-        }
-        return roleDeptRepository.findDeptIdsByRoleIdIn(roleIds);
+        // 部门管理已下线，CUSTOM 范围无数据来源
+        return Set.of();
     }
 
     @Override
     public Set<Long> getChildDeptIds(Long deptId) {
+        // 部门管理已下线，无法查询子部门，返回自身 ID 兜底
         if (deptId == null) {
             return Set.of();
         }
-        Optional<Dept> deptOpt = deptRepository.findById(deptId);
-        if (deptOpt.isEmpty()) {
-            return Set.of(deptId);
-        }
-        String path = deptOpt.get().getDeptPath();
-        Set<Long> ids = deptRepository.findIdsByDeptPathStartingWith(path);
-        ids.add(deptId);
-        return ids;
+        return Set.of(deptId);
     }
 
     private Set<String> extractRoleCodes() {

@@ -4,8 +4,6 @@ import com.eagle.system.base.application.mapper.UserMapper;
 import com.eagle.system.base.domain.model.User;
 import com.eagle.system.base.domain.model.enums.RoleStatus;
 import com.eagle.system.base.domain.model.valueobject.UserProfile;
-import com.eagle.system.base.domain.repository.DeptRepository;
-import com.eagle.system.base.domain.repository.PostRepository;
 import com.eagle.system.base.domain.repository.RoleRepository;
 import com.eagle.system.base.domain.repository.UserRepository;
 import com.eagle.system.base.domain.repository.UserSpecification;
@@ -13,8 +11,6 @@ import com.eagle.system.base.domain.repository.UserSummary;
 import com.eagle.system.base.domain.service.RoleValidationService;
 import com.eagle.system.base.web.dto.request.UpdateUserRequest;
 import com.eagle.system.base.web.dto.request.UserQueryRequest;
-import com.eagle.system.base.web.dto.response.AssignedDeptResponse;
-import com.eagle.system.base.web.dto.response.AssignedPostResponse;
 import com.eagle.system.base.web.dto.response.AssignedRoleResponse;
 import com.eagle.system.base.web.dto.response.UserResponse;
 import com.eagle.system.base.domain.model.enums.UserErrorCode;
@@ -26,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -39,7 +34,7 @@ import java.util.Set;
  *   <li>认证凭据操作（密码、锁定）由 auth 域的 AccountController 直接处理</li>
  * </ul>
  * <p>
- * system 域零 auth 依赖，所有跨域通信通过 common 包中的事件契约完成。
+ * 部门/岗位管理已下线，但 User.deptId 仍作为外部 ID 引用保留。
  *
  * @author sunshixiong
  */
@@ -51,8 +46,6 @@ public class UserApplicationService {
     private final UserMapper userMapper;
     private final RoleValidationService roleValidationService;
     private final RoleRepository roleRepository;
-    private final PostRepository postRepository;
-    private final DeptRepository deptRepository;
 
     /**
      * 更新用户档案信息
@@ -127,26 +120,6 @@ public class UserApplicationService {
     }
 
     /**
-     * 分配部门
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public void assignDept(Long id, Long deptId) {
-        User user = findUserById(id);
-        user.assignDept(deptId);
-        userRepository.save(user);
-    }
-
-    /**
-     * 分配岗位
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public void assignPosts(Long id, Set<Long> postIds) {
-        User user = findUserById(id);
-        user.assignPosts(postIds);
-        userRepository.save(user);
-    }
-
-    /**
      * 获取用户已分配角色列表
      *
      * @param userId 用户 ID
@@ -164,57 +137,11 @@ public class UserApplicationService {
                         .id(role.getId())
                         .roleName(role.getRoleName())
                         .roleCode(role.getRoleCode())
-                        // API 契约：RoleStatus.NORMAL → "ENABLE", DISABLED → "DISABLE"（与前端约定的显示值，非枚举名）
+                        // API 契约：RoleStatus.NORMAL → "ENABLE", DISABLED → "DISABLE"
                         .status(role.getStatus() == RoleStatus.NORMAL ? "ENABLE" :
                                 role.getStatus() == RoleStatus.DISABLED ? "DISABLE" : null)
                         .build())
                 .toList();
-    }
-
-    /**
-     * 获取用户已分配岗位列表
-     *
-     * @param userId 用户 ID
-     * @return 已分配岗位列表
-     */
-    @Transactional(readOnly = true)
-    public List<AssignedPostResponse> getUserPosts(Long userId) {
-        User user = findUserById(userId);
-        Set<Long> postIds = user.getPostIds();
-        if (postIds.isEmpty()) {
-            return List.of();
-        }
-        return postRepository.findAllById(postIds).stream()
-                .map(post -> AssignedPostResponse.builder()
-                        .id(post.getId())
-                        .postCode(post.getPostCode())
-                        .postName(post.getPostName())
-                        .postSort(post.getPostSort())
-                        .build())
-                .toList();
-    }
-
-    /**
-     * 获取用户所属部门
-     *
-     * @param userId 用户 ID
-     * @return 所属部门（Optional，用户未分配部门时为 empty）
-     */
-    @Transactional(readOnly = true)
-    public Optional<AssignedDeptResponse> getUserDept(Long userId) {
-        User user = findUserById(userId);
-        if (user.getDeptId() == null) {
-            return Optional.empty();
-        }
-        return deptRepository.findById(user.getDeptId())
-                .map(dept -> AssignedDeptResponse.builder()
-                        .id(dept.getId())
-                        .parentId(dept.getParentId())
-                        .name(dept.getName())
-                        .deptPath(dept.getDeptPath())
-                        .level(dept.getLevel())
-                        .status(dept.getStatus() != null ? dept.getStatus().name() : null)
-                        .build());
     }
 
     private User findUserById(Long id) {

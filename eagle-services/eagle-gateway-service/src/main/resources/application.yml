@@ -115,21 +115,6 @@ spring:
               predicates:
                 - Path=/login,/login/**
 
-          # 协议固定路径：OAuth2 / OIDC 规范要求客户端按 discovery 中发布的
-          # 字面 URL（authorization_endpoint / token_endpoint / jwks_uri 等）发起请求，
-          # 网关必须按原路径透传到授权服务器，不能套 alias 前缀也不能 rewrite/strip。
-          # issuer 由下游 Spring Authorization Server 从 X-Forwarded-* 自动派生为网关 URL
-          # （system 侧需开启 server.forward-headers-strategy=framework）。
-          routes:
-            - id: auth-oauth2
-              uri: lb://eagle-system-server
-              predicates:
-                - Path=/oauth2/**,/.well-known/**,/userinfo,/logout
-            - id: auth-login
-              uri: lb://eagle-system-server
-              predicates:
-                - Path=/login,/login/**
-
 # ===========================================
 # Actuator：生产安全基线
 # ===========================================
