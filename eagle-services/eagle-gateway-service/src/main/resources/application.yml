@@ -101,48 +101,39 @@ spring:
             connect-timeout: 3000
             response-timeout: 30s
 
-          # AliasRouteDefinitionLocator 基于 DiscoveryClient 自动生成两类路由：
-          #   - 业务别名：/api/{alias}/**       → lb://{serviceId}（整段透传）
-          #   - OpenAPI 聚合：/v3/api-docs/{alias} → lb://{serviceId} + SetPath=/v3/api-docs
-          # 此处仅声明 alias 规则无法覆盖的特殊路径：
-          #   - WebSocket：lb:ws:// 协议
-          #   - OAuth2/OIDC：协议固定路径（/oauth2/**、/login、/logout、/.well-known/**）不能套别名前缀
-          routes:
-            - id: system-server-ws
-              uri: lb:ws://eagle-system-server
-              predicates:
-                - Path=/ws-stomp/**
-
-            - id: system-server-oauth2
-              uri: lb://eagle-system-server
-              predicates:
-                - Path=/oauth2/**,/login,/logout,/.well-known/**
-
-          discovery:
-            locator:
-              enabled: true
+          # 所有业务路由由 GatewayRouteConfig.ServiceRouteLocator 基于 Nacos DiscoveryClient
+          # 与 eagle.gateway.routes.services.* 自动生成，此处不再声明任何静态 routes 条目。
 
 # ===========================================
-# Eagle Gateway 业务配置
-# 注意：网关不再做 JWT 鉴权（JwtAuthenticationGlobalFilter 已移除），
-#       JWT 验签与权限校验下沉到下游业务服务（eagle-resource-server-starter）。
-#       公开路径白名单由各下游服务通过 eagle.resource-server.permit-paths 各自维护。
+# Eagle 网关路由声明：alias + 协议固定端点 + WebSocket
+# 每个下游服务的 serviceId 在 services 下声明 alias / wsPaths / fixedPaths；
+# 未声明的服务自动按命名规则推导 alias（剥离 eagle- 前缀与 -server/-service 后缀），
+# 仅生成业务别名 + OpenAPI 聚合两条基础路由。
 # ===========================================
 eagle:
   gateway:
     openapi:
-      discovery-enabled: true                   # 默认走服务发现聚合；local 关闭
-    alias:
-      enabled: true                             # 基于 DiscoveryClient 自动为每个下游服务生成 /api/{alias}/** 路由
+      discovery-enabled: true                   # Swagger UI 通过 Nacos 服务发现聚合下游 OpenAPI
+    routes:
+      enabled: true                             # 启用服务发现路由（本地无 Nacos 场景用 profile 覆盖为 false）
       path-prefix: /api
       self-service-id: eagle-gateway-server
-      # 显式覆盖默认推导规则（eagle-{name}-server / -service → {name}）；
-      # 不在此声明的服务，按默认规则自动生成 alias
-      mappings:
-        system: eagle-system-server
-        user: user-service
-        trade: trade-service
-        product: product-service
+      services:
+        eagle-system-server:
+          alias: system
+          ws-paths:
+            - /ws-stomp/**                      # STOMP over WebSocket
+          fixed-paths:                          # OAuth2/OIDC 标准路径，不能套 /api/system/ 前缀
+            - /oauth2/**
+            - /login
+            - /logout
+            - /.well-known/**
+        user-service:
+          alias: user
+        product-service:
+          alias: product
+        trade-service:
+          alias: trade
 
 # ===========================================
 # Actuator：生产安全基线

@@ -32,13 +32,13 @@ public class GatewayOpenApiConfig implements ApplicationListener<ApplicationRead
 
     private final DiscoveryClient discoveryClient;
     private final SwaggerUiConfigProperties swaggerUiConfigProperties;
-    private final GatewayAliasProperties aliasProperties;
+    private final GatewayRouteConfig.RouteProperties routeProperties;
 
     /**
      * 应用完全就绪后从 Nacos 发现服务，注册到 Swagger UI 聚合 URLs。
      *
      * <p>SwaggerUrl 的 {@code name} 与 {@code url} 段均使用 alias（与
-     * {@link AliasRouteDefinitionLocator} 生成的 api-docs 聚合路由对齐），
+     * {@link GatewayRouteConfig.ServiceRouteLocator} 生成的 api-docs 聚合路由对齐），
      * 例如 {@code eagle-system-server} → {@code /v3/api-docs/system}。
      *
      * <p>使用 {@link ApplicationReadyEvent} 而非 {@code @PostConstruct}，
@@ -54,7 +54,7 @@ public class GatewayOpenApiConfig implements ApplicationListener<ApplicationRead
 
         Set<SwaggerUiConfigProperties.SwaggerUrl> urls = new HashSet<>();
         for (String serviceId : services) {
-            if (serviceId.equalsIgnoreCase(aliasProperties.getSelfServiceId())) {
+            if (serviceId.equalsIgnoreCase(routeProperties.getSelfServiceId())) {
                 continue;
             }
             List<ServiceInstance> instances = discoveryClient.getInstances(serviceId);
@@ -62,7 +62,7 @@ public class GatewayOpenApiConfig implements ApplicationListener<ApplicationRead
                 continue;
             }
 
-            String alias = aliasProperties.resolveAlias(serviceId);
+            String alias = routeProperties.resolveAlias(serviceId);
             String url = API_DOCS_PATH + "/" + alias;
             String displayName = formatServiceName(serviceId);
             urls.add(new SwaggerUiConfigProperties.SwaggerUrl(alias, url, displayName));
