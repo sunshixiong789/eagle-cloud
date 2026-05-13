@@ -30,6 +30,10 @@ spring:
         password: ${NACOS_PASSWORD:}
         # 多机部署时显式注入宿主机/可达 IP；单机 docker 部署留空，客户端自动取容器 IP
         ip: ${NACOS_REGISTER_IP:}
+        # 实例 metadata：网关按 spring-doc 聚合 OpenAPI，对应 /v3/api-docs/system
+        metadata:
+          spring-doc: system
+          spring-doc-name: System Server
 
   # ---- Flyway：基线默认关闭，dev/prod profile 显式打开 ----
   flyway:
