@@ -17,7 +17,7 @@ server:
 
 spring:
   application:
-    name: eagle-gateway-server
+    name: gateway-server
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
   lifecycle:
