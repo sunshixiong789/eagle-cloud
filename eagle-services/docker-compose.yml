@@ -112,7 +112,6 @@ services:
       args:
         SENTINEL_VERSION: 1.8.9
     image: eagle-sentinel-dashboard:1.8.9
-    pull_policy: build           # 本地构建镜像，禁止 docker compose up 时去 registry 拉
     container_name: eagle-sentinel
     restart: always
     ports:
@@ -197,7 +196,6 @@ services:
       context: ./eagle-gateway-service
       dockerfile: Dockerfile
     image: eagle-gateway:1.0.0
-    pull_policy: build           # 本地构建镜像，禁止 docker compose up 时去 registry 拉
     container_name: eagle-gateway
     restart: always
     ports:
@@ -244,7 +242,6 @@ services:
       context: ./eagle-system-service
       dockerfile: Dockerfile
     image: eagle-system:1.0.0
-    pull_policy: build           # 本地构建镜像，禁止 docker compose up 时去 registry 拉
     container_name: eagle-system
     restart: always
     ports:
