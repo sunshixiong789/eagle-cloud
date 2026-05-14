@@ -109,11 +109,17 @@ spring:
             - id: auth-oauth2
               uri: lb://system
               predicates:
-                - Path=/oauth2/**,/.well-known/**,/userinfo,/logout
+                - Path=/oauth2/**,/.well-known/**,/userinfo,/logout,/connect/**
             - id: auth-login
               uri: lb://system
               predicates:
                 - Path=/login,/login/**
+            # 账号自助 / 短信验证码：注册、重置密码、绑定手机、短信码下发等
+            # system 侧已在 SecurityConfig 中按需 permitAll；网关层只做透传不做鉴权
+            - id: auth-account
+              uri: lb://system
+              predicates:
+                - Path=/accounts/**,/sms/**
 
 # ===========================================
 # Actuator：生产安全基线
