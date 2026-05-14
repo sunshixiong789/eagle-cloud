@@ -40,6 +40,7 @@ ext {
     wxJavaVersion = '4.8.2-20260420.104332'
     aliyunSmsVersion = '4.5.1'
     aliyunDypnsapiVersion = '1.2.3'
+    tencentCloudSmsVersion = '3.1.1451'
 
     // API 文档
     springdocVersion = '3.0.3'
@@ -118,6 +119,7 @@ dependencies {
         add('api', "com.github.binarywang:weixin-java-miniapp:${wxJavaVersion}")
         add('api', "com.aliyun:dysmsapi20170525:${aliyunSmsVersion}")
         add('api', "com.aliyun:dypnsapi20170525:${aliyunDypnsapiVersion}")
+        add('api', "com.tencentcloudapi:tencentcloud-sdk-java-sms:${tencentCloudSmsVersion}")
 
         // API 文档
         add('api', "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}")

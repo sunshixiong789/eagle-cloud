@@ -2,7 +2,7 @@
 
 ## 何时使用
 
-- 短信验证码 / 通知（阿里云）
+- 短信验证码 / 通知（**阿里云** / **腾讯云**，二选一，通过 `eagle.message.sms.provider` 切换）
 - 邮件通知（Spring Mail）
 - 站内信（IN_APP）
 - 模板化消息（`${key}` 占位符）
@@ -28,21 +28,29 @@ spring.mail: # type=EMAIL 时
 eagle.message:
   enabled: true
   sms:
-    access-key-id: ${SMS_AK}
-    access-key-secret: ${SMS_SK}
+    provider: aliyun                       # aliyun（默认） / tencent
+    access-key-id: ${SMS_AK}               # 阿里云 AK，或腾讯云 SecretId
+    access-key-secret: ${SMS_SK}           # 阿里云 SK，或腾讯云 SecretKey
     sign-name: 鹰云
-    endpoint: dysmsapi.aliyuncs.com
+    endpoint: dysmsapi.aliyuncs.com        # 腾讯云改为 sms.tencentcloudapi.com（或留空走默认）
+    # —— 仅 provider=tencent 需要 ——
+    region: ap-guangzhou
+    sdk-app-id: "1400000000"
   email:
     from: noreply@eagle.com
   templates: # 模板配置（key 是模板编码）
     verify.code:
       subject: 您的验证码
       content: "您的验证码是 ${code}，有效期 ${minutes} 分钟。"
-      sms-template-id: SMS_123456789       # 阿里云模板 ID（SMS 渠道）
+      sms-template-id: SMS_123456789       # 阿里云 SMS_xxx；腾讯云为数字字符串如 "100001"
     order.shipped:
       subject: 订单已发货
       content: "订单 ${orderNo} 已发货，物流 ${trackingNo}"
 ```
+
+> **腾讯云提示**：
+> - 模板参数按 `Map` 迭代顺序展开为字符串数组，调用方应使用 `LinkedHashMap` 或 `Map.of(...)` 保证顺序与模板占位符一致。
+> - 手机号建议传 `+86` 开头的 E.164 格式；本实现也接受 11 位国内号（自动补 `+86`）。
 
 ## 核心 API
 
@@ -110,17 +118,20 @@ public class WechatMpChannel implements MessageChannel {
 
 ## 配置项
 
-| key                                              | 类型      | 默认                      | 说明            |
-|--------------------------------------------------|---------|-------------------------|---------------|
-| `eagle.message.enabled`                          | boolean | `true`                  | 总开关           |
-| `eagle.message.sms.access-key-id`                | String  | —                       | 阿里云 AK（ENC()） |
-| `eagle.message.sms.access-key-secret`            | String  | —                       | 阿里云 SK（ENC()） |
-| `eagle.message.sms.sign-name`                    | String  | —                       | 短信签名          |
-| `eagle.message.sms.endpoint`                     | String  | `dysmsapi.aliyuncs.com` | 阿里云 SMS 端点    |
-| `eagle.message.email.from`                       | String  | —                       | 发件邮箱          |
-| `eagle.message.templates.{code}.subject`         | String  | —                       | 模板主题（邮件）      |
-| `eagle.message.templates.{code}.content`         | String  | —                       | 模板内容          |
-| `eagle.message.templates.{code}.sms-template-id` | String  | —                       | 阿里云 SMS 模板 ID |
+| key                                              | 类型      | 默认                      | 说明                                |
+|--------------------------------------------------|---------|-------------------------|-----------------------------------|
+| `eagle.message.enabled`                          | boolean | `true`                  | 总开关                               |
+| `eagle.message.sms.provider`                     | String  | `aliyun`                | 短信服务商：`aliyun` / `tencent`        |
+| `eagle.message.sms.access-key-id`                | String  | —                       | 阿里云 AK / 腾讯云 SecretId（ENC()）      |
+| `eagle.message.sms.access-key-secret`            | String  | —                       | 阿里云 SK / 腾讯云 SecretKey（ENC()）     |
+| `eagle.message.sms.sign-name`                    | String  | —                       | 短信签名                              |
+| `eagle.message.sms.endpoint`                     | String  | `dysmsapi.aliyuncs.com` | API 端点（腾讯云填 `sms.tencentcloudapi.com` 或留默认由 starter 兜底）|
+| `eagle.message.sms.region`                       | String  | `ap-guangzhou`          | 腾讯云地域（仅腾讯云）                       |
+| `eagle.message.sms.sdk-app-id`                   | String  | —                       | 腾讯云短信 SdkAppId（仅腾讯云，必填）           |
+| `eagle.message.email.from`                       | String  | —                       | 发件邮箱                              |
+| `eagle.message.templates.{code}.subject`         | String  | —                       | 模板主题（邮件）                          |
+| `eagle.message.templates.{code}.content`         | String  | —                       | 模板内容                              |
+| `eagle.message.templates.{code}.sms-template-id` | String  | —                       | 服务商侧模板 ID（阿里云 `SMS_xxx` / 腾讯云数字字符串） |
 
 邮件 SMTP 配置走 Spring Boot 标准 `spring.mail.*`。
 

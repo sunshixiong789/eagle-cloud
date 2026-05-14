@@ -5,6 +5,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationGrantAuthenticationToken;
 
+import java.io.Serial;
 import java.util.Map;
 
 /**
@@ -16,6 +17,7 @@ import java.util.Map;
 public class SmsCodeAuthenticationToken extends OAuth2AuthorizationGrantAuthenticationToken {
     public static final AuthorizationGrantType SMS_CODE =
             new AuthorizationGrantType("sms_code");
+    @Serial
     private static final long serialVersionUID = 1L;
     private final String phone;
     private final String code;

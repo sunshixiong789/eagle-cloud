@@ -38,24 +38,42 @@ public class MessageProperties {
     @Data
     public static class Sms {
         /**
-         * 阿里云 AccessKey ID。
+         * 短信服务商：{@code aliyun}（默认） / {@code tencent}。
+         */
+        private String provider = "aliyun";
+
+        /**
+         * 服务商 AccessKey ID / SecretId（阿里云用 AK，腾讯云用 SecretId）。
          */
         private String accessKeyId = "";
 
         /**
-         * 阿里云 AccessKey Secret。
+         * 服务商 AccessKey Secret / SecretKey。
          */
         private String accessKeySecret = "";
 
         /**
-         * 短信签名。
+         * 短信签名（阿里云、腾讯云均使用）。
          */
         private String signName = "";
 
         /**
-         * 阿里云 SMS Endpoint。
+         * 服务商 SMS Endpoint。
+         * <p>阿里云默认 {@code dysmsapi.aliyuncs.com}；
+         * 腾讯云默认 {@code sms.tencentcloudapi.com}。
          */
         private String endpoint = "dysmsapi.aliyuncs.com";
+
+        /**
+         * 腾讯云地域，例如 {@code ap-guangzhou}、{@code ap-shanghai}。仅腾讯云使用。
+         */
+        private String region = "ap-guangzhou";
+
+        /**
+         * 腾讯云短信应用 SdkAppId（在腾讯云短信控制台创建，例如 {@code 1400000000}）。
+         * <p>仅腾讯云使用。
+         */
+        private String sdkAppId = "";
     }
 
     @Data

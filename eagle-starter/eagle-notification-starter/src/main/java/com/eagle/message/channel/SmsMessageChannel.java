@@ -1,23 +1,21 @@
 package com.eagle.message.channel;
 
-import com.aliyun.dysmsapi20170525.Client;
-import com.aliyun.dysmsapi20170525.models.SendSmsRequest;
-import com.aliyun.dysmsapi20170525.models.SendSmsResponse;
-import com.aliyun.teaopenapi.models.Config;
+import com.eagle.message.channel.sms.SmsProvider;
 import com.eagle.message.dto.MessageDTO;
 import com.eagle.message.enums.MessageChannelType;
 import com.eagle.message.properties.MessageProperties;
 import com.eagle.message.template.MessageTemplateEngine;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
-
 /**
- * 阿里云短信发送渠道。
+ * 短信发送渠道。
  *
- * <p>阿里云 SMS 在服务端完成模板渲染，应用层只负责传递参数（{@code templateParam}）。
- * 模板 ID 需在 {@code eagle.message.templates.<code>.sms-template-id} 中配置，
- * 与应用层 {@code templateCode} 分开管理。
+ * <p>本类只负责模板 ID 解析、签名传递与 fan-out 到每个接收号码，
+ * 实际 SDK 调用委派给 {@link SmsProvider}（阿里云 / 腾讯云）。
+ *
+ * <p>服务商通过 {@code eagle.message.sms.provider} 切换；模板 ID 仍写在
+ * {@code eagle.message.templates.<code>.sms-template-id}（阿里云 {@code SMS_xxx}，
+ * 腾讯云数字字符串）。
  *
  * @author 孙士雄
  */
@@ -26,20 +24,14 @@ public class SmsMessageChannel implements MessageChannel {
 
     private final MessageProperties properties;
     private final MessageTemplateEngine templateEngine;
-    private final Client client;
+    private final SmsProvider provider;
 
-    public SmsMessageChannel(MessageProperties properties, MessageTemplateEngine templateEngine) {
+    public SmsMessageChannel(MessageProperties properties,
+                             MessageTemplateEngine templateEngine,
+                             SmsProvider provider) {
         this.properties = properties;
         this.templateEngine = templateEngine;
-        try {
-            Config config = new Config()
-                    .setAccessKeyId(properties.getSms().getAccessKeyId())
-                    .setAccessKeySecret(properties.getSms().getAccessKeySecret())
-                    .setEndpoint(properties.getSms().getEndpoint());
-            this.client = new Client(config);
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to create Aliyun SMS client", e);
-        }
+        this.provider = provider;
     }
 
     @Override
@@ -49,49 +41,10 @@ public class SmsMessageChannel implements MessageChannel {
 
     @Override
     public void send(MessageDTO message, String renderedContent) {
-        // 阿里云 SMS 使用在控制台注册的模板 ID，与应用层 templateCode 不同
         String smsTemplateId = templateEngine.getSmsTemplateId(message.templateCode());
-        String templateParam = toJson(message.params());
-
+        String signName = properties.getSms().getSignName();
         for (String phone : message.recipients()) {
-            try {
-                SendSmsRequest request = new SendSmsRequest()
-                        .setPhoneNumbers(phone)
-                        .setSignName(properties.getSms().getSignName())
-                        .setTemplateCode(smsTemplateId)
-                        .setTemplateParam(templateParam);
-                SendSmsResponse response = client.sendSms(request);
-                if (!"OK".equals(response.getBody().getCode())) {
-                    log.error("SMS send failed: phone={}, aliyunCode={}, message={}",
-                            phone, response.getBody().getCode(), response.getBody().getMessage());
-                } else {
-                    log.info("SMS sent to {}", phone);
-                }
-            } catch (Exception e) {
-                log.error("SMS send error: phone={}", phone, e);
-            }
+            provider.send(phone, smsTemplateId, signName, message.params());
         }
-    }
-
-    /**
-     * 将参数 Map 序列化为 JSON 字符串，转义 {@code "} 和 {@code \} 防止格式破坏。
-     */
-    private String toJson(Map<String, String> params) {
-        StringBuilder sb = new StringBuilder("{");
-        boolean first = true;
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            if (!first) {
-                sb.append(",");
-            }
-            first = false;
-            sb.append("\"").append(escapeJson(entry.getKey()))
-                    .append("\":\"").append(escapeJson(entry.getValue())).append("\"");
-        }
-        sb.append("}");
-        return sb.toString();
-    }
-
-    private String escapeJson(String value) {
-        return value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }

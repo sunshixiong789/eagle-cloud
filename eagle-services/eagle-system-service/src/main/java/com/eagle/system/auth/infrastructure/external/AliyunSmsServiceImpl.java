@@ -77,11 +77,16 @@ public class AliyunSmsServiceImpl implements SmsService {
             // 开发环境未配置阿里云时，打印验证码到日志
             log.warn("阿里云短信未配置，验证码: phone={}, code={}", phone, code);
         }
+        log.debug("sms send DEBUG: phone=[{}] (len={}), code=[{}], cacheSize={}, this={}",
+                phone, phone.length(), code, codeCache.estimatedSize(), System.identityHashCode(this));
     }
 
     @Override
     public boolean verifyCode(String phone, String code) {
         String cached = codeCache.getIfPresent(phone);
+        log.debug("sms verify DEBUG: phone=[{}] (len={}), inputCode=[{}], cachedCode=[{}], cacheSize={}, this={}",
+                phone, phone == null ? -1 : phone.length(), code, cached,
+                codeCache.estimatedSize(), System.identityHashCode(this));
         if (cached != null && cached.equals(code)) {
             codeCache.invalidate(phone);
             return true;

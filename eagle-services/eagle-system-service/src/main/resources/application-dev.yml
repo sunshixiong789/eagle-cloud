@@ -48,3 +48,4 @@ logging:
     com.eagle: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
+    com.eagle.system.auth: DEBUG

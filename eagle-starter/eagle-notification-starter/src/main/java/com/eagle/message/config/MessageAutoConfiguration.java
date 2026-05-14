@@ -3,6 +3,9 @@ package com.eagle.message.config;
 import com.eagle.message.channel.EmailMessageChannel;
 import com.eagle.message.channel.MessageChannel;
 import com.eagle.message.channel.SmsMessageChannel;
+import com.eagle.message.channel.sms.AliyunSmsProvider;
+import com.eagle.message.channel.sms.SmsProvider;
+import com.eagle.message.channel.sms.TencentSmsProvider;
 import com.eagle.message.properties.MessageProperties;
 import com.eagle.message.service.NotificationService;
 import com.eagle.message.template.MessageTemplateEngine;
@@ -73,15 +76,48 @@ public class MessageAutoConfiguration {
     }
 
     @Configuration(proxyBeanMethods = false)
-    @ConditionalOnClass(name = "com.aliyun.dysmsapi20170525.Client")
     @ConditionalOnProperty(prefix = "eagle.message.sms", name = "access-key-id")
     static class SmsChannelConfiguration {
 
+        /**
+         * 阿里云短信服务商（默认）。
+         * <p>当类路径存在 {@code com.aliyun.dysmsapi20170525.Client} 且
+         * {@code eagle.message.sms.provider=aliyun}（或未配置）时生效。
+         */
         @Bean
+        @ConditionalOnMissingBean(SmsProvider.class)
+        @ConditionalOnClass(name = "com.aliyun.dysmsapi20170525.Client")
+        @ConditionalOnProperty(prefix = "eagle.message.sms", name = "provider",
+                havingValue = AliyunSmsProvider.NAME, matchIfMissing = true)
+        public SmsProvider aliyunSmsProvider(MessageProperties properties) {
+            log.info("SMS provider = Aliyun, endpoint: {}", properties.getSms().getEndpoint());
+            return new AliyunSmsProvider(properties);
+        }
+
+        /**
+         * 腾讯云短信服务商。
+         * <p>当类路径存在 {@code com.tencentcloudapi.sms.v20210111.SmsClient} 且
+         * {@code eagle.message.sms.provider=tencent} 时生效。
+         */
+        @Bean
+        @ConditionalOnMissingBean(SmsProvider.class)
+        @ConditionalOnClass(name = "com.tencentcloudapi.sms.v20210111.SmsClient")
+        @ConditionalOnProperty(prefix = "eagle.message.sms", name = "provider",
+                havingValue = TencentSmsProvider.NAME)
+        public SmsProvider tencentSmsProvider(MessageProperties properties) {
+            log.info("SMS provider = Tencent Cloud, region: {}, sdkAppId: {}",
+                    properties.getSms().getRegion(), properties.getSms().getSdkAppId());
+            return new TencentSmsProvider(properties);
+        }
+
+        @Bean
+        @ConditionalOnBean(SmsProvider.class)
         public SmsMessageChannel smsMessageChannel(MessageProperties properties,
-                                                   MessageTemplateEngine templateEngine) {
-            log.info("SMS message channel enabled, signName: {}", properties.getSms().getSignName());
-            return new SmsMessageChannel(properties, templateEngine);
+                                                   MessageTemplateEngine templateEngine,
+                                                   SmsProvider provider) {
+            log.info("SMS message channel enabled, provider: {}, signName: {}",
+                    provider.name(), properties.getSms().getSignName());
+            return new SmsMessageChannel(properties, templateEngine, provider);
         }
     }
 
