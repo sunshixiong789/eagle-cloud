@@ -52,7 +52,7 @@ public class TokenTrackingHandler implements AuthenticationSuccessHandler {
         }
 
         // 1. Write standard token response
-        OAuth2AccessTokenResponse tokenResponse = OAuth2AccessTokenResponse
+        OAuth2AccessTokenResponse.Builder responseBuilder = OAuth2AccessTokenResponse
                 .withToken(tokenAuth.getAccessToken().getTokenValue())
                 .tokenType(tokenAuth.getAccessToken().getTokenType())
                 .scopes(tokenAuth.getAccessToken().getScopes())
@@ -60,9 +60,11 @@ public class TokenTrackingHandler implements AuthenticationSuccessHandler {
                         ? Duration.between(Instant.now(), tokenAuth.getAccessToken().getExpiresAt()).getSeconds()
                         : 3600L)
                 .additionalParameters(tokenAuth.getAdditionalParameters() != null
-                        ? tokenAuth.getAdditionalParameters() : Map.of())
-                .build();
-        tokenResponseConverter.write(tokenResponse, MediaType.APPLICATION_JSON,
+                        ? tokenAuth.getAdditionalParameters() : Map.of());
+        if (tokenAuth.getRefreshToken() != null) {
+            responseBuilder.refreshToken(tokenAuth.getRefreshToken().getTokenValue());
+        }
+        tokenResponseConverter.write(responseBuilder.build(), MediaType.APPLICATION_JSON,
                 new ServletServerHttpResponse(response));
 
         // 2. Track online user — failure must not affect the already-written token response
