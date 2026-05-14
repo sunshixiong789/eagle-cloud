@@ -3,7 +3,6 @@ package com.eagle.system.auth.infrastructure.config;
 import com.eagle.common.constant.SecurityConstants;
 import com.eagle.common.dto.EagleUser;
 import com.eagle.system.auth.infrastructure.security.BlacklistAwareJwtDecoder;
-import com.eagle.system.auth.infrastructure.security.CustomGrantPublicClientAuthenticationConverter;
 import com.eagle.system.auth.infrastructure.security.EagleUserAuthenticationToken;
 import com.eagle.system.auth.infrastructure.security.JwtKeyProperties;
 import com.eagle.system.auth.infrastructure.security.LoginRateLimitFilter;
@@ -150,9 +149,6 @@ public class SecurityConfig {
                 .oauth2AuthorizationServer((authorizationServer) -> {
                     http.securityMatcher(authorizationServer.getEndpointsMatcher());
                     authorizationServer
-                            .clientAuthentication(clientAuth -> clientAuth
-                                    .authenticationConverter(new CustomGrantPublicClientAuthenticationConverter())
-                            )
                             .tokenEndpoint(tokenEndpoint -> tokenEndpoint
                                     .accessTokenRequestConverter(new WechatMiniProgramAuthenticationConverter())
                                     .authenticationProvider(wechatProvider)
