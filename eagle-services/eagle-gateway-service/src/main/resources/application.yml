@@ -78,16 +78,16 @@ spring:
             rule-type: degrade
 
     gateway:
-      # SCG 5.0 安全设计：trusted-proxies 不配置则 XForwardedHeadersFilter Bean 不创建,
-      # 网关不会给下游注入 X-Forwarded-Host/Proto/Port/Prefix，导致下游（如 system 的
-      # Spring Authorization Server）用容器内网 host:port 拼 302 Location。
-      # 值是 Java 正则，匹配 request.getRemoteAddress() 的 hostString。
-      # 开发期信任所有 IP；生产应收窄为 VPC 网段 / CDN 节点 / Ingress IP 的正则。
-      trusted-proxies: ${GATEWAY_TRUSTED_PROXIES:.*}
-
       # Spring Cloud Gateway 4.3+：spring.cloud.gateway.server.webflux.*
       server:
         webflux:
+          # SCG 5.0 安全设计：trusted-proxies 不配置则 XForwardedHeadersFilter Bean 不创建,
+          # 网关不会给下游注入 X-Forwarded-Host/Proto/Port/Prefix，导致下游（如 system 的
+          # Spring Authorization Server）用容器内网 host:port 拼 302 Location。
+          # 值是 Java 正则，匹配 request.getRemoteAddress() 的 hostString。
+          # 开发期信任所有 IP；生产应收窄为 VPC 网段 / CDN 节点 / Ingress IP 的正则。
+          # 注意属性必须在 server.webflux 下：GatewayProperties.PREFIX 已迁移到此前缀。
+          trusted-proxies: ${GATEWAY_TRUSTED_PROXIES:.*}
           # 全局 CORS（基线放开 *；prod profile 强制注入 CORS_ALLOWED_ORIGINS）
           globalcors:
             cors-configurations:
