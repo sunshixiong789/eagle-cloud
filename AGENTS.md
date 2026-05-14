@@ -147,75 +147,107 @@ PR 应包含简明摘要、受影响模块、关联 issue 或背景说明，以�
 <claude-mem-context>
 # Memory Context
 
-# [eagle-cloud] recent context, 2026-05-13 12:08pm GMT+8
+# [eagle-cloud] recent context, 2026-05-14 6:35pm GMT+8
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (18,228t read) | 625,041t work | 97% savings
+Stats: 50 obs (12,235t read) | 420,771t work | 97% savings
 
-### May 13, 2026
-810 9:51a 🔵 eagle-cloud 两个服务均无显式 application-dev profile 引用
-811 9:52a 🟣 gateway 和 system 服务 dev profile 均已写入 Nacos namespace 隔离配置并验证
-812 9:59a 🔵 Gateway 503 — 无法路由到 eagle-system-server 实例
-813 10:18a 🔵 Nacos 注册 IP 策略：内网 IP vs 外网 IP 的多服务器场景分析
-814 10:20a ✅ gateway application.yml 新增 NACOS_REGISTER_IP 多机部署支持
-815 " ✅ gateway 和 system 两服务 application.yml 均新增 NACOS_REGISTER_IP 多机注册 IP 支持
-816 " ✅ .env 新增 NACOS_REGISTER_IP 变量并附带使用说明注释
-817 " ✅ docker-compose.yml gateway 环境变量新增 NACOS_REGISTER_IP 注入，.env.example 同步更新
-818 10:21a 🔵 docker-compose.yml system 服务缺少 NACOS_REGISTER_IP 注入
-819 " 🔴 docker-compose.yml system 服务补全 NACOS_REGISTER_IP 注入
-820 " 🟣 NACOS_REGISTER_IP 多机部署支持完整落地，6处验证全通过
-821 10:27a 🔵 docker compose up -d gateway 触发其他容器重建的原因分析
-822 10:38a 🔵 Nacos v3 服务目录 API 路径与 v1 不同，/nacos/v3/ns/catalog/services 返回 404
-823 " 🔵 Nacos 3.x API 路径体系：三套端点分别对应 admin/client/console 三种角色
-824 " 🔵 Nacos 3.x 服务列表查询正确 API 路径确认
-825 10:46a 🔵 docker exec sh -c 多行管道命令报 "unexpected |" 语法错误
-S253 Nacos 实例 IP 已回到 172.19.0.8，进一步诊断 gateway→system 路由链路 (May 13 at 10:50 AM)
-S254 503 根因进一步缩小：gateway 路由配置已确认正常，等待 TCP 连通性和端口配置诊断 (May 13 at 10:58 AM)
-S255 503 根因锁定：gateway LoadBalancer 看不到 system，强怀疑 namespace 错位（dev vs public） (May 13 at 11:00 AM)
-S257 503 根因再次确认（重复摘要）：Spring Boot 4 占位符行为变更 + Nacos namespace 错位，等待用户决策修复方式 (May 13 at 11:04 AM)
-S258 503 根本修复完成：application-dev.yml Nacos namespace 默认值全部从 dev 改为 public (May 13 at 11:06 AM)
-S256 503 根因 100% 确认：Spring Boot 4 占位符行为变更导致 gateway/system 分属不同 namespace (May 13 at 11:06 AM)
-826 11:08a 🔵 gateway application-dev.yml 确认含三处 ${NACOS_NAMESPACE:dev} 配置待修复
-827 11:09a 🔴 gateway application-dev.yml 修复 Nacos namespace 默认值 dev→public，附 Spring Boot 4 警告注释
-828 " 🔵 system-service application-dev.yml 同样含 ${NACOS_NAMESPACE:dev}，需同步修复
-829 11:10a 🔴 gateway 和 system 两服务 application-dev.yml Nacos namespace 默认值全部修复为 public
-S259 503 在代码修复后仍持续，验证服务器端 .env 和容器是否已同步更新 (May 13 at 11:10 AM)
-830 11:14a 🔵 503 在代码修复后仍持续——服务器容器尚未 force-recreate 生效
-S260 新根因发现：spring.cloud.discovery.reactive.enabled=false 导致 gateway ReactiveLoadBalancer 永远找不到实例 (May 13 at 11:15 AM)
-831 11:19a 🔵 NACOS_NAMESPACE=public 已生效，但 gateway discoveryClient 仍只看到自身——namespace 来源为旧 jar 中的 application-dev.yml
-S261 503 最终根因修复：删除 spring.cloud.discovery.reactive.enabled=false，需重新 build jar + docker image (May 13 at 11:21 AM)
-832 11:22a 🔵 application.yml 确认 spring.cloud.discovery.reactive.enabled=false 的注释揭示了错误的设计决策
-833 " 🔴 删除 spring.cloud.discovery.reactive.enabled=false，修复 Spring Cloud Gateway 4.x lb:// 路由永久 503
-834 11:23a 🔴 确认 spring.cloud.discovery.reactive.enabled=false 已从 application.yml 彻底删除
-835 11:26a 🔵 Docker Compose `up` Recreates Already-Running Containers
-S262 Docker Compose `up -d gateway` causes already-running dependency containers (system, nacos, etc.) to be recreated — how to prevent this in eagle-services project (May 13 at 11:26 AM)
-836 " 🔵 eagle-services docker-compose.yml: Dependency Chain Causes Cascading Restarts
-837 11:40a 🔵 Spring Cloud Gateway 503 - Unable to Find Instance for eagle-system-server
-838 11:42a 🔵 Project Uses Superpowers Skill Framework with Chinese Routing Rules
-840 " 🔵 Root Cause Identified: LoadBalancer Caches Empty Instance List for 35s on Gateway Startup Race
-841 " 🔵 eagle-cloud Architecture: Gateway Uses AliasRouteDefinitionLocator for Dynamic lb:// Routing
-844 11:43a 🔵 Actual .env Config: dev Profile + NACOS_NAMESPACE=public on Remote Server 139.155.104.132
-845 " 🔵 AliasRouteDefinitionLocator Does NOT Strip Prefix — Full Path Forwarded to eagle-system-server
-846 " 🔵 docker-compose.yml: gateway depends_on nacos Only, NOT system — Startup Race Confirmed
-849 11:44a 🔵 Dependency Versions: Spring Cloud Gateway 5.0.1 + Spring Cloud Alibaba 2025.1.0.0 with Nacos-LB Integration
-850 " 🔵 CachingServiceInstanceListSupplier Does NOT Cache Empty Lists — Persistent 503 Means System Service Never Registers
-851 11:45a 🔵 NacosServiceDiscovery Filters Out Unhealthy Instances — Registered But Unhealthy = 503
-852 11:46a 🔵 Services Run on Remote Server 139.155.104.132 — Local Nacos/Gateway Not Accessible
-853 " 🔵 Critical Dependency Conflict: sentinel-datasource-nacos:1.8.9 Requires nacos-client:1.4.2 But Gets 3.1.1
-854 " 🔵 Root Cause Found: gateway depends_on system Removed in Uncommitted docker-compose.yml Change
-864 " 🔵 eagle-system-server IS Registered and Healthy in Nacos — Not a Registration Problem
-865 11:53a 🔵 503 Root Cause Pivoted: System IS Healthy in Nacos — Issue Is in Gateway LoadBalancer Pipeline
-866 " 🔵 NacosDiscoveryClient Has failure-tolerance-enabled Property with ServiceCache Fallback
-867 " 🔵 Confirmed Uncommitted Changes: nacos-client Strict Pin and Startup depends_on Both Removed
-868 11:55a 🔵 Spring Cloud Gateway Uses NacosReactiveDiscoveryClient via Auto-Configuration — No Custom LB Config in Gateway Code
-874 12:04p 🔵 Definitive Smoking Gun: Gateway Container Can Query Nacos Directly But Spring Cloud LoadBalancer Still Returns 503
-875 12:05p 🔵 ConditionalOnReactiveDiscoveryEnabled Requires WebClient on Classpath — Both Discovery Modes Active by Default
-876 " 🔵 SCA 2025.1.0.0 Registers LoadBalancerNacosAutoConfiguration — Potential Custom LB Override
-877 12:06p 🔵 NacosLoadBalancerClientConfiguration Overrides Default LB Chain — Installs NacosLoadBalancer WITHOUT Caching
-878 12:07p 🔵 @ConditionalOnLoadBalancerNacos Requires Explicit spring.cloud.loadbalancer.nacos.enabled=true — NacosLoadBalancer is NOT Active by Default
+### May 14, 2026
+1168 5:05p 🟣 新增 TencentSmsProvider：腾讯云短信核心实现
+1169 5:06p 🔵 SmsMessageChannel 需重构为 SmsProvider 委派层，当前仍为旧阿里云实现
+1184 5:08p 🔵 SMS diagnostic logs confirm code 225697 written to Caffeine cache, bean identity hash 590578720
+1170 " 🔄 SmsMessageChannel 重构为 SmsProvider 委派层，移除所有阿里云 SDK 直接依赖
+1171 " ✅ MessageAutoConfiguration 新增 SmsProvider 相关 import
+1172 5:09p 🟣 MessageAutoConfiguration.SmsChannelConfiguration 重构为双 provider 条件配置
+1173 " 🔵 gradlew 不在当前工作目录，编译验证需切换至项目根路径
+1174 " 🔵 eagle-cloud 项目无 gradlew 包装器，无法在命令行编译验证
+1175 5:10p 🔵 Gradle 9.5.0 全局安装于 /opt/homebrew/bin/gradle，可替代 gradlew 编译
+1176 " 🔵 编译失败：com.tencentcloudapi:tencentcloud-sdk-java-sms:3.1.1141 在配置的 Maven 仓库中不存在
+1177 " 🔵 本地 Maven 和 Gradle 缓存均无腾讯云 SDK，需核实正确 Maven 坐标
+1178 " 🔵 腾讯云 SMS SDK 最新版本为 3.1.1451，BOM 中使用的 3.1.1141 版本号错误
+1179 5:11p 🔴 修正 eagle-bom 中腾讯云 SMS SDK 版本号：3.1.1141 → 3.1.1451
+1180 5:12p 🟣 eagle-notification-starter 腾讯云 SMS 集成编译成功
+1181 " 🟣 eagle-notification-starter 完整构建成功，腾讯云 SMS 集成交付完毕
+1182 " ✅ USAGE.md 开始更新：短信服务商描述改为阿里云/腾讯云二选一
+1183 " ✅ USAGE.md 配置示例更新，新增腾讯云完整配置说明和注意事项
+1185 " ✅ USAGE.md 完整重写：配置项表格新增腾讯云字段，常见错误新增腾讯云专项警告
+1186 5:14p 🔵 SMS code grant type string confirmed as `"sms_code"` in `SmsCodeAuthenticationToken`
+1187 " 🔵 Exception handler locations in eagle-cloud
+1188 " 🔵 `GlobalExceptionHandler` does not intercept `invalid_grant` — OAuth2 errors handled by Spring Authorization Server's own mechanism
+1189 5:15p 🔵 `SmsCodeAuthenticationConverter` wired exclusively in `SecurityConfig.java`
+1190 " 🔵 `SmsCodeAuthenticationConverter` full content revealed — throws `DomainException` for missing params, not OAuth2 errors
+1191 5:16p ✅ Debug logging added to `SmsCodeAuthenticationConverter` to trace grant type matching
+1192 " 🔵 `SmsCodeAuthenticationProvider` wired exclusively in `SecurityConfig.java`
+1193 " 🔵 `SmsCodeAuthenticationProvider` full content revealed — missing `FactorGrantedAuthority.OTT_AUTHORITY` causes `authenticationTime cannot be null`
+1194 5:17p ✅ Diagnostic logs downgraded from `INFO` to `DEBUG` in `AliyunSmsServiceImpl` and `SmsCodeAuthenticationConverter`; `SmsCodeAuthenticationProvider` keeps `INFO`
+1195 " ✅ All SMS grant diagnostic logs unified to `log.debug` level across all three classes
+1196 " ✅ SMS grant diagnostic logging changes compile cleanly
+1197 " 🔵 Second DEBUG test run: code 026893 generated, bean hash 2040958233, log truncated before converter/provider lines appear
+S374 Fix mobile app SMS code grant `invalid_grant` — comprehensive DEBUG logging added across full grant chain; awaiting user test run with DEBUG enabled (May 14 at 5:17 PM)
+S376 Fix mobile app SMS code grant — converter/provider confirmed NOT being called; escalated to Spring Security TRACE logging to find where request is being intercepted (May 14 at 5:18 PM)
+S377 Fix mobile app SMS code grant — root cause definitively identified as PKCE `code_verifier` enforcement by `PublicClientAuthenticationProvider` blocking ALL custom grants (May 14 at 5:43 PM)
+1198 5:50p 🔵 Root cause identified: SMS code grant fails at `PublicClientAuthenticationProvider` due to PKCE `code_verifier` enforcement on `eagleWeb` client
+S378 Fix mobile app SMS code grant — user chose option B (new dedicated `eagleApp` client); planning implementation and cleanup of diagnostic logs (May 14 at 5:52 PM)
+S380 Fix mobile app SMS code grant (POST /oauth2/token?grant_type=sms_code) returning invalid_grant in eagle-cloud Spring Authorization Server 7.0.5 — implement Option B (new eagleApp client with require_proof_key=false) (May 14 at 5:52 PM)
+1199 5:53p 🔵 `OAuthClientProperties` is single-client mode only — supports only `eagleWeb` via `eagle.oauth.default-client` prefix
+S381 Fix eagle-cloud Spring Authorization Server 7.0.5 sms_code grant returning invalid_grant; remove all diagnostic debug logs; apply FactorGrantedAuthority.OTT_AUTHORITY fix (May 14 at 5:53 PM)
+1200 5:58p 🔵 eagle-system-service 已有独立 SMS 配置块（eagle.sms.aliyun），与 notification-starter 路径不同
+1201 5:59p 🔵 eagle-system-service auth 模块有独立 SMS 实现（AliyunSmsServiceImpl），用于验证码发送和校验
+1202 " 🔵 eagle-services/.env.example 中 SMS 环境变量只有 Aliyun 4个字段，profile 配置文件无 SMS 覆盖
+1203 " 🔵 .env 与 .env.example 中 SMS 变量内容完全一致，均为 4 个空值 ALIYUN_SMS_* 变量
+1205 " 🔵 auth/infrastructure/external/ 已有多个外部服务实现，SMS 错误码已完备
+1206 " 🔄 新增 AbstractCachedSmsService 抽象基类，提取验证码缓存和频率限制通用逻辑
+1204 6:00p 🔵 .env 中阿里云短信块结构确认：4行变量后紧跟两个空行再接分隔注释
+1207 " 🔵 auth/infrastructure/config/ 确认 Properties 类模式，TencentSmsProperties 尚未创建
+S382 Fix eagle-cloud sms_code grant invalid_grant; remove all diagnostic debug logs; apply FactorGrantedAuthority.OTT_AUTHORITY; understand why require_proof_key=false is insufficient (May 14 at 6:00 PM)
+S383 Fix eagle-cloud sms_code grant invalid_grant by creating CustomGrantClientAuthenticationProvider to bypass PublicClientAuthenticationProvider PKCE enforcement for custom grants (May 14 at 6:01 PM)
+1208 6:01p 🟣 新增 TencentSmsProperties 配置类，绑定 eagle.sms.tencent 前缀
+1209 6:02p 🔄 AliyunSmsServiceImpl 重构为继承 AbstractCachedSmsService，添加 @ConditionalOnProperty(provider=aliyun)
+1210 6:03p 🔵 eagle-system-service build.gradle 只有阿里云 dysmsapi SDK，需新增腾讯云 tencentcloud-sdk-java-sms 依赖
+1211 " ✅ eagle-system-service/build.gradle 新增腾讯云 SMS SDK 依赖
+1212 " 🟣 新增 TencentSmsServiceImpl，eagle-system-service auth 模块腾讯云短信实现完成
+1213 " 🔵 application.yml 中 eagle.sms 块位置确认（第179行），准备扩展为多 provider 结构
+1215 6:04p 🟣 application.yml eagle.sms 配置块扩展为多 provider 结构，新增 tencent 子块和 provider 切换字段
+1216 " 🟣 .env.example 更新：新增 SMS_PROVIDER 切换变量和 6 个 TENCENT_SMS_* 腾讯云短信变量
+1217 " 🔵 application.yml 多次 Edit 后读取仍显示旧内容，SMS 配置块更新未持久化
+1214 6:05p 🔵 application.yml eagle.sms 配置块精确内容确认（第179-185行），即将扩展 provider 和 tencent 子块
+S384 Fix eagle-cloud sms_code invalid_grant: wire CustomGrantClientAuthenticationProvider into SecurityConfig to bypass PKCE enforcement for custom grants (May 14 at 6:27 PM)
+S385 Fix eagle-cloud Spring Authorization Server 7.0.5 sms_code grant returning invalid_grant by implementing CustomGrantClientAuthenticationProvider to bypass mandatory PKCE for custom grant types (May 14 at 6:29 PM)
+**Investigated**: - SAS 7.0.5 source: `PublicClientAuthenticationProvider.authenticate()` calls `codeVerifierAuthenticator.authenticateRequired()` UNCONDITIONALLY for all `none`-method clients
+    - `CodeVerifierAuthenticator.authenticate()` returns `false` for non-authorization_code grants → `authenticateRequired()` always throws `invalid_grant: code_verifier`
+    - `require_proof_key=false` on `RegisteredClient` does NOT bypass token endpoint PKCE — that flag only affects the authorization endpoint
+    - `ProviderManager` stops at first provider returning non-null — custom providers registered via SAS DSL `.clientAuthentication(c -> c.authenticationProvider(...))` are prepended before built-in providers
 
-Access 625k tokens of past work via get_observations([IDs]) or mem-search skill.
+**Learned**: - Root cause confirmed: `PublicClientAuthenticationProvider` enforces PKCE unconditionally for ALL `none`-auth-method clients regardless of grant type or `require_proof_key` setting
+    - Fix strategy: Register a custom `AuthenticationProvider` BEFORE `PublicClientAuthenticationProvider` that handles custom grants (`sms_code`, `wechat_mini_program`, `phone_one_click`) by returning an already-authenticated token, causing `ProviderManager` to stop before reaching `PublicClientAuthenticationProvider`
+    - For `authorization_code` grant, the custom provider returns `null` → falls through to `PublicClientAuthenticationProvider` → PKCE still enforced for web OAuth2 flow (security preserved)
+    - SAS DSL `.clientAuthentication(c -> c.authenticationProvider(...))` prepends custom providers to the list automatically
+
+**Completed**: - **NEW `CustomGrantClientAuthenticationProvider.java`** created:
+      - Supports: `sms_code`, `wechat_mini_program`, `phone_one_click`
+      - Only intercepts `ClientAuthenticationMethod.NONE` requests
+      - Returns `null` for non-custom grant types (falls through to built-in providers)
+      - Validates: client exists, has `none` auth method, grant type is in whitelist
+      - Returns authenticated `OAuth2ClientAuthenticationToken(client, NONE, null)` — bypasses PKCE
+    - **`SecurityConfig.java`** updated:
+      - Import added: `CustomGrantClientAuthenticationProvider`
+      - `filterChain()` signature: `RegisteredClientRepository registeredClientRepository` added as parameter
+      - `.clientAuthentication(...)` block: `.authenticationProvider(new CustomGrantClientAuthenticationProvider(registeredClientRepository))` registered
+    - **`CustomGrantPublicClientAuthenticationConverter.java`** (previously created) — converts custom grant requests into `OAuth2ClientAuthenticationToken` to enter the client auth chain
+    - **`OAuthAppClientProperties.java`** + **`OAuthClientInitializer.java`** (rewritten with dual web/app `ClientSpec` record) — `eagleApp` client with `none` auth method, custom grants whitelist
+    - **`application.yml`**: `eagle.oauth.app-client` block added
+    - **All diagnostic debug logs removed** from `SmsCodeAuthenticationProvider`, `SmsCodeAuthenticationConverter`, `AliyunSmsServiceImpl`
+    - **`LoginController.smsLogin`** + **`WechatWebLoginController.authenticateAndRedirect`**: `FactorGrantedAuthority.OTT_AUTHORITY` added to token authorities (fixes OIDC `auth_time` null)
+    - `gradle compileJava` → **clean compile verified**
+
+**Next Steps**: - User needs to: run `gradle :eagle-services:eagle-system-service:clean :eagle-services:eagle-system-service:bootJar`, restart service, and test `POST /oauth2/token` with `grant_type=sms_code&client_id=eagleApp&phone=...&code=...`
+    - Optionally remove temporary logging config from `application.yml` (`logging.level.com.eagle.system.auth: DEBUG`, `logging.level.org.springframework.security: TRACE`) before deploying
+    - `SmsCodeAuthenticationProvider.generateTokens()` may still need `FactorGrantedAuthority.OTT_AUTHORITY` — currently uses `AuthorityUtils.createAuthorityList("ROLE_USER")` — verify whether this causes `authenticationTime cannot be null` after PKCE is fixed
+    - Awaiting user test results to confirm the fix works end-to-end
+
+
+Access 421k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
