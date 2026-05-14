@@ -101,6 +101,10 @@ public class SecurityConfig {
      * 替代 {@code InMemoryOAuth2AuthorizationService}，
      * 授权码、访问令牌、刷新令牌等数据持久化到数据库，
      * 服务重启不丢失活跃授权，多实例部署共享授权状态。
+     * <p>
+     * SAS 7.0.5 默认使用 Jackson 3 的 {@code JsonMapperOAuth2AuthorizationRowMapper}
+     * 与 {@code JsonMapperOAuth2AuthorizationParametersMapper}，已内置 {@code java.time.*}
+     * 支持，无需自定义 ObjectMapper。
      */
     @Bean
     public OAuth2AuthorizationService authorizationService(JdbcOperations jdbcOperations,
