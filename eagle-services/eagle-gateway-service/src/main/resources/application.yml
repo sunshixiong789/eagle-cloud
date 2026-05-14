@@ -107,11 +107,11 @@ spring:
           # （system 侧需开启 server.forward-headers-strategy=framework）。
           routes:
             - id: auth-oauth2
-              uri: lb://eagle-system-server
+              uri: lb://system
               predicates:
                 - Path=/oauth2/**,/.well-known/**,/userinfo,/logout
             - id: auth-login
-              uri: lb://eagle-system-server
+              uri: lb://system
               predicates:
                 - Path=/login,/login/**
 
