@@ -3,6 +3,7 @@ package com.eagle.system.auth.infrastructure.config;
 import com.eagle.common.constant.SecurityConstants;
 import com.eagle.common.dto.EagleUser;
 import com.eagle.system.auth.infrastructure.security.BlacklistAwareJwtDecoder;
+import com.eagle.system.auth.infrastructure.security.CustomGrantClientAuthenticationProvider;
 import com.eagle.system.auth.infrastructure.security.CustomGrantPublicClientAuthenticationConverter;
 import com.eagle.system.auth.infrastructure.security.EagleUserAuthenticationToken;
 import com.eagle.system.auth.infrastructure.security.JwtKeyProperties;
@@ -146,7 +147,8 @@ public class SecurityConfig {
                                            SmsCodeAuthenticationProvider smsProvider,
                                            PhoneOneClickAuthenticationProvider phoneOneClickProvider,
                                            SecurityContextRepository securityContextRepository,
-                                           TokenTrackingHandler tokenTrackingHandler) throws Exception {
+                                           TokenTrackingHandler tokenTrackingHandler,
+                                           RegisteredClientRepository registeredClientRepository) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -156,6 +158,7 @@ public class SecurityConfig {
                     authorizationServer
                             .clientAuthentication(clientAuth -> clientAuth
                                     .authenticationConverter(new CustomGrantPublicClientAuthenticationConverter())
+                                    .authenticationProvider(new CustomGrantClientAuthenticationProvider(registeredClientRepository))
                             )
                             .tokenEndpoint(tokenEndpoint -> tokenEndpoint
                                     .accessTokenRequestConverter(new WechatMiniProgramAuthenticationConverter())
