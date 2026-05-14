@@ -57,6 +57,10 @@ management:
 eagle:
   admin:
     password: ${EAGLE_ADMIN_PASSWORD:localDev@2026}
+  security:
+    # 开发环境关闭登录频率限制，避免反复联调时被自封 30 分钟
+    login-rate-limit:
+      enabled: false
 
 logging:
   level:

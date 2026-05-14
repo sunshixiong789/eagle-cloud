@@ -2,7 +2,7 @@ package com.eagle.system.auth.infrastructure.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
-import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
+import org.springframework.security.authentication.event.AuthenticationFailureBadCredentialsEvent;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.stereotype.Component;
@@ -26,15 +26,16 @@ public class AuthenticationEventListener {
     private final LoginAttemptService loginAttemptService;
 
     /**
-     * 登录失败时递增失败计数
+     * 用户名/密码错误时递增失败计数（限缩到 BadCredentials，仅针对真实的登录尝试）。
      * <p>
-     * 监听 Spring Security 的 AbstractAuthenticationFailureEvent,
-     * 当任何认证提供者(AuthenticationProvider)认证失败时触发。
+     * 历史上监听 {@code AbstractAuthenticationFailureEvent}（所有认证失败基类），
+     * 会把 JWT 解码失败、UserDetailsService 异常、Provider 不匹配等
+     * 与"登录尝试"无关的事件全部计入 IP 失败计数，导致用户未登录也被 429 限流。
      *
-     * @param event 认证失败事件
+     * @param event 用户名/密码错误事件
      */
     @EventListener
-    public void onAuthFailure(AbstractAuthenticationFailureEvent event) {
+    public void onAuthFailure(AuthenticationFailureBadCredentialsEvent event) {
         String ip = extractIp(event.getAuthentication().getDetails());
         if (ip != null) {
             loginAttemptService.registerFailure(ip);

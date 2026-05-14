@@ -32,8 +32,10 @@ import java.nio.charset.StandardCharsets;
 public class LoginRateLimitFilter extends OncePerRequestFilter {
 
     private static final String LOGIN_PATH = "/login";
+    private static final String POST_METHOD = "POST";
 
     private final LoginAttemptService loginAttemptService;
+    private final LoginRateLimitProperties properties;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -50,8 +52,12 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        // 只对登录请求生效
-        return !LOGIN_PATH.equals(request.getServletPath());
+        // 1) 配置关闭（开发环境）直接放行；2) 仅拦 POST /login，GET 拿登录页不消耗配额
+        if (!properties.isEnabled()) {
+            return true;
+        }
+        return !(LOGIN_PATH.equals(request.getServletPath())
+                && POST_METHOD.equalsIgnoreCase(request.getMethod()));
     }
 
     /**
