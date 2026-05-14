@@ -100,6 +100,19 @@ spring:
             locator:
               enabled: true
 
+          # X-Forwarded-* 头注入（SCG 默认就是这些值，这里显式声明仅为防御后续误关）：
+          # 网关必须把外部访问地址（host/proto/port）告诉下游 system 服务，否则
+          # Spring Authorization Server 用 docker 容器内网 host:port 拼 302 Location，
+          # 导致 /oauth2/authorize 未登录跳转到 172.x.x.x:8082/login 跳出反代范围。
+          # 与 system 侧 server.forward-headers-strategy=framework 配套生效。
+          x-forwarded:
+            enabled: true
+            for-enabled: true
+            host-enabled: true
+            port-enabled: true
+            proto-enabled: true
+            prefix-enabled: true
+
           # 协议固定路径：OAuth2 / OIDC 规范要求客户端按 discovery 中发布的
           # 字面 URL（authorization_endpoint / token_endpoint / jwks_uri 等）发起请求，
           # 网关必须按原路径透传到授权服务器，不能套 alias 前缀也不能 rewrite/strip。
