@@ -74,15 +74,10 @@ public class SmsCodeAuthenticationProvider implements AuthenticationProvider {
     @Override
     public Authentication authenticate(@NonNull Authentication authentication) throws AuthenticationException {
         SmsCodeAuthenticationToken authToken = (SmsCodeAuthenticationToken) authentication;
-        log.debug("SmsCodeProvider DEBUG: entered authenticate, phone=[{}], code=[{}]",
-                authToken.getPhone(), authToken.getCode());
 
         // 1. 验证客户端是否支持 sms_code 授权类型
         OAuth2ClientAuthenticationToken clientPrincipal = getAuthenticatedClient(authToken);
         RegisteredClient registeredClient = clientPrincipal.getRegisteredClient();
-        log.debug("SmsCodeProvider DEBUG: client passed, clientId=[{}], grantTypes=[{}]",
-                registeredClient == null ? "null" : registeredClient.getClientId(),
-                registeredClient == null ? "null" : registeredClient.getAuthorizationGrantTypes());
 
         if (registeredClient == null ||
                 !registeredClient.getAuthorizationGrantTypes().contains(SmsCodeAuthenticationToken.SMS_CODE)) {

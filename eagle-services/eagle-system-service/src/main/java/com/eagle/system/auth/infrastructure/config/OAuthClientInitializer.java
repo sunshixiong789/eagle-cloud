@@ -14,14 +14,16 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Set;
 
 /**
- * OAuth2 默认客户端初始化器
+ * OAuth2 客户端初始化器
  * <p>
- * 应用启动时根据 {@link OAuthClientProperties} 配置：
+ * 应用启动时根据 {@link OAuthClientProperties}（web 端，强制 PKCE）和
+ * {@link OAuthAppClientProperties}（App 端，关闭 PKCE）配置：
  * <ul>
  *   <li>客户端不存在 → 创建新客户端</li>
  *   <li>客户端已存在 → 同步配置变更（redirect_uris、scopes、grant_types 等）</li>
  * </ul>
- * 可通过 {@code eagle.oauth.default-client.enabled=false} 关闭。
+ * 可分别通过 {@code eagle.oauth.default-client.enabled=false} /
+ * {@code eagle.oauth.app-client.enabled=false} 关闭。
  * {@code @Order(2)} 确保在 AdminInitializer 之后执行。
  *
  * @author sunshixiong
@@ -34,53 +36,50 @@ public class OAuthClientInitializer implements ApplicationRunner {
     private static final Logger log = LoggerFactory.getLogger(OAuthClientInitializer.class);
 
     private final OAuthClientRepository oAuthClientRepository;
-    private final OAuthClientProperties properties;
+    private final OAuthClientProperties webProperties;
+    private final OAuthAppClientProperties appProperties;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void run(ApplicationArguments args) {
-        if (!properties.isEnabled()) {
-            log.debug("默认客户端初始化已关闭");
-            return;
-        }
-
-        String clientId = properties.getClientId();
-
-        oAuthClientRepository.findByClientId(clientId).ifPresentOrElse(
-                this::syncExistingClient,
-                this::createNewClient
-        );
+        initializeIfEnabled(ClientSpec.ofWeb(webProperties), "Web 端");
+        initializeIfEnabled(ClientSpec.ofApp(appProperties), "App 端");
     }
 
-    private void createNewClient() {
-        String secret = properties.getClientSecret();
+    private void initializeIfEnabled(ClientSpec spec, String label) {
+        if (!spec.enabled()) {
+            log.debug("{}客户端初始化已关闭, clientId: {}", label, spec.clientId());
+            return;
+        }
+        oAuthClientRepository.findByClientId(spec.clientId()).ifPresentOrElse(
+                existing -> syncExistingClient(existing, spec, label),
+                () -> createNewClient(spec, label));
+    }
 
+    private void createNewClient(ClientSpec spec, String label) {
+        String secret = spec.clientSecret();
         OAuthClient client = OAuthClient.create(
-                properties.getClientId(),
-                secret.isBlank() ? null : secret,
-                properties.getClientName(),
-                joinSet(properties.getClientAuthenticationMethods()),
-                joinSet(properties.getAuthorizationGrantTypes()),
-                joinSet(properties.getRedirectUris()),
-                joinSet(properties.getScopes())
-        );
-        client.updateClientSettings(
-                properties.isRequireProofKey(), properties.isRequireAuthorizationConsent());
-        client.updateTokenSettings(
-                properties.getAccessTokenTtlSeconds(), properties.getRefreshTokenTtlSeconds());
-
+                spec.clientId(),
+                secret == null || secret.isBlank() ? null : secret,
+                spec.clientName(),
+                joinSet(spec.clientAuthenticationMethods()),
+                joinSet(spec.authorizationGrantTypes()),
+                joinSet(spec.redirectUris()),
+                joinSet(spec.scopes()));
+        client.updateClientSettings(spec.requireProofKey(), spec.requireAuthorizationConsent());
+        client.updateTokenSettings(spec.accessTokenTtlSeconds(), spec.refreshTokenTtlSeconds());
         oAuthClientRepository.save(client);
-        log.info("默认客户端初始化成功, clientId: {}", properties.getClientId());
+        log.info("{}客户端初始化成功, clientId: {}", label, spec.clientId());
     }
 
     /**
      * 同步已有客户端的配置（yml 变更后重启即生效，无需手动改库）
      */
-    private void syncExistingClient(OAuthClient existing) {
-        String configRedirectUris = joinSet(properties.getRedirectUris());
-        String configGrantTypes = joinSet(properties.getAuthorizationGrantTypes());
-        String configScopes = joinSet(properties.getScopes());
-        String configAuthMethods = joinSet(properties.getClientAuthenticationMethods());
+    private void syncExistingClient(OAuthClient existing, ClientSpec spec, String label) {
+        String configRedirectUris = joinSet(spec.redirectUris());
+        String configGrantTypes = joinSet(spec.authorizationGrantTypes());
+        String configScopes = joinSet(spec.scopes());
+        String configAuthMethods = joinSet(spec.clientAuthenticationMethods());
 
         boolean changed = false;
 
@@ -88,39 +87,39 @@ public class OAuthClientInitializer implements ApplicationRunner {
                 || !equalsNullable(configGrantTypes, existing.getAuthorizationGrantTypes())
                 || !equalsNullable(configScopes, existing.getScopes())
                 || !equalsNullable(configAuthMethods, existing.getClientAuthenticationMethods())
-                || !equalsNullable(properties.getClientName(), existing.getClientName())) {
+                || !equalsNullable(spec.clientName(), existing.getClientName())) {
             existing.updateInfo(
-                    properties.getClientName(), null,
+                    spec.clientName(), null,
                     configAuthMethods, configGrantTypes,
                     configRedirectUris, configScopes);
             changed = true;
         }
 
-        if (properties.isRequireProofKey() != Boolean.TRUE.equals(existing.getRequireProofKey())
-                || properties.isRequireAuthorizationConsent() != Boolean.TRUE.equals(
+        if (spec.requireProofKey() != Boolean.TRUE.equals(existing.getRequireProofKey())
+                || spec.requireAuthorizationConsent() != Boolean.TRUE.equals(
                 existing.getRequireAuthorizationConsent())) {
             existing.updateClientSettings(
-                    properties.isRequireProofKey(), properties.isRequireAuthorizationConsent());
+                    spec.requireProofKey(), spec.requireAuthorizationConsent());
             changed = true;
         }
 
-        if (properties.getAccessTokenTtlSeconds() != existing.getAccessTokenTtlSeconds()
-                || properties.getRefreshTokenTtlSeconds() != existing.getRefreshTokenTtlSeconds()) {
+        if (spec.accessTokenTtlSeconds() != existing.getAccessTokenTtlSeconds()
+                || spec.refreshTokenTtlSeconds() != existing.getRefreshTokenTtlSeconds()) {
             existing.updateTokenSettings(
-                    properties.getAccessTokenTtlSeconds(), properties.getRefreshTokenTtlSeconds());
+                    spec.accessTokenTtlSeconds(), spec.refreshTokenTtlSeconds());
             changed = true;
         }
 
         if (changed) {
             oAuthClientRepository.save(existing);
-            log.info("默认客户端配置已同步更新, clientId: {}", existing.getClientId());
+            log.info("{}客户端配置已同步更新, clientId: {}", label, existing.getClientId());
         } else {
-            log.debug("默认客户端配置未变更, clientId: {}", existing.getClientId());
+            log.debug("{}客户端配置未变更, clientId: {}", label, existing.getClientId());
         }
     }
 
     private String joinSet(Set<String> set) {
-        return String.join(",", set);
+        return set == null ? "" : String.join(",", set);
     }
 
     private boolean equalsNullable(String a, String b) {
@@ -128,5 +127,39 @@ public class OAuthClientInitializer implements ApplicationRunner {
             return true;
         }
         return a != null && a.equals(b);
+    }
+
+    /**
+     * 把两类 Properties 抽象为统一的客户端规格，避免重复实现。
+     */
+    private record ClientSpec(
+            boolean enabled,
+            String clientId,
+            String clientName,
+            String clientSecret,
+            Set<String> clientAuthenticationMethods,
+            Set<String> authorizationGrantTypes,
+            Set<String> redirectUris,
+            Set<String> scopes,
+            boolean requireProofKey,
+            boolean requireAuthorizationConsent,
+            long accessTokenTtlSeconds,
+            long refreshTokenTtlSeconds) {
+
+        static ClientSpec ofWeb(OAuthClientProperties p) {
+            return new ClientSpec(p.isEnabled(), p.getClientId(), p.getClientName(),
+                    p.getClientSecret(), p.getClientAuthenticationMethods(),
+                    p.getAuthorizationGrantTypes(), p.getRedirectUris(), p.getScopes(),
+                    p.isRequireProofKey(), p.isRequireAuthorizationConsent(),
+                    p.getAccessTokenTtlSeconds(), p.getRefreshTokenTtlSeconds());
+        }
+
+        static ClientSpec ofApp(OAuthAppClientProperties p) {
+            return new ClientSpec(p.isEnabled(), p.getClientId(), p.getClientName(),
+                    p.getClientSecret(), p.getClientAuthenticationMethods(),
+                    p.getAuthorizationGrantTypes(), p.getRedirectUris(), p.getScopes(),
+                    p.isRequireProofKey(), p.isRequireAuthorizationConsent(),
+                    p.getAccessTokenTtlSeconds(), p.getRefreshTokenTtlSeconds());
+        }
     }
 }

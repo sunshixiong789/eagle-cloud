@@ -16,6 +16,8 @@ dependencies {
     implementation "com.aliyun:dysmsapi20170525"
     // 阿里云号码认证 / 一键登录
     implementation "com.aliyun:dypnsapi20170525"
+    // 腾讯云短信 SDK（与阿里云二选一，由 eagle.sms.provider 切换）
+    implementation "com.tencentcloudapi:tencentcloud-sdk-java-sms"
 
     implementation "com.github.ben-manes.caffeine:caffeine"
     implementation "org.apache.poi:poi-ooxml"
