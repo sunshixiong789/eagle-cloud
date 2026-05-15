@@ -147,107 +147,75 @@ PR 应包含简明摘要、受影响模块、关联 issue 或背景说明，以�
 <claude-mem-context>
 # Memory Context
 
-# [eagle-cloud] recent context, 2026-05-14 6:35pm GMT+8
+# [eagle-cloud] recent context, 2026-05-15 2:44pm GMT+8
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (12,235t read) | 420,771t work | 97% savings
+Stats: 50 obs (18,708t read) | 425,248t work | 96% savings
 
-### May 14, 2026
-1168 5:05p 🟣 新增 TencentSmsProvider：腾讯云短信核心实现
-1169 5:06p 🔵 SmsMessageChannel 需重构为 SmsProvider 委派层，当前仍为旧阿里云实现
-1184 5:08p 🔵 SMS diagnostic logs confirm code 225697 written to Caffeine cache, bean identity hash 590578720
-1170 " 🔄 SmsMessageChannel 重构为 SmsProvider 委派层，移除所有阿里云 SDK 直接依赖
-1171 " ✅ MessageAutoConfiguration 新增 SmsProvider 相关 import
-1172 5:09p 🟣 MessageAutoConfiguration.SmsChannelConfiguration 重构为双 provider 条件配置
-1173 " 🔵 gradlew 不在当前工作目录，编译验证需切换至项目根路径
-1174 " 🔵 eagle-cloud 项目无 gradlew 包装器，无法在命令行编译验证
-1175 5:10p 🔵 Gradle 9.5.0 全局安装于 /opt/homebrew/bin/gradle，可替代 gradlew 编译
-1176 " 🔵 编译失败：com.tencentcloudapi:tencentcloud-sdk-java-sms:3.1.1141 在配置的 Maven 仓库中不存在
-1177 " 🔵 本地 Maven 和 Gradle 缓存均无腾讯云 SDK，需核实正确 Maven 坐标
-1178 " 🔵 腾讯云 SMS SDK 最新版本为 3.1.1451，BOM 中使用的 3.1.1141 版本号错误
-1179 5:11p 🔴 修正 eagle-bom 中腾讯云 SMS SDK 版本号：3.1.1141 → 3.1.1451
-1180 5:12p 🟣 eagle-notification-starter 腾讯云 SMS 集成编译成功
-1181 " 🟣 eagle-notification-starter 完整构建成功，腾讯云 SMS 集成交付完毕
-1182 " ✅ USAGE.md 开始更新：短信服务商描述改为阿里云/腾讯云二选一
-1183 " ✅ USAGE.md 配置示例更新，新增腾讯云完整配置说明和注意事项
-1185 " ✅ USAGE.md 完整重写：配置项表格新增腾讯云字段，常见错误新增腾讯云专项警告
-1186 5:14p 🔵 SMS code grant type string confirmed as `"sms_code"` in `SmsCodeAuthenticationToken`
-1187 " 🔵 Exception handler locations in eagle-cloud
-1188 " 🔵 `GlobalExceptionHandler` does not intercept `invalid_grant` — OAuth2 errors handled by Spring Authorization Server's own mechanism
-1189 5:15p 🔵 `SmsCodeAuthenticationConverter` wired exclusively in `SecurityConfig.java`
-1190 " 🔵 `SmsCodeAuthenticationConverter` full content revealed — throws `DomainException` for missing params, not OAuth2 errors
-1191 5:16p ✅ Debug logging added to `SmsCodeAuthenticationConverter` to trace grant type matching
-1192 " 🔵 `SmsCodeAuthenticationProvider` wired exclusively in `SecurityConfig.java`
-1193 " 🔵 `SmsCodeAuthenticationProvider` full content revealed — missing `FactorGrantedAuthority.OTT_AUTHORITY` causes `authenticationTime cannot be null`
-1194 5:17p ✅ Diagnostic logs downgraded from `INFO` to `DEBUG` in `AliyunSmsServiceImpl` and `SmsCodeAuthenticationConverter`; `SmsCodeAuthenticationProvider` keeps `INFO`
-1195 " ✅ All SMS grant diagnostic logs unified to `log.debug` level across all three classes
-1196 " ✅ SMS grant diagnostic logging changes compile cleanly
-1197 " 🔵 Second DEBUG test run: code 026893 generated, bean hash 2040958233, log truncated before converter/provider lines appear
-S374 Fix mobile app SMS code grant `invalid_grant` — comprehensive DEBUG logging added across full grant chain; awaiting user test run with DEBUG enabled (May 14 at 5:17 PM)
-S376 Fix mobile app SMS code grant — converter/provider confirmed NOT being called; escalated to Spring Security TRACE logging to find where request is being intercepted (May 14 at 5:18 PM)
-S377 Fix mobile app SMS code grant — root cause definitively identified as PKCE `code_verifier` enforcement by `PublicClientAuthenticationProvider` blocking ALL custom grants (May 14 at 5:43 PM)
-1198 5:50p 🔵 Root cause identified: SMS code grant fails at `PublicClientAuthenticationProvider` due to PKCE `code_verifier` enforcement on `eagleWeb` client
-S378 Fix mobile app SMS code grant — user chose option B (new dedicated `eagleApp` client); planning implementation and cleanup of diagnostic logs (May 14 at 5:52 PM)
-S380 Fix mobile app SMS code grant (POST /oauth2/token?grant_type=sms_code) returning invalid_grant in eagle-cloud Spring Authorization Server 7.0.5 — implement Option B (new eagleApp client with require_proof_key=false) (May 14 at 5:52 PM)
-1199 5:53p 🔵 `OAuthClientProperties` is single-client mode only — supports only `eagleWeb` via `eagle.oauth.default-client` prefix
-S381 Fix eagle-cloud Spring Authorization Server 7.0.5 sms_code grant returning invalid_grant; remove all diagnostic debug logs; apply FactorGrantedAuthority.OTT_AUTHORITY fix (May 14 at 5:53 PM)
-1200 5:58p 🔵 eagle-system-service 已有独立 SMS 配置块（eagle.sms.aliyun），与 notification-starter 路径不同
-1201 5:59p 🔵 eagle-system-service auth 模块有独立 SMS 实现（AliyunSmsServiceImpl），用于验证码发送和校验
-1202 " 🔵 eagle-services/.env.example 中 SMS 环境变量只有 Aliyun 4个字段，profile 配置文件无 SMS 覆盖
-1203 " 🔵 .env 与 .env.example 中 SMS 变量内容完全一致，均为 4 个空值 ALIYUN_SMS_* 变量
-1205 " 🔵 auth/infrastructure/external/ 已有多个外部服务实现，SMS 错误码已完备
-1206 " 🔄 新增 AbstractCachedSmsService 抽象基类，提取验证码缓存和频率限制通用逻辑
-1204 6:00p 🔵 .env 中阿里云短信块结构确认：4行变量后紧跟两个空行再接分隔注释
-1207 " 🔵 auth/infrastructure/config/ 确认 Properties 类模式，TencentSmsProperties 尚未创建
-S382 Fix eagle-cloud sms_code grant invalid_grant; remove all diagnostic debug logs; apply FactorGrantedAuthority.OTT_AUTHORITY; understand why require_proof_key=false is insufficient (May 14 at 6:00 PM)
-S383 Fix eagle-cloud sms_code grant invalid_grant by creating CustomGrantClientAuthenticationProvider to bypass PublicClientAuthenticationProvider PKCE enforcement for custom grants (May 14 at 6:01 PM)
-1208 6:01p 🟣 新增 TencentSmsProperties 配置类，绑定 eagle.sms.tencent 前缀
-1209 6:02p 🔄 AliyunSmsServiceImpl 重构为继承 AbstractCachedSmsService，添加 @ConditionalOnProperty(provider=aliyun)
-1210 6:03p 🔵 eagle-system-service build.gradle 只有阿里云 dysmsapi SDK，需新增腾讯云 tencentcloud-sdk-java-sms 依赖
-1211 " ✅ eagle-system-service/build.gradle 新增腾讯云 SMS SDK 依赖
-1212 " 🟣 新增 TencentSmsServiceImpl，eagle-system-service auth 模块腾讯云短信实现完成
-1213 " 🔵 application.yml 中 eagle.sms 块位置确认（第179行），准备扩展为多 provider 结构
-1215 6:04p 🟣 application.yml eagle.sms 配置块扩展为多 provider 结构，新增 tencent 子块和 provider 切换字段
-1216 " 🟣 .env.example 更新：新增 SMS_PROVIDER 切换变量和 6 个 TENCENT_SMS_* 腾讯云短信变量
-1217 " 🔵 application.yml 多次 Edit 后读取仍显示旧内容，SMS 配置块更新未持久化
-1214 6:05p 🔵 application.yml eagle.sms 配置块精确内容确认（第179-185行），即将扩展 provider 和 tencent 子块
-S384 Fix eagle-cloud sms_code invalid_grant: wire CustomGrantClientAuthenticationProvider into SecurityConfig to bypass PKCE enforcement for custom grants (May 14 at 6:27 PM)
-S385 Fix eagle-cloud Spring Authorization Server 7.0.5 sms_code grant returning invalid_grant by implementing CustomGrantClientAuthenticationProvider to bypass mandatory PKCE for custom grant types (May 14 at 6:29 PM)
-**Investigated**: - SAS 7.0.5 source: `PublicClientAuthenticationProvider.authenticate()` calls `codeVerifierAuthenticator.authenticateRequired()` UNCONDITIONALLY for all `none`-method clients
-    - `CodeVerifierAuthenticator.authenticate()` returns `false` for non-authorization_code grants → `authenticateRequired()` always throws `invalid_grant: code_verifier`
-    - `require_proof_key=false` on `RegisteredClient` does NOT bypass token endpoint PKCE — that flag only affects the authorization endpoint
-    - `ProviderManager` stops at first provider returning non-null — custom providers registered via SAS DSL `.clientAuthentication(c -> c.authenticationProvider(...))` are prepended before built-in providers
+### May 15, 2026
+1260 11:18a 🔵 eagle-system-server Has No Dedicated Message/Notification/WebSocket Directories
+1261 " 🔵 eagle-system Module Correctly Located at eagle-services/eagle-system-service
+1262 " 🔵 Chat/Messaging Classes Found in eagle-system-service base Package
+1263 11:19a 🔵 ChatController STOMP WebSocket API: Broadcast and Private Message Endpoints Fully Documented
+1264 " 🔵 eagle-websocket-starter Module Located Under eagle-starter
+1265 " 🔵 eagle-websocket-starter Full File Inventory: SSE, Offline Messages, Auth Interceptor, Metrics
+1266 " 🔵 WebSocket STOMP Connection Details: Endpoint /ws-stomp, App Prefix /message, JWT Auth via URL Param
+1267 11:20a 🔵 eagle-system-service Server Config: Port 80, Spring Application Name "system", Nacos-Registered
+1268 11:21a 🔵 No Existing WebSocket or AsyncAPI Documentation in eagle-system-service
+1269 " 🟣 WebSocket API Documentation Created: eagle-system-service/docs/websocket-api.md
+1270 " 🟣 AsyncAPI 3.0 Spec Created: eagle-system-service/docs/websocket-api.yaml
+1271 11:25a ✅ websocket-api.md Auth Section Corrected: JWT Now Required, Anonymous Connections Rejected
+1272 " 🔴 websocket-api.yaml Security Scoping: Auth Only Applied to Gateway Server, Not Development
+1273 " ✅ websocket-api.yaml Security Scheme Consolidated: Two Schemes Merged Into Single "jwt" Entry
+1291 11:38a 🔵 OAuth2 PKCE Error: code_challenge_method Parameter Invalid on Callback
+1292 " 🔴 OAuth2 PKCE Error Fixed: require-proof-key Changed from true to false in eagleWeb Client Config
+1293 " 🔵 Frontend (minimal-eleganteer-web) Correctly Implements PKCE S256 — Server-Side Fix Was Unnecessary at Frontend
+1294 " 🔵 pkce.ts: Full PKCE Implementation with Pure-JS SHA-256 Fallback and Dual-Storage Cross-Tab Resilience
+S412 Debug OAuth2 PKCE error (invalid_request: code_challenge_method) — root cause analysis, fix recommendation, and preparing git revert of 641f52f (May 15 at 11:38 AM)
+S410 Debug OAuth2 PKCE error: invalid_request for code_challenge_method on callback from 139.155.104.132:3000 (May 15 at 11:38 AM)
+1295 11:39a 🔵 Both OAuth2 Clients (default-client and app-client) Are Public Clients with PKCE Now Disabled
+S414 OAuth2 PKCE error persists after revert (same error, new state param) — error is still occurring at 139.155.104.132:3000 with code_challenge_method invalid_request (May 15 at 11:42 AM)
+1296 11:42a 🔴 Reverted commit 641f52f: require-proof-key Restored to true in eagle-system-service application.yml
+1297 " 🔴 Committed Revert e8725a8: require-proof-key Restored to true, 641f52f Workaround Undone
+1298 " 🔵 OAuthClientInitializer Confirmed: YAML-to-DB Sync on Startup, No Custom PKCE Validators Anywhere
+S415 OAuth2 PKCE error still occurring after revert — investigating OAuthClientInitializer sync mechanism and confirming no custom validators (May 15 at 11:42 AM)
+S413 Debug and fix OAuth2 PKCE error (invalid_request: code_challenge_method) — root cause traced, wrong fix reverted, correct state restored (May 15 at 11:42 AM)
+S416 OAuth2 PKCE error root cause fully identified: production server running stale bundle where code_challenge_method is a function reference, not the string 'S256' (May 15 at 11:42 AM)
+1299 11:53a 🔵 Frontend Bundle Already Contains code_challenge_method — Stale Bundle Hypothesis Eliminated
+1300 " 🔵 Deployed Bundle (index-EO3NgK0Z.js) Differs from Local Build (index-BmutAtl6.js) — Stale Bundle IS the Root Cause
+1301 11:54a 🔵 Deployed Bundle Has code_challenge_method as Variable (r) Not Hardcoded 'S256' — Critical Difference from Local Build
+1302 " 🔵 Deployed Bundle Uses Direct Config URL (SX.oauth2.authorizeUrl) Not OIDC Discovery — Confirms Older Code Version
+S417 Fix OAuth2 PKCE callback error (invalid_request: code_challenge_method) in ease-mind-web frontend deployed at http://139.155.104.132:3000 (May 15 at 11:55 AM)
+1303 11:59a 🔵 PKCE Error Persists After Frontend Redeployment — Same State Parameter Reused Suggests Browser Cache Not Cleared
+1304 " 🔵 Redeployment Failed: Server Still Serving Old Bundle index-EO3NgK0Z.js
+1305 " 🔵 Local dist Bundle is Stale: Built May 1, pkce.ts Modified Today May 15 — yarn build Required Before Deployment
+1306 " 🔵 Second Frontend Project Discovered: ease-mind-web at /Users/sunshixiong/my-work/ease-mind-web
+1307 12:01p 🔵 Root Cause Found: ease-mind-web Falls Back to PKCE "plain" Method on HTTP — Spring AS Rejects It
+1308 12:02p 🔵 ease-mind-web pkce.ts Has Two Consumers: auth-provider (login) and oauth2-callback Page
+1309 " 🔴 ease-mind-web pkce.ts Fixed: Pure-JS SHA-256 Fallback Added, "plain" Method Eliminated
+S418 Add Swagger annotations to ChatController and audit all controllers in eagle-system-service for missing annotations (May 15 at 12:02 PM)
+S419 Add Swagger annotations to ChatController and audit all controllers in eagle-system-service for missing annotations (May 15 at 12:03 PM)
+1323 12:03p 🔵 Swagger Annotation Audit — 3 Controllers Missing @Tag/@Operation in eagle-system-service
+1324 1:59p 🔵 LoginController and WechatWebLoginController Are MVC Template Controllers, Not REST APIs
+1325 " ✅ Added @Operation Swagger Annotation to ChatController broadcast-message STOMP Endpoint
+1326 " ✅ ChatController @Operation Annotations Complete — Both STOMP Endpoints Annotated
+1327 " ✅ ChatController Swagger Annotation Complete — @Tag Added with Javadoc Note Pointing to AsyncAPI Docs
+1328 " 🔵 ChatMessage and PrivateMessage DTOs Are Only Used by ChatController
+1329 2:01p ✅ ChatMessage and PrivateMessage DTOs Annotated with @Schema for WebSocket Documentation
+1330 " ✅ LoginController @Tag Annotation Added
+1331 " ✅ LoginController @Operation Annotations Added to Three Endpoints
+1332 " ✅ LoginController @Operation Annotation Complete — All 4 Endpoints Annotated
+1333 2:02p ✅ LoginController Swagger Imports Added; WechatWebLoginController @Tag Started
+1334 " ✅ WechatWebLoginController @Operation Annotations Complete — All 4 Endpoints Annotated
+1335 " ✅ WechatWebLoginController Swagger Annotation Complete — All 3 Missing Controllers Now Fully Annotated
+1336 2:03p ✅ Swagger Annotation Audit Complete — All 12 Controllers Have Full Coverage; Compile Check Skipped
+1337 " 🔵 Gradle Wrapper Not Found at eagle-cloud Project Root in Claude Code Shell
+1338 " 🔵 eagle-cloud Project Has No Gradle Wrapper — Build Tool Unclear
+1339 " 🔵 eagle-cloud Uses System Gradle at /opt/homebrew/bin/gradle (No Wrapper)
+S420 Add Swagger annotations to ChatController and audit/fix all controllers missing annotations in eagle-system-service (May 15 at 2:03 PM)
 
-**Learned**: - Root cause confirmed: `PublicClientAuthenticationProvider` enforces PKCE unconditionally for ALL `none`-auth-method clients regardless of grant type or `require_proof_key` setting
-    - Fix strategy: Register a custom `AuthenticationProvider` BEFORE `PublicClientAuthenticationProvider` that handles custom grants (`sms_code`, `wechat_mini_program`, `phone_one_click`) by returning an already-authenticated token, causing `ProviderManager` to stop before reaching `PublicClientAuthenticationProvider`
-    - For `authorization_code` grant, the custom provider returns `null` → falls through to `PublicClientAuthenticationProvider` → PKCE still enforced for web OAuth2 flow (security preserved)
-    - SAS DSL `.clientAuthentication(c -> c.authenticationProvider(...))` prepends custom providers to the list automatically
-
-**Completed**: - **NEW `CustomGrantClientAuthenticationProvider.java`** created:
-      - Supports: `sms_code`, `wechat_mini_program`, `phone_one_click`
-      - Only intercepts `ClientAuthenticationMethod.NONE` requests
-      - Returns `null` for non-custom grant types (falls through to built-in providers)
-      - Validates: client exists, has `none` auth method, grant type is in whitelist
-      - Returns authenticated `OAuth2ClientAuthenticationToken(client, NONE, null)` — bypasses PKCE
-    - **`SecurityConfig.java`** updated:
-      - Import added: `CustomGrantClientAuthenticationProvider`
-      - `filterChain()` signature: `RegisteredClientRepository registeredClientRepository` added as parameter
-      - `.clientAuthentication(...)` block: `.authenticationProvider(new CustomGrantClientAuthenticationProvider(registeredClientRepository))` registered
-    - **`CustomGrantPublicClientAuthenticationConverter.java`** (previously created) — converts custom grant requests into `OAuth2ClientAuthenticationToken` to enter the client auth chain
-    - **`OAuthAppClientProperties.java`** + **`OAuthClientInitializer.java`** (rewritten with dual web/app `ClientSpec` record) — `eagleApp` client with `none` auth method, custom grants whitelist
-    - **`application.yml`**: `eagle.oauth.app-client` block added
-    - **All diagnostic debug logs removed** from `SmsCodeAuthenticationProvider`, `SmsCodeAuthenticationConverter`, `AliyunSmsServiceImpl`
-    - **`LoginController.smsLogin`** + **`WechatWebLoginController.authenticateAndRedirect`**: `FactorGrantedAuthority.OTT_AUTHORITY` added to token authorities (fixes OIDC `auth_time` null)
-    - `gradle compileJava` → **clean compile verified**
-
-**Next Steps**: - User needs to: run `gradle :eagle-services:eagle-system-service:clean :eagle-services:eagle-system-service:bootJar`, restart service, and test `POST /oauth2/token` with `grant_type=sms_code&client_id=eagleApp&phone=...&code=...`
-    - Optionally remove temporary logging config from `application.yml` (`logging.level.com.eagle.system.auth: DEBUG`, `logging.level.org.springframework.security: TRACE`) before deploying
-    - `SmsCodeAuthenticationProvider.generateTokens()` may still need `FactorGrantedAuthority.OTT_AUTHORITY` — currently uses `AuthorityUtils.createAuthorityList("ROLE_USER")` — verify whether this causes `authenticationTime cannot be null` after PKCE is fixed
-    - Awaiting user test results to confirm the fix works end-to-end
-
-
-Access 421k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 425k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>

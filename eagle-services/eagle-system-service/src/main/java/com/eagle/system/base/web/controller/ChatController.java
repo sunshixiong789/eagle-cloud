@@ -5,6 +5,8 @@ import com.eagle.system.base.web.dto.ChatMessage;
 import com.eagle.system.base.web.dto.PrivateMessage;
 import com.eagle.websocket.listener.WebSocketEventListener;
 import com.eagle.websocket.session.WebSocketSessionManager;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
@@ -21,9 +23,13 @@ import java.security.Principal;
  * 推送逻辑委托给 {@link WebSocketSessionManager}。
  * 连接 / 断开事件由 {@link WebSocketEventListener} 统一处理。
  *
+ * <p>注:STOMP/@MessageMapping 端点不会出现在 Swagger UI 中,完整 WebSocket 接口契约
+ * 见 {@code docs/websocket-api.md} 与 {@code docs/websocket-api.yaml}(AsyncAPI 3.0)。
+ *
  * @author 孙士雄
  */
 @Slf4j
+@Tag(name = "WebSocket 消息", description = "基于 STOMP over WebSocket 的实时消息;Swagger 不渲染 @MessageMapping,详见 docs/websocket-api.md")
 @Controller
 @RequiredArgsConstructor
 public class ChatController {
@@ -38,6 +44,8 @@ public class ChatController {
      * @param message   消息内容
      * @param principal 当前用户身份（可为 null，表示匿名连接）
      */
+    @Operation(summary = "发送广播消息",
+            description = "客户端通过 STOMP SEND 到 /message/broadcast-message;服务端转发到 /topic/public,所有订阅者收到。content 必填,空白抛 OperationErrorCode.MESSAGE_REQUIRED(13005)。")
     @MessageMapping("/broadcast-message")
     public void sendMessage(@Payload ChatMessage message, Principal principal) {
         if (message == null || message.getContent() == null || message.getContent().isBlank()) {
@@ -56,6 +64,8 @@ public class ChatController {
      * @param message   私信内容（含 {@code to} 收件人字段）
      * @param principal 当前用户身份
      */
+    @Operation(summary = "发送私信",
+            description = "客户端 STOMP SEND 到 /message/message-to-one;服务端推送给指定用户的 /user/queue/private。to+content 必填,缺失分别抛 RECIPIENT_REQUIRED(13006)/MESSAGE_REQUIRED(13005)。")
     @MessageMapping("/message-to-one")
     public void sendPrivateMessage(@Payload PrivateMessage message, Principal principal) {
         if (message == null || message.getTo() == null || message.getTo().isBlank()) {

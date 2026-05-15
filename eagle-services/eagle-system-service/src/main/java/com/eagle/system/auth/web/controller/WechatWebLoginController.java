@@ -5,6 +5,8 @@ import com.eagle.system.auth.domain.model.Account;
 import com.eagle.system.auth.domain.service.WechatWebService;
 import com.eagle.system.auth.domain.service.WechatWebService.WechatWebUserInfo;
 import com.eagle.system.auth.infrastructure.config.WechatWebProperties;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -44,6 +46,7 @@ import java.util.UUID;
  *
  * @author sunshixiong
  */
+@Tag(name = "微信 Web 登录", description = "PC 扫码(snsapi_login)与 H5 公众号网页授权(snsapi_userinfo)两种流程的发起与回调,基于 Session 认证(非 REST)")
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/login/wechat")
@@ -63,6 +66,8 @@ public class WechatWebLoginController {
     /**
      * 发起 PC 微信扫码登录，重定向到微信开放平台授权页
      */
+    @Operation(summary = "发起 PC 微信扫码登录",
+            description = "生成 state 存入 Session,重定向到 https://open.weixin.qq.com/connect/qrconnect 让用户扫码")
     @GetMapping("/pc")
     public void initiatePcLogin(HttpServletRequest request, HttpServletResponse response,
                                 HttpSession session) throws IOException {
@@ -84,6 +89,8 @@ public class WechatWebLoginController {
      * @param code  微信临时授权 code
      * @param state 随机 state（用于验证防 CSRF）
      */
+    @Operation(summary = "PC 微信扫码回调",
+            description = "校验 state(防 CSRF) → 用 code 换取 openid/unionid → 建立 Session 认证 → 跳回 SavedRequest;state 不匹配重定向 /login?error")
     @GetMapping("/pc/callback")
     public void handlePcCallback(@RequestParam String code,
                                  @RequestParam String state,
@@ -102,6 +109,8 @@ public class WechatWebLoginController {
     /**
      * 发起 H5 微信公众号网页授权，重定向到微信授权页
      */
+    @Operation(summary = "发起 H5 微信公众号网页授权",
+            description = "生成 state 存入 Session,重定向到 https://open.weixin.qq.com/connect/oauth2/authorize#wechat_redirect(仅微信内置浏览器有效)")
     @GetMapping("/h5")
     public void initiateH5Login(HttpServletRequest request, HttpServletResponse response,
                                 HttpSession session) throws IOException {
@@ -125,6 +134,8 @@ public class WechatWebLoginController {
      * @param code  微信临时授权 code
      * @param state 随机 state（用于验证防 CSRF）
      */
+    @Operation(summary = "H5 公众号授权回调",
+            description = "校验 state → 用 code 换取 openid+用户资料 → 建立 Session 认证;未绑定手机号引导至 /login/bind-phone")
     @GetMapping("/h5/callback")
     public void handleH5Callback(@RequestParam String code,
                                  @RequestParam String state,

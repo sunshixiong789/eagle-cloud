@@ -6,6 +6,8 @@ import com.eagle.system.auth.domain.model.Account;
 import com.eagle.system.auth.domain.service.SmsService;
 import com.eagle.system.auth.infrastructure.config.WechatWebProperties;
 import com.eagle.system.auth.domain.AuthErrorCode;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -41,6 +43,7 @@ import java.util.UUID;
  *
  * @author sunshixiong
  */
+@Tag(name = "登录页面/会话登录", description = "Thymeleaf 渲染的登录页与基于 Session 的短信登录端点(非 REST,Swagger 仅作文档)")
 @Controller
 @RequestMapping(value = "login")
 @RequiredArgsConstructor
@@ -60,6 +63,7 @@ public class LoginController {
      * <p>
      * 传递微信开放平台 PC 扫码配置，用于页面内嵌二维码。
      */
+    @Operation(summary = "渲染登录页", description = "返回 Thymeleaf 模板 'login';微信 PC 扫码启用时携带 appId/state 内嵌二维码")
     @GetMapping
     public String login(Model model, HttpSession session) {
         boolean wechatEnabled = wechatWebProperties.isEnabled();
@@ -78,6 +82,7 @@ public class LoginController {
     /**
      * 渲染找回密码页面
      */
+    @Operation(summary = "渲染找回密码页", description = "返回 Thymeleaf 模板 'reset-password'")
     @GetMapping("/reset-password")
     public String resetPassword() {
         return "reset-password";
@@ -89,6 +94,7 @@ public class LoginController {
      * @param accountId   当前登录账号 ID
      * @param redirectUrl 绑定/跳过后的重定向地址（通常为 OAuth2 授权端点）
      */
+    @Operation(summary = "渲染绑定手机号页", description = "微信扫码后未绑定手机号时引导用户绑定;accountId+redirectUrl 用于绑定/跳过后跳回 OAuth2 流程")
     @GetMapping("/bind-phone")
     public String bindPhone(Model model,
                             @RequestParam Long accountId,
@@ -106,6 +112,8 @@ public class LoginController {
      * @param phone 手机号
      * @param code  短信验证码
      */
+    @Operation(summary = "短信验证码 Web 登录(Session)",
+            description = "校验验证码 → 建立 Session 认证;失败重定向 /login?error&sms,成功重定向到 SavedRequest 或 /。错误码:INVALID_PHONE_FORMAT、SMS_CODE_INVALID")
     @PostMapping("/sms")
     public void smsLogin(@RequestParam String phone,
                          @RequestParam String code,
