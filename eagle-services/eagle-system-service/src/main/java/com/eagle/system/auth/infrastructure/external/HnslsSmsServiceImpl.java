@@ -13,6 +13,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -119,6 +120,8 @@ public class HnslsSmsServiceImpl extends AbstractCachedSmsService {
         formData.add("dest", phone);
         formData.add("content", content);
 
+        // 预生成完整请求 URL,仅失败时打印(不脱敏,便于直接复制到 curl/浏览器排查)
+        String fullUrl = buildFullSendUrl(formData);
         long start = System.currentTimeMillis();
         try {
             log.debug(
@@ -139,21 +142,20 @@ public class HnslsSmsServiceImpl extends AbstractCachedSmsService {
                     .body(formData)
                     .retrieve()
                     .body(String.class);
-            handleResponse(phone, response, System.currentTimeMillis() - start);
+            handleResponse(phone, response, System.currentTimeMillis() - start, fullUrl);
         } catch (IllegalStateException | ServiceException e) {
             throw e;
         } catch (Exception e) {
-            log.error("手拉手短信提交异常: url={}, phone={}, costMs={}",
-                    smsProperties.getSendUrl(), maskPhone(phone),
-                    System.currentTimeMillis() - start, e);
+            log.error("手拉手短信提交异常: fullUrl={}, phone={}, costMs={}",
+                    fullUrl, phone, System.currentTimeMillis() - start, e);
             throw AuthErrorCode.SMS_SEND_FAILED.toServiceException(e);
         }
     }
 
-    private void handleResponse(String phone, String response, long costMs) {
+    private void handleResponse(String phone, String response, long costMs, String fullUrl) {
         if (response == null || response.isBlank()) {
-            log.error("手拉手短信发送失败：返回为空 phone={}, costMs={}",
-                    maskPhone(phone), costMs);
+            log.error("手拉手短信发送失败：返回为空 fullUrl={}, phone={}, costMs={}",
+                    fullUrl, phone, costMs);
             throw AuthErrorCode.SMS_SEND_FAILED.toServiceException();
         }
         String normalizedResponse = response.trim();
@@ -164,12 +166,12 @@ public class HnslsSmsServiceImpl extends AbstractCachedSmsService {
         }
         if (startsWithError(normalizedResponse)) {
             String errorCode = extractErrorCode(normalizedResponse);
-            log.error("手拉手短信发送失败: phone={}, errorCode={}, reason={}, response={}",
-                    maskPhone(phone), errorCode, describeError(errorCode), normalizedResponse);
+            log.error("手拉手短信发送失败: fullUrl={}, phone={}, errorCode={}, reason={}, response={}",
+                    fullUrl, phone, errorCode, describeError(errorCode), normalizedResponse);
             throw AuthErrorCode.SMS_SEND_FAILED.toServiceException();
         }
-        log.error("手拉手短信发送失败：未知响应 phone={}, response={}",
-                maskPhone(phone), normalizedResponse);
+        log.error("手拉手短信发送失败：未知响应 fullUrl={}, phone={}, response={}",
+                fullUrl, phone, normalizedResponse);
         throw AuthErrorCode.SMS_SEND_FAILED.toServiceException();
     }
 
@@ -216,6 +218,25 @@ public class HnslsSmsServiceImpl extends AbstractCachedSmsService {
             return "***";
         }
         return phone.substring(0, 3) + "****" + phone.substring(phone.length() - 4);
+    }
+
+    /**
+     * 把 form 参数拼成 GET 形式的完整 URL,仅在失败日志中使用(不脱敏,可直接复制到 curl/浏览器复现)。
+     * 注意:此 URL 含 key(MD5 签名,与 seed 绑定且短时有效),不要外发到不可信渠道。
+     */
+    private String buildFullSendUrl(MultiValueMap<String, String> formData) {
+        Charset charset = Charset.forName(smsProperties.getCharset());
+        StringBuilder sb = new StringBuilder(smsProperties.getSendUrl()).append('?');
+        formData.forEach((k, values) -> values.forEach(v -> {
+            sb.append(URLEncoder.encode(k, charset))
+                    .append('=')
+                    .append(URLEncoder.encode(v, charset))
+                    .append('&');
+        }));
+        if (!sb.isEmpty() && sb.charAt(sb.length() - 1) == '&') {
+            sb.setLength(sb.length() - 1);
+        }
+        return sb.toString();
     }
 
     private String maskAccount(String account) {
