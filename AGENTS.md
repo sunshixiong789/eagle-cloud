@@ -147,18 +147,17 @@ PR 应包含简明摘要、受影响模块、关联 issue 或背景说明，以�
 <claude-mem-context>
 # Memory Context
 
-# [eagle-cloud] recent context, 2026-05-15 2:57pm GMT+8
+# [eagle-cloud] recent context, 2026-05-15 3:09pm GMT+8
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (19,239t read) | 545,625t work | 96% savings
+Stats: 50 obs (19,035t read) | 539,183t work | 96% savings
 
 ### May 15, 2026
 1268 11:21a 🔵 No Existing WebSocket or AsyncAPI Documentation in eagle-system-service
 1269 " 🟣 WebSocket API Documentation Created: eagle-system-service/docs/websocket-api.md
-1270 " 🟣 AsyncAPI 3.0 Spec Created: eagle-system-service/docs/websocket-api.yaml
 1271 11:25a ✅ websocket-api.md Auth Section Corrected: JWT Now Required, Anonymous Connections Rejected
 1272 " 🔴 websocket-api.yaml Security Scoping: Auth Only Applied to Gateway Server, Not Development
 1273 " ✅ websocket-api.yaml Security Scheme Consolidated: Two Schemes Merged Into Single "jwt" Entry
@@ -216,6 +215,7 @@ S420 Add Swagger annotations to ChatController and audit/fix all controllers mis
 1344 2:48p ⚖️ Implementation Plan Established for ShoulaShou SMS Provider Integration
 1346 " 🔵 TDD Red-Light Confirmed: HnslsSmsServiceImpl and HnslsSmsProperties Don't Exist Yet
 1347 " 🟣 HnslsSmsProperties @ConfigurationProperties Class Created
+1348 2:49p 🔴 HnslsSmsServiceImpl 构造函数自动装配歧义修复
 
-Access 546k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 539k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
