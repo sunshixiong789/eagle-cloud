@@ -147,23 +147,15 @@ PR 应包含简明摘要、受影响模块、关联 issue 或背景说明，以�
 <claude-mem-context>
 # Memory Context
 
-# [eagle-cloud] recent context, 2026-05-15 2:44pm GMT+8
+# [eagle-cloud] recent context, 2026-05-15 2:57pm GMT+8
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (18,708t read) | 425,248t work | 96% savings
+Stats: 50 obs (19,239t read) | 545,625t work | 96% savings
 
 ### May 15, 2026
-1260 11:18a 🔵 eagle-system-server Has No Dedicated Message/Notification/WebSocket Directories
-1261 " 🔵 eagle-system Module Correctly Located at eagle-services/eagle-system-service
-1262 " 🔵 Chat/Messaging Classes Found in eagle-system-service base Package
-1263 11:19a 🔵 ChatController STOMP WebSocket API: Broadcast and Private Message Endpoints Fully Documented
-1264 " 🔵 eagle-websocket-starter Module Located Under eagle-starter
-1265 " 🔵 eagle-websocket-starter Full File Inventory: SSE, Offline Messages, Auth Interceptor, Metrics
-1266 " 🔵 WebSocket STOMP Connection Details: Endpoint /ws-stomp, App Prefix /message, JWT Auth via URL Param
-1267 11:20a 🔵 eagle-system-service Server Config: Port 80, Spring Application Name "system", Nacos-Registered
 1268 11:21a 🔵 No Existing WebSocket or AsyncAPI Documentation in eagle-system-service
 1269 " 🟣 WebSocket API Documentation Created: eagle-system-service/docs/websocket-api.md
 1270 " 🟣 AsyncAPI 3.0 Spec Created: eagle-system-service/docs/websocket-api.yaml
@@ -216,6 +208,14 @@ S419 Add Swagger annotations to ChatController and audit all controllers in eagl
 1338 " 🔵 eagle-cloud Project Has No Gradle Wrapper — Build Tool Unclear
 1339 " 🔵 eagle-cloud Uses System Gradle at /opt/homebrew/bin/gradle (No Wrapper)
 S420 Add Swagger annotations to ChatController and audit/fix all controllers missing annotations in eagle-system-service (May 15 at 2:03 PM)
+1340 2:46p 🔵 eagle-cloud SMS/Notification Service Architecture Discovered
+1341 " 🔵 手拉手 SMS Provider API Protocol Fully Extracted
+1342 2:47p 🔵 SMS Provider Extension Pattern and Existing Code Structure Fully Mapped
+1343 " 🔵 SMS Provider Configuration Structure in application.yml and .env.example Mapped
+1345 " 🟣 HnslsSmsServiceImplTest Created as TDD Red-Light Test
+1344 2:48p ⚖️ Implementation Plan Established for ShoulaShou SMS Provider Integration
+1346 " 🔵 TDD Red-Light Confirmed: HnslsSmsServiceImpl and HnslsSmsProperties Don't Exist Yet
+1347 " 🟣 HnslsSmsProperties @ConfigurationProperties Class Created
 
-Access 425k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 546k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
