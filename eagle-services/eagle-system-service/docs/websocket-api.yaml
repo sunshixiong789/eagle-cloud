@@ -1,0 +1,183 @@
+asyncapi: 3.0.0
+info:
+  title: Eagle System Service — WebSocket Messaging API
+  version: 1.0.0
+  description: |
+    System 模块基于 STOMP over WebSocket 的实时消息接口。
+    由 `eagle-websocket-starter` 提供基础设施，`ChatController` 作为业务入口。
+    Swagger/OpenAPI 不支持 WebSocket，因此独立用 AsyncAPI 维护。
+  contact:
+    name: system 模块
+  license:
+    name: Proprietary
+
+defaultContentType: application/json
+
+servers:
+  development:
+    host: localhost:80
+    pathname: /ws-stomp
+    protocol: ws
+    description: 本地直连（system-service 默认端口 80）
+    security:
+      - $ref: '#/components/securitySchemes/jwt'
+  gateway:
+    host: gateway.example.com
+    pathname: /system/ws-stomp
+    protocol: wss
+    description: 经 Eagle Gateway 暴露的对外地址（生产）
+    security:
+      - $ref: '#/components/securitySchemes/jwt'
+
+channels:
+  broadcastPublish:
+    address: /message/broadcast-message
+    title: 客户端发送广播消息
+    description: |
+      客户端通过 STOMP SEND 帧推送到此 destination，
+      服务端把消息转发到 `/topic/public`，所有订阅者都会收到。
+    messages:
+      sendChatMessage:
+        $ref: '#/components/messages/ChatMessage'
+
+  privatePublish:
+    address: /message/message-to-one
+    title: 客户端发送私信
+    description: |
+      客户端通过 STOMP SEND 帧推送到此 destination，
+      服务端 `convertAndSendToUser(to, "/queue/private", payload)`，
+      目标用户订阅的 `/user/queue/private` 会收到。
+    messages:
+      sendPrivateMessage:
+        $ref: '#/components/messages/PrivateMessage'
+
+  publicTopic:
+    address: /topic/public
+    title: 广播频道（所有人订阅）
+    description: 由服务端推送，全体在线订阅者都会收到。
+    messages:
+      receiveChatMessage:
+        $ref: '#/components/messages/ChatMessage'
+
+  privateQueue:
+    address: /user/queue/private
+    title: 个人私信队列（点对点）
+    description: |
+      由服务端推送给指定用户。每个登录用户都会有独立的 `/user/queue/private` 实例。
+    messages:
+      receivePrivateMessage:
+        $ref: '#/components/messages/PrivateMessage'
+
+operations:
+  sendBroadcast:
+    action: send
+    channel:
+      $ref: '#/channels/broadcastPublish'
+    summary: 发送广播消息
+    description: |
+      校验：`content` 非空。失败抛出业务异常（错误码 13005）。
+    messages:
+      - $ref: '#/channels/broadcastPublish/messages/sendChatMessage'
+
+  sendPrivate:
+    action: send
+    channel:
+      $ref: '#/channels/privatePublish'
+    summary: 发送私信
+    description: |
+      校验：`to` 非空（错误码 13006）、`content` 非空（错误码 13005）。
+    messages:
+      - $ref: '#/channels/privatePublish/messages/sendPrivateMessage'
+
+  receiveBroadcast:
+    action: receive
+    channel:
+      $ref: '#/channels/publicTopic'
+    summary: 订阅广播消息
+    messages:
+      - $ref: '#/channels/publicTopic/messages/receiveChatMessage'
+
+  receivePrivate:
+    action: receive
+    channel:
+      $ref: '#/channels/privateQueue'
+    summary: 订阅个人私信
+    messages:
+      - $ref: '#/channels/privateQueue/messages/receivePrivateMessage'
+
+components:
+  securitySchemes:
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        唯一鉴权方式：JWT Bearer Token。握手时必须携带有效 JWT，token 传输位置二选一：
+          - URL 查询参数：`/ws-stomp?token=<JWT>`（浏览器场景，WebSocket 握手不允许自定义 Header）
+          - HTTP Header：`Authorization: Bearer <JWT>`（非浏览器客户端）
+        服务端由 `WebSocketAuthHandshakeInterceptor` 解析并校验，失败拒绝连接。
+
+  messages:
+    ChatMessage:
+      name: ChatMessage
+      title: 广播消息
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ChatMessage'
+
+    PrivateMessage:
+      name: PrivateMessage
+      title: 私信消息
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PrivateMessage'
+
+  schemas:
+    ChatMessage:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          description: 消息正文；空白会被拒绝（错误码 13005）
+          example: 大家好
+        sender:
+          type: string
+          description: 发送者标识；服务端可基于 Principal 覆写
+          example: alice
+
+    PrivateMessage:
+      type: object
+      required:
+        - to
+        - content
+      properties:
+        to:
+          type: string
+          description: 收件人用户 ID
+          example: '1024'
+        content:
+          type: string
+          description: 消息正文
+          example: 你好
+        from:
+          type: string
+          description: 发送者标识；建议服务端覆写防伪造
+          example: alice
+
+    BusinessError:
+      type: object
+      description: |
+        当前实现仅记录到服务端日志，未通过 STOMP ERROR 帧回推。
+        如未来需要回推，建议遵循此结构。
+      properties:
+        errorCode:
+          type: integer
+          example: 13005
+        messageKey:
+          type: string
+          example: error.chat.message_required
+        message:
+          type: string
+          example: 消息内容不能为空
