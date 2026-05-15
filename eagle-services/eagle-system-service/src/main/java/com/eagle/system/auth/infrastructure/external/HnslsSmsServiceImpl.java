@@ -140,9 +140,7 @@ public class HnslsSmsServiceImpl extends AbstractCachedSmsService {
                     .retrieve()
                     .body(String.class);
             handleResponse(phone, response, System.currentTimeMillis() - start);
-        } catch (IllegalStateException e) {
-            throw e;
-        } catch (ServiceException e) {
+        } catch (IllegalStateException | ServiceException e) {
             throw e;
         } catch (Exception e) {
             log.error("手拉手短信提交异常: url={}, phone={}, costMs={}",

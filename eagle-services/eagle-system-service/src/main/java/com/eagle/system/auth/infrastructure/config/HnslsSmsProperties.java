@@ -51,7 +51,7 @@ public class HnslsSmsProperties {
     /**
      * 连接超时时间，单位毫秒。
      */
-    private int connectTimeoutMs = 5000;
+    private int connectTimeoutMs = 8000;
 
     /**
      * 读取响应超时时间，单位毫秒。
