@@ -10,7 +10,7 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClaimAccessor;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
@@ -59,6 +59,7 @@ public class SmsCodeAuthenticationProvider implements AuthenticationProvider {
     private final OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator;
     private final SmsService smsService;
     private final AccountApplicationService accountApplicationService;
+    private final UserDetailsService userDetailsService;
 
     private static OAuth2ClientAuthenticationToken getAuthenticatedClient(Authentication authentication) {
         OAuth2ClientAuthenticationToken clientPrincipal = null;
@@ -92,12 +93,9 @@ public class SmsCodeAuthenticationProvider implements AuthenticationProvider {
         // 3. 查找或自动创建账号(首次短信登录自动注册)
         Account account = accountApplicationService.findOrCreateByPhone(authToken.getPhone());
 
-        // 4. 构建 EagleUser (封装用户信息到 Spring Security)
-        EagleUser eagleUser = new EagleUser(
-                account.getId(), account.getUsername(), "", account.getUsername(),
-                null, "", account.getPhone(),
-                AuthorityUtils.createAuthorityList("ROLE_USER")
-        );
+        // 4. 通过 UserDetailsService 加载真实用户（携带数据库实际角色 / 部门信息），
+        // 与密码登录路径保持一致，避免硬编码 ROLE_USER 覆盖管理员权限。
+        EagleUser eagleUser = (EagleUser) userDetailsService.loadUserByUsername(account.getUsername());
 
         // 5. 生成 OAuth2 Token
         return generateTokens(eagleUser, registeredClient, clientPrincipal,

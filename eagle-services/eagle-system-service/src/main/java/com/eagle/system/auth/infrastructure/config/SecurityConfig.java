@@ -305,8 +305,14 @@ public class SecurityConfig {
                 }
                 if (user != null) {
                     context.getClaims()
+                            // JWT claim 中存业务角色 code（不含 ROLE_ 前缀），
+                            // 由资源服务器的 EagleJwtAuthenticationConverter 统一补 Spring Security 框架前缀，
+                            // 防止双重前缀导致 hasRole('admin') 校验失败。
                             .claim(DETAILS_ROLES, user.getAuthorities().stream()
                                     .map(GrantedAuthority::getAuthority).filter(Objects::nonNull)
+                                    .map(a -> a.startsWith(SecurityConstants.ROLE_START)
+                                            ? a.substring(SecurityConstants.ROLE_START.length())
+                                            : a)
                                     .collect(Collectors.toList()))
                             .claim(SecurityConstants.DETAILS_USER_ID, user.getId())
                             .claim(SecurityConstants.DETAILS_USERNAME, user.getUsername())
