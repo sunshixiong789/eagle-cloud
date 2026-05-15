@@ -290,9 +290,6 @@ services:
       # JWT keystore
       - EAGLE_JWT_KEYSTORE_LOCATION=${EAGLE_JWT_KEYSTORE_LOCATION:-classpath:jwt-keystore.p12}
       - EAGLE_JWT_KEYSTORE_PASSWORD=${EAGLE_JWT_KEYSTORE_PASSWORD:-eagle-jwt-dev-2026}
-      # OAuth2 / Swagger 回调对外地址（浏览器侧可访问的 URL）
-      - SYSTEM_SERVER_URL=${SYSTEM_SERVER_URL:-http://localhost:8082}
-      - GATEWAY_URL=${GATEWAY_URL:-http://localhost:8080}
       # OAuth2 issuer: 集群部署必填,所有 system 实例共用同一个对外稳定 URL(LB / 网关)
       - EAGLE_OAUTH_ISSUER=${EAGLE_OAUTH_ISSUER:-http://localhost:8080}
       # 第三方登录（按需启用，留空 = 禁用）

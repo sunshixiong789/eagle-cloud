@@ -142,9 +142,7 @@ eagle:
       authorization-grant-types: authorization_code,refresh_token,wechat_mini_program,sms_code
       redirect-uris: >
         http://localhost:8080/auth/oauth2/callback,
-        http://139.155.104.132:3000/auth/oauth2/callback,
-        ${SYSTEM_SERVER_URL:http://localhost:80}/swagger-ui/oauth2-redirect.html,
-        ${GATEWAY_URL:http://localhost:8080}/swagger-ui/oauth2-redirect.html
+        http://139.155.104.132:3000/auth/oauth2/callback
       scopes: openid,profile,email,address,phone
       require-proof-key: true
       require-authorization-consent: false
