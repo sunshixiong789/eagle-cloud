@@ -1,6 +1,7 @@
 package com.eagle.system.auth.infrastructure.external;
 
 import com.eagle.system.auth.domain.service.WechatWebService;
+import com.eagle.system.auth.infrastructure.config.WechatAppProperties;
 import com.eagle.system.auth.infrastructure.config.WechatWebProperties;
 import com.eagle.system.auth.domain.AuthErrorCode;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -34,12 +35,20 @@ public class WechatWebServiceImpl implements WechatWebService {
             "https://api.weixin.qq.com/sns/userinfo?access_token={accessToken}&openid={openid}&lang=zh_CN";
 
     private final WechatWebProperties wechatWebProperties;
+    private final WechatAppProperties wechatAppProperties;
     private final RestClient restClient;
 
     public WechatWebServiceImpl(WechatWebProperties wechatWebProperties,
+                                WechatAppProperties wechatAppProperties,
                                 @Qualifier("wechatRestClient") RestClient restClient) {
         this.wechatWebProperties = wechatWebProperties;
+        this.wechatAppProperties = wechatAppProperties;
         this.restClient = restClient;
+    }
+
+    @Override
+    public WechatWebUserInfo exchangeAppCode(String code) {
+        return exchange(wechatAppProperties.getAppId(), wechatAppProperties.getAppSecret(), code, "app");
     }
 
     @Override

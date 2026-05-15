@@ -13,6 +13,8 @@ import com.eagle.system.auth.infrastructure.security.PhoneOneClickAuthentication
 import com.eagle.system.auth.infrastructure.security.SmsCodeAuthenticationConverter;
 import com.eagle.system.auth.infrastructure.security.SmsCodeAuthenticationProvider;
 import com.eagle.system.auth.infrastructure.security.TokenTrackingHandler;
+import com.eagle.system.auth.infrastructure.security.WechatAppAuthenticationConverter;
+import com.eagle.system.auth.infrastructure.security.WechatAppAuthenticationProvider;
 import com.eagle.system.auth.infrastructure.security.WechatMiniProgramAuthenticationConverter;
 import com.eagle.system.auth.infrastructure.security.WechatMiniProgramAuthenticationProvider;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -143,6 +145,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            OAuth2AuthorizationService authorizationService,
                                            OAuth2TokenGenerator<?> tokenGenerator,
+                                           WechatAppAuthenticationProvider wechatAppProvider,
                                            WechatMiniProgramAuthenticationProvider wechatProvider,
                                            SmsCodeAuthenticationProvider smsProvider,
                                            PhoneOneClickAuthenticationProvider phoneOneClickProvider,
@@ -161,6 +164,8 @@ public class SecurityConfig {
                                     .authenticationProvider(new CustomGrantClientAuthenticationProvider(registeredClientRepository))
                             )
                             .tokenEndpoint(tokenEndpoint -> tokenEndpoint
+                                    .accessTokenRequestConverter(new WechatAppAuthenticationConverter())
+                                    .authenticationProvider(wechatAppProvider)
                                     .accessTokenRequestConverter(new WechatMiniProgramAuthenticationConverter())
                                     .authenticationProvider(wechatProvider)
                                     .accessTokenRequestConverter(new SmsCodeAuthenticationConverter())

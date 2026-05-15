@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * 微信 Web 端登录配置属性
  * <p>
- * 包含两种场景的凭证：
+ * 包含两种 Web 场景的凭证：
  * <ul>
  *   <li>{@code pc}：微信开放平台网站应用（PC 扫码登录）</li>
  *   <li>{@code h5}：微信公众号网页授权（H5 网页登录）</li>

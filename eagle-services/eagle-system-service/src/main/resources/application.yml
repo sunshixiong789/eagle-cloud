@@ -150,13 +150,13 @@ eagle:
       require-authorization-consent: false
       access-token-ttl-seconds: 3600
       refresh-token-ttl-seconds: 2592000
-    # App 端专用 public client：关闭 PKCE，仅授权自定义 grant_type，配合移动端 sms_code / wechat_mini_program / phone_one_click 使用
+    # App 端专用 public client：关闭 PKCE，仅授权自定义 grant_type，配合移动端 sms_code / wechat_app / wechat_mini_program / phone_one_click 使用
     app-client:
       enabled: true
       client-id: eagleApp
       client-name: Eagle App 移动端
       client-authentication-methods: none
-      authorization-grant-types: refresh_token,sms_code,wechat_mini_program,phone_one_click
+      authorization-grant-types: refresh_token,sms_code,wechat_app,wechat_mini_program,phone_one_click
       redirect-uris: ""
       scopes: openid,profile,email,address,phone
       require-proof-key: false
@@ -164,6 +164,9 @@ eagle:
       access-token-ttl-seconds: 3600
       refresh-token-ttl-seconds: 2592000
   wechat:
+    app:
+      app-id: ${WECHAT_APP_APP_ID:}
+      app-secret: ${WECHAT_APP_APP_SECRET:}
     mini-program:
       app-id: ${WECHAT_MINI_APP_ID:}
       app-secret: ${WECHAT_MINI_APP_SECRET:}

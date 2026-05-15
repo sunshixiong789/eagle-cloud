@@ -14,7 +14,7 @@ import java.util.Set;
  * 用于应用启动时预置 App 端使用的 OAuth2 public client。</p>
  *
  * <p>与 {@link OAuthClientProperties}（web 端，强制 PKCE）的区别：本 client 关闭
- * {@code require-proof-key}，仅授权自定义 grant_type（sms_code / wechat_mini_program /
+ * {@code require-proof-key}，仅授权自定义 grant_type（sms_code / wechat_app / wechat_mini_program /
  * phone_one_click）+ refresh_token，以满足移动端无 PKCE 的 token 请求场景；
  * 不开放 {@code authorization_code}，避免被滥用绕过 PKCE。</p>
  *
@@ -37,7 +37,7 @@ public class OAuthAppClientProperties {
     private Set<String> clientAuthenticationMethods = Set.of("none");
 
     private Set<String> authorizationGrantTypes = Set.of(
-            "refresh_token", "wechat_mini_program", "sms_code", "phone_one_click");
+            "refresh_token", "wechat_app", "wechat_mini_program", "sms_code", "phone_one_click");
 
     private Set<String> redirectUris = Set.of();
 

@@ -27,7 +27,7 @@ import java.util.Set;
  * 与 client 的 {@code require-proof-key} 设置无关（require-proof-key 只影响
  * {@code /oauth2/authorize} 入口的授权码颁发，不影响 {@code /oauth2/token} 客户端认证）。</p>
  *
- * <p>本 Provider 仅接管 {@code sms_code} / {@code wechat_mini_program} /
+ * <p>本 Provider 仅接管 {@code sms_code} / {@code wechat_app} / {@code wechat_mini_program} /
  * {@code phone_one_click} 三种自定义 grant_type 的客户端认证：自行校验 client_id 注册、
  * 认证方法、grant_type 白名单，校验通过直接返回已认证的 {@link OAuth2ClientAuthenticationToken}，
  * 跳过 PKCE 检查。其它 grant_type 返回 {@code null}，由内置
@@ -44,6 +44,7 @@ public class CustomGrantClientAuthenticationProvider implements AuthenticationPr
 
     private static final Set<String> SUPPORTED_GRANT_TYPES = Set.of(
             SmsCodeAuthenticationToken.SMS_CODE.getValue(),
+            WechatAppAuthenticationToken.WECHAT_APP.getValue(),
             WechatMiniProgramAuthenticationToken.WECHAT_MINI_PROGRAM.getValue(),
             PhoneOneClickAuthenticationToken.PHONE_ONE_CLICK.getValue()
     );

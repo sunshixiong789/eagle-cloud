@@ -5,6 +5,7 @@ package com.eagle.system.auth.domain.service;
  * <p>
  * 支持两种场景：
  * <ul>
+ *   <li>App 微信登录：微信开放平台移动应用（scope: snsapi_userinfo）</li>
  *   <li>PC 扫码登录：微信开放平台网站应用（scope: snsapi_login）</li>
  *   <li>H5 网页授权：微信公众号（scope: snsapi_userinfo）</li>
  * </ul>
@@ -12,6 +13,14 @@ package com.eagle.system.auth.domain.service;
  * @author sunshixiong
  */
 public interface WechatWebService {
+
+    /**
+     * App 微信登录：用微信开放平台移动应用 code 换取用户信息
+     *
+     * @param code 微信 App SDK 返回的临时授权 code
+     * @return 微信用户信息
+     */
+    WechatWebUserInfo exchangeAppCode(String code);
 
     /**
      * PC 扫码登录：用微信开放平台 code 换取用户信息
@@ -36,7 +45,7 @@ public interface WechatWebService {
      * @param unionid  跨平台联合 ID（同一微信用户在同一开放平台账号下唯一，可能为 null）
      * @param nickname 微信昵称
      * @param avatar   微信头像 URL
-     * @param channel  登录渠道：{@code "pc"} 或 {@code "h5"}
+     * @param channel  登录渠道：{@code "app"}、{@code "pc"} 或 {@code "h5"}
      */
     record WechatWebUserInfo(
             String openid,
