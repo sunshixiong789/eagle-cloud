@@ -277,9 +277,19 @@ public class SecurityConfig {
         return new ImmutableJWKSet<>(new JWKSet(rsaKey));
     }
 
+    /**
+     * 锁定 issuer，避免随反向代理/前端入口的 X-Forwarded-Host 漂移。
+     *
+     * <p>显式调用 {@code .issuer(...)} 后，Spring Authorization Server 不再从请求头派生 issuer，
+     * 所有客户端（不管经过哪个前端 / 网关实例 / LB IP）拿到的 token,
+     * {@code iss} claim 都是同一个稳定 URL。资源服务器据此配置 {@code issuer-uri} 即可。
+     */
     @Bean
-    public AuthorizationServerSettings authorizationServerSettings() {
-        return AuthorizationServerSettings.builder().build();
+    public AuthorizationServerSettings authorizationServerSettings(OAuthServerProperties properties) {
+        log.info("OAuth2 Authorization Server issuer locked to: {}", properties.getIssuer());
+        return AuthorizationServerSettings.builder()
+                .issuer(properties.getIssuer())
+                .build();
     }
 
     /**

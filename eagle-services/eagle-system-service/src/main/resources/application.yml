@@ -129,6 +129,11 @@ eagle:
     name: ${EAGLE_ADMIN_NAME:系统管理员}
     email: ${EAGLE_ADMIN_EMAIL:admin@eagle.com}
   oauth:
+    # OAuth2 Authorization Server 对外 issuer（必填,fail-fast）。
+    # 一旦设置,签发 token 的 iss claim 锁定为此值,不再随 X-Forwarded-Host 漂移。
+    # 集群部署：所有 system 实例必须配置同一个 issuer；指向 LB / 网关对外稳定 URL,而非任何单实例地址。
+    # 资源服务器 (product / user / trade) 的 AUTH_SERVER_ISSUER_URI 必须与此严格一致。
+    issuer: ${EAGLE_OAUTH_ISSUER}
     default-client:
       enabled: true
       client-id: eagleWeb

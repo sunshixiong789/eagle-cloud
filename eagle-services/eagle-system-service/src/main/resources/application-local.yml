@@ -57,6 +57,9 @@ management:
 eagle:
   admin:
     password: ${EAGLE_ADMIN_PASSWORD:localDev@2026}
+  oauth:
+    # 本地开发: 默认 issuer 用 80 端口对齐 server.port,资源服务器 AUTH_SERVER_ISSUER_URI 配同值
+    issuer: ${EAGLE_OAUTH_ISSUER:http://localhost:80}
   security:
     # 开发环境关闭登录频率限制，避免反复联调时被自封 30 分钟
     login-rate-limit:
