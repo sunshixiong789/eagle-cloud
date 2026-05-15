@@ -198,6 +198,8 @@ eagle:
       content-template: ${HNSLS_SMS_CONTENT_TEMPLATE:您的验证码是{code}，5分钟内有效。}
       send-url: ${HNSLS_SMS_SEND_URL:https://xapi.hnsls.com.cn/eums/sms/utf8/send.do}
       charset: ${HNSLS_SMS_CHARSET:UTF-8}
+      connect-timeout-ms: ${HNSLS_SMS_CONNECT_TIMEOUT_MS:5000}
+      read-timeout-ms: ${HNSLS_SMS_READ_TIMEOUT_MS:10000}
 
 # ===========================================
 # Actuator：生产安全基线（仅 health/info/prometheus，无详情）

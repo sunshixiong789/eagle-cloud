@@ -47,4 +47,14 @@ public class HnslsSmsProperties {
      * 表单编码，需与接口地址匹配，可选 UTF-8 / GBK。
      */
     private String charset = "UTF-8";
+
+    /**
+     * 连接超时时间，单位毫秒。
+     */
+    private int connectTimeoutMs = 5000;
+
+    /**
+     * 读取响应超时时间，单位毫秒。
+     */
+    private int readTimeoutMs = 10000;
 }

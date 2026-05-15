@@ -147,26 +147,16 @@ PR 应包含简明摘要、受影响模块、关联 issue 或背景说明，以�
 <claude-mem-context>
 # Memory Context
 
-# [eagle-cloud] recent context, 2026-05-15 3:09pm GMT+8
+# [eagle-cloud] recent context, 2026-05-15 3:40pm GMT+8
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (19,035t read) | 539,183t work | 96% savings
+Stats: 50 obs (17,883t read) | 503,507t work | 96% savings
 
 ### May 15, 2026
-1268 11:21a 🔵 No Existing WebSocket or AsyncAPI Documentation in eagle-system-service
-1269 " 🟣 WebSocket API Documentation Created: eagle-system-service/docs/websocket-api.md
-1271 11:25a ✅ websocket-api.md Auth Section Corrected: JWT Now Required, Anonymous Connections Rejected
-1272 " 🔴 websocket-api.yaml Security Scoping: Auth Only Applied to Gateway Server, Not Development
-1273 " ✅ websocket-api.yaml Security Scheme Consolidated: Two Schemes Merged Into Single "jwt" Entry
-1291 11:38a 🔵 OAuth2 PKCE Error: code_challenge_method Parameter Invalid on Callback
-1292 " 🔴 OAuth2 PKCE Error Fixed: require-proof-key Changed from true to false in eagleWeb Client Config
-1293 " 🔵 Frontend (minimal-eleganteer-web) Correctly Implements PKCE S256 — Server-Side Fix Was Unnecessary at Frontend
-1294 " 🔵 pkce.ts: Full PKCE Implementation with Pure-JS SHA-256 Fallback and Dual-Storage Cross-Tab Resilience
-S412 Debug OAuth2 PKCE error (invalid_request: code_challenge_method) — root cause analysis, fix recommendation, and preparing git revert of 641f52f (May 15 at 11:38 AM)
-S410 Debug OAuth2 PKCE error: invalid_request for code_challenge_method on callback from 139.155.104.132:3000 (May 15 at 11:38 AM)
+1294 11:38a 🔵 pkce.ts: Full PKCE Implementation with Pure-JS SHA-256 Fallback and Dual-Storage Cross-Tab Resilience
 1295 11:39a 🔵 Both OAuth2 Clients (default-client and app-client) Are Public Clients with PKCE Now Disabled
 S414 OAuth2 PKCE error persists after revert (same error, new state param) — error is still occurring at 139.155.104.132:3000 with code_challenge_method invalid_request (May 15 at 11:42 AM)
 1296 11:42a 🔴 Reverted commit 641f52f: require-proof-key Restored to true in eagle-system-service application.yml
@@ -190,6 +180,7 @@ S417 Fix OAuth2 PKCE callback error (invalid_request: code_challenge_method) in 
 S418 Add Swagger annotations to ChatController and audit all controllers in eagle-system-service for missing annotations (May 15 at 12:02 PM)
 S419 Add Swagger annotations to ChatController and audit all controllers in eagle-system-service for missing annotations (May 15 at 12:03 PM)
 1323 12:03p 🔵 Swagger Annotation Audit — 3 Controllers Missing @Tag/@Operation in eagle-system-service
+S421 New task: Expose SMS_PROVIDER config in docker-compose; keep only HNSL-related SMS config and remove Alibaba Cloud and Tencent Cloud configs (May 15 at 12:03 PM)
 1324 1:59p 🔵 LoginController and WechatWebLoginController Are MVC Template Controllers, Not REST APIs
 1325 " ✅ Added @Operation Swagger Annotation to ChatController broadcast-message STOMP Endpoint
 1326 " ✅ ChatController @Operation Annotations Complete — Both STOMP Endpoints Annotated
@@ -216,6 +207,15 @@ S420 Add Swagger annotations to ChatController and audit/fix all controllers mis
 1346 " 🔵 TDD Red-Light Confirmed: HnslsSmsServiceImpl and HnslsSmsProperties Don't Exist Yet
 1347 " 🟣 HnslsSmsProperties @ConfigurationProperties Class Created
 1348 2:49p 🔴 HnslsSmsServiceImpl 构造函数自动装配歧义修复
+1351 3:08p 🔵 手拉手短信发送失败 — 待调试
+1349 3:20p 🔵 Docker Compose and .env Files Located in eagle-services/ Subdirectory
+1350 3:21p 🔵 SMS Configuration Gap: docker-compose.yml Missing SMS_PROVIDER; Only Aliyun Vars Exposed (Not HNSL)
+S422 SMS配置修复：将SMS_PROVIDER暴露到docker-compose，只保留HNSLS短信配置，去掉阿里云和腾讯云 (May 15 at 3:22 PM)
+1352 3:30p 🟣 手拉手 SMS 实际发送测试请求 — 环境变量已配置
+1354 " 🔵 手拉手三个网关地址全部无法连通 — 网络层封锁而非配置问题
+1353 3:39p 🔵 手拉手 SMS 发送失败根因：.env 中 SEND_URL 配置为无法连通的 IP 地址
+1355 3:40p 🟣 HnslsSmsServiceImplTest 全部通过，DEBUG 日志格式验证正确
+1356 " 🔴 修复 doSend() 双重 ERROR 日志 — ServiceException 被外层 catch 重复捕获
 
-Access 539k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 504k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>

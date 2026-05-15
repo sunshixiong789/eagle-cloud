@@ -42,7 +42,7 @@ class HnslsSmsServiceImplTest {
             MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
             HnslsSmsServiceImpl service = new HnslsSmsServiceImpl(
                     properties(),
-                    builder,
+                    builder.build(),
                     FIXED_CLOCK);
 
             server.expect(requestTo(SEND_URL))
@@ -70,7 +70,7 @@ class HnslsSmsServiceImplTest {
             MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
             HnslsSmsServiceImpl service = new HnslsSmsServiceImpl(
                     properties(),
-                    builder,
+                    builder.build(),
                     FIXED_CLOCK);
 
             server.expect(requestTo(SEND_URL))
@@ -93,7 +93,7 @@ class HnslsSmsServiceImplTest {
 
             HnslsSmsServiceImpl service = new HnslsSmsServiceImpl(
                     properties,
-                    RestClient.builder(),
+                    RestClient.builder().build(),
                     FIXED_CLOCK);
 
             assertFalse(service.isConfigured());
