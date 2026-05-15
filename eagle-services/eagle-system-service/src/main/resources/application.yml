@@ -141,7 +141,7 @@ eagle:
         ${SYSTEM_SERVER_URL:http://localhost:80}/swagger-ui/oauth2-redirect.html,
         ${GATEWAY_URL:http://localhost:8080}/swagger-ui/oauth2-redirect.html
       scopes: openid,profile,email,address,phone
-      require-proof-key: true
+      require-proof-key: false
       require-authorization-consent: false
       access-token-ttl-seconds: 3600
       refresh-token-ttl-seconds: 2592000
