@@ -48,6 +48,9 @@ public class RoleApplicationService {
     @Transactional(rollbackFor = Exception.class)
     public RoleResponse updateRole(Long id, UpdateRoleRequest request) {
         Role role = findRoleById(id);
+        if (role.isSystemRole()) {
+            throw SystemErrorCode.ROLE_SYSTEM_PROTECTED.toDomainException();
+        }
 
         role.updateInfo(
                 request.getRoleName(),
@@ -119,6 +122,9 @@ public class RoleApplicationService {
     @Transactional(rollbackFor = Exception.class)
     public void disableRole(Long id) {
         Role role = findRoleById(id);
+        if (role.isSystemRole()) {
+            throw SystemErrorCode.ROLE_SYSTEM_PROTECTED.toDomainException();
+        }
         role.disable();
         roleRepository.save(role);
     }
