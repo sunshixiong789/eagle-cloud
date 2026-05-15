@@ -148,4 +148,11 @@ public class Role extends BaseAggregateRoot<Role> {
     public boolean isActive() {
         return RoleStatus.NORMAL.equals(this.status);
     }
+
+    /**
+     * 判断是否为系统内置角色（由初始化器预置，禁止通过 API 删除）。
+     */
+    public boolean isSystemRole() {
+        return RoleType.SYSTEM.equals(this.roleType);
+    }
 }

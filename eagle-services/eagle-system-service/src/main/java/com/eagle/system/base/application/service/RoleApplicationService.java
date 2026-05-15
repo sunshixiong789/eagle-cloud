@@ -61,7 +61,11 @@ public class RoleApplicationService {
 
     @Transactional(rollbackFor = Exception.class)
     public void deleteRole(Long id) {
-        roleRepository.deleteById(id);
+        Role role = findRoleById(id);
+        if (role.isSystemRole()) {
+            throw SystemErrorCode.ROLE_SYSTEM_PROTECTED.toDomainException();
+        }
+        roleRepository.delete(role);
     }
 
     @Transactional(readOnly = true)
