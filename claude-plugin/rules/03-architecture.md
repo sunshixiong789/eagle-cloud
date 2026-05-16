@@ -64,7 +64,7 @@ public record AccountRegisteredEvent(Long accountId, String username, ...) {
 
 ```
 {module}/
-├── web/                                # 表现层（Presentation Layer）
+├── interfaces/                         # 接口层（Interfaces Layer）
 │   ├── controller/                     # REST 控制器
 │   └── dto/                            # 入参 / 出参 DTO（Bean Validation）
 │       ├── request/
@@ -95,7 +95,7 @@ public record AccountRegisteredEvent(Long accountId, String username, ...) {
     └── messaging/                      # 消息队列（MQ 生产者 / 消费者）
 ```
 
-**分层依赖方向（单向）：** `web → application → domain ← infrastructure`
+**分层依赖方向（单向）：** `interfaces → application → domain ← infrastructure`
 
 > **可选演进（CQRS 命令/查询分离）**：如果模块的读写复杂度增长，可在 `application/` 下增加 `command/`（写模型入参）和 `query/`
 > （读模型入参）包，将应用服务按读写职责拆分。当前项目未采用此模式。

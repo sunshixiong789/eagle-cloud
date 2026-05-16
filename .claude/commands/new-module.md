@@ -19,7 +19,7 @@ argument-hint: "<服务名>:<模块名>，例 eagle-system-server:order"
 ```
 {service}/src/main/java/com/eagle/{service-short}/{module}/
 ├── package-info.java                    # @ApplicationModule
-├── web/
+├── interfaces/
 │   ├── controller/
 │   └── dto/
 │       ├── request/
@@ -76,7 +76,7 @@ package com.eagle.{service-short}.{module}.domain.event;
 ### 4. 生成 ErrorCode 枚举骨架
 
 ```java
-package com.eagle.{service-short}.{module}.web.exception;
+package com.eagle.{service-short}.{module}.interfaces.exception;
 
         import com.eagle.common.exception.ErrorCode;
         import com.eagle.common.exception.AppException;

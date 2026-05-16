@@ -115,8 +115,8 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 
 ## DDD 分层架构
 
-每个业务模块内部遵循 `web / application / domain / infrastructure` 四层，依赖方向：
-`web → application → domain ← infrastructure`。完整分层结构和规范见 `.claude/rules/03-architecture.md`。
+每个业务模块内部遵循 `interfaces / application / domain / infrastructure` 四层，依赖方向：
+`interfaces → application → domain ← infrastructure`。完整分层结构和规范见 `.claude/rules/03-architecture.md`。
 
 ## 关键基类
 

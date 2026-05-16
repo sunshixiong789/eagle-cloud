@@ -45,7 +45,7 @@ gradle dependencyUpdates
 
 ## DDD 与 Modulith 约定
 
-业务模块内部遵循 `web / application / domain / infrastructure` 四层，依赖方向为 `web -> application -> domain <- infrastructure`。跨模块协作优先使用 Port、领域事件和 `@NamedInterface` 暴露的稳定接口，避免直接穿透其他模块内部实现。
+业务模块内部遵循 `interfaces / application / domain / infrastructure` 四层，依赖方向为 `interfaces -> application -> domain <- infrastructure`。跨模块协作优先使用 Port、领域事件和 `@NamedInterface` 暴露的稳定接口，避免直接穿透其他模块内部实现。
 
 `eagle-services/eagle-system-service` 中 `com.eagle.system` 按有界上下文划分模块，典型模块包括 `auth`、`base`、`config`、`common`。涉及模块边界、Named Interface 或跨模块依赖时，先读取 `claude-plugin/rules/04-modulith.md`。
 

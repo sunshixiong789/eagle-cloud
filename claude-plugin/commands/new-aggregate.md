@@ -10,7 +10,7 @@ argument-hint: "<service>:<module>:<AggregateName>，例 eagle-system-server:ord
 - Domain：聚合根 + Repository + ErrorCode + 领域事件
 - Application：ApplicationService + Mapper（MapStruct）
 - Infrastructure：JPA Repository 实现
-- Web：Controller + Request DTO + Response DTO
+- Interfaces：Controller + Request DTO + Response DTO
 
 严格遵循 `03-architecture.md` / `01-naming.md` / `02-code-style.md`。
 
@@ -87,7 +87,7 @@ package com.eagle.{service}.{module}.domain.model.enums;
 ### 3. ErrorCode
 
 ```java
-package com.eagle.{service}.{module}.web.exception;
+package com.eagle.{service}.{module}.interfaces.exception;
 
         @Getter
         @RequiredArgsConstructor

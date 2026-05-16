@@ -7,7 +7,7 @@
 
 ## 特性
 
-- **DDD 分层架构** — 严格的 `web / application / domain / infrastructure` 四层分离，领域逻辑纯净无框架依赖
+- **DDD 分层架构** — 严格的 `interfaces / application / domain / infrastructure` 四层分离，领域逻辑纯净无框架依赖
 - **六边形架构（Ports & Adapters）** — 跨域协作通过 Port 接口隔离，拆分微服务时仅替换基础设施层实现，业务代码零改动
 - **Spring Modulith 模块治理** — 编译期静态验证模块边界，杜绝循环依赖和非法跨模块访问
 - **OAuth2 授权服务器** — 基于 Spring Authorization Server，支持授权码 + PKCE、刷新令牌、微信登录、短信登录
@@ -131,13 +131,13 @@ eagle-cloud/
 
 ```
 {module}/
-├── web/                    # 表现层（REST Controller + DTO）
+├── interfaces/             # 接口层（REST Controller + DTO）
 ├── application/            # 应用层（用例编排、事务边界、MapStruct）
 ├── domain/                 # 领域层（聚合根、实体、值对象、仓储接口、领域事件、Port 接口）
 └── infrastructure/         # 基础设施层（仓储实现、Port 适配器、安全、配置）
 ```
 
-依赖方向（单向）：`web → application → domain ← infrastructure`
+依赖方向（单向）：`interfaces → application → domain ← infrastructure`
 
 ## 高并发 Starter 使用说明
 
@@ -567,7 +567,7 @@ gradle nativeCompile
 
 ### 新增业务模块
 
-1. 在 `eagle-system-server` 对应包下创建模块目录，遵循 `web / application / domain / infrastructure` 分层
+1. 在 `eagle-system-server` 对应包下创建模块目录，遵循 `interfaces / application / domain / infrastructure` 分层
 2. 在模块根目录创建 `package-info.java`，声明 `@ApplicationModule` 和 `allowedDependencies`
 3. 为需要暴露的子包添加 `@NamedInterface`
 4. 运行 `gradle test --tests "*.ModulithArchitectureTest"` 验证模块边界
