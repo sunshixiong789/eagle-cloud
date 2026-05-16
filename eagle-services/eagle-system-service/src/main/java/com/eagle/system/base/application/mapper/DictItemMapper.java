@@ -1,7 +1,7 @@
 package com.eagle.system.base.application.mapper;
 
 import com.eagle.system.base.domain.model.entity.DictItemEntity;
-import com.eagle.system.base.web.dto.response.DictItemResponse;
+import com.eagle.system.base.interfaces.dto.response.DictItemResponse;
 import org.mapstruct.Mapper;
 
 import java.util.List;

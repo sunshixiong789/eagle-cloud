@@ -1,7 +1,7 @@
 package com.eagle.system.auth.application.mapper;
 
 import com.eagle.system.auth.domain.model.OAuthClient;
-import com.eagle.system.auth.web.dto.response.OAuthClientResponse;
+import com.eagle.system.auth.interfaces.dto.response.OAuthClientResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
