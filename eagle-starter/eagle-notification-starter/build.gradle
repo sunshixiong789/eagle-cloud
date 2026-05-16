@@ -1,10 +1,10 @@
 dependencies {
     api project(':eagle-starter:eagle-common-starter')
 
-    compileOnly 'com.aliyun:dysmsapi20170525'
-    compileOnly 'com.tencentcloudapi:tencentcloud-sdk-java-sms'
+    api 'com.aliyun:dysmsapi20170525'
+    api 'com.tencentcloudapi:tencentcloud-sdk-java-sms'
+    api 'org.springframework:spring-web'
     compileOnly 'org.springframework.boot:spring-boot-starter-mail'
-    compileOnly 'org.springframework:spring-web'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

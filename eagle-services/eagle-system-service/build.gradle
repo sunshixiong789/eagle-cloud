@@ -14,11 +14,8 @@ dependencies {
 
     // 微信/第三方 SDK
     implementation "com.github.binarywang:weixin-java-miniapp"
-    implementation "com.aliyun:dysmsapi20170525"
-    // 阿里云号码认证 / 一键登录
+    // 阿里云号码认证 / 一键登录（短信 SDK 已由 eagle-notification-starter 传递依赖）
     implementation "com.aliyun:dypnsapi20170525"
-    // 腾讯云短信 SDK（由 eagle-notification-starter 中的 SmsProvider 使用）
-    implementation "com.tencentcloudapi:tencentcloud-sdk-java-sms"
 
     implementation "com.github.ben-manes.caffeine:caffeine"
     implementation "org.apache.poi:poi-ooxml"

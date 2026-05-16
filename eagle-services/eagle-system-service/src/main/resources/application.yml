@@ -188,8 +188,8 @@ eagle:
       provider: ${SMS_PROVIDER:tencent}
       access-key-id: ${SMS_ACCESS_KEY_ID:}
       access-key-secret: ${SMS_ACCESS_KEY_SECRET:}
-      sign-name: ${SMS_SIGN_NAME:}
-      template-id: ${SMS_TEMPLATE_ID:}
+      sign-name: ${SMS_SIGN_NAME:${HNSLS_SMS_SIGN_NAME:}}
+      template-id: ${SMS_TEMPLATE_ID:${TENCENT_SMS_TEMPLATE_ID:${ALIYUN_SMS_TEMPLATE_CODE:}}}
       sdk-app-id: ${TENCENT_SMS_SDK_APP_ID:}
       region: ${TENCENT_SMS_REGION:ap-guangzhou}
       username: ${HNSLS_SMS_USERNAME:}
