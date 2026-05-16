@@ -1,19 +1,17 @@
 package com.eagle.system.auth.interfaces.controller;
 
-import com.eagle.common.exception.codes.DataErrorCode;
+import com.eagle.common.exception.AppException;
 import com.eagle.system.auth.application.service.AccountApplicationService;
 import com.eagle.system.auth.domain.model.Account;
 import com.eagle.system.auth.domain.service.SmsService;
 import com.eagle.system.auth.infrastructure.config.WechatWebProperties;
-import com.eagle.system.auth.domain.AuthErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.FactorGrantedAuthority;
@@ -26,6 +24,7 @@ import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,14 +42,15 @@ import java.util.UUID;
  *
  * @author sunshixiong
  */
+@Slf4j
 @Tag(name = "登录页面/会话登录", description = "Thymeleaf 渲染的登录页与基于 Session 的短信登录端点(非 REST,Swagger 仅作文档)")
 @Controller
 @RequestMapping(value = "login")
 @RequiredArgsConstructor
 public class LoginController {
 
-    private static final Logger log = LoggerFactory.getLogger(LoginController.class);
     private static final String STATE_SESSION_KEY = "WECHAT_OAUTH_STATE";
+    private static final String SMS_LOGIN_ERROR_REDIRECT = "/login?error&sms";
 
     private final SmsService smsService;
     private final AccountApplicationService accountApplicationService;
@@ -119,37 +119,41 @@ public class LoginController {
                          @RequestParam String code,
                          HttpServletRequest request,
                          HttpServletResponse response) throws IOException {
-        try {
-            if (phone == null || !phone.matches("^1[3-9]\\d{9}$")) {
-                throw DataErrorCode.INVALID_PHONE_FORMAT.toDomainException();
-            }
-            if (!smsService.verifyCode(phone, code)) {
-                throw AuthErrorCode.SMS_CODE_INVALID.toDomainException();
-            }
-            Account account = accountApplicationService.findOrCreateByPhone(phone);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(account.getUsername());
+        Account account = accountApplicationService.authenticateBySmsCode(phone, code);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(account.getUsername());
 
-            // SAS 7.0 OIDC id_token 生成要求 Authentication 携带 FactorGrantedAuthority 以提供 auth_time；
-            // 短信验证码属于一次性凭证（One-Time-Token）因子。
-            Set<GrantedAuthority> authorities = new LinkedHashSet<>(userDetails.getAuthorities());
-            authorities.add(FactorGrantedAuthority.fromAuthority(FactorGrantedAuthority.OTT_AUTHORITY));
+        // SAS 7.0 OIDC id_token 生成要求 Authentication 携带 FactorGrantedAuthority 以提供 auth_time；
+        // 短信验证码属于一次性凭证（One-Time-Token）因子。
+        Set<GrantedAuthority> authorities = new LinkedHashSet<>(userDetails.getAuthorities());
+        authorities.add(FactorGrantedAuthority.fromAuthority(FactorGrantedAuthority.OTT_AUTHORITY));
 
-            UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
-            SecurityContext context = SecurityContextHolder.createEmptyContext();
-            context.setAuthentication(authToken);
-            SecurityContextHolder.setContext(context);
-            securityContextRepository.saveContext(context, request, response);
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authToken);
+        SecurityContextHolder.setContext(context);
+        securityContextRepository.saveContext(context, request, response);
 
-            HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
-            SavedRequest savedRequest = requestCache.getRequest(request, response);
-            String targetUrl = savedRequest != null ? savedRequest.getRedirectUrl() : "/";
-            log.info("短信登录成功, phone: {}, redirect: {}", phone, targetUrl);
-            response.sendRedirect(targetUrl);
+        HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
+        SavedRequest savedRequest = requestCache.getRequest(request, response);
+        String targetUrl = savedRequest != null ? savedRequest.getRedirectUrl() : "/";
+        log.info("短信登录成功, redirect: {}", targetUrl);
+        response.sendRedirect(targetUrl);
+    }
 
-        } catch (Exception e) {
-            log.error("短信登录失败, phone: {}, error: {}", phone, e.getMessage(), e);
-            response.sendRedirect("/login?error&sms");
+    /**
+     * Form-login 的失败重定向器：短信登录路径的业务异常统一回到 /login?error&sms。
+     * <p>对应规范 05-api.md "Controller 禁止 try-catch"——@ExceptionHandler 是声明式处理，
+     * 不属于 try-catch。其他端点的异常仍由全局 GlobalExceptionHandler 接管。</p>
+     */
+    @ExceptionHandler(AppException.class)
+    public void handleSmsLoginFailure(AppException ex,
+                                      HttpServletRequest request,
+                                      HttpServletResponse response) throws IOException {
+        if (!"/login/sms".equals(request.getRequestURI())) {
+            throw ex;
         }
+        log.warn("短信登录失败: code={}", ex.getErrorCode().getCode(), ex);
+        response.sendRedirect(SMS_LOGIN_ERROR_REDIRECT);
     }
 }

@@ -4,6 +4,7 @@ import com.eagle.common.base.BaseAggregateRoot;
 import com.eagle.system.base.domain.model.entity.DictItemEntity;
 import com.eagle.system.base.domain.model.enums.DictStatus;
 import com.eagle.system.base.domain.model.enums.DictType;
+import com.eagle.system.base.domain.model.enums.SystemErrorCode;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -121,13 +122,13 @@ public class Dict extends BaseAggregateRoot<Dict> {
      *
      * @param itemId 字典项 ID
      * @return 字典项
-     * @throws IllegalArgumentException 当字典项不存在时
+     * @throws com.eagle.common.exception.NotFoundException 当字典项不存在时
      */
     public DictItemEntity findItemById(Long itemId) {
         return this.dictItems.stream()
                 .filter(item -> item.getId().equals(itemId))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("字典项不存在"));
+                .orElseThrow(SystemErrorCode.DICT_ITEM_NOT_FOUND::toNotFoundException);
     }
 
     /**

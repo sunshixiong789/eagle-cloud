@@ -1,5 +1,6 @@
 package com.eagle.system.base.infrastructure.event;
 
+import com.eagle.common.util.LogMask;
 import com.eagle.system.auth.domain.event.AccountDeletedEvent;
 import com.eagle.system.auth.domain.event.AccountRegisteredEvent;
 import com.eagle.system.base.domain.event.UserCreatedEvent;
@@ -57,7 +58,7 @@ public class UserEventHandler {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleUserCreated(UserCreatedEvent event) {
         log.info("用户创建事件: username={}, phone={}, email={}",
-                event.getUsername(), event.getPhone(), event.getEmail());
+                event.getUsername(), LogMask.phone(event.getPhone()), LogMask.email(event.getEmail()));
     }
 
     /**

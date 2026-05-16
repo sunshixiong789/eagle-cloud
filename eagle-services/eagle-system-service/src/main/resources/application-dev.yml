@@ -8,6 +8,12 @@
 # 数据源 / Redis 连接信息使用基线 + 环境变量注入。
 # ===========================================
 
+eagle:
+  jwt:
+    # dev 环境默认值；与项目内置 classpath:jwt-keystore.p12 的密码对齐，
+    # 仅用于 dev profile；test/staging/prod 必须通过环境变量 EAGLE_JWT_KEYSTORE_PASSWORD 注入
+    keystore-password: ${EAGLE_JWT_KEYSTORE_PASSWORD:eagle-jwt-dev-2026}
+
 spring:
   # dev 环境默认沿用 Nacos 内置 public 命名空间。
   # 注意：Spring Boot 4 占位符行为变化——${VAR:default} 在 VAR 已定义但为空时也会用 default，

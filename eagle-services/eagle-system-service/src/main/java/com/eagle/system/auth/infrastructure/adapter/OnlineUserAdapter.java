@@ -42,8 +42,8 @@ public class OnlineUserAdapter implements OnlineUserPort {
                     ONLINE_KEY_PREFIX + info.tokenId(), json,
                     info.expiresIn(), TimeUnit.SECONDS);
         } catch (Exception e) {
-            // Redis 不可用时降级处理，仅记录调试日志，不阻断登录流程
-            log.debug("Failed to track online user for tokenId: {}, Redis may be unavailable", info.tokenId());
+            // Redis 不可用时降级，不阻断登录流程；但必须保留堆栈以便运维定位
+            log.warn("failed to track online user, redis may be unavailable: tokenId={}", info.tokenId(), e);
         }
     }
 
@@ -66,8 +66,8 @@ public class OnlineUserAdapter implements OnlineUserPort {
                 }
             });
         } catch (Exception e) {
-            // Redis 不可用时返回空列表
-            log.debug("Failed to list online users from Redis, returning empty list");
+            // Redis 不可用时返回空列表；运维需要堆栈定位
+            log.warn("failed to list online users from redis, returning empty list", e);
         }
         return result;
     }
@@ -84,8 +84,8 @@ public class OnlineUserAdapter implements OnlineUserPort {
                     BLACKLIST_KEY_PREFIX + tokenId, "1",
                     blacklistTtl, TimeUnit.SECONDS);
         } catch (Exception e) {
-            // Redis 不可用时降级处理
-            log.debug("Failed to force logout for tokenId: {}, Redis may be unavailable", tokenId);
+            // Redis 不可用时降级处理；保留堆栈
+            log.warn("failed to force logout, redis may be unavailable: tokenId={}", tokenId, e);
         }
     }
 
@@ -94,8 +94,8 @@ public class OnlineUserAdapter implements OnlineUserPort {
         try {
             return Boolean.TRUE.equals(redisTemplate.hasKey(BLACKLIST_KEY_PREFIX + jti));
         } catch (Exception e) {
-            // Redis 不可用时默认认为未拉黑（允许访问）
-            log.debug("Failed to check blacklist for jti: {}, defaulting to false", jti);
+            // Redis 不可用时默认认为未拉黑（允许访问）；保留堆栈以排查 Redis 故障
+            log.warn("failed to check blacklist, defaulting to not-blacklisted: jti={}", jti, e);
             return false;
         }
     }

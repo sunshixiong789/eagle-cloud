@@ -5,6 +5,7 @@ import com.eagle.system.base.application.mapper.LogMapper;
 import com.eagle.system.base.domain.model.SysLog;
 import com.eagle.system.base.domain.repository.LogRepository;
 import com.eagle.system.base.domain.repository.LogSpecification;
+import com.eagle.system.base.domain.repository.LogSummary;
 import com.eagle.system.base.interfaces.dto.request.LogQueryRequest;
 import com.eagle.system.base.interfaces.dto.response.LogResponse;
 import com.eagle.system.base.domain.model.enums.SystemErrorCode;
@@ -81,6 +82,22 @@ public class LogApplicationService {
     public Page<LogResponse> queryLogs(LogQueryRequest request, Pageable pageable) {
         Specification<SysLog> spec = buildSpec(request);
         return logRepository.findAll(spec, pageable).map(logMapper::toResponse);
+    }
+
+    /**
+     * 条件分页查询日志摘要（CQRS 投影）
+     * <p>
+     * 与 {@link #queryLogs(LogQueryRequest, Pageable)} 共用同一组过滤条件，但只返回列表
+     * 展示所需字段（剔除 {@code params / result / exception} 等 TEXT 列），适合大批量列表场景。
+     *
+     * @param request  查询条件
+     * @param pageable 分页参数
+     * @return 日志摘要分页结果
+     */
+    @Transactional(readOnly = true)
+    public Page<LogSummary> queryLogSummaries(LogQueryRequest request, Pageable pageable) {
+        Specification<SysLog> spec = buildSpec(request);
+        return logRepository.findLogSummariesBy(spec, pageable);
     }
 
     /**

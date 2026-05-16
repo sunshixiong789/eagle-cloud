@@ -1,5 +1,6 @@
 package com.eagle.system;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -28,6 +29,7 @@ import java.util.Optional;
  * @author sunshixiong
  */
 // @Modulithic 仅供 Modulith 静态分析读取（compileOnly），Spring Boot 启动时不处理
+@Slf4j
 @Modulithic(systemName = "Eagle")
 @SpringBootApplication
 @ConfigurationPropertiesScan
@@ -50,15 +52,20 @@ public class EagleSystemApplication {
         String contextPath = Optional.ofNullable(env.getProperty("server.servlet.context-path")).orElse("");
         String baseUrl = "http://localhost:" + port + contextPath;
 
-        System.out.println();
-        System.out.println("╔══════════════════════════════════════════════════════════════╗");
-        System.out.println("║  🚀 Eagle Application Started Successfully!                  ║");
-        System.out.println("╠══════════════════════════════════════════════════════════════╣");
-        System.out.println("║  📚 Swagger UI:      " + padRight(baseUrl + "/swagger-ui.html", 38) + "║");
-        System.out.println("║  📖 API Docs:        " + padRight(baseUrl + "/v3/api-docs", 38) + "║");
-        System.out.println("║  🔐 OAuth2 Token:    " + padRight(baseUrl + "/oauth2/token", 38) + "║");
-        System.out.println("╚══════════════════════════════════════════════════════════════╝");
-        System.out.println();
+        log.info(
+                """
+
+                ╔══════════════════════════════════════════════════════════════╗
+                ║  🚀 Eagle Application Started Successfully!                  ║
+                ╠══════════════════════════════════════════════════════════════╣
+                ║  📚 Swagger UI:      {}║
+                ║  📖 API Docs:        {}║
+                ║  🔐 OAuth2 Token:    {}║
+                ╚══════════════════════════════════════════════════════════════╝
+                """,
+                padRight(baseUrl + "/swagger-ui.html", 38),
+                padRight(baseUrl + "/v3/api-docs", 38),
+                padRight(baseUrl + "/oauth2/token", 38));
     }
 
     private String padRight(String s, int n) {

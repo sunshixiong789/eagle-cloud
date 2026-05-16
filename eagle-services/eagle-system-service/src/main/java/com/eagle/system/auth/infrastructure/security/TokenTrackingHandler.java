@@ -71,7 +71,8 @@ public class TokenTrackingHandler implements AuthenticationSuccessHandler {
         try {
             trackOnlineUser(request, tokenAuth);
         } catch (Exception e) {
-            log.warn("Failed to track online user, skipping: {}", e.getMessage());
+            // 异常作为最后参数，保留完整堆栈；e.getMessage() 可能为 null 也会丢失堆栈信息
+            log.warn("failed to track online user, skipping", e);
         }
     }
 

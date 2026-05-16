@@ -13,7 +13,9 @@ public enum SystemErrorCode implements ErrorCode {
     DICT_NOT_FOUND(20004, "error.dict.not_found", "字典不存在"),
     POST_NOT_FOUND(20005, "error.post.not_found", "岗位不存在"),
     LOG_NOT_FOUND(20006, "error.log.not_found", "日志不存在"),
-    POST_CODE_EXISTS(20008, "error.post.code_already_exists", "岗位编码已存在");
+    POST_CODE_EXISTS(20008, "error.post.code_already_exists", "岗位编码已存在"),
+    DICT_ITEM_NOT_FOUND(20009, "error.dict.item_not_found", "字典项不存在"),
+    DICT_TYPE_INVALID(20010, "error.dict.type_invalid", "字典类型无效");
 
     private final ErrorCode.Meta meta;
 

@@ -25,7 +25,8 @@ eagle:
   # JWT 签名密钥（复用 system-service 内置 keystore，生产请挂载外部 keystore）
   jwt:
     keystore-location: ${EAGLE_JWT_KEYSTORE_LOCATION:classpath:jwt-keystore.p12}
-    keystore-password: ${EAGLE_JWT_KEYSTORE_PASSWORD:eagle-jwt-dev-2026}
+    # 必填，缺失即 fail-fast；local profile 在 application-local.yml 注入默认值
+    keystore-password: ${EAGLE_JWT_KEYSTORE_PASSWORD}
     key-alias: eagle-jwt
   # WebSocket 配置
   websocket:

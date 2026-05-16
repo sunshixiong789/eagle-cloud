@@ -3,6 +3,9 @@ package com.eagle.system.base.domain.repository;
 import com.eagle.system.base.domain.model.SysLog;
 import com.eagle.system.base.domain.model.enums.LogStatus;
 import com.eagle.system.base.domain.model.enums.LogType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -98,6 +101,18 @@ public interface LogRepository extends JpaRepository<SysLog, Long>,
     Long countDistinctUsernameByLogTypeAndPeriod(@Param("logType") LogType logType,
                                                  @Param("start") LocalDateTime start,
                                                  @Param("end") LocalDateTime end);
+
+    /**
+     * 列表查询（CQRS 读投影）：与 {@link #findAll(Specification, Pageable)} 共用同一组过滤条件，
+     * 但只取 {@link LogSummary} 字段，剔除 {@code params / result / exception} 等 TEXT 列。
+     *
+     * @param spec     动态查询条件
+     * @param pageable 分页参数
+     * @return 日志摘要投影分页
+     */
+    default Page<LogSummary> findLogSummariesBy(Specification<SysLog> spec, Pageable pageable) {
+        return findBy(spec, query -> query.as(LogSummary.class).page(pageable));
+    }
 
     /**
      * 按日期分组统计登录数（用于趋势图）

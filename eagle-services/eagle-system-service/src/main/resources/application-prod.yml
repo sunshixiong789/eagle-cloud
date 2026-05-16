@@ -5,10 +5,15 @@
 #   - Swagger 强制关闭（防止 schema 泄漏）
 #   - 日志 root=WARN，com.eagle=INFO
 #
-# 【新项目阶段】schema 策略：
-#   - ddl-auto=update：Hibernate 自动同步业务实体表（非 JPA 的 OAuth2 表由 Flyway 建）
-#   - Flyway 启用 + baseline-on-migrate=true：兼容 Hibernate 已建表的库
-#   - 等业务稳定后再切回基线 ddl-auto=validate + 完整 Flyway 管理
+# 【schema 策略】严格遵循 28-migration.md：
+#   - ddl-auto=validate：启动期校验实体与表结构匹配，禁止运行时自动改表
+#   - 所有业务实体表必须由 Flyway 脚本预先建立（V{yyyyMMddHHmm}__*.sql）
+#
+# 【Flyway 覆盖范围】
+#   - V1__oauth2_authorization_tables.sql：SAS JDBC 持久化表（authorization / consent）
+#   - V202605161500__init_business_tables.sql：业务实体 baseline（auth_account / oauth2_client / sys_*）
+#   后续业务表变更通过新增 V{yyyyMMddHHmm}__*.sql 文件；如需重新生成 baseline，
+#   开启 SchemaExportTest 上的 @Disabled 跑一次即可（详见该测试类 Javadoc）。
 # ===========================================
 
 spring:
@@ -18,7 +23,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update                          # 新项目阶段自动建表；稳定后改回 validate
+      ddl-auto: validate                        # 生产严格 validate；运行时禁止改表，所有 DDL 通过 Flyway 管控
 
   datasource:
     hikari:

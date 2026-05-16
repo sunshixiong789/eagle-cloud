@@ -18,7 +18,12 @@
  *
  * @author sunshixiong
  */
-@ApplicationModule(displayName = "认证授权模块")
+@ApplicationModule(
+        displayName = "认证授权模块",
+        // allowedDependencies = {} 即"不允许任何模块依赖"（common 因为 @Modulithic(sharedModules)
+        // 隐式开放，无需写）。此声明把"禁止依赖 base/config"从注释升级为 ModulithArchitectureTest 硬约束。
+        allowedDependencies = {}
+)
 @NullMarked
 package com.eagle.system.auth;
 

@@ -1,6 +1,7 @@
 package com.eagle.system.auth.infrastructure.security;
 
 import com.eagle.common.dto.EagleUser;
+import com.eagle.common.util.LogMask;
 import com.eagle.system.auth.application.service.AccountApplicationService;
 import com.eagle.system.auth.domain.model.Account;
 import com.eagle.system.auth.domain.service.PhoneOneClickService;
@@ -166,7 +167,7 @@ public class PhoneOneClickAuthenticationProvider implements AuthenticationProvid
         OAuth2Authorization authorization = authorizationBuilder.build();
         authorizationService.save(authorization);
 
-        log.info("一键登录成功，accountId={}, phone={}", eagleUser.getId(), eagleUser.getPhone());
+        log.info("一键登录成功，accountId={}, phone={}", eagleUser.getId(), LogMask.phone(eagleUser.getPhone()));
 
         return new OAuth2AccessTokenAuthenticationToken(
                 registeredClient, clientPrincipal, accessToken, refreshToken,

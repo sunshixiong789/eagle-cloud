@@ -5,6 +5,7 @@ import com.aliyun.dypnsapi20170525.models.GetMobileRequest;
 import com.aliyun.dypnsapi20170525.models.GetMobileResponse;
 import com.aliyun.dypnsapi20170525.models.GetMobileResponseBody;
 import com.aliyun.teaopenapi.models.Config;
+import com.eagle.common.util.LogMask;
 import com.eagle.system.auth.domain.AuthErrorCode;
 import com.eagle.system.auth.domain.service.PhoneOneClickService;
 import com.eagle.system.auth.infrastructure.config.PhoneOneClickProperties;
@@ -82,7 +83,7 @@ public class PhoneOneClickServiceImpl implements PhoneOneClickService {
             log.warn("一键登录 mock 模式收到非法 token，无法解析为手机号");
             throw AuthErrorCode.ONE_CLICK_PHONE_PARSE_FAILED.toDomainException();
         }
-        log.warn("一键登录 mock 模式：access_token 直接作为手机号使用，仅供开发环境，phone={}", accessToken);
+        log.warn("一键登录 mock 模式：access_token 直接作为手机号使用，仅供开发环境，phone={}", LogMask.phone(accessToken));
         return accessToken;
     }
 

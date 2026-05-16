@@ -116,7 +116,8 @@ spring:
 eagle:
   jwt:
     keystore-location: classpath:jwt-keystore.p12
-    keystore-password: ${EAGLE_JWT_KEYSTORE_PASSWORD:eagle-jwt-dev-2026}
+    # 必填，缺失即 fail-fast；dev / local profile 在 application-dev.yml / application-local.yml 注入默认值
+    keystore-password: ${EAGLE_JWT_KEYSTORE_PASSWORD}
     key-alias: eagle-jwt
   websocket:
     endpoint: /ws-stomp
@@ -140,9 +141,9 @@ eagle:
       client-name: Eagle Web 前端应用
       client-authentication-methods: none
       authorization-grant-types: authorization_code,refresh_token,wechat_mini_program,sms_code
-      redirect-uris: >
-        http://localhost:8080/auth/oauth2/callback,
-        http://139.155.104.132:3000/auth/oauth2/callback
+      # 完整 redirect_uri 列表通过 EAGLE_OAUTH_REDIRECT_URIS 注入（逗号分隔），
+      # 默认仅 localhost 用于本地开发；联调 / 生产环境必须用环境变量覆盖。
+      redirect-uris: ${EAGLE_OAUTH_REDIRECT_URIS:http://localhost:8080/auth/oauth2/callback}
       scopes: openid,profile,email,address,phone
       require-proof-key: true
       require-authorization-consent: false

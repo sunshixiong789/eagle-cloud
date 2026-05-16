@@ -1,5 +1,6 @@
 package com.eagle.system.auth.application.service;
 
+import com.eagle.common.exception.codes.DataErrorCode;
 import com.eagle.system.auth.domain.model.Account;
 import com.eagle.system.auth.domain.model.valueobject.ProfileHints;
 import com.eagle.system.auth.domain.repository.AccountRepository;
@@ -9,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.regex.Pattern;
 
 /**
  * 账号应用服务
@@ -23,9 +26,26 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AccountApplicationService {
 
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^1[3-9]\\d{9}$");
+
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
     private final SmsService smsService;
+
+    /**
+     * 短信验证码 Web 登录：校验手机号格式 + 验证码后查/建账号。
+     * <p>校验失败抛出 {@link com.eagle.common.exception.DomainException}，由全局异常处理。</p>
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Account authenticateBySmsCode(String phone, String code) {
+        if (phone == null || !PHONE_PATTERN.matcher(phone).matches()) {
+            throw DataErrorCode.INVALID_PHONE_FORMAT.toDomainException();
+        }
+        if (!smsService.verifyCode(phone, code)) {
+            throw AuthErrorCode.SMS_CODE_INVALID.toDomainException();
+        }
+        return findOrCreateByPhone(phone);
+    }
 
     /**
      * 用户自主注册

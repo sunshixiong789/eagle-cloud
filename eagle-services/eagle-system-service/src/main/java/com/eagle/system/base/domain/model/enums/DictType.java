@@ -61,6 +61,6 @@ public enum DictType {
                 return type;
             }
         }
-        throw new IllegalArgumentException("Unknown dict type code: " + code);
+        throw SystemErrorCode.DICT_TYPE_INVALID.toDomainException();
     }
 }

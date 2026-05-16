@@ -1,5 +1,6 @@
 package com.eagle.system.auth.infrastructure.external;
 
+import com.eagle.common.util.LogMask;
 import com.eagle.system.auth.domain.AuthErrorCode;
 import com.eagle.system.auth.domain.service.SmsService;
 import com.github.benmanes.caffeine.cache.Cache;
@@ -48,11 +49,12 @@ public abstract class AbstractCachedSmsService implements SmsService {
         if (isConfigured()) {
             doSend(phone, code);
         } else {
-            // 未配置真实服务商凭据时，打印验证码到日志，便于本地/开发环境联调
-            log.warn("{} 短信未配置，验证码: phone={}, code={}", providerName(), phone, code);
+            // 未配置真实服务商凭据时，打印验证码到日志，便于本地/开发环境联调；
+            // 即使是开发态也对手机号脱敏，code 仅在 isConfigured() == false 分支输出（生产不会进入）
+            log.warn("{} 短信未配置，验证码: phone={}, code={}", providerName(), LogMask.phone(phone), code);
         }
         log.debug("sms send: provider={}, phone=[{}] (len={}), cacheSize={}, this={}",
-                providerName(), phone, phone.length(),
+                providerName(), LogMask.phone(phone), phone.length(),
                 codeCache.estimatedSize(), System.identityHashCode(this));
     }
 
@@ -60,7 +62,7 @@ public abstract class AbstractCachedSmsService implements SmsService {
     public boolean verifyCode(String phone, String code) {
         String cached = codeCache.getIfPresent(phone);
         log.debug("sms verify: provider={}, phone=[{}], cachedPresent={}",
-                providerName(), phone, cached != null);
+                providerName(), LogMask.phone(phone), cached != null);
         if (cached != null && cached.equals(code)) {
             codeCache.invalidate(phone);
             return true;

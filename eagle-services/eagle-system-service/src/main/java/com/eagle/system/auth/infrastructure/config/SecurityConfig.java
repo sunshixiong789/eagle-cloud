@@ -63,13 +63,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
 import java.io.InputStream;
 import java.security.KeyStore;
-import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -154,7 +149,6 @@ public class SecurityConfig {
                                            RegisteredClientRepository registeredClientRepository) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .securityContext(sc -> sc.securityContextRepository(securityContextRepository))
                 .oauth2AuthorizationServer((authorizationServer) -> {
                     http.securityMatcher(authorizationServer.getEndpointsMatcher());
@@ -200,7 +194,6 @@ public class SecurityConfig {
         http
                 // JWT 无状态，必须禁用 CSRF
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .securityContext(sc -> sc.securityContextRepository(securityContextRepository))
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers("/login", "/login/sms", SecurityConstants.AUTH_TOKEN).permitAll()
@@ -237,29 +230,6 @@ public class SecurityConfig {
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder)));
         return http.build();
-    }
-
-    /**
-     * 跨域配置
-     * <p>
-     * 当前使用通配符允许所有来源，生产环境请将 setAllowedOriginPatterns 替换为具体域名列表，
-     * 例如：{@code List.of("https://app.example.com", "https://admin.example.com")}
-     *
-     * @return CorsConfigurationSource
-     */
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        // 生产环境替换为具体域名，禁止通配符
-        config.setAllowedOriginPatterns(List.of("*"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
-        config.setMaxAge(3600L);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // 应用于所有路径，包括 API 接口和认证端点
-        source.registerCorsConfiguration("/**", config);
-        return source;
     }
 
     /**
