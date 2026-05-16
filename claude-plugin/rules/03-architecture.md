@@ -71,7 +71,7 @@ public record AccountRegisteredEvent(Long accountId, String username, ...) {
 │       └── response/
 ├── application/                        # 应用层（Application Layer）
 │   ├── service/                        # 应用服务（用例编排，事务边界）
-│   └── mapper/                         # DTO ↔ 领域对象映射器（MapStruct）
+│   └── mapper/                         # DTO ↔ 领域对象映射器（纯 Java `@Component`，不使用 MapStruct）
 ├── domain/                             # 领域层（Domain Layer，纯业务，无框架依赖）
 │   ├── model/
 │   │   ├── aggregate/                  # 聚合根（有独立 Repository）
@@ -96,6 +96,46 @@ public record AccountRegisteredEvent(Long accountId, String username, ...) {
 ```
 
 **分层依赖方向（单向）：** `interfaces → application → domain ← infrastructure`
+
+## DTO ↔ 领域对象映射（纯 Java，不使用 MapStruct）
+
+项目**统一采用纯 Java `@Component` Mapper**，不引入 MapStruct / ModelMapper / BeanUtils.copyProperties 等反射/代码生成方案。
+
+**规范：**
+
+- Mapper 位于 `application/mapper/`，类名 `{Aggregate}Mapper`，使用 `@Component` 注册为 Spring Bean
+- 通过构造器注入（`@RequiredArgsConstructor` 或显式构造器），调用方持有 mapper 实例
+- 方法以 `toResponse / toDto / toDomain` 命名，**入参为 `null` 直接返回 `null`**
+- 字段映射逐行显式 `set`，禁止用反射框架"省事"
+- **枚举字段** → String 输出时调用 `.name()`：`xxx != null ? xxx.name() : null`
+- **不要写 `toResponseList` 这类批量方法**，调用方用 `list.stream().map(mapper::toResponse).toList()` 更直观
+- Mapper 内**不做业务判断**（递归构建树、跨聚合查询都是应用服务的职责）
+
+```java
+// ✅ 标准模板
+@Component
+public class OrderMapper {
+
+    public OrderResponse toResponse(Order order) {
+        if (order == null) {
+            return null;
+        }
+        OrderResponse response = new OrderResponse();
+        response.setId(order.getId());
+        response.setOrderNo(order.getOrderNo());
+        response.setStatus(order.getStatus() != null ? order.getStatus().name() : null);
+        response.setTotalAmount(order.getTotalAmount());
+        response.setCreateTime(order.getCreateTime());
+        return response;
+    }
+}
+```
+
+**禁止：**
+
+- 禁止引入 `org.mapstruct:*` / `@Mapper` / `@Mapping` 注解
+- 禁止用 `BeanUtils.copyProperties` 跨 DTO 与领域对象（绕过类型/枚举校验）
+- 禁止 mapper 内访问 Repository / Service（应保持纯字段转换）
 
 > **可选演进（CQRS 命令/查询分离）**：如果模块的读写复杂度增长，可在 `application/` 下增加 `command/`（写模型入参）和 `query/`
 > （读模型入参）包，将应用服务按读写职责拆分。当前项目未采用此模式。

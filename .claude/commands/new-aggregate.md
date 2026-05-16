@@ -8,7 +8,7 @@ argument-hint: "<service>:<module>:<AggregateName>，例 eagle-system-server:ord
 为指定模块创建一个完整的聚合根，含：
 
 - Domain：聚合根 + Repository + ErrorCode + 领域事件
-- Application：ApplicationService + Mapper（MapStruct）
+- Application：ApplicationService + Mapper（纯 Java `@Component`，不使用 MapStruct）
 - Infrastructure：JPA Repository 实现
 - Interfaces：Controller + Request DTO + Response DTO
 
@@ -162,19 +162,33 @@ package com.eagle.{service}.{module}.application.service;
         }
 ```
 
-### 7. Mapper（MapStruct）
+### 7. Mapper（纯 Java，不使用 MapStruct）
+
+DTO ↔ 领域对象映射统一采用纯 Java `@Component`，逐字段显式 `set`：
 
 ```java
-@Mapper
-public interface {Aggregate}
+@Component
+public class {Aggregate}Mapper {
 
-Mapper {
-    {
-        Aggregate
-    } Response toResponse ({Aggregate} agg);
-    List < {Aggregate} Response > toResponseList(List < {Aggregate} > list);
+    public {Aggregate}Response toResponse({Aggregate} agg) {
+        if (agg == null) {
+            return null;
+        }
+        {Aggregate}Response response = new {Aggregate}Response();
+        response.setId(agg.getId());
+        // 枚举 → String：xxx != null ? xxx.name() : null
+        // 其余字段直接 setXxx(agg.getXxx())
+        response.setCreateTime(agg.getCreateTime());
+        return response;
+    }
 }
 ```
+
+要点：
+- 入参为 `null` 直接返回 `null`
+- 枚举字段调用 `.name()` 转 String（响应 DTO 推荐用 String，便于演进）
+- 不要再写 `toResponseList`，调用方用 `list.stream().map(mapper::toResponse).toList()` 更直观
+- 不要在 mapper 内做业务判断（例如递归构建子树），那是应用服务的职责
 
 ### 8. Controller + DTO
 

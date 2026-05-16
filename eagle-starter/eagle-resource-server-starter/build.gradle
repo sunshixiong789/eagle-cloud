@@ -1,5 +1,4 @@
 dependencies {
-    api "org.mapstruct:mapstruct"
     api project(':eagle-starter:eagle-common-starter')
     api project(':eagle-starter:eagle-redis-starter')
     api project(':eagle-starter:eagle-openapi-starter')

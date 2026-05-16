@@ -132,7 +132,7 @@ eagle-cloud/
 ```
 {module}/
 ├── interfaces/             # 接口层（REST Controller + DTO）
-├── application/            # 应用层（用例编排、事务边界、MapStruct）
+├── application/            # 应用层（用例编排、事务边界、纯 Java Mapper）
 ├── domain/                 # 领域层（聚合根、实体、值对象、仓储接口、领域事件、Port 接口）
 └── infrastructure/         # 基础设施层（仓储实现、Port 适配器、安全、配置）
 ```

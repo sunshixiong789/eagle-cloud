@@ -110,8 +110,6 @@ configure(subprojects.findAll { it.name != 'eagle-bom' }) {
 
     tasks.named('compileJava') {
         options.compilerArgs += [
-                '-Amapstruct.defaultComponentModel=spring',
-                '-Amapstruct.unmappedTargetPolicy=IGNORE',
                 '-Xlint:all,-processing'
         ]
     }
@@ -164,9 +162,6 @@ configure(subprojects.findAll { it.name != 'eagle-bom' }) {
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
 
-        compileOnly 'org.mapstruct:mapstruct'
-        annotationProcessor 'org.mapstruct:mapstruct-processor'
-        annotationProcessor 'org.projectlombok:lombok-mapstruct-binding'
         developmentOnly 'org.springframework.boot:spring-boot-devtools'
         annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

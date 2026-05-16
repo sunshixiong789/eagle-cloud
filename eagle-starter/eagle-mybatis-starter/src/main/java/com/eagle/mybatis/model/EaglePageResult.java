@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * IPage<User> mpPage = userMapper.selectPage(new Page<>(1, 20), wrapper);
  * EaglePageResult<User> result = EaglePageResult.of(mpPage);
  *
- * // 转换记录类型（配合 MapStruct 使用）
+ * // 转换记录类型（配合纯 Java Mapper 使用）
  * EaglePageResult<UserResponse> response = result.convert(userMapper::toResponse);
  * }</pre>
  *

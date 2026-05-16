@@ -14,7 +14,7 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 - **Spring Modulith 2.0.5** — 模块边界静态验证
 - **Hibernate 7.2.6** (JPA) / MySQL 9.6.0 / PostgreSQL 42.7.10 / Druid 1.2.28
 - **Spring Security + OAuth2 Authorization Server**
-- **MapStruct 1.6.3** / Lombok / SpringDoc OpenAPI 3.0.2
+- Lombok / SpringDoc OpenAPI 3.0.2
 - **Redisson 4.3.0** / RocketMQ 2.3.5 / XXL-JOB 2.4.2 / Seata 2.2.0 / MinIO 8.5.17
 
 ## PR 前必跑（速查）
@@ -130,7 +130,7 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 
 - 所有模块的 AOT 任务（processAot/processTestAot）已禁用
 - Hibernate 字节码增强已启用（`enableAssociationManagement`）
-- MapStruct 编译参数：`defaultComponentModel=spring`、`unmappedTargetPolicy=IGNORE`
+- DTO ↔ 领域对象映射统一采用纯 Java `@Component` Mapper（不引入 MapStruct）
 - 测试使用 JUnit 5 (JUnit Platform)，Mockito 以 JVM Agent 方式加载（解决 JDK 21+ 动态 Agent 警告）
 - 测试超时 5 分钟
 

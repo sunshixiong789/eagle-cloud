@@ -29,7 +29,7 @@
 | 请求 DTO           | `{Action}{Name}Request`                | `CreateOrderRequest`、`UpdateUserRequest`      |
 | 响应 DTO           | `{Name}Response`                       | `OrderResponse`、`UserResponse`                |
 | CQRS 投影接口        | `{Name}Summary`                        | `OrderSummary`                                |
-| MapStruct Mapper | `{Name}Mapper`                         | `OrderMapper`、`UserMapper`                    |
+| Mapper           | `{Name}Mapper`（纯 Java `@Component`）   | `OrderMapper`、`UserMapper`                    |
 | 事件处理器            | `{Name}EventHandler`                   | `OrderEventHandler`                           |
 | Properties       | `{Name}Properties`                     | `PaymentProperties`、`StorageProperties`       |
 | Port 接口          | `{Name}Port` / `{Name}QueryPort`       | `PaymentPort`、`InventoryQueryPort`            |

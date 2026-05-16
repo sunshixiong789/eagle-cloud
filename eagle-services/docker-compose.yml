@@ -248,7 +248,7 @@ services:
       - "8082:8082"
     networks:
       - eagle-network
-    # 开发环境内存上限：system 跑 OAuth2/JPA/Hibernate/MapStruct，堆需 768m
+    # 开发环境内存上限：system 跑 OAuth2/JPA/Hibernate，堆需 768m
     # 容器总量 1.5g = 堆 768m + 元空间 256m + 直接内存 + 线程栈 + 余量
     mem_limit: 1536m
     mem_reservation: 768m

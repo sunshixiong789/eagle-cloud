@@ -2,27 +2,27 @@ package com.eagle.system.base.application.mapper;
 
 import com.eagle.system.base.domain.model.User;
 import com.eagle.system.base.domain.model.valueobject.UserProfile;
-import com.eagle.system.base.interfaces.dto.request.CreateUserRequest;
-import com.eagle.system.base.interfaces.dto.request.RegisterRequest;
 import com.eagle.system.base.interfaces.dto.response.UserResponse;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.springframework.stereotype.Component;
 
 /**
- * User 映射器
+ * User 映射器（纯 Java 实现）。
  */
-@Mapper(componentModel = "spring")
-public interface UserMapper {
+@Component
+public class UserMapper {
 
-    @Mapping(target = "nickname", source = "profile.nickname")
-    @Mapping(target = "avatar", source = "profile.avatar")
-    UserResponse toResponse(User user);
-
-    default UserProfile toProfile(RegisterRequest request) {
-        return new UserProfile(request.getAvatar(), request.getNickname(), null, null, null);
-    }
-
-    default UserProfile toProfile(CreateUserRequest request) {
-        return new UserProfile(request.getAvatar(), request.getNickname(), null, null, null);
+    public UserResponse toResponse(User user) {
+        if (user == null) {
+            return null;
+        }
+        UserProfile profile = user.getProfile();
+        return UserResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .name(profile != null ? profile.getName() : null)
+                .nickname(profile != null ? profile.getNickname() : null)
+                .avatar(profile != null ? profile.getAvatar() : null)
+                .build();
     }
 }

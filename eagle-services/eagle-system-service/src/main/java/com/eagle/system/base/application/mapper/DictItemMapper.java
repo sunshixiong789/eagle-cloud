@@ -2,13 +2,30 @@ package com.eagle.system.base.application.mapper;
 
 import com.eagle.system.base.domain.model.entity.DictItemEntity;
 import com.eagle.system.base.interfaces.dto.response.DictItemResponse;
-import org.mapstruct.Mapper;
+import org.springframework.stereotype.Component;
 
-import java.util.List;
+/**
+ * 字典项映射器（纯 Java 实现）。
+ */
+@Component
+public class DictItemMapper {
 
-@Mapper(componentModel = "spring")
-public interface DictItemMapper {
-    DictItemResponse toResponse(DictItemEntity entity);
-
-    List<DictItemResponse> toResponseList(List<DictItemEntity> entities);
+    public DictItemResponse toResponse(DictItemEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+        DictItemResponse response = new DictItemResponse();
+        response.setId(entity.getId());
+        response.setDictId(entity.getDictId());
+        response.setItemValue(entity.getItemValue());
+        response.setName(entity.getName());
+        response.setDictType(entity.getDictType() != null ? entity.getDictType().name() : null);
+        response.setParentId(entity.getParentId());
+        response.setDescription(entity.getDescription());
+        response.setSortOrder(entity.getSortOrder());
+        response.setStatus(entity.getStatus() != null ? entity.getStatus().name() : null);
+        response.setRemarks(entity.getRemarks());
+        response.setCreateTime(entity.getCreateTime());
+        return response;
+    }
 }

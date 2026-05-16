@@ -2,9 +2,7 @@ package com.eagle.system.auth.application.mapper;
 
 import com.eagle.system.auth.domain.model.OAuthClient;
 import com.eagle.system.auth.interfaces.dto.response.OAuthClientResponse;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
+import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -12,24 +10,37 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * OAuth2 客户端对象映射器
+ * OAuth2 客户端对象映射器（纯 Java 实现）。
  *
  * @author sunshixiong
  */
-@Mapper(componentModel = "spring")
-public interface OAuthClientMapper {
+@Component
+public class OAuthClientMapper {
 
-    @Mapping(source = "clientAuthenticationMethods", target = "clientAuthenticationMethods", qualifiedByName = "csvToSet")
-    @Mapping(source = "authorizationGrantTypes", target = "authorizationGrantTypes", qualifiedByName = "csvToSet")
-    @Mapping(source = "redirectUris", target = "redirectUris", qualifiedByName = "csvToSet")
-    @Mapping(source = "scopes", target = "scopes", qualifiedByName = "csvToSet")
-    OAuthClientResponse toResponse(OAuthClient entity);
+    public OAuthClientResponse toResponse(OAuthClient entity) {
+        if (entity == null) {
+            return null;
+        }
+        OAuthClientResponse response = new OAuthClientResponse();
+        response.setId(entity.getId());
+        response.setClientId(entity.getClientId());
+        response.setClientName(entity.getClientName());
+        response.setClientAuthenticationMethods(csvToSet(entity.getClientAuthenticationMethods()));
+        response.setAuthorizationGrantTypes(csvToSet(entity.getAuthorizationGrantTypes()));
+        response.setRedirectUris(csvToSet(entity.getRedirectUris()));
+        response.setScopes(csvToSet(entity.getScopes()));
+        response.setRequireProofKey(entity.getRequireProofKey());
+        response.setRequireAuthorizationConsent(entity.getRequireAuthorizationConsent());
+        response.setAccessTokenTtlSeconds(entity.getAccessTokenTtlSeconds());
+        response.setRefreshTokenTtlSeconds(entity.getRefreshTokenTtlSeconds());
+        response.setClientIdIssuedAt(entity.getClientIdIssuedAt());
+        response.setEnabled(entity.getEnabled());
+        response.setCreateTime(entity.getCreateTime());
+        response.setUpdateTime(entity.getUpdateTime());
+        return response;
+    }
 
-    /**
-     * 逗号分隔字符串转 Set
-     */
-    @Named("csvToSet")
-    default Set<String> csvToSet(String csv) {
+    private Set<String> csvToSet(String csv) {
         if (csv == null || csv.isBlank()) {
             return Collections.emptySet();
         }

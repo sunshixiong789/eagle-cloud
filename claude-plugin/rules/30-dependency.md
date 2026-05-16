@@ -14,7 +14,7 @@
 | `implementation`      | 编译期 + 运行期，**不暴露**      | 业务服务依赖；私有实现细节                                   |
 | `compileOnly`         | 仅编译期                   | 注解处理器、可选依赖（`@ConditionalOnClass`）               |
 | `runtimeOnly`         | 仅运行期                   | JDBC 驱动、Logback 实现                              |
-| `annotationProcessor` | 注解处理                   | Lombok、MapStruct、Spring Configuration Processor |
+| `annotationProcessor` | 注解处理                   | Lombok、Spring Configuration Processor          |
 | `testImplementation`  | 测试编译 + 运行              | JUnit、Mockito                                   |
 | `testCompileOnly`     | 仅测试编译                  | 测试用 Lombok                                      |
 

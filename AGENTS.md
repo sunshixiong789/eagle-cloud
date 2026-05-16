@@ -13,7 +13,7 @@ Eagle Cloud 是一个基于 DDD + 六边形架构 + Spring Modulith 模块化单
 - Spring Modulith 2.0.5
 - Hibernate 7.2.6 / JPA / MySQL / PostgreSQL / Druid
 - Spring Security + OAuth2 Authorization Server / Resource Server
-- MapStruct 1.6.3 / Lombok / SpringDoc OpenAPI 3.0.2
+- Lombok / SpringDoc OpenAPI 3.0.2
 - Redisson / RocketMQ / XXL-JOB / Seata / MinIO
 
 ## 项目结构与模块组织

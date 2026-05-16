@@ -78,10 +78,6 @@ ext {
 
     // Office 文档
     poiVersion = '5.5.1'
-
-    // MapStruct
-    mapstructVersion = '1.6.3'
-    lombokMapstructVersion = '0.2.0'
 }
 
 dependencies {
@@ -133,11 +129,6 @@ dependencies {
 
         // Office 文档
         add('api', "org.apache.poi:poi-ooxml:${poiVersion}")
-
-        // MapStruct
-        add('api', "org.projectlombok:lombok-mapstruct-binding:${lombokMapstructVersion}")
-        add('api', "org.mapstruct:mapstruct:${mapstructVersion}")
-        add('api', "org.mapstruct:mapstruct-processor:${mapstructVersion}")
 
         // RocketMQ
         add('api', "org.apache.rocketmq:rocketmq-spring-boot-starter:${rocketMqVersion}")
