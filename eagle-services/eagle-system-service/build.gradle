@@ -3,9 +3,9 @@ dependencies {
     implementation project(':eagle-starter:eagle-resource-server-starter')
     implementation project(':eagle-starter:eagle-row-security-starter')
     implementation project(':eagle-starter:eagle-notification-starter')
+    implementation project(':eagle-starter:eagle-websocket-starter')
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
-    implementation project(':eagle-starter:eagle-websocket-starter')
     implementation 'org.springframework.boot:spring-boot-starter-flyway'
     implementation 'org.flywaydb:flyway-mysql'
 
@@ -14,8 +14,14 @@ dependencies {
 
     // 微信/第三方 SDK
     implementation "com.github.binarywang:weixin-java-miniapp"
-    // 阿里云号码认证 / 一键登录（短信 SDK 已由 eagle-notification-starter 传递依赖）
+    // 阿里云号码认证 / 一键登录（短信 SDK 与本依赖无关，单独管理）
     implementation "com.aliyun:dypnsapi20170525"
+
+    // 短信 SDK：当前仅使用手拉手（HTTP 协议，无需额外 SDK）。
+    // 若 eagle.message.sms.provider 切换为 aliyun / tencent，需取消下列对应行的注释，
+    // 让 starter 的 @ConditionalOnClass 探测到 Client 类后装配对应 Provider。
+    // implementation "com.aliyun:dysmsapi20170525"            // SMS_PROVIDER=aliyun 时启用
+    // implementation "com.tencentcloudapi:tencentcloud-sdk-java-sms" // SMS_PROVIDER=tencent 时启用
 
     implementation "com.github.ben-manes.caffeine:caffeine"
     implementation "org.apache.poi:poi-ooxml"

@@ -38,9 +38,13 @@ public class MessageProperties {
     @Data
     public static class Sms {
         /**
-         * 短信服务商：{@code aliyun}（默认） / {@code tencent}。
+         * 短信服务商：{@code aliyun} / {@code tencent} / {@code hnsls}。
+         *
+         * <p>注意：此字段默认值仅用于属性绑定，{@code SmsChannelConfiguration} 通过
+         * {@code @ConditionalOnProperty(name = "provider")} 读取 Environment 决定是否装配，
+         * 字段默认值不会触发条件——消费方需在 {@code application.yml} 显式声明本属性。
          */
-        private String provider = "aliyun";
+        private String provider = "";
 
         /**
          * 服务商 AccessKey ID / SecretId（阿里云用 AK，腾讯云用 SecretId）。

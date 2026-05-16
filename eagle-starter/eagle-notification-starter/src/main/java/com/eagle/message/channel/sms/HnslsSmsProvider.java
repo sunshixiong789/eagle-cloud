@@ -8,7 +8,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
-import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -65,15 +64,14 @@ public class HnslsSmsProvider implements SmsProvider {
     private final Clock clock;
 
     public HnslsSmsProvider(MessageProperties properties) {
-        this(properties, Clock.systemDefaultZone());
+        this(properties, RestClient.builder().requestFactory(createRequestFactory(properties)),
+                Clock.systemDefaultZone());
     }
 
-    HnslsSmsProvider(MessageProperties properties, Clock clock) {
+    HnslsSmsProvider(MessageProperties properties, RestClient.Builder builder, Clock clock) {
         this.properties = properties;
         this.clock = clock;
-        this.restClient = RestClient.builder()
-                .requestFactory(createRequestFactory(properties))
-                .build();
+        this.restClient = builder.build();
     }
 
     @Override
@@ -97,14 +95,15 @@ public class HnslsSmsProvider implements SmsProvider {
         formData.add("dest", phone);
         formData.add("content", content);
 
-        String fullUrl = buildFullSendUrl(formData);
         long start = System.currentTimeMillis();
+        String maskedPhone = maskPhone(phone);
         try {
-            log.debug("Hnsls SMS submit: url={}, charset={}, account={}, phone={}",
+            log.debug("Hnsls SMS submit: url={}, charset={}, account={}, phone={}, contentLen={}",
                     properties.getSms().getSendUrl(),
                     properties.getSms().getCharset(),
                     maskAccount(properties.getSms().getUsername()),
-                    maskPhone(phone));
+                    maskedPhone,
+                    content.length());
             String response = restClient.post()
                     .uri(properties.getSms().getSendUrl())
                     .contentType(new MediaType(
@@ -113,36 +112,42 @@ public class HnslsSmsProvider implements SmsProvider {
                     .body(formData)
                     .retrieve()
                     .body(String.class);
-            handleResponse(phone, response, System.currentTimeMillis() - start, fullUrl);
+            handleResponse(maskedPhone, response, System.currentTimeMillis() - start);
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("Hnsls SMS submit error: fullUrl={}, phone={}, costMs={}",
-                    fullUrl, phone, System.currentTimeMillis() - start, e);
+            log.error("Hnsls SMS submit error: url={}, phone={}, costMs={}",
+                    properties.getSms().getSendUrl(),
+                    maskedPhone,
+                    System.currentTimeMillis() - start, e);
             throw new RuntimeException("Hnsls SMS send failed", e);
         }
     }
 
-    private void handleResponse(String phone, String response, long costMs, String fullUrl) {
+    private void handleResponse(String maskedPhone, String response, long costMs) {
         if (response == null || response.isBlank()) {
-            log.error("Hnsls SMS failed: empty response, fullUrl={}, phone={}, costMs={}",
-                    fullUrl, phone, costMs);
+            log.error("Hnsls SMS failed: empty response, url={}, phone={}, costMs={}",
+                    properties.getSms().getSendUrl(), maskedPhone, costMs);
             throw new RuntimeException("Hnsls SMS empty response");
         }
         String normalized = response.trim();
-        log.debug("Hnsls SMS response: phone={}, response={}, costMs={}",
-                maskPhone(phone), normalized, costMs);
         if (normalized.startsWith("success:") || normalized.startsWith("success：")) {
+            log.debug("Hnsls SMS success: phone={}, costMs={}", maskedPhone, costMs);
             return;
         }
         String errorCode = "";
+        String reason;
         if (normalized.startsWith("error:") || normalized.startsWith("error：")) {
             errorCode = extractErrorCode(normalized);
-            log.error("Hnsls SMS failed: fullUrl={}, phone={}, errorCode={}, reason={}, response={}",
-                    fullUrl, phone, errorCode, describeError(errorCode), normalized);
+            reason = describeError(errorCode);
+            log.error("Hnsls SMS failed: url={}, phone={}, costMs={}, errorCode={}, reason={}",
+                    properties.getSms().getSendUrl(), maskedPhone, costMs, errorCode, reason);
         } else {
-            log.error("Hnsls SMS failed: unknown response, fullUrl={}, phone={}, response={}",
-                    fullUrl, phone, normalized);
+            reason = "unexpected response prefix";
+            log.error("Hnsls SMS failed: unknown response, url={}, phone={}, costMs={}, length={}",
+                    properties.getSms().getSendUrl(), maskedPhone, costMs, normalized.length());
         }
-        throw new RuntimeException("Hnsls SMS error: " + describeError(errorCode));
+        throw new RuntimeException("Hnsls SMS error: " + reason);
     }
 
     private String buildContent(String signName, String code) {
@@ -171,21 +176,6 @@ public class HnslsSmsProvider implements SmsProvider {
 
     private String describeError(String errorCode) {
         return ERROR_DESCRIPTIONS.getOrDefault(errorCode, "未知错误码，请对照手拉手协议附录");
-    }
-
-    private String buildFullSendUrl(MultiValueMap<String, String> formData) {
-        Charset charset = Charset.forName(properties.getSms().getCharset());
-        StringBuilder sb = new StringBuilder(properties.getSms().getSendUrl()).append('?');
-        formData.forEach((k, values) -> values.forEach(v -> {
-            sb.append(URLEncoder.encode(k, charset))
-                    .append('=')
-                    .append(URLEncoder.encode(v, charset))
-                    .append('&');
-        }));
-        if (sb.length() > 0 && sb.charAt(sb.length() - 1) == '&') {
-            sb.setLength(sb.length() - 1);
-        }
-        return sb.toString();
     }
 
     private String maskPhone(String phone) {
