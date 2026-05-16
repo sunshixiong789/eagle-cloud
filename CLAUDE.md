@@ -184,7 +184,7 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 
 主干用 **Superpowers 6 阶段**，在 **规划** 与 **写代码** 阶段嵌入式调用本仓库的 rules / commands / starter skills（不使用 OpenSpec）：
 
-| 阶段 | 名称         | 主干调用                                          | claude-plugin 注入                                                            |
+| 阶段 | 名称         | 主干调用                                          | agent-plugin 注入                                                            |
 |----|------------|-----------------------------------------------|---------------------------------------------------------------------------|
 | 1  | Brainstorm | `superpowers:brainstorming`                   | （无，聚焦需求澄清）                                                                |
 | 2  | Plan       | `superpowers:writing-plans`                   | ★ 必读相关 `.claude/rules/*` + 在 plan 中预定要触发的 commands（`/new-module` 等）       |
@@ -194,6 +194,6 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 | 6  | Finish     | `superpowers:finishing-a-development-branch`  | 按 `.claude/rules/22-git.md` 整理 commit + PR 描述                              |
 
 **设计哲学**：Superpowers 提供工程纪律（brainstorm → plan → TDD → verify → review → finish），
-本仓库的 `claude-plugin` 提供 Eagle 平台的"约束"（rules）和"工具箱"（commands + per-starter skills），后者在主流程的关键节点被嵌入式调用。
+本仓库的 `agent-plugin` 提供 Eagle 平台的"约束"（rules）和"工具箱"（commands + per-starter skills），后者在主流程的关键节点被嵌入式调用。
 
-详见 `claude-plugin/skills/eagle-feature-flow/SKILL.md`。模型在识别到"做一个新功能 / 加一个模块 / 重构 X"等触发短语时自动激活；手动触发可直接说"按 eagle flow 走"。
+详见 `agent-plugin/skills/eagle-feature-flow/SKILL.md`。模型在识别到"做一个新功能 / 加一个模块 / 重构 X"等触发短语时自动激活；手动触发可直接说"按 eagle flow 走"。

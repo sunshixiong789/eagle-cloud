@@ -1,0 +1,3 @@
+interface:
+  display_name: "Eagle Common"
+  short_description: "Use when working with DDD base classes (BaseAggregateRoot, BaseEntity), AppExcep"

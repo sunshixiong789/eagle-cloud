@@ -1,0 +1,3 @@
+interface:
+  display_name: "Eagle Feign Client"
+  short_description: "Use when implementing service-to-service HTTP clients in eagle-cloud projects — "

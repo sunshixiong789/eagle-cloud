@@ -1,0 +1,19 @@
+{
+  "name": "eagle-cloud",
+  "version": "1.1.0",
+  "description": "Eagle Cloud 平台开发插件：Spring Boot 4 + Java 25 + DDD + Spring Modulith 项目的开发规范、Starter 使用指南和脚手架命令",
+  "author": {
+    "name": "Eagle Cloud",
+    "url": "https://gitee.com/sunjones/eagle-cloud"
+  },
+  "homepage": "https://gitee.com/sunjones/eagle-cloud",
+  "repository": "https://gitee.com/sunjones/eagle-cloud.git",
+  "license": "Apache-2.0",
+  "keywords": [
+    "spring-boot",
+    "java",
+    "ddd",
+    "modulith",
+    "eagle-cloud"
+  ]
+}

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Eagle Feature Flow"
+  short_description: "Orchestrate Superpowers 6-phase flow with Eagle Cloud rules/commands/skills injection"

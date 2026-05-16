@@ -1,0 +1,3 @@
+interface:
+  display_name: "Eagle Id Generator"
+  short_description: "Use when generating distributed IDs in eagle-cloud projects — Snowflake, UUID v7"

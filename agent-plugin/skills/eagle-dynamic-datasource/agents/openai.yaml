@@ -1,0 +1,3 @@
+interface:
+  display_name: "Eagle Dynamic Datasource"
+  short_description: "Use when implementing master/slave read-write splitting in eagle-cloud projects "

@@ -1,0 +1,33 @@
+{
+  "name": "eagle-cloud",
+  "version": "1.1.0",
+  "description": "Eagle Cloud 平台开发插件：Spring Boot 4 + Java 25 + DDD + Spring Modulith 项目的开发规范、Starter 使用指南和脚手架命令",
+  "author": {
+    "name": "Eagle Cloud",
+    "url": "https://gitee.com/sunjones/eagle-cloud"
+  },
+  "homepage": "https://gitee.com/sunjones/eagle-cloud",
+  "repository": "https://gitee.com/sunjones/eagle-cloud.git",
+  "license": "Apache-2.0",
+  "keywords": [
+    "spring-boot",
+    "java",
+    "ddd",
+    "modulith",
+    "eagle-cloud"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Eagle Cloud",
+    "shortDescription": "Spring Boot 4 + DDD + Modulith 项目的开发规范与 Starter 使用指南",
+    "longDescription": "Eagle Cloud 平台开发插件，包含 30 份开发规范（DDD / 安全 / 缓存 / 消息 / 事务 / 多租户 / 性能 / 部署 等）、29 个 Starter 使用指南（按需自动加载）、6 个脚手架命令（/check-arch、/new-module、/new-aggregate、/new-starter、/add-error-code、/eagle-flow）。",
+    "developerName": "Eagle Cloud",
+    "category": "Coding",
+    "capabilities": ["Read", "Write"],
+    "defaultPrompt": [
+      "按 eagle flow 走，做一个新功能",
+      "用 /check-arch 跑一遍架构验证",
+      "新增一个聚合根"
+    ]
+  }
+}

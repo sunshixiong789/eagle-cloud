@@ -1,0 +1,3 @@
+interface:
+  display_name: "Eagle Resource Server"
+  short_description: "Use when implementing OAuth2 resource server (JWT-protected service) in eagle-cl"

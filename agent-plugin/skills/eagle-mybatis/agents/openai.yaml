@@ -1,0 +1,3 @@
+interface:
+  display_name: "Eagle Mybatis"
+  short_description: "Use when working with MyBatis-Plus in eagle-cloud projects — IEagleService/Eagle"

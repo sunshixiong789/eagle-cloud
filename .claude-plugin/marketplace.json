@@ -8,9 +8,9 @@
   "plugins": [
     {
       "name": "eagle-cloud",
-      "source": "./claude-plugin",
-      "description": "Eagle Cloud 开发规范 + Starter 使用指南 + 脚手架命令",
-      "version": "1.0.3",
+      "source": "./agent-plugin",
+      "description": "Eagle Cloud 平台开发插件：Spring Boot 4 + Java 25 + DDD + Spring Modulith 项目的开发规范、Starter 使用指南和脚手架命令",
+      "version": "1.1.0",
       "author": {
         "name": "Eagle Cloud Team"
       },

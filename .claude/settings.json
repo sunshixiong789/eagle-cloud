@@ -2,7 +2,6 @@
   "enabledPlugins": {
     "everything-claude-code@everything-claude-code": true,
     "superpowers@claude-plugins-official": true,
-    "claude-mem@thedotmack": true,
-    "andrej-karpathy-skills@karpathy-skills": true
+    "claude-mem@thedotmack": true
   }
 }

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Eagle Payment"
+  short_description: "Use when integrating payments (Alipay/WeChat Pay) in eagle-cloud projects — Paym"

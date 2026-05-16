@@ -1,0 +1,3 @@
+interface:
+  display_name: "Eagle Websocket"
+  short_description: "Use when implementing WebSocket/SSE/offline messaging in eagle-cloud projects — "
