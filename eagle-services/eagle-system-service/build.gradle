@@ -2,6 +2,7 @@ dependencies {
     implementation project(':eagle-starter:eagle-data-jpa-starter')
     implementation project(':eagle-starter:eagle-resource-server-starter')
     implementation project(':eagle-starter:eagle-row-security-starter')
+    implementation project(':eagle-starter:eagle-notification-starter')
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
     implementation project(':eagle-starter:eagle-websocket-starter')
@@ -16,7 +17,7 @@ dependencies {
     implementation "com.aliyun:dysmsapi20170525"
     // 阿里云号码认证 / 一键登录
     implementation "com.aliyun:dypnsapi20170525"
-    // 腾讯云短信 SDK（与阿里云二选一，由 eagle.sms.provider 切换）
+    // 腾讯云短信 SDK（由 eagle-notification-starter 中的 SmsProvider 使用）
     implementation "com.tencentcloudapi:tencentcloud-sdk-java-sms"
 
     implementation "com.github.ben-manes.caffeine:caffeine"

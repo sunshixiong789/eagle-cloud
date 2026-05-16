@@ -76,13 +76,14 @@ eagle:
       enabled: true
       retention-days: 90
       cron: "0 0 2 * * ?"
-  # 阿里云短信（可选）
-  sms:
-    aliyun:
-      access-key-id: ${ALIYUN_SMS_ACCESS_KEY_ID:}
-      access-key-secret: ${ALIYUN_SMS_ACCESS_KEY_SECRET:}
-      sign-name: ${ALIYUN_SMS_SIGN_NAME:}
-      template-code: ${ALIYUN_SMS_TEMPLATE_CODE:}
+  # 短信配置（由 eagle-notification-starter 统一处理）
+  message:
+    sms:
+      provider: ${SMS_PROVIDER:}
+      access-key-id: ${SMS_ACCESS_KEY_ID:}
+      access-key-secret: ${SMS_ACCESS_KEY_SECRET:}
+      sign-name: ${SMS_SIGN_NAME:}
+      template-id: ${SMS_TEMPLATE_ID:}
 
 # ===========================================
 # Actuator

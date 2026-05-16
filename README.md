@@ -393,11 +393,19 @@ NACOS_GROUP=DEFAULT_GROUP
 WECHAT_MINI_APP_ID=
 WECHAT_MINI_APP_SECRET=
 
-# 阿里云短信（可选）
-ALIYUN_SMS_ACCESS_KEY_ID=
-ALIYUN_SMS_ACCESS_KEY_SECRET=
-ALIYUN_SMS_SIGN_NAME=
-ALIYUN_SMS_TEMPLATE_CODE=
+# 短信配置（由 eagle-notification-starter 统一处理）
+SMS_PROVIDER=hnsls
+SMS_ACCESS_KEY_ID=
+SMS_ACCESS_KEY_SECRET=
+SMS_SIGN_NAME=
+SMS_TEMPLATE_ID=
+
+# 手拉手短信特有配置
+HNSLS_SMS_USERNAME=
+HNSLS_SMS_PASSWORD=
+HNSLS_SMS_CONTENT_TEMPLATE=您的验证码是{code}，5分钟内有效。
+HNSLS_SMS_SEND_URL=https://xapi.hnsls.com.cn/eums/sms/utf8/send.do
+HNSLS_SMS_CHARSET=UTF-8
 ```
 
 3. 以 dev profile 启动：
@@ -470,11 +478,19 @@ WECHAT_MP_APP_ID=
 WECHAT_MP_APP_SECRET=
 WECHAT_MP_REDIRECT_URI=http://localhost/login/wechat/h5/callback
 
-# ── 阿里云短信服务（可选）────────────────────────────
-ALIYUN_SMS_ACCESS_KEY_ID=
-ALIYUN_SMS_ACCESS_KEY_SECRET=
-ALIYUN_SMS_SIGN_NAME=
-ALIYUN_SMS_TEMPLATE_CODE=
+# ── 短信配置（由 eagle-notification-starter 统一处理）────────
+SMS_PROVIDER=hnsls
+SMS_ACCESS_KEY_ID=
+SMS_ACCESS_KEY_SECRET=
+SMS_SIGN_NAME=
+SMS_TEMPLATE_ID=
+
+# ── 手拉手短信特有配置 ───────────────────────────────
+HNSLS_SMS_USERNAME=
+HNSLS_SMS_PASSWORD=
+HNSLS_SMS_CONTENT_TEMPLATE=您的验证码是{code}，5分钟内有效。
+HNSLS_SMS_SEND_URL=https://xapi.hnsls.com.cn/eums/sms/utf8/send.do
+HNSLS_SMS_CHARSET=UTF-8
 
 # ── 管理员账户（可选，默认 admin/123456）──────────────
 EAGLE_ADMIN_PASSWORD=123456
@@ -519,8 +535,8 @@ SENTINEL_DASHBOARD=localhost:8858
 - **微信小程序** — `WECHAT_MINI_APP_ID` / `WECHAT_MINI_APP_SECRET`
 - **微信 PC 扫码** — `WECHAT_WEB_APP_ID` / `WECHAT_WEB_APP_SECRET`
 - **微信 H5 公众号** — `WECHAT_MP_APP_ID` / `WECHAT_MP_APP_SECRET`
-- **阿里云短信** — `ALIYUN_SMS_ACCESS_KEY_ID` / `ALIYUN_SMS_ACCESS_KEY_SECRET` / `ALIYUN_SMS_SIGN_NAME` /
-  `ALIYUN_SMS_TEMPLATE_CODE`
+- **短信服务** — `SMS_PROVIDER`（aliyun/tencent/hnsls）/ `SMS_ACCESS_KEY_ID` / `SMS_ACCESS_KEY_SECRET` /
+  `SMS_SIGN_NAME` / `SMS_TEMPLATE_ID`；手拉手额外需要 `HNSLS_SMS_USERNAME` / `HNSLS_SMS_PASSWORD`
 
 ## 常用命令
 

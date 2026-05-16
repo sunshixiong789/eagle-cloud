@@ -182,25 +182,18 @@ eagle:
       enabled: true
       retention-days: 90
       cron: "0 0 2 * * ?"
-  sms:
-    # 短信服务商：aliyun / tencent / hnsls，三选一
-    provider: ${SMS_PROVIDER:tencent}
-    aliyun:
-      access-key-id: ${ALIYUN_SMS_ACCESS_KEY_ID:}
-      access-key-secret: ${ALIYUN_SMS_ACCESS_KEY_SECRET:}
-      sign-name: ${ALIYUN_SMS_SIGN_NAME:}
-      template-code: ${ALIYUN_SMS_TEMPLATE_CODE:}
-    tencent:
-      access-key-id: ${TENCENT_SMS_SECRET_ID:}
-      access-key-secret: ${TENCENT_SMS_SECRET_KEY:}
-      sign-name: ${TENCENT_SMS_SIGN_NAME:}
-      template-id: ${TENCENT_SMS_TEMPLATE_ID:}
+  message:
+    sms:
+      # 短信服务商：aliyun / tencent / hnsls，三选一
+      provider: ${SMS_PROVIDER:tencent}
+      access-key-id: ${SMS_ACCESS_KEY_ID:}
+      access-key-secret: ${SMS_ACCESS_KEY_SECRET:}
+      sign-name: ${SMS_SIGN_NAME:}
+      template-id: ${SMS_TEMPLATE_ID:}
       sdk-app-id: ${TENCENT_SMS_SDK_APP_ID:}
       region: ${TENCENT_SMS_REGION:ap-guangzhou}
-    hnsls:
       username: ${HNSLS_SMS_USERNAME:}
       password: ${HNSLS_SMS_PASSWORD:}
-      sign-name: ${HNSLS_SMS_SIGN_NAME:}
       content-template: ${HNSLS_SMS_CONTENT_TEMPLATE:您的验证码是{code}，5分钟内有效。}
       send-url: ${HNSLS_SMS_SEND_URL:https://xapi.hnsls.com.cn/eums/sms/utf8/send.do}
       charset: ${HNSLS_SMS_CHARSET:UTF-8}

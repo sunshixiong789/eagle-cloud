@@ -80,7 +80,7 @@ spring-dotenv                                  # 本地 .env 自动加载
 | `eagle.oauth.default-client.*`   | —                                   | 默认 OAuth2 公开客户端（PKCE）           |
 | `eagle.wechat.mini-program.*`    | env `WECHAT_MINI_APP_*`             | 微信小程序 AppID / Secret            |
 | `eagle.wechat.web.pc/h5.*`       | env `WECHAT_WEB_*` / `WECHAT_MP_*`  | 微信网页/H5 登录                      |
-| `eagle.sms.aliyun.*`             | env `ALIYUN_SMS_*`                  | 阿里云短信 AccessKey / 签名 / 模板       |
+| `eagle.message.sms.*`            | env `SMS_*` / `HNSLS_SMS_*`         | 短信服务商配置（由 eagle-notification-starter 统一处理） |
 | `eagle.auth.one-click.*`         | provider 默认 `mock`                  | 一键登录提供方 / 阿里云 dypnsapi 配置       |
 | `eagle.log.cleanup.cron`         | `0 0 2 * * ?`                       | 审计日志每日清理                        |
 | `eagle.websocket.endpoint`       | `/ws-stomp`                         | STOMP 握手路径                      |

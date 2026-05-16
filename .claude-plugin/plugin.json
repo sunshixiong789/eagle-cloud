@@ -1,7 +1,7 @@
 {
   "name": "eagle-cloud",
   "description": "Eagle Cloud Spring Boot 4 + DDD + Spring Modulith 开发规范、Starter 使用指南、脚手架命令",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": {
     "name": "Eagle Cloud Team"
   },

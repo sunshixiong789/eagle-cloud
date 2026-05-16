@@ -52,13 +52,17 @@ public class AliyunSmsProvider implements SmsProvider {
                     .setTemplateParam(templateParam);
             SendSmsResponse response = client.sendSms(request);
             if (!"OK".equals(response.getBody().getCode())) {
+                String err = "Aliyun SMS failed: " + response.getBody().getMessage();
                 log.error("Aliyun SMS send failed: phone={}, code={}, message={}",
                         phone, response.getBody().getCode(), response.getBody().getMessage());
-            } else {
-                log.info("Aliyun SMS sent to {}", phone);
+                throw new RuntimeException(err);
             }
+            log.info("Aliyun SMS sent to {}", phone);
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Aliyun SMS send error: phone={}", phone, e);
+            throw new RuntimeException("Aliyun SMS send error", e);
         }
     }
 

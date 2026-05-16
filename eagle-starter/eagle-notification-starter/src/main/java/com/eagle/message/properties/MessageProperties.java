@@ -74,6 +74,49 @@ public class MessageProperties {
          * <p>仅腾讯云使用。
          */
         private String sdkAppId = "";
+
+        /**
+         * 手拉手网关账号 name。仅手拉手使用。
+         */
+        private String username = "";
+
+        /**
+         * 手拉手网关密码，用于生成 key。仅手拉手使用。
+         */
+        private String password = "";
+
+        /**
+         * 手拉手验证码短信内容模板，使用 {code} 作为占位符。
+         * <p>仅手拉手使用。阿里云/腾讯云在服务端完成模板渲染，无需此字段。
+         */
+        private String contentTemplate = "您的验证码是{code}，5分钟内有效。";
+
+        /**
+         * 手拉手下行提交接口地址。
+         * <p>仅手拉手使用。
+         */
+        private String sendUrl = "https://xapi.hnsls.com.cn/eums/sms/utf8/send.do";
+
+        /**
+         * 手拉手表单编码，需与接口地址匹配，可选 UTF-8 / GBK。仅手拉手使用。
+         */
+        private String charset = "UTF-8";
+
+        /**
+         * 短信模板 ID（阿里云为 {@code SMS_xxx}，腾讯云为数字字符串）。
+         * <p>用于直接发送场景（如验证码），不经过模板引擎。Hnsls 忽略此字段。
+         */
+        private String templateId = "";
+
+        /**
+         * 手拉手连接超时，单位毫秒。仅手拉手使用。
+         */
+        private int connectTimeoutMs = 8000;
+
+        /**
+         * 手拉手读取响应超时，单位毫秒。仅手拉手使用。
+         */
+        private int readTimeoutMs = 10000;
     }
 
     @Data

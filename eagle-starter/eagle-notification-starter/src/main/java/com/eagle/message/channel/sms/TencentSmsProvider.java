@@ -79,17 +79,21 @@ public class TencentSmsProvider implements SmsProvider {
             SendStatus[] statuses = response.getSendStatusSet();
             if (statuses == null || statuses.length == 0) {
                 log.error("Tencent SMS empty response: phone={}", phone);
-                return;
+                throw new RuntimeException("Tencent SMS empty response");
             }
             SendStatus status = statuses[0];
-            if ("Ok".equalsIgnoreCase(status.getCode())) {
-                log.info("Tencent SMS sent to {}, serialNo={}", phone, status.getSerialNo());
-            } else {
+            if (!"Ok".equalsIgnoreCase(status.getCode())) {
+                String err = "Tencent SMS failed: " + status.getMessage();
                 log.error("Tencent SMS send failed: phone={}, code={}, message={}",
                         phone, status.getCode(), status.getMessage());
+                throw new RuntimeException(err);
             }
+            log.info("Tencent SMS sent to {}, serialNo={}", phone, status.getSerialNo());
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Tencent SMS send error: phone={}", phone, e);
+            throw new RuntimeException("Tencent SMS send error", e);
         }
     }
 

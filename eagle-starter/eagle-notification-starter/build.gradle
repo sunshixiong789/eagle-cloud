@@ -4,6 +4,7 @@ dependencies {
     compileOnly 'com.aliyun:dysmsapi20170525'
     compileOnly 'com.tencentcloudapi:tencentcloud-sdk-java-sms'
     compileOnly 'org.springframework.boot:spring-boot-starter-mail'
+    compileOnly 'org.springframework:spring-web'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

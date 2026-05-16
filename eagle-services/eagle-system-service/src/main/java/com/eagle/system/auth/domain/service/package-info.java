@@ -10,7 +10,7 @@
  * </ul>
  * <p>
  * 此包被声明为 Named Interface，允许 {@code config} 模块的 SecurityConfig
- * 通过接口引用注入具体实现（如 AliyunSmsServiceImpl、WechatMiniProgramServiceImpl）。
+ * 通过接口引用注入具体实现（如 SmsServiceImpl、WechatMiniProgramServiceImpl）。
  *
  * @author sunshixiong
  */

@@ -4,6 +4,7 @@ import com.eagle.message.channel.EmailMessageChannel;
 import com.eagle.message.channel.MessageChannel;
 import com.eagle.message.channel.SmsMessageChannel;
 import com.eagle.message.channel.sms.AliyunSmsProvider;
+import com.eagle.message.channel.sms.HnslsSmsProvider;
 import com.eagle.message.channel.sms.SmsProvider;
 import com.eagle.message.channel.sms.TencentSmsProvider;
 import com.eagle.message.properties.MessageProperties;
@@ -76,7 +77,7 @@ public class MessageAutoConfiguration {
     }
 
     @Configuration(proxyBeanMethods = false)
-    @ConditionalOnProperty(prefix = "eagle.message.sms", name = "access-key-id")
+    @ConditionalOnProperty(prefix = "eagle.message.sms", name = "provider")
     static class SmsChannelConfiguration {
 
         /**
@@ -108,6 +109,19 @@ public class MessageAutoConfiguration {
             log.info("SMS provider = Tencent Cloud, region: {}, sdkAppId: {}",
                     properties.getSms().getRegion(), properties.getSms().getSdkAppId());
             return new TencentSmsProvider(properties);
+        }
+
+        /**
+         * 手拉手短信服务商。
+         * <p>当 {@code eagle.message.sms.provider=hnsls} 时生效。
+         */
+        @Bean
+        @ConditionalOnMissingBean(SmsProvider.class)
+        @ConditionalOnProperty(prefix = "eagle.message.sms", name = "provider",
+                havingValue = HnslsSmsProvider.NAME)
+        public SmsProvider hnslsSmsProvider(MessageProperties properties) {
+            log.info("SMS provider = Hnsls, sendUrl: {}", properties.getSms().getSendUrl());
+            return new HnslsSmsProvider(properties);
         }
 
         @Bean
