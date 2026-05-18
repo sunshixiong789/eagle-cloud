@@ -13,18 +13,15 @@ spring:
   cloud:
     sentinel:
       eager: true
-    gateway:
-      server:
-        webflux:
-          globalcors:
-            cors-configurations:
-              '[/**]':
-                # 覆盖基线 ${CORS_ALLOWED_ORIGINS:*} 默认值，强制注入
-                allowedOriginPatterns: ${CORS_ALLOWED_ORIGINS}
-                exposedHeaders:
-                  - Authorization
-                  - X-Request-Id
-                  - X-Trace-Id
+
+# CORS：覆盖基线 ${CORS_ALLOWED_ORIGINS:*} 默认值，缺失环境变量即 fail-fast；
+# 额外向前端暴露 Authorization / X-Request-Id / X-Trace-Id 三个响应头。
+# 实际写入响应头由 GatewayCorsConfig 注册的 CorsWebFilter 统一处理。
+eagle:
+  gateway:
+    cors:
+      allowed-origin-patterns: ${CORS_ALLOWED_ORIGINS}
+      exposed-headers: Authorization,X-Request-Id,X-Trace-Id
 
 springdoc:
   api-docs:

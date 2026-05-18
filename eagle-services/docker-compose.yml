@@ -292,6 +292,9 @@ services:
       - EAGLE_JWT_KEYSTORE_PASSWORD=${EAGLE_JWT_KEYSTORE_PASSWORD:-eagle-jwt-dev-2026}
       # OAuth2 issuer: 集群部署必填,所有 system 实例共用同一个对外稳定 URL(LB / 网关)
       - EAGLE_OAUTH_ISSUER=${EAGLE_OAUTH_ISSUER:-http://localhost:8080}
+      # OAuth2 回调白名单: 逗号分隔,与 application.yml 默认值保持一致;
+      # 前端联调 / 多环境部署时在 .env 覆盖,补上额外的回调地址
+      - EAGLE_OAUTH_REDIRECT_URIS=${EAGLE_OAUTH_REDIRECT_URIS:-http://localhost:8080/auth/oauth2/callback}
       # 第三方登录（按需启用，留空 = 禁用）
       - WECHAT_MINI_APP_ID=${WECHAT_MINI_APP_ID:-}
       - WECHAT_MINI_APP_SECRET=${WECHAT_MINI_APP_SECRET:-}

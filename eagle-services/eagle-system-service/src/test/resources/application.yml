@@ -8,6 +8,18 @@ spring:
       config:
         enabled: false
 
+  # 测试期彻底排除 Flyway：当前仍用 JPA ddl-auto=update 自动建表，
+  # 暂不依赖 Flyway。双重防御 = enabled:false（属性开关）+ autoconfigure.exclude
+  # （自动配置剔除），避免任何环境变量 / IDE / 残留构建强行装配 FlywayAutoConfiguration。
+  flyway:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: update
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration
+
 eagle:
   jwt:
     keystore-location: classpath:jwt-keystore.p12

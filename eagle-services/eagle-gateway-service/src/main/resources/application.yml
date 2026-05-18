@@ -88,15 +88,10 @@ spring:
           # 开发期信任所有 IP；生产应收窄为 VPC 网段 / CDN 节点 / Ingress IP 的正则。
           # 注意属性必须在 server.webflux 下：GatewayProperties.PREFIX 已迁移到此前缀。
           trusted-proxies: ${GATEWAY_TRUSTED_PROXIES:.*}
-          # 全局 CORS（基线放开 *；prod profile 强制注入 CORS_ALLOWED_ORIGINS）
-          globalcors:
-            cors-configurations:
-              '[/**]':
-                allowedOriginPatterns: ${CORS_ALLOWED_ORIGINS:*}
-                allowedMethods: [GET, POST, PUT, DELETE, PATCH, OPTIONS]
-                allowedHeaders: ["*"]
-                allowCredentials: true
-                maxAge: 3600
+          # CORS 不在 SCG globalcors 配置 —— SCG 5.x 在 globalcors 与 WebFlux 默认
+          # CORS 处理链共存时会双写 Access-Control-Allow-Origin（浏览器拒收 "multiple values"）。
+          # 改由 GatewayCorsConfig 注册的 CorsWebFilter Bean 唯一处理；配置见
+          # eagle.gateway.cors.*（基线放开 *；prod profile 强制注入 CORS_ALLOWED_ORIGINS）
 
           # Reactor Netty 客户端全局超时：不开 httpclient.compression 避免
           # "上游 → 网关解压 → 网关重压"的 CPU 浪费，仅依赖 server.compression 末端压缩一次
@@ -185,3 +180,17 @@ logging:
     com.eagle: INFO
     org.springframework.cloud.gateway: INFO
     reactor.netty: WARN
+
+# ===========================================
+# 网关 CORS：唯一一处（由 GatewayCorsConfig 注册 CorsWebFilter 落地）
+# 基线放开 *；prod profile 必须显式注入 CORS_ALLOWED_ORIGINS（覆盖默认值）
+# 列表字段也支持环境变量逗号分隔："http://a.com,http://b.com"
+# ===========================================
+eagle:
+  gateway:
+    cors:
+      allowed-origin-patterns: ${CORS_ALLOWED_ORIGINS:*}
+      allowed-methods: GET,POST,PUT,DELETE,PATCH,OPTIONS
+      allowed-headers: "*"
+      allow-credentials: true
+      max-age: 3600

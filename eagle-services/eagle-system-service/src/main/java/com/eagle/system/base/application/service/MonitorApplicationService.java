@@ -8,7 +8,9 @@ import com.eagle.system.base.domain.model.enums.LogType;
 import com.eagle.system.base.domain.repository.LogRepository;
 import com.eagle.system.base.interfaces.dto.request.LogQueryRequest;
 import com.eagle.system.base.interfaces.dto.request.LoginLogQueryRequest;
+import com.eagle.system.base.interfaces.dto.response.LoginLogItemResponse;
 import com.eagle.system.base.interfaces.dto.response.LoginLogStatsResponse;
+import com.eagle.system.base.interfaces.dto.response.LogResponse;
 import com.eagle.system.base.interfaces.dto.response.OnlineUserListResponse;
 import com.eagle.system.base.interfaces.dto.response.OnlineUserResponse;
 import lombok.RequiredArgsConstructor;
@@ -90,7 +92,8 @@ public class MonitorApplicationService {
         LogQueryRequest logRequest = new LogQueryRequest();
         logRequest.setUsername(request.getUsername());
         logRequest.setRemoteAddr(request.getIp());
-        logRequest.setStatus(request.getStatus());
+        // 前端传 FAIL，内部枚举是 FAILURE，在此统一映射
+        logRequest.setStatus("FAIL".equals(request.getStatus()) ? "FAILURE" : request.getStatus());
         logRequest.setStartTime(request.getStartTime());
         logRequest.setEndTime(request.getEndTime());
         logRequest.setLogType(LogType.LOGIN.name());
@@ -105,8 +108,41 @@ public class MonitorApplicationService {
                 .todayTotal(todayTotal)
                 .todayFail(todayFail)
                 .todayUniqueUsers(todayUniqueUsers)
-                .page(logApplicationService.queryLogs(logRequest, pageable))
+                .page(logApplicationService.queryLogs(logRequest, pageable).map(this::toLoginLogItem))
                 .build();
+    }
+
+    private LoginLogItemResponse toLoginLogItem(LogResponse log) {
+        return LoginLogItemResponse.builder()
+                .id(log.getId())
+                .userId(log.getUserId())
+                .username(log.getUsername())
+                .ip(log.getRemoteAddr())
+                .browser(parseBrowser(log.getUserAgent()))
+                .os(parseOs(log.getUserAgent()))
+                .status("FAILURE".equals(log.getStatus()) ? "FAIL" : log.getStatus())
+                .loginTime(log.getCreateTime() != null ? log.getCreateTime().toString() : null)
+                .failReason(log.getException())
+                .build();
+    }
+
+    private String parseBrowser(String ua) {
+        if (ua == null) return "Unknown";
+        if (ua.contains("Edg")) return "Edge";
+        if (ua.contains("Chrome")) return "Chrome";
+        if (ua.contains("Firefox")) return "Firefox";
+        if (ua.contains("Safari")) return "Safari";
+        return "Unknown";
+    }
+
+    private String parseOs(String ua) {
+        if (ua == null) return "Unknown";
+        if (ua.contains("Windows")) return "Windows";
+        if (ua.contains("Macintosh") || ua.contains("Mac OS X")) return "macOS";
+        if (ua.contains("Linux")) return "Linux";
+        if (ua.contains("Android")) return "Android";
+        if (ua.contains("iPhone") || ua.contains("iPad")) return "iOS";
+        return "Unknown";
     }
 
     /**

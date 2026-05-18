@@ -31,7 +31,7 @@ public class LoginLogStatsResponse {
     private long todayUniqueUsers;
 
     /**
-     * 分页日志列表
+     * 分页日志列表（前端友好字段）
      */
-    private Page<LogResponse> page;
+    private Page<LoginLogItemResponse> page;
 }
