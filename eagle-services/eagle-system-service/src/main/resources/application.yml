@@ -119,6 +119,27 @@ eagle:
     # 必填，缺失即 fail-fast；dev / local profile 在 application-dev.yml / application-local.yml 注入默认值
     keystore-password: ${EAGLE_JWT_KEYSTORE_PASSWORD}
     key-alias: eagle-jwt
+  # ----- 文件存储（eagle-oss-minio-starter）-----
+  # type 默认 local，本地文件系统存储；生产应切到 minio
+  storage:
+    type: ${EAGLE_STORAGE_TYPE:local}
+    local:
+      base-path: ${EAGLE_STORAGE_BASE_PATH:./data/eagle/storage}
+      url-prefix: ${EAGLE_STORAGE_URL_PREFIX:http://localhost/api/files}
+  file:
+    bucket: ${EAGLE_FILE_BUCKET:eagle-dev-files}
+    max-size-mb: ${EAGLE_FILE_MAX_SIZE_MB:50}
+    default-tenant-id: default
+    allowed-extensions:
+      - jpg
+      - jpeg
+      - png
+      - gif
+      - webp
+      - pdf
+      - docx
+      - xlsx
+      - txt
   websocket:
     endpoint: /ws-stomp
     app-prefix: /message
