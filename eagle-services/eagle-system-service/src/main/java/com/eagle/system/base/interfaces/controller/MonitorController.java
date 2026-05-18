@@ -4,9 +4,12 @@ import com.eagle.system.base.application.service.MonitorApplicationService;
 import com.eagle.system.base.interfaces.dto.request.LoginLogQueryRequest;
 import com.eagle.system.base.interfaces.dto.response.LoginLogStatsResponse;
 import com.eagle.system.base.interfaces.dto.response.OnlineUserListResponse;
+import com.eagle.system.base.interfaces.dto.response.ServiceStatusResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
@@ -56,6 +59,18 @@ public class MonitorController {
     @PreAuthorize("hasRole('admin')")
     public void forceLogout(@PathVariable String tokenId) {
         monitorService.forceLogout(tokenId);
+    }
+
+    /**
+     * 从注册中心拉取所有服务及其健康实例信息。
+     *
+     * @return 服务状态列表
+     */
+    @Operation(summary = "获取注册中心服务列表")
+    @GetMapping("/services")
+    @PreAuthorize("hasRole('admin')")
+    public List<ServiceStatusResponse> listServices() {
+        return monitorService.listServices();
     }
 
     /**

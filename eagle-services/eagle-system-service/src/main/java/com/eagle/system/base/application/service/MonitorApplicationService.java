@@ -13,7 +13,11 @@ import com.eagle.system.base.interfaces.dto.response.LoginLogStatsResponse;
 import com.eagle.system.base.interfaces.dto.response.LogResponse;
 import com.eagle.system.base.interfaces.dto.response.OnlineUserListResponse;
 import com.eagle.system.base.interfaces.dto.response.OnlineUserResponse;
+import com.eagle.system.base.interfaces.dto.response.ServiceInstanceInfo;
+import com.eagle.system.base.interfaces.dto.response.ServiceStatusResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -37,6 +41,7 @@ public class MonitorApplicationService {
     private final OnlineUserPort onlineUserPort;
     private final LogApplicationService logApplicationService;
     private final LogRepository logRepository;
+    private final DiscoveryClient discoveryClient;
 
     /**
      * 获取当前在线用户列表。
@@ -143,6 +148,39 @@ public class MonitorApplicationService {
         if (ua.contains("Android")) return "Android";
         if (ua.contains("iPhone") || ua.contains("iPad")) return "iOS";
         return "Unknown";
+    }
+
+    /**
+     * 从注册中心（Nacos）拉取所有已注册服务及其实例状态。
+     * <p>
+     * DiscoveryClient 只返回健康实例，因此 instances 非空即表示服务 UP。
+     *
+     * @return 服务状态列表
+     */
+    public List<ServiceStatusResponse> listServices() {
+        return discoveryClient.getServices().stream()
+                .map(serviceId -> {
+                    List<ServiceInstance> instances = discoveryClient.getInstances(serviceId);
+                    List<ServiceInstanceInfo> infos = instances.stream()
+                            .map(inst -> ServiceInstanceInfo.builder()
+                                    .instanceId(inst.getInstanceId())
+                                    .host(inst.getHost())
+                                    .port(inst.getPort())
+                                    .metadata(inst.getMetadata())
+                                    .build())
+                            .toList();
+                    String displayName = instances.isEmpty() ? serviceId
+                            : instances.getFirst().getMetadata()
+                            .getOrDefault("spring-doc-name", serviceId);
+                    return ServiceStatusResponse.builder()
+                            .serviceId(serviceId)
+                            .displayName(displayName)
+                            .status(infos.isEmpty() ? "DOWN" : "UP")
+                            .healthyCount(infos.size())
+                            .instances(infos)
+                            .build();
+                })
+                .toList();
     }
 
     /**
