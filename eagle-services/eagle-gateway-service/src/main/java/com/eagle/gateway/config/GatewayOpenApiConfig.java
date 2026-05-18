@@ -50,7 +50,7 @@ public class GatewayOpenApiConfig implements InitializingBean, ApplicationListen
     public static final String METADATA_DISPLAY_NAME_KEY = "spring-doc-name";
 
     /** 网关侧聚合 URL 模板：{@code /v3/api-docs/{alias}} */
-    static final String API_DOCS_PATH = "/v3/api-docs";
+    public static final String API_DOCS_PATH = "/v3/api-docs";
 
     private final DiscoveryClient discoveryClient;
     private final SwaggerUiConfigProperties swaggerUiConfigProperties;
