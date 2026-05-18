@@ -33,7 +33,7 @@ import lombok.NoArgsConstructor;
 public class FileMetadata extends BaseAggregateRoot<FileMetadata> {
 
     @Column(name = "tenant_id", nullable = false, updatable = false, length = 64,
-            comment = "租户 ID（单租户部署默认 'default'）")
+            comment = "租户 ID（单租户部署默认 default）")
     private String tenantId;
 
     @Column(name = "bucket", nullable = false, updatable = false, length = 64, comment = "存储桶")
