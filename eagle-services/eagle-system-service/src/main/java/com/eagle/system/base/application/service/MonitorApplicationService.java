@@ -16,24 +16,29 @@ import com.eagle.system.base.interfaces.dto.response.OnlineUserResponse;
 import com.eagle.system.base.interfaces.dto.response.ServiceInstanceInfo;
 import com.eagle.system.base.interfaces.dto.response.ServiceStatusResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClient;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
- * 监控应用服务：在线用户管理、登录日志统计。
- * <p>
- * 服务器监控通过 Spring Boot Actuator 端点（/actuator/**）直接提供。
+ * 监控应用服务：在线用户管理、登录日志统计、服务注册中心探测。
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MonitorApplicationService {
@@ -44,10 +49,17 @@ public class MonitorApplicationService {
     private final DiscoveryClient discoveryClient;
 
     /**
-     * 获取当前在线用户列表。
-     *
-     * @return 在线用户列表响应
+     * 内部 actuator 探测专用 RestClient（短超时，探测失败不影响主流程）。
+     * 连接超时 2s，读取超时 3s，避免慢节点阻塞整体响应。
      */
+    private final RestClient actuatorClient = RestClient.builder()
+            .requestFactory(actuatorRequestFactory())
+            .build();
+
+    // -------------------------------------------------------------------------
+    // 在线用户
+    // -------------------------------------------------------------------------
+
     public OnlineUserListResponse listOnlineUsers() {
         List<OnlineUserInfo> infos = onlineUserPort.listOnlineUsers();
         List<OnlineUserResponse> responses = infos.stream()
@@ -65,15 +77,7 @@ public class MonitorApplicationService {
         return new OnlineUserListResponse(responses.size(), responses);
     }
 
-    /**
-     * 强制下线指定用户（通过 JWT JTI 识别）。
-     * <p>
-     * 禁止踢出当前登录用户自身。
-     *
-     * @param tokenId 目标用户的 JWT JTI
-     */
     public void forceLogout(String tokenId) {
-        // 禁止踢出自己：当前 token 与目标 tokenId 相同时拒绝
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String currentJti = getCurrentJti(auth);
         if (currentJti != null && currentJti.equals(tokenId)) {
@@ -82,13 +86,10 @@ public class MonitorApplicationService {
         onlineUserPort.forceLogout(tokenId);
     }
 
-    /**
-     * 查询登录日志，并附带今日登录统计数据。
-     *
-     * @param request  查询条件
-     * @param pageable 分页参数
-     * @return 登录日志统计响应
-     */
+    // -------------------------------------------------------------------------
+    // 登录日志
+    // -------------------------------------------------------------------------
+
     @Transactional(readOnly = true)
     public LoginLogStatsResponse queryLoginLogs(LoginLogQueryRequest request, Pageable pageable) {
         LocalDateTime todayStart = LocalDate.now().atStartOfDay();
@@ -97,7 +98,6 @@ public class MonitorApplicationService {
         LogQueryRequest logRequest = new LogQueryRequest();
         logRequest.setUsername(request.getUsername());
         logRequest.setRemoteAddr(request.getIp());
-        // 前端传 FAIL，内部枚举是 FAILURE，在此统一映射
         logRequest.setStatus("FAIL".equals(request.getStatus()) ? "FAILURE" : request.getStatus());
         logRequest.setStartTime(request.getStartTime());
         logRequest.setEndTime(request.getEndTime());
@@ -116,6 +116,132 @@ public class MonitorApplicationService {
                 .page(logApplicationService.queryLogs(logRequest, pageable).map(this::toLoginLogItem))
                 .build();
     }
+
+    // -------------------------------------------------------------------------
+    // 服务注册中心监控
+    // -------------------------------------------------------------------------
+
+    /**
+     * 从 Nacos 拉取所有服务，并并行探测每个服务第一个健康实例的 actuator 指标。
+     * <p>
+     * 探测采用 CompletableFuture 并行执行，避免慢节点串行阻塞。
+     * 探测失败（服务未暴露 actuator、网络超时等）时对应字段为 null，不影响其他服务。
+     *
+     * @return 服务状态列表（含 CPU/内存指标）
+     */
+    public List<ServiceStatusResponse> listServices() {
+        List<CompletableFuture<ServiceStatusResponse>> futures = discoveryClient.getServices()
+                .stream()
+                .map(serviceId -> CompletableFuture.supplyAsync(() -> buildServiceStatus(serviceId)))
+                .toList();
+        return futures.stream().map(CompletableFuture::join).toList();
+    }
+
+    private ServiceStatusResponse buildServiceStatus(String serviceId) {
+        List<ServiceInstance> instances = discoveryClient.getInstances(serviceId);
+        List<ServiceInstanceInfo> infos = instances.stream()
+                .map(inst -> ServiceInstanceInfo.builder()
+                        .instanceId(inst.getInstanceId())
+                        .host(inst.getHost())
+                        .port(inst.getPort())
+                        .metadata(inst.getMetadata())
+                        .build())
+                .toList();
+
+        String displayName = instances.isEmpty() ? serviceId
+                : instances.getFirst().getMetadata().getOrDefault("spring-doc-name", serviceId);
+
+        // 取第一个实例的 URI 作为 actuator 探测目标
+        String baseUrl = instances.isEmpty() ? null : instances.getFirst().getUri().toString();
+
+        Double cpu = null;
+        Long memUsed = null;
+        Long memMax = null;
+        String healthStatus = null;
+
+        if (baseUrl != null) {
+            cpu = fetchMetricValue(baseUrl, "system.cpu.usage");
+            memUsed = fetchMetricLong(baseUrl, "jvm.memory.used");
+            memMax = fetchMetricLong(baseUrl, "jvm.memory.max");
+            healthStatus = fetchHealthStatus(baseUrl);
+        }
+
+        return ServiceStatusResponse.builder()
+                .serviceId(serviceId)
+                .displayName(displayName)
+                .status(infos.isEmpty() ? "DOWN" : "UP")
+                .healthStatus(healthStatus)
+                .healthyCount(infos.size())
+                .instances(infos)
+                .cpuUsage(cpu)
+                .memUsed(memUsed)
+                .memMax(memMax)
+                .build();
+    }
+
+    // -------------------------------------------------------------------------
+    // Actuator 探测工具方法
+    // -------------------------------------------------------------------------
+
+    /**
+     * 探测指定 actuator 指标的 VALUE 值（0.0~1.0 或字节数等）。
+     * 任何异常（404/超时/网络不通）均返回 null。
+     */
+    @SuppressWarnings("unchecked")
+    private Double fetchMetricValue(String baseUrl, String metricName) {
+        try {
+            Map<String, Object> resp = actuatorClient.get()
+                    .uri(baseUrl + "/actuator/metrics/" + metricName)
+                    .retrieve()
+                    .body(Map.class);
+            if (resp == null) return null;
+            List<Map<String, Object>> measurements = (List<Map<String, Object>>) resp.get("measurements");
+            if (measurements == null) return null;
+            return measurements.stream()
+                    .filter(m -> "VALUE".equals(m.get("statistic")))
+                    .map(m -> ((Number) m.get("value")).doubleValue())
+                    .findFirst()
+                    .orElse(null);
+        } catch (Exception e) {
+            log.debug("actuator metric probe failed [{}/{}]: {}", baseUrl, metricName, e.getMessage());
+            return null;
+        }
+    }
+
+    /** 与 fetchMetricValue 相同，结果转为 Long（用于内存字节数）。 */
+    private Long fetchMetricLong(String baseUrl, String metricName) {
+        Double val = fetchMetricValue(baseUrl, metricName);
+        return val != null ? val.longValue() : null;
+    }
+
+    /**
+     * 探测 actuator /health 端点，返回顶层 status 字符串。
+     * 失败时返回 null。
+     */
+    @SuppressWarnings("unchecked")
+    private String fetchHealthStatus(String baseUrl) {
+        try {
+            Map<String, Object> resp = actuatorClient.get()
+                    .uri(baseUrl + "/actuator/health")
+                    .retrieve()
+                    .body(Map.class);
+            return resp != null ? (String) resp.get("status") : null;
+        } catch (Exception e) {
+            log.debug("actuator health probe failed [{}]: {}", baseUrl, e.getMessage());
+            return null;
+        }
+    }
+
+    private static SimpleClientHttpRequestFactory actuatorRequestFactory() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(2));
+        factory.setReadTimeout(Duration.ofSeconds(3));
+        return factory;
+    }
+
+    // -------------------------------------------------------------------------
+    // 登录日志私有映射
+    // -------------------------------------------------------------------------
 
     private LoginLogItemResponse toLoginLogItem(LogResponse log) {
         return LoginLogItemResponse.builder()
@@ -150,45 +276,6 @@ public class MonitorApplicationService {
         return "Unknown";
     }
 
-    /**
-     * 从注册中心（Nacos）拉取所有已注册服务及其实例状态。
-     * <p>
-     * DiscoveryClient 只返回健康实例，因此 instances 非空即表示服务 UP。
-     *
-     * @return 服务状态列表
-     */
-    public List<ServiceStatusResponse> listServices() {
-        return discoveryClient.getServices().stream()
-                .map(serviceId -> {
-                    List<ServiceInstance> instances = discoveryClient.getInstances(serviceId);
-                    List<ServiceInstanceInfo> infos = instances.stream()
-                            .map(inst -> ServiceInstanceInfo.builder()
-                                    .instanceId(inst.getInstanceId())
-                                    .host(inst.getHost())
-                                    .port(inst.getPort())
-                                    .metadata(inst.getMetadata())
-                                    .build())
-                            .toList();
-                    String displayName = instances.isEmpty() ? serviceId
-                            : instances.getFirst().getMetadata()
-                            .getOrDefault("spring-doc-name", serviceId);
-                    return ServiceStatusResponse.builder()
-                            .serviceId(serviceId)
-                            .displayName(displayName)
-                            .status(infos.isEmpty() ? "DOWN" : "UP")
-                            .healthyCount(infos.size())
-                            .instances(infos)
-                            .build();
-                })
-                .toList();
-    }
-
-    /**
-     * 从 Authentication 中提取 JWT JTI。
-     *
-     * @param auth 当前认证对象
-     * @return JTI 字符串，若无法提取则返回 null
-     */
     private String getCurrentJti(Authentication auth) {
         if (auth != null && auth.getCredentials() instanceof Jwt jwt) {
             return jwt.getId();

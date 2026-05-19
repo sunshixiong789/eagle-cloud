@@ -1,6 +1,6 @@
 spring:
-  profiles:
-    active: local
+  # 不再激活 local profile（已删除）。剩余 @SpringBootTest 默认 @Disabled，
+  # 其它 Mockito 单测不依赖此文件，但保留下方防御性配置作为未来集成测试的兜底。
   cloud:
     nacos:
       discovery:
@@ -8,9 +8,8 @@ spring:
       config:
         enabled: false
 
-  # 测试期彻底排除 Flyway：当前仍用 JPA ddl-auto=update 自动建表，
-  # 暂不依赖 Flyway。双重防御 = enabled:false（属性开关）+ autoconfigure.exclude
-  # （自动配置剔除），避免任何环境变量 / IDE / 残留构建强行装配 FlywayAutoConfiguration。
+  # 测试期彻底排除会拉起外部资源的自动配置：Flyway / Redisson。
+  # 双重防御 = enabled:false（属性开关）+ autoconfigure.exclude（自动配置剔除）。
   flyway:
     enabled: false
   jpa:
@@ -19,6 +18,7 @@ spring:
   autoconfigure:
     exclude:
       - org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration
+      - org.redisson.spring.starter.RedissonAutoConfigurationV4
 
 eagle:
   jwt:
