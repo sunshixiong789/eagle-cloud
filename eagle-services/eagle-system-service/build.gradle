@@ -1,3 +1,12 @@
+// 排除 xpp3 / xmlpull（旧式 SAX 解析器，dom4j / xstream 等传递引入）。
+// 它们通过 ServiceLoader 注册为默认 SAXParserFactory，会导致 Nacos / Logback
+// 加载 XML 配置时报 SAXNotRecognizedException: external-general-entities。
+configurations.all {
+    exclude group: 'xpp3', module: 'xpp3'
+    exclude group: 'xpp3', module: 'xpp3_min'
+    exclude group: 'xmlpull', module: 'xmlpull'
+}
+
 dependencies {
     implementation project(':eagle-starter:eagle-data-jpa-starter')
     implementation project(':eagle-starter:eagle-resource-server-starter')
