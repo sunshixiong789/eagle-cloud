@@ -12,7 +12,7 @@ plugins {
 
 allprojects {
     group = 'com.eagle'
-    version = '1.0.3-SNAPSHOT'
+    version = '1.0.4-SNAPSHOT'
 
     repositories {
         maven { url = 'https://maven.aliyun.com/repository/public' }
