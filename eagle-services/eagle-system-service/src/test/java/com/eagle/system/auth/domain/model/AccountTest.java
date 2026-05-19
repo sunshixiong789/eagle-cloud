@@ -3,6 +3,7 @@ package com.eagle.system.auth.domain.model;
 import com.eagle.common.exception.AppException;
 import com.eagle.common.exception.DomainException;
 import com.eagle.system.auth.domain.AuthErrorCode;
+import com.eagle.system.auth.domain.model.enums.AccountStatus;
 import com.eagle.system.auth.domain.model.valueobject.ProfileHints;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -37,7 +38,7 @@ class AccountTest {
             assertEquals(USERNAME, account.getUsername());
             assertEquals(PASSWORD, account.getPassword());
             assertEquals(PHONE, account.getPhone());
-            assertFalse(account.getLocked());
+            assertEquals(AccountStatus.ACTIVE, account.getStatus());
             assertSame(HINTS, account.getProfileHints());
             assertNull(account.getWechatBinding());
         }
@@ -75,7 +76,7 @@ class AccountTest {
             assertEquals(PHONE, account.getUsername());
             assertEquals(PHONE, account.getPhone());
             assertEquals("", account.getPassword());
-            assertFalse(account.getLocked());
+            assertEquals(AccountStatus.ACTIVE, account.getStatus());
             assertSame(ProfileHints.EMPTY, account.getProfileHints());
         }
 
@@ -210,41 +211,41 @@ class AccountTest {
     }
 
     @Nested
-    @DisplayName("lock / unlock")
+    @DisplayName("lock / unlock (deprecated delegates to freeze/unfreeze)")
     class LockUnlock {
 
         @Test
-        @DisplayName("should lock an active account")
+        @DisplayName("should freeze an active account via lock()")
         void shouldLockActive() {
             Account account = Account.create(USERNAME, PASSWORD, PHONE, HINTS);
             account.lock();
-            assertTrue(account.getLocked());
+            assertEquals(AccountStatus.FROZEN, account.getStatus());
         }
 
         @Test
-        @DisplayName("should throw when locking an already-locked account")
+        @DisplayName("should throw ACCOUNT_FROZEN when locking an already-locked account")
         void shouldThrowWhenAlreadyLocked() {
             Account account = Account.create(USERNAME, PASSWORD, PHONE, HINTS);
             account.lock();
             AppException ex = assertThrows(DomainException.class, account::lock);
-            assertEquals(AuthErrorCode.ACCOUNT_LOCKED, ex.getErrorCode());
+            assertEquals(AuthErrorCode.ACCOUNT_FROZEN, ex.getErrorCode());
         }
 
         @Test
-        @DisplayName("should unlock a locked account")
+        @DisplayName("should unfreeze a locked account via unlock()")
         void shouldUnlockLocked() {
             Account account = Account.create(USERNAME, PASSWORD, PHONE, HINTS);
             account.lock();
             account.unlock();
-            assertFalse(account.getLocked());
+            assertEquals(AccountStatus.ACTIVE, account.getStatus());
         }
 
         @Test
-        @DisplayName("should throw when unlocking an unlocked account")
+        @DisplayName("should throw ACCOUNT_NOT_FROZEN when unlocking an active account")
         void shouldThrowWhenNotLocked() {
             Account account = Account.create(USERNAME, PASSWORD, PHONE, HINTS);
             AppException ex = assertThrows(DomainException.class, account::unlock);
-            assertEquals(AuthErrorCode.ACCOUNT_NOT_LOCKED, ex.getErrorCode());
+            assertEquals(AuthErrorCode.ACCOUNT_NOT_FROZEN, ex.getErrorCode());
         }
     }
 

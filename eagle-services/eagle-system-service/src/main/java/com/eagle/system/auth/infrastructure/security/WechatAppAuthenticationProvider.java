@@ -51,6 +51,7 @@ public class WechatAppAuthenticationProvider implements AuthenticationProvider {
     private final WechatWebService wechatWebService;
     private final WechatWebUserService wechatWebUserService;
     private final UserDetailsService userDetailsService;
+    private final BlacklistChecker blacklistChecker;
 
     private static OAuth2ClientAuthenticationToken getAuthenticatedClient(Authentication authentication) {
         OAuth2ClientAuthenticationToken clientPrincipal = null;
@@ -76,6 +77,9 @@ public class WechatAppAuthenticationProvider implements AuthenticationProvider {
         }
 
         WechatWebUserInfo wechatUserInfo = wechatWebService.exchangeAppCode(authToken.getCode());
+
+        // 黑名单前置：拦截 IP / OPENID
+        blacklistChecker.checkWechat(wechatUserInfo.openid(), ClientIpHolder.get());
 
         Account account = wechatWebUserService.findOrCreateWechatWebAccount(wechatUserInfo);
 

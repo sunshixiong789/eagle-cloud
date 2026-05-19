@@ -1,7 +1,9 @@
 package com.eagle.system.auth.application.service;
 
 import com.eagle.common.exception.codes.DataErrorCode;
+import com.eagle.system.auth.application.command.FreezeAccountCommand;
 import com.eagle.system.auth.domain.model.Account;
+import com.eagle.system.auth.domain.model.enums.AccountStatus;
 import com.eagle.system.auth.domain.model.valueobject.ProfileHints;
 import com.eagle.system.auth.domain.repository.AccountRepository;
 import com.eagle.system.auth.domain.service.SmsService;
@@ -87,9 +89,27 @@ public class AccountApplicationService {
         accountRepository.save(account);
     }
 
+    /** 冻结账号（管理员显式触发）*/
+    @Transactional(rollbackFor = Exception.class)
+    public void freezeAccount(Long accountId, FreezeAccountCommand cmd) {
+        Account account = findAccountById(accountId);
+        account.freezeByAdmin(cmd.operatorId(), cmd.operatorName(),
+                cmd.reason(), cmd.freezeUntil(), cmd.remark());
+        accountRepository.save(account);
+    }
+
+    /** 解冻账号（管理员显式触发）*/
+    @Transactional(rollbackFor = Exception.class)
+    public void unfreezeAccount(Long accountId, Long operatorId, String operatorName) {
+        Account account = findAccountById(accountId);
+        account.unfreeze(operatorId, operatorName);
+        accountRepository.save(account);
+    }
+
     /**
-     * 锁定账号
+     * @deprecated 改用 {@link #freezeAccount}
      */
+    @Deprecated
     @Transactional(rollbackFor = Exception.class)
     public void lockAccount(Long accountId) {
         Account account = findAccountById(accountId);
@@ -98,8 +118,9 @@ public class AccountApplicationService {
     }
 
     /**
-     * 解锁账号
+     * @deprecated 改用 {@link #unfreezeAccount}
      */
+    @Deprecated
     @Transactional(rollbackFor = Exception.class)
     public void unlockAccount(Long accountId) {
         Account account = findAccountById(accountId);
@@ -174,8 +195,8 @@ public class AccountApplicationService {
         Account account = accountRepository.findByPhone(phone)
                 .orElseThrow(AuthErrorCode.PHONE_NOT_BOUND::toNotFoundException);
         // 3. 检查账号状态
-        if (Boolean.TRUE.equals(account.getLocked())) {
-            throw AuthErrorCode.ACCOUNT_LOCKED.toDomainException();
+        if (account.getStatus() == AccountStatus.FROZEN) {
+            throw AuthErrorCode.ACCOUNT_FROZEN.toDomainException();
         }
         // 4. 更新密码
         account.changePassword(passwordEncoder.encode(rawNewPassword));
@@ -212,8 +233,8 @@ public class AccountApplicationService {
         // 3. 查找当前账号
         Account account = findAccountById(accountId);
         // 4. 检查账号状态
-        if (Boolean.TRUE.equals(account.getLocked())) {
-            throw AuthErrorCode.ACCOUNT_LOCKED.toDomainException();
+        if (account.getStatus() == AccountStatus.FROZEN) {
+            throw AuthErrorCode.ACCOUNT_FROZEN.toDomainException();
         }
         // 5. 绑定手机号
         account.bindPhone(phone);

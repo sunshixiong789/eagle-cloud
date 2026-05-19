@@ -37,4 +37,12 @@ public interface OnlineUserPort {
      * @return {@code true} 表示 token 已失效
      */
     boolean isBlacklisted(String jti);
+
+    /**
+     * 反查某账号当前所有在线 JTI。
+     *
+     * @param accountId 账号 ID
+     * @return JTI 列表（空集合表示未在线）
+     */
+    List<String> listJtisByAccount(Long accountId);
 }

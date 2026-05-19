@@ -7,6 +7,7 @@ import com.eagle.common.exception.NotFoundException;
 import com.eagle.common.exception.codes.DataErrorCode;
 import com.eagle.system.auth.domain.AuthErrorCode;
 import com.eagle.system.auth.domain.model.Account;
+import com.eagle.system.auth.domain.model.enums.AccountStatus;
 import com.eagle.system.auth.domain.model.valueobject.ProfileHints;
 import com.eagle.system.auth.domain.repository.AccountRepository;
 import com.eagle.system.auth.domain.service.SmsService;
@@ -142,7 +143,7 @@ class AccountApplicationServiceTest {
             Account account = existingAccount();
             when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
             service.lockAccount(ACCOUNT_ID);
-            assertTrue(account.getLocked());
+            assertEquals(AccountStatus.FROZEN, account.getStatus());
             verify(accountRepository).save(account);
         }
 
@@ -153,7 +154,58 @@ class AccountApplicationServiceTest {
             account.lock();
             when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
             service.unlockAccount(ACCOUNT_ID);
-            assertFalse(account.getLocked());
+            assertEquals(AccountStatus.ACTIVE, account.getStatus());
+            verify(accountRepository).save(account);
+        }
+    }
+
+    @Nested
+    @DisplayName("freezeAccount")
+    class FreezeAccount {
+        @Test
+        @DisplayName("should freeze account and save")
+        void shouldFreezeAccount() {
+            Account account = existingAccount();
+            when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
+            when(accountRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            service.freezeAccount(ACCOUNT_ID,
+                    new com.eagle.system.auth.application.command.FreezeAccountCommand(
+                            com.eagle.system.auth.domain.model.enums.FreezeReason.ADMIN,
+                            null, "test", 99L, "admin"));
+
+            assertEquals(com.eagle.system.auth.domain.model.enums.AccountStatus.FROZEN,
+                    account.getStatus());
+            verify(accountRepository).save(account);
+        }
+
+        @Test
+        @DisplayName("should throw when account not found")
+        void shouldThrowWhenNotFound() {
+            when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.empty());
+            assertThrows(NotFoundException.class, () -> service.freezeAccount(ACCOUNT_ID,
+                    new com.eagle.system.auth.application.command.FreezeAccountCommand(
+                            com.eagle.system.auth.domain.model.enums.FreezeReason.ADMIN,
+                            null, null, 99L, "admin")));
+        }
+    }
+
+    @Nested
+    @DisplayName("unfreezeAccount")
+    class UnfreezeAccount {
+        @Test
+        @DisplayName("should unfreeze and save")
+        void shouldUnfreeze() {
+            Account account = existingAccount();
+            account.freezeByAdmin(99L, "admin",
+                    com.eagle.system.auth.domain.model.enums.FreezeReason.ADMIN, null, null);
+            when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
+            when(accountRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            service.unfreezeAccount(ACCOUNT_ID, 99L, "admin");
+
+            assertEquals(com.eagle.system.auth.domain.model.enums.AccountStatus.ACTIVE,
+                    account.getStatus());
             verify(accountRepository).save(account);
         }
     }

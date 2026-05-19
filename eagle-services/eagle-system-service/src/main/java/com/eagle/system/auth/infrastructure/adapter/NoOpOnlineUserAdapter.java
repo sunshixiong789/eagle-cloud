@@ -45,4 +45,10 @@ public class NoOpOnlineUserAdapter implements OnlineUserPort {
         log.debug("Online user tracking disabled (no Redis available), defaulting isBlacklisted to false for jti: {}", jti);
         return false;
     }
+
+    @Override
+    public List<String> listJtisByAccount(Long accountId) {
+        log.debug("Online user tracking disabled (no Redis available), returning empty jtis for accountId: {}", accountId);
+        return List.of();
+    }
 }

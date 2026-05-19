@@ -1,14 +1,21 @@
 package com.eagle.system.auth.domain.model;
 
 import com.eagle.common.base.BaseAggregateRoot;
+import com.eagle.system.auth.domain.AuthErrorCode;
 import com.eagle.system.auth.domain.event.AccountDeletedEvent;
+import com.eagle.system.auth.domain.event.AccountFrozenEvent;
 import com.eagle.system.auth.domain.event.AccountRegisteredEvent;
+import com.eagle.system.auth.domain.event.AccountUnfrozenEvent;
+import com.eagle.system.auth.domain.model.enums.AccountStatus;
+import com.eagle.system.auth.domain.model.enums.FreezeReason;
+import com.eagle.system.auth.domain.model.valueobject.AccountFreeze;
 import com.eagle.system.auth.domain.model.valueobject.ProfileHints;
 import com.eagle.system.auth.domain.model.valueobject.WechatBinding;
-import com.eagle.system.auth.domain.AuthErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Index;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.Table;
@@ -16,10 +23,12 @@ import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 /**
  * 账号聚合根
  * <p>
- * 管理用户的认证凭据（用户名、密码、微信绑定）和账号状态（锁定）。
+ * 管理用户的认证凭据（用户名、密码、微信绑定）和账号状态（冻结）。
  * 与 system 域的 User 通过 accountId 关联，Account 负责"你是谁"，
  * User 负责"你的组织信息和权限"。
  *
@@ -57,10 +66,17 @@ public class Account extends BaseAggregateRoot<Account> {
     private String phone;
 
     /**
-     * 是否锁定
+     * 账号状态
      */
-    @Column(nullable = false, comment = "是否锁定")
-    private Boolean locked = false;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20, comment = "账号状态")
+    private AccountStatus status = AccountStatus.ACTIVE;
+
+    /**
+     * 冻结信息（status=FROZEN 时非 null）
+     */
+    @Embedded
+    private AccountFreeze freeze;
 
     /**
      * 微信绑定信息
@@ -100,7 +116,7 @@ public class Account extends BaseAggregateRoot<Account> {
         account.username = username;
         account.password = password;
         account.phone = phone;
-        account.locked = false;
+        account.status = AccountStatus.ACTIVE;
         account.profileHints = profileHints;
         return account;
     }
@@ -119,7 +135,7 @@ public class Account extends BaseAggregateRoot<Account> {
         Account account = new Account();
         account.username = "wx_" + openid.substring(0, Math.min(16, openid.length()));
         account.password = "";
-        account.locked = false;
+        account.status = AccountStatus.ACTIVE;
         account.wechatBinding = WechatBinding.create(openid, unionid);
         account.profileHints = ProfileHints.EMPTY;
         return account;
@@ -139,7 +155,7 @@ public class Account extends BaseAggregateRoot<Account> {
         account.username = phone;
         account.password = "";
         account.phone = phone;
-        account.locked = false;
+        account.status = AccountStatus.ACTIVE;
         account.profileHints = ProfileHints.EMPTY;
         return account;
     }
@@ -162,7 +178,7 @@ public class Account extends BaseAggregateRoot<Account> {
         account.username = "wxweb_"
                 + webOpenid.substring(0, Math.min(16, webOpenid.length()));
         account.password = "";
-        account.locked = false;
+        account.status = AccountStatus.ACTIVE;
         account.wechatBinding = WechatBinding.createForWeb(webOpenid, unionid);
         account.profileHints = ProfileHints.ofWechat(nickname, avatar);
         return account;
@@ -186,7 +202,7 @@ public class Account extends BaseAggregateRoot<Account> {
         account.username = "wxmp_"
                 + mpOpenid.substring(0, Math.min(16, mpOpenid.length()));
         account.password = "";
-        account.locked = false;
+        account.status = AccountStatus.ACTIVE;
         account.wechatBinding = WechatBinding.createForH5(mpOpenid, unionid);
         account.profileHints = ProfileHints.ofWechat(nickname, avatar);
         return account;
@@ -249,24 +265,83 @@ public class Account extends BaseAggregateRoot<Account> {
         this.phone = phone;
     }
 
+    // ==================== 冻结 / 解冻 ====================
+
     /**
-     * 锁定账号
+     * 管理员冻结账号
+     *
+     * @param operatorId   操作人 ID
+     * @param operatorName 操作人姓名
+     * @param reason       冻结原因
+     * @param freezeUntil  到期时间（null 表示永久冻结）
+     * @param remark       备注
      */
-    public void lock() {
-        if (Boolean.TRUE.equals(this.locked)) {
-            throw AuthErrorCode.ACCOUNT_LOCKED.toDomainException();
+    public void freezeByAdmin(Long operatorId, String operatorName,
+                              FreezeReason reason, LocalDateTime freezeUntil, String remark) {
+        if (this.status == AccountStatus.FROZEN) {
+            throw AuthErrorCode.ACCOUNT_FROZEN.toDomainException();
         }
-        this.locked = true;
+        if (freezeUntil != null && !freezeUntil.isAfter(LocalDateTime.now())) {
+            throw AuthErrorCode.ACCOUNT_FREEZE_UNTIL_INVALID.toDomainException();
+        }
+        this.status = AccountStatus.FROZEN;
+        this.freeze = new AccountFreeze(
+                reason, freezeUntil, operatorId, operatorName, remark, LocalDateTime.now());
+        registerEvent(new AccountFrozenEvent(getId(), username, reason, freezeUntil, operatorId));
     }
 
     /**
-     * 解锁账号
+     * 管理员解冻账号
+     *
+     * @param operatorId   操作人 ID
+     * @param operatorName 操作人姓名
      */
-    public void unlock() {
-        if (!Boolean.TRUE.equals(this.locked)) {
-            throw AuthErrorCode.ACCOUNT_NOT_LOCKED.toDomainException();
+    public void unfreeze(Long operatorId, String operatorName) {
+        if (this.status != AccountStatus.FROZEN) {
+            throw AuthErrorCode.ACCOUNT_NOT_FROZEN.toDomainException();
         }
-        this.locked = false;
+        this.status = AccountStatus.ACTIVE;
+        this.freeze = null;
+        registerEvent(new AccountUnfrozenEvent(
+                getId(), username, AccountUnfrozenEvent.Source.ADMIN, operatorId));
+    }
+
+    /**
+     * 尝试自动解冻（到期自动解冻）
+     *
+     * @param now 当前时间
+     * @return true 表示已解冻，false 表示未到期或非冻结状态
+     */
+    public boolean tryAutoUnfreezeIfExpired(LocalDateTime now) {
+        if (this.status == AccountStatus.FROZEN
+                && this.freeze != null
+                && this.freeze.isExpired(now)) {
+            this.status = AccountStatus.ACTIVE;
+            this.freeze = null;
+            registerEvent(new AccountUnfrozenEvent(
+                    getId(), username, AccountUnfrozenEvent.Source.AUTO, null));
+            return true;
+        }
+        return false;
+    }
+
+    // ==================== 旧 lock/unlock @Deprecated 委托 ====================
+
+    /**
+     * @deprecated use {@link #freezeByAdmin}
+     */
+    @Deprecated
+    public void lock() {
+        freezeByAdmin(null, "system-legacy",
+                FreezeReason.OTHER, null, "legacy lock API");
+    }
+
+    /**
+     * @deprecated use {@link #unfreeze}
+     */
+    @Deprecated
+    public void unlock() {
+        unfreeze(null, "system-legacy");
     }
 
     // ==================== 微信绑定 ====================

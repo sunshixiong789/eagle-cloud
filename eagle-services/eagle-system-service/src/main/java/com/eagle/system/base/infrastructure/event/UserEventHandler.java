@@ -4,7 +4,6 @@ import com.eagle.common.util.LogMask;
 import com.eagle.system.auth.domain.event.AccountDeletedEvent;
 import com.eagle.system.auth.domain.event.AccountRegisteredEvent;
 import com.eagle.system.base.domain.event.UserCreatedEvent;
-import com.eagle.system.base.domain.event.UserLockedEvent;
 import com.eagle.system.base.domain.event.UserPasswordChangedEvent;
 import com.eagle.system.base.domain.event.UserUpdatedEvent;
 import com.eagle.system.base.domain.model.User;
@@ -69,17 +68,6 @@ public class UserEventHandler {
     public void handlePasswordChanged(UserPasswordChangedEvent event) {
         log.info("密码修改事件: userId={}, username={}",
                 event.getUserId(), event.getUsername());
-        evictUserCache(event.getUsername());
-    }
-
-    /**
-     * 处理用户锁定事件
-     */
-    @Async("taskExecutor")
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleUserLocked(UserLockedEvent event) {
-        log.info("用户锁定事件: userId={}, username={}, reason={}",
-                event.getUserId(), event.getUsername(), event.getReason());
         evictUserCache(event.getUsername());
     }
 

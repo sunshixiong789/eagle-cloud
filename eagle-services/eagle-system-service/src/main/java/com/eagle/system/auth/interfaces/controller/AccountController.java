@@ -1,9 +1,12 @@
 package com.eagle.system.auth.interfaces.controller;
 
+import com.eagle.common.dto.EagleUser;
+import com.eagle.system.auth.application.command.FreezeAccountCommand;
 import com.eagle.system.auth.application.service.AccountApplicationService;
 import com.eagle.system.auth.interfaces.dto.request.BindPhoneRequest;
 import com.eagle.system.auth.interfaces.dto.request.ChangePasswordRequest;
 import com.eagle.system.auth.interfaces.dto.request.CreateAccountRequest;
+import com.eagle.system.auth.interfaces.dto.request.FreezeAccountRequest;
 import com.eagle.system.auth.interfaces.dto.request.RegisterAccountRequest;
 import com.eagle.system.auth.interfaces.dto.request.ResetPasswordRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,6 +16,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,12 +43,16 @@ import java.util.Map;
 public class AccountController {
 
     private final AccountApplicationService accountApplicationService;
+    private final com.eagle.system.auth.infrastructure.security.BlacklistChecker blacklistChecker;
 
     @Operation(summary = "用户自主注册")
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("permitAll()")
-    public Map<String, Long> register(@Valid @RequestBody RegisterAccountRequest request) {
+    public Map<String, Long> register(@Valid @RequestBody RegisterAccountRequest request,
+                                      jakarta.servlet.http.HttpServletRequest httpRequest) {
+        blacklistChecker.checkRegister(request.getPhone(), request.getEmail(),
+                httpRequest.getRemoteAddr());
         Long accountId = accountApplicationService.register(
                 request.getUsername(), request.getPassword(), request.getPhone(),
                 request.getEmail(), request.getNickname());
@@ -90,18 +98,47 @@ public class AccountController {
         accountApplicationService.changePassword(accountId, request.getNewPassword());
     }
 
-    @Operation(summary = "锁定账号")
+    @Operation(summary = "冻结账号")
+    @PatchMapping("/{accountId}/freeze")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('admin')")
+    public void freezeAccount(@Parameter(description = "账号ID") @PathVariable Long accountId,
+                              @Valid @RequestBody FreezeAccountRequest request,
+                              @AuthenticationPrincipal EagleUser principal) {
+        accountApplicationService.freezeAccount(accountId,
+                new FreezeAccountCommand(request.getReason(), request.getFreezeUntil(),
+                        request.getRemark(),
+                        principal != null ? principal.getId() : null,
+                        principal != null ? principal.getName() : "admin"));
+    }
+
+    @Operation(summary = "解冻账号")
+    @PatchMapping("/{accountId}/unfreeze")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('admin')")
+    public void unfreezeAccount(@Parameter(description = "账号ID") @PathVariable Long accountId,
+                                @AuthenticationPrincipal EagleUser principal) {
+        accountApplicationService.unfreezeAccount(accountId,
+                principal != null ? principal.getId() : null,
+                principal != null ? principal.getName() : "admin");
+    }
+
+    /** @deprecated 改用 /freeze */
+    @Deprecated
+    @Operation(summary = "[Deprecated] 锁定账号", description = "请改用 /freeze")
     @PatchMapping("/{accountId}/lock")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('admin')")
     public void lockAccount(@Parameter(description = "账号ID") @PathVariable Long accountId) {
         accountApplicationService.lockAccount(accountId);
     }
 
-    @Operation(summary = "解锁账号")
+    /** @deprecated 改用 /unfreeze */
+    @Deprecated
+    @Operation(summary = "[Deprecated] 解锁账号", description = "请改用 /unfreeze")
     @PatchMapping("/{accountId}/unlock")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('admin')")
     public void unlockAccount(@Parameter(description = "账号ID") @PathVariable Long accountId) {
         accountApplicationService.unlockAccount(accountId);
     }

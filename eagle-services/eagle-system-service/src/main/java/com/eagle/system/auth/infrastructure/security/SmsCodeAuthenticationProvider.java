@@ -61,6 +61,7 @@ public class SmsCodeAuthenticationProvider implements AuthenticationProvider {
     private final SmsService smsService;
     private final AccountApplicationService accountApplicationService;
     private final UserDetailsService userDetailsService;
+    private final BlacklistChecker blacklistChecker;
 
     private static OAuth2ClientAuthenticationToken getAuthenticatedClient(Authentication authentication) {
         OAuth2ClientAuthenticationToken clientPrincipal = null;
@@ -86,7 +87,10 @@ public class SmsCodeAuthenticationProvider implements AuthenticationProvider {
             throw new OAuth2AuthenticationException(new OAuth2Error("unauthorized_client"));
         }
 
-        // 2. 验证短信验证码
+        // 2. 黑名单前置：拦截 IP / PHONE
+        blacklistChecker.checkLogin(null, authToken.getPhone(), ClientIpHolder.get(), null);
+
+        // 3. 验证短信验证码
         if (!smsService.verifyCode(authToken.getPhone(), authToken.getCode())) {
             throw new OAuth2AuthenticationException(new OAuth2Error("invalid_grant", "验证码错误或已过期", null));
         }

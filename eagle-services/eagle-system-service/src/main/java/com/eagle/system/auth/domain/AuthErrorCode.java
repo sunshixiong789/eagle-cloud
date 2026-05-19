@@ -3,7 +3,7 @@ package com.eagle.system.auth.domain;
 import com.eagle.common.exception.ErrorCode;
 
 /**
- * 认证领域错误码（11001–11033）
+ * 认证领域错误码（11001–11044）
  */
 public enum AuthErrorCode implements ErrorCode {
 
@@ -57,7 +57,20 @@ public enum AuthErrorCode implements ErrorCode {
     ONE_CLICK_TOKEN_REQUIRED(11034, "error.auth.one_click_token_required", "一键登录 access_token 不能为空"),
     ONE_CLICK_VERIFY_FAILED(11035, "error.auth.one_click_verify_failed", "一键登录校验失败"),
     ONE_CLICK_PROVIDER_DISABLED(11036, "error.auth.one_click_provider_disabled", "一键登录服务未启用"),
-    ONE_CLICK_PHONE_PARSE_FAILED(11037, "error.auth.one_click_phone_parse_failed", "一键登录获取手机号失败");
+    ONE_CLICK_PHONE_PARSE_FAILED(11037, "error.auth.one_click_phone_parse_failed", "一键登录获取手机号失败"),
+
+    // ==================== 账号冻结（11038–11040）====================
+
+    ACCOUNT_FROZEN(11038, "error.account.frozen", "账号已被冻结：{0}"),
+    ACCOUNT_NOT_FROZEN(11039, "error.account.not_frozen", "账号未被冻结"),
+    ACCOUNT_FREEZE_UNTIL_INVALID(11040, "error.account.freeze_until_invalid", "冻结到期时间必须晚于当前时间"),
+
+    // ==================== 黑名单（11041–11044）====================
+
+    IDENTITY_BLACKLISTED(11041, "error.auth.identity_blacklisted", "该身份已被禁止访问"),
+    IP_BLACKLISTED(11042, "error.auth.ip_blacklisted", "当前 IP 已被禁止访问"),
+    BLACKLIST_DUPLICATE(11043, "error.blacklist.duplicate", "该黑名单条目已存在"),
+    BLACKLIST_NOT_FOUND(11044, "error.blacklist.not_found", "黑名单条目不存在");
 
     private final ErrorCode.Meta meta;
 

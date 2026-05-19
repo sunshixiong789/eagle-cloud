@@ -14,6 +14,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 
 /**
  * 分布式 ID 生成器自动配置。
@@ -82,6 +83,7 @@ public class IdGeneratorAutoConfiguration {
      * <p>业务通过注入 {@code IdGenerator} 接口获取（推荐），如需明确实现则注入具体类型 Bean。
      */
     @Bean
+    @Primary
     @ConditionalOnMissingBean
     public IdGenerator idGenerator(
             IdGeneratorProperties properties,

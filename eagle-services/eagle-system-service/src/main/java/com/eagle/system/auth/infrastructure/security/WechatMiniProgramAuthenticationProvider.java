@@ -51,6 +51,7 @@ public class WechatMiniProgramAuthenticationProvider implements AuthenticationPr
     private final WechatService wechatService;
     private final AccountApplicationService accountApplicationService;
     private final UserDetailsService userDetailsService;
+    private final BlacklistChecker blacklistChecker;
 
     private static OAuth2ClientAuthenticationToken getAuthenticatedClient(Authentication authentication) {
         OAuth2ClientAuthenticationToken clientPrincipal = null;
@@ -78,6 +79,9 @@ public class WechatMiniProgramAuthenticationProvider implements AuthenticationPr
 
         // 调用微信 API 获取 openid
         WechatUserInfo wechatUserInfo = wechatService.getUserInfo(authToken.getCode());
+
+        // 黑名单前置：拦截 IP / OPENID
+        blacklistChecker.checkWechat(wechatUserInfo.openid(), ClientIpHolder.get());
 
         // 查找或自动创建账号（委托给应用服务）
         Account account = accountApplicationService.findOrCreateByWechatOpenid(
