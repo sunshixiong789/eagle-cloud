@@ -20,7 +20,6 @@ import java.util.List;
  * 使得 SpEL 权限表达式可直接访问用户字段：
  * <pre>{@code
  * @PreAuthorize("#userId == authentication.principal.id")
- * @PreAuthorize("authentication.principal.deptId == #deptId")
  * }</pre>
  *
  * @author 孙士雄
@@ -47,11 +46,9 @@ public class EagleJwtAuthenticationConverter implements Converter<Jwt, AbstractA
         Long userId = jwt.getClaim(SecurityConstants.DETAILS_USER_ID);
         String username = jwt.getClaim(SecurityConstants.DETAILS_USERNAME);
         String name = jwt.getClaim(SecurityConstants.DETAILS_USER_NAME);
-        Long deptId = jwt.getClaim(SecurityConstants.DETAILS_DEPT_ID);
-        String deptName = jwt.getClaim(SecurityConstants.DETAILS_DEPT_NAME);
         String phone = jwt.getClaim(SecurityConstants.DETAILS_PHONE);
 
-        EagleUser user = new EagleUser(userId, username, "", name, deptId, deptName, phone, authorities);
+        EagleUser user = new EagleUser(userId, username, "", name, phone, authorities);
         return new EagleAuthentication(jwt, user, authorities);
     }
 }

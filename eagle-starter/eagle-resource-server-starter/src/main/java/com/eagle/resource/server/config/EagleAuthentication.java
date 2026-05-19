@@ -17,7 +17,6 @@ import java.util.Collection;
  *
  * <pre>{@code
  * @PreAuthorize("#userId == authentication.principal.id")
- * @PreAuthorize("authentication.principal.deptId == #deptId")
  * }</pre>
  *
  * @author 孙士雄

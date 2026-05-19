@@ -62,8 +62,8 @@ public class DataPermissionProviderImpl implements DataPermissionProvider {
 
     @Override
     public Long getCurrentUserDeptId() {
-        EagleUser user = SecurityUtils.getCurrentUser();
-        return user != null ? user.getDeptId() : null;
+        // 部门管理已下线，EagleUser 不再携带 deptId
+        return null;
     }
 
     @Override

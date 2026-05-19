@@ -49,14 +49,11 @@ public class EagleUserDetailsServiceImpl implements UserDetailsService {
                 .findAuthorizationInfo(account.getId())
                 .orElse(AuthorizationInfo.empty());
 
-        // 部门管理已下线，deptId / deptName 始终为 null
         return new EagleUser(
                 account.getId(),
                 account.getUsername(),
                 account.getPassword(),
                 authInfo.name() != null ? authInfo.name() : account.getUsername(),
-                null,
-                null,
                 account.getPhone(),
                 !Boolean.TRUE.equals(account.getLocked()),
                 true,

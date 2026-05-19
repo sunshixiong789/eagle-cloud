@@ -45,14 +45,6 @@ public final class SecurityConstants {
      * JWT Claim：手机号
      */
     public static final String DETAILS_PHONE = "phone";
-    /**
-     * JWT Claim：部门 ID
-     */
-    public static final String DETAILS_DEPT_ID = "depId";
-    /**
-     * JWT Claim：部门名称
-     */
-    public static final String DETAILS_DEPT_NAME = "depName";
 
     private SecurityConstants() {
     }

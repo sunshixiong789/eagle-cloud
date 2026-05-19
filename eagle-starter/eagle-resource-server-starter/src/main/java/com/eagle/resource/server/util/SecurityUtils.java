@@ -81,16 +81,6 @@ public class SecurityUtils {
     }
 
     /**
-     * 获取当前用户部门 ID。
-     *
-     * @return 部门 ID，未认证时返回 {@code null}
-     */
-    public static Long getCurrentDeptId() {
-        EagleUser user = getCurrentUser();
-        return user != null ? user.getDeptId() : null;
-    }
-
-    /**
      * 判断当前用户是否拥有指定角色。
      *
      * @param role 角色名称（不需要 {@code ROLE_} 前缀）
@@ -125,12 +115,10 @@ public class SecurityUtils {
         Long userId = jwt.getClaim(SecurityConstants.DETAILS_USER_ID);
         String username = jwt.getClaim(SecurityConstants.DETAILS_USERNAME);
         String name = jwt.getClaim(SecurityConstants.DETAILS_USER_NAME);
-        Long deptId = jwt.getClaim(SecurityConstants.DETAILS_DEPT_ID);
-        String deptName = jwt.getClaim(SecurityConstants.DETAILS_DEPT_NAME);
         String phone = jwt.getClaim(SecurityConstants.DETAILS_PHONE);
 
         Collection<GrantedAuthority> authorities = extractAuthoritiesFromJwt(jwt);
-        return new EagleUser(userId, username, "[PROTECTED]", name, deptId, deptName, phone, authorities);
+        return new EagleUser(userId, username, "[PROTECTED]", name, phone, authorities);
     }
 
     private static Collection<GrantedAuthority> extractAuthoritiesFromJwt(Jwt jwt) {

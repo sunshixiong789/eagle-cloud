@@ -13,7 +13,7 @@ import java.util.Map;
  * 背景：{@code JdbcOAuth2AuthorizationService} 通过 Jackson 把 metadata 持久化到
  * {@code oauth2_authorization} 表，{@code /userinfo} 等端点回读时由
  * {@code BasicPolymorphicTypeValidator} 校验类型 id。当 {@code Map<String, Object>} 的
- * value 是 {@link Number}（id / deptId 等）时，Jackson 会写入 {@code @class: java.lang.Long}，
+ * value 是 {@link Number}（如 id 等）时，Jackson 会写入 {@code @class: java.lang.Long}，
  * 反序列化时被 PTV 拒绝（白名单不含 java.lang 包装类型）。
  * <p>
  * 处理策略：把 {@link Number} 全部转 {@link String}，{@link Iterable} 递归处理元素。
