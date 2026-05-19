@@ -2,6 +2,7 @@ package com.eagle.system.auth.infrastructure.security;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -55,7 +56,7 @@ public class CustomGrantClientAuthenticationProvider implements AuthenticationPr
     private final RegisteredClientRepository registeredClientRepository;
 
     @Override
-    public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+    public Authentication authenticate(@NonNull Authentication authentication) throws AuthenticationException {
         OAuth2ClientAuthenticationToken token = (OAuth2ClientAuthenticationToken) authentication;
 
         // 只接管 NONE 认证方法
@@ -92,7 +93,7 @@ public class CustomGrantClientAuthenticationProvider implements AuthenticationPr
     }
 
     @Override
-    public boolean supports(Class<?> authentication) {
+    public boolean supports(@NonNull Class<?> authentication) {
         return OAuth2ClientAuthenticationToken.class.isAssignableFrom(authentication);
     }
 }

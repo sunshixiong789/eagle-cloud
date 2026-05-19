@@ -62,6 +62,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
+
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.util.Objects;
@@ -104,8 +105,7 @@ public class SecurityConfig {
      * 支持，无需自定义 ObjectMapper。
      */
     @Bean
-    public OAuth2AuthorizationService authorizationService(JdbcOperations jdbcOperations,
-                                                           RegisteredClientRepository registeredClientRepository) {
+    public OAuth2AuthorizationService authorizationService(JdbcOperations jdbcOperations, RegisteredClientRepository registeredClientRepository) {
         return new JdbcOAuth2AuthorizationService(jdbcOperations, registeredClientRepository);
     }
 
@@ -113,8 +113,7 @@ public class SecurityConfig {
      * OAuth2 授权同意持久化 — JDBC 实现
      */
     @Bean
-    public OAuth2AuthorizationConsentService authorizationConsentService(JdbcOperations jdbcOperations,
-                                                                         RegisteredClientRepository registeredClientRepository) {
+    public OAuth2AuthorizationConsentService authorizationConsentService(JdbcOperations jdbcOperations, RegisteredClientRepository registeredClientRepository) {
         return new JdbcOAuth2AuthorizationConsentService(jdbcOperations, registeredClientRepository);
     }
 
@@ -124,8 +123,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator(JwtEncoder jwtEncoder,
-                                                                      OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer) {
+    public OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator(JwtEncoder jwtEncoder, OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer) {
         JwtGenerator jwtGenerator = new JwtGenerator(jwtEncoder);
         jwtGenerator.setJwtCustomizer(jwtCustomizer);
         OAuth2AccessTokenGenerator accessTokenGenerator = new OAuth2AccessTokenGenerator();
@@ -136,51 +134,11 @@ public class SecurityConfig {
 
     @Bean
     @Order(1)
-    public SecurityFilterChain filterChain(HttpSecurity http,
-                                           OAuth2AuthorizationService authorizationService,
-                                           OAuth2TokenGenerator<?> tokenGenerator,
-                                           WechatAppAuthenticationProvider wechatAppProvider,
-                                           WechatMiniProgramAuthenticationProvider wechatProvider,
-                                           SmsCodeAuthenticationProvider smsProvider,
-                                           PhoneOneClickAuthenticationProvider phoneOneClickProvider,
-                                           SecurityContextRepository securityContextRepository,
-                                           TokenTrackingHandler tokenTrackingHandler,
-                                           RegisteredClientRepository registeredClientRepository,
-                                           BlacklistAwareJwtDecoder jwtDecoder) throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable)
-                .securityContext(sc -> sc.securityContextRepository(securityContextRepository))
-                .oauth2AuthorizationServer((authorizationServer) -> {
+    public SecurityFilterChain filterChain(HttpSecurity http, WechatAppAuthenticationProvider wechatAppProvider, WechatMiniProgramAuthenticationProvider wechatProvider, SmsCodeAuthenticationProvider smsProvider, PhoneOneClickAuthenticationProvider phoneOneClickProvider, SecurityContextRepository securityContextRepository, TokenTrackingHandler tokenTrackingHandler, RegisteredClientRepository registeredClientRepository, BlacklistAwareJwtDecoder jwtDecoder) {
+        http.csrf(AbstractHttpConfigurer::disable).securityContext(sc -> sc.securityContextRepository(securityContextRepository)).oauth2AuthorizationServer((authorizationServer) -> {
                     http.securityMatcher(authorizationServer.getEndpointsMatcher());
-                    authorizationServer
-                            .clientAuthentication(clientAuth -> clientAuth
-                                    .authenticationConverter(new CustomGrantPublicClientAuthenticationConverter())
-                                    .authenticationProvider(new CustomGrantClientAuthenticationProvider(registeredClientRepository))
-                            )
-                            .tokenEndpoint(tokenEndpoint -> tokenEndpoint
-                                    .accessTokenRequestConverter(new WechatAppAuthenticationConverter())
-                                    .authenticationProvider(wechatAppProvider)
-                                    .accessTokenRequestConverter(new WechatMiniProgramAuthenticationConverter())
-                                    .authenticationProvider(wechatProvider)
-                                    .accessTokenRequestConverter(new SmsCodeAuthenticationConverter())
-                                    .authenticationProvider(smsProvider)
-                                    .accessTokenRequestConverter(new PhoneOneClickAuthenticationConverter())
-                                    .authenticationProvider(phoneOneClickProvider)
-                                    .accessTokenResponseHandler(tokenTrackingHandler)
-                            )
-                            .oidc(Customizer.withDefaults());
-                })
-                .authorizeHttpRequests((authorize) ->
-                        authorize
-                                .requestMatchers(SecurityConstants.AUTH_TOKEN).permitAll()
-                                .anyRequest().authenticated()
-                )
-                .exceptionHandling((exceptions) -> exceptions
-                        .defaultAuthenticationEntryPointFor(
-                                new LoginUrlAuthenticationEntryPoint("/login"),
-                                new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
-                        )
-                )
+                    authorizationServer.clientAuthentication(clientAuth -> clientAuth.authenticationConverter(new CustomGrantPublicClientAuthenticationConverter()).authenticationProvider(new CustomGrantClientAuthenticationProvider(registeredClientRepository))).tokenEndpoint(tokenEndpoint -> tokenEndpoint.accessTokenRequestConverter(new WechatAppAuthenticationConverter()).authenticationProvider(wechatAppProvider).accessTokenRequestConverter(new WechatMiniProgramAuthenticationConverter()).authenticationProvider(wechatProvider).accessTokenRequestConverter(new SmsCodeAuthenticationConverter()).authenticationProvider(smsProvider).accessTokenRequestConverter(new PhoneOneClickAuthenticationConverter()).authenticationProvider(phoneOneClickProvider).accessTokenResponseHandler(tokenTrackingHandler)).oidc(Customizer.withDefaults());
+                }).authorizeHttpRequests((authorize) -> authorize.requestMatchers(SecurityConstants.AUTH_TOKEN).permitAll().anyRequest().authenticated()).exceptionHandling((exceptions) -> exceptions.defaultAuthenticationEntryPointFor(new LoginUrlAuthenticationEntryPoint("/login"), new MediaTypeRequestMatcher(MediaType.TEXT_HTML)))
                 // OIDC /userinfo、token introspection、revoke 等端点需要 Bearer access_token；
                 // oauth2AuthorizationServer().oidc(Customizer.withDefaults()) 自身不会注册
                 // BearerTokenAuthenticationFilter——必须在 @Order 1 chain 显式启用 OAuth2
@@ -195,47 +153,14 @@ public class SecurityConfig {
 
     @Bean
     @Order(2)
-    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http,
-                                                          SecurityContextRepository securityContextRepository,
-                                                          BlacklistAwareJwtDecoder jwtDecoder) throws Exception {
+    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, SecurityContextRepository securityContextRepository, BlacklistAwareJwtDecoder jwtDecoder) {
         http
                 // JWT 无状态，必须禁用 CSRF
-                .csrf(AbstractHttpConfigurer::disable)
-                .securityContext(sc -> sc.securityContextRepository(securityContextRepository))
-                .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/login", "/login/sms", SecurityConstants.AUTH_TOKEN).permitAll()
-                        .requestMatchers("/accounts/register").permitAll()
-                        .requestMatchers("/accounts/password/reset").permitAll()
-                        .requestMatchers("/sms/code/reset").permitAll()
-                        .requestMatchers("/login/reset-password").permitAll()
-                        .requestMatchers("/login/bind-phone").permitAll()
-                        .requestMatchers("/login/wechat/**").permitAll()
-                        .requestMatchers("/sms/code").permitAll()
-                        .requestMatchers("/public/**").permitAll()
-                        .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**", "/favicon.ico").permitAll()
-                        .requestMatchers(
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/swagger-resources/**",
-                                "/webjars/**"
-                        ).permitAll()
-                        .requestMatchers("/actuator/health").permitAll()
-                        .requestMatchers("/actuator/**").hasRole("admin")
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(loginRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
-                .formLogin(form -> form
+                .csrf(AbstractHttpConfigurer::disable).securityContext(sc -> sc.securityContextRepository(securityContextRepository)).authorizeHttpRequests((authorize) -> authorize.requestMatchers("/login", "/login/sms", SecurityConstants.AUTH_TOKEN).permitAll().requestMatchers("/accounts/register").permitAll().requestMatchers("/accounts/password/reset").permitAll().requestMatchers("/sms/code/reset").permitAll().requestMatchers("/login/reset-password").permitAll().requestMatchers("/login/bind-phone").permitAll().requestMatchers("/login/wechat/**").permitAll().requestMatchers("/sms/code").permitAll().requestMatchers("/public/**").permitAll().requestMatchers("/css/**", "/js/**", "/images/**", "/static/**", "/favicon.ico").permitAll().requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll().requestMatchers("/actuator/health").permitAll().requestMatchers("/actuator/**").hasRole("admin").anyRequest().authenticated()).addFilterBefore(loginRateLimitFilter, UsernamePasswordAuthenticationFilter.class).formLogin(form -> form
                         // 指定上面的自定义 HTML 页面路径
-                        .loginPage("/login")
-                        .permitAll()
-                )
-                .logout(logout -> logout
+                        .loginPage("/login").permitAll()).logout(logout -> logout
                         // 注销后带参数跳转
-                        .logoutSuccessUrl(SecurityConstants.TOKEN_LOGOUT)
-                        .permitAll()
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder)));
+                        .logoutSuccessUrl(SecurityConstants.TOKEN_LOGOUT).permitAll()).oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder)));
         return http.build();
     }
 
@@ -269,9 +194,7 @@ public class SecurityConfig {
     @Bean
     public AuthorizationServerSettings authorizationServerSettings(OAuthServerProperties properties) {
         log.info("OAuth2 Authorization Server issuer locked to: {}", properties.getIssuer());
-        return AuthorizationServerSettings.builder()
-                .issuer(properties.getIssuer())
-                .build();
+        return AuthorizationServerSettings.builder().issuer(properties.getIssuer()).build();
     }
 
     /**
@@ -290,24 +213,11 @@ public class SecurityConfig {
                 // 把业务扩展字段写入 JWT claims；下游资源服务器由 EagleJwtAuthenticationConverter
                 // 从 claims 重建 EagleUser，业务层 Authentication.getPrincipal() 仍是 EagleUser。
                 EagleUser user = (EagleUser) userDetailsService.loadUserByUsername(principal.getName());
-                if (user != null) {
-                    context.getClaims()
-                            // JWT claim 中存业务角色 code（不含 ROLE_ 前缀），
-                            // 由资源服务器的 EagleJwtAuthenticationConverter 统一补 Spring Security 框架前缀，
-                            // 防止双重前缀导致 hasRole('admin') 校验失败。
-                            .claim(DETAILS_ROLES, user.getAuthorities().stream()
-                                    .map(GrantedAuthority::getAuthority).filter(Objects::nonNull)
-                                    .map(a -> a.startsWith(SecurityConstants.ROLE_START)
-                                            ? a.substring(SecurityConstants.ROLE_START.length())
-                                            : a)
-                                    .collect(Collectors.toList()))
-                            .claim(SecurityConstants.DETAILS_USER_ID, user.getId())
-                            .claim(SecurityConstants.DETAILS_USERNAME, user.getUsername())
-                            .claim(SecurityConstants.DETAILS_USER_NAME, Objects.requireNonNullElse(user.getName(), ""))
-                            .claim(SecurityConstants.DETAILS_DEPT_ID, Objects.requireNonNullElse(user.getDeptId(), 0L))
-                            .claim(SecurityConstants.DETAILS_DEPT_NAME, Objects.requireNonNullElse(user.getDeptName(), ""))
-                            .claim(SecurityConstants.DETAILS_PHONE, Objects.requireNonNullElse(user.getPhone(), ""));
-                }
+                context.getClaims()
+                        // JWT claim 中存业务角色 code（不含 ROLE_ 前缀），
+                        // 由资源服务器的 EagleJwtAuthenticationConverter 统一补 Spring Security 框架前缀，
+                        // 防止双重前缀导致 hasRole('admin') 校验失败。
+                        .claim(DETAILS_ROLES, user.getAuthorities().stream().map(GrantedAuthority::getAuthority).filter(Objects::nonNull).map(a -> a.startsWith(SecurityConstants.ROLE_START) ? a.substring(SecurityConstants.ROLE_START.length()) : a).collect(Collectors.toList())).claim(SecurityConstants.DETAILS_USER_ID, user.getId()).claim(SecurityConstants.DETAILS_USERNAME, user.getUsername()).claim(SecurityConstants.DETAILS_USER_NAME, Objects.requireNonNullElse(user.getName(), "")).claim(SecurityConstants.DETAILS_DEPT_ID, Objects.requireNonNullElse(user.getDeptId(), 0L)).claim(SecurityConstants.DETAILS_DEPT_NAME, Objects.requireNonNullElse(user.getDeptName(), "")).claim(SecurityConstants.DETAILS_PHONE, Objects.requireNonNullElse(user.getPhone(), ""));
             }
         };
     }
