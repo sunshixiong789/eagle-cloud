@@ -50,3 +50,6 @@ bin/
 .env.local
 .env.*.local
 !.env.example
+
+# 含 Nexus 凭证，禁止入库
+gradle.properties
