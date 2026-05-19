@@ -17,7 +17,7 @@ import org.springframework.data.jpa.domain.Specification;
  * <pre>
  * Specification&lt;User&gt; spec = Specification
  *     .where(UserSpecification.usernameLike("admin"))
- *     .and(UserSpecification.deptIdEquals(1L));
+ *     .and(UserSpecification.emailLike("@example.com"));
  * List&lt;User&gt; users = userRepository.findAll(spec);
  * </pre>
  * <p>
@@ -40,16 +40,6 @@ public class UserSpecification {
      */
     public static Specification<User> usernameLike(String username) {
         return (root, query, cb) -> username == null ? null : cb.like(root.get("username"), "%" + username + "%");
-    }
-
-    /**
-     * 部门 ID 精确查询
-     *
-     * @param deptId 部门 ID（null 时返回 null，该条件会被忽略）
-     * @return JPA Specification
-     */
-    public static Specification<User> deptIdEquals(Long deptId) {
-        return (root, query, cb) -> deptId == null ? null : cb.equal(root.get("deptId"), deptId);
     }
 
     /**

@@ -9,7 +9,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
@@ -33,7 +32,7 @@ class UserTest {
     class Create {
 
         @Test
-        @DisplayName("should create user with profile and default empty role/post sets")
+        @DisplayName("should create user with profile and default empty role set")
         void shouldCreateUser() {
             User user = User.create(ACCOUNT_ID, USERNAME, EMAIL, PROFILE);
 
@@ -43,8 +42,6 @@ class UserTest {
             assertEquals(PROFILE, user.getProfile());
             assertNotNull(user.getRoleIds());
             assertTrue(user.getRoleIds().isEmpty());
-            assertNotNull(user.getPostIds());
-            assertTrue(user.getPostIds().isEmpty());
         }
 
         @Test
@@ -152,37 +149,6 @@ class UserTest {
             Set<Long> tenRoles = LongStream.rangeClosed(1, 10).boxed().collect(Collectors.toSet());
             user.assignRoles(tenRoles);
             assertEquals(10, user.getRoleIds().size());
-        }
-    }
-
-    @Nested
-    @DisplayName("assignDept / assignPosts")
-    class AssignDeptAndPosts {
-
-        @Test
-        @DisplayName("should set dept id")
-        void shouldAssignDept() {
-            User user = User.create(ACCOUNT_ID, USERNAME, EMAIL, PROFILE);
-            user.assignDept(42L);
-            assertEquals(42L, user.getDeptId());
-        }
-
-        @Test
-        @DisplayName("should reassign posts replacing previous set")
-        void shouldReassignPosts() {
-            User user = User.create(ACCOUNT_ID, USERNAME, EMAIL, PROFILE);
-            user.assignPosts(new HashSet<>(Set.of(1L, 2L)));
-            user.assignPosts(new HashSet<>(Set.of(3L)));
-            assertEquals(Set.of(3L), user.getPostIds());
-        }
-
-        @Test
-        @DisplayName("should clear posts when null")
-        void shouldClearPostsWhenNull() {
-            User user = User.create(ACCOUNT_ID, USERNAME, EMAIL, PROFILE);
-            user.assignPosts(new HashSet<>(Set.of(1L)));
-            user.assignPosts(null);
-            assertTrue(user.getPostIds().isEmpty());
         }
     }
 }

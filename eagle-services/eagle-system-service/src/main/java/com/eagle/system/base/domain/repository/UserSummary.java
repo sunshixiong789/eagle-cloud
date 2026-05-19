@@ -32,11 +32,6 @@ public interface UserSummary {
     String getEmail();
 
     /**
-     * 部门 ID
-     */
-    Long getDeptId();
-
-    /**
      * 真实姓名（来自嵌入值对象 UserProfile）
      */
     String getFullName();

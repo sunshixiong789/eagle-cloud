@@ -45,9 +45,6 @@ public class CreateUserRequest {
     @Schema(description = "头像URL", example = "https://example.com/avatar.jpg")
     private String avatar;
 
-    @Schema(description = "部门ID", example = "1")
-    private Long departmentId;
-
     @Schema(description = "角色ID列表", example = "[1, 2]")
     private Long[] roleIds;
 }

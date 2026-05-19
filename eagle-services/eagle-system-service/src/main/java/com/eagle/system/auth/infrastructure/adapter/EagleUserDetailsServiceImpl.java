@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * Spring Security UserDetailsService 实现
  * <p>
  * 使用 auth 域的 {@link AccountRepository} 加载认证凭据，
- * 使用 auth 域的 {@link AuthorizationPort} 加载角色/部门授权信息。
+ * 使用 auth 域的 {@link AuthorizationPort} 加载姓名 / 角色授权信息。
  * <p>
  * 依赖方向：auth 内部调用，无跨模块依赖（六边形架构 Driven Port）
  *
@@ -44,18 +44,19 @@ public class EagleUserDetailsServiceImpl implements UserDetailsService {
         Account account = accountRepository.findByUsername(username)
                 .orElseThrow(AuthErrorCode.ACCOUNT_NOT_FOUND::toNotFoundException);
 
-        // 2. 通过 AuthorizationPort 加载授权信息（角色码、部门名称）
+        // 2. 通过 AuthorizationPort 加载授权信息（姓名、角色码）
         AuthorizationInfo authInfo = authorizationPort
                 .findAuthorizationInfo(account.getId())
                 .orElse(AuthorizationInfo.empty());
 
+        // 部门管理已下线，deptId / deptName 始终为 null
         return new EagleUser(
                 account.getId(),
                 account.getUsername(),
                 account.getPassword(),
                 authInfo.name() != null ? authInfo.name() : account.getUsername(),
-                authInfo.deptId(),
-                authInfo.deptName(),
+                null,
+                null,
                 account.getPhone(),
                 !Boolean.TRUE.equals(account.getLocked()),
                 true,

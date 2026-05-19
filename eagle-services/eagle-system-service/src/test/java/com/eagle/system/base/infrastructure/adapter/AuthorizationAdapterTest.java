@@ -43,7 +43,6 @@ class AuthorizationAdapterTest {
     private User sampleUser(Set<Long> roleIds) {
         UserProfile profile = new UserProfile("https://a.png", "Alice", "Alice Real", Gender.FEMALE, "bio");
         User user = User.create(ACCOUNT_ID, "alice", "alice@example.com", profile);
-        user.assignDept(42L);
         if (roleIds != null && !roleIds.isEmpty()) {
             user.assignRoles(roleIds);
         }
@@ -71,8 +70,6 @@ class AuthorizationAdapterTest {
             AuthorizationInfo info = adapter.findAuthorizationInfo(ACCOUNT_ID).orElseThrow();
 
             assertEquals("Alice Real", info.name());
-            assertEquals(42L, info.deptId());
-            assertNull(info.deptName(), "部门管理已下线，deptName 应为 null");
             assertTrue(info.roleCodes().isEmpty());
             verify(roleRepository, never()).findAllById(any());
         }

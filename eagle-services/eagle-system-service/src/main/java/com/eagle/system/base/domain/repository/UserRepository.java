@@ -10,7 +10,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -67,14 +66,6 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     Optional<User> findByEmail(String email);
 
     /**
-     * 根据部门 ID 查询用户列表
-     *
-     * @param deptId 部门 ID
-     * @return 用户列表
-     */
-    List<User> findByDeptId(Long deptId);
-
-    /**
      * 用户列表分页查询（CQRS 读投影）
      * <p>
      * 只加载列表所需字段，避免触发 Address 等值对象的加载。
@@ -84,7 +75,7 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
      * @return 用户摘要投影分页结果
      */
     @Query("SELECT u.id AS id, u.username AS username, " +
-            "u.email AS email, u.deptId AS deptId, " +
+            "u.email AS email, " +
             "u.profile.name AS fullName, u.createTime AS createTime FROM User u")
     Page<UserSummary> findUserSummaries(Pageable pageable);
 

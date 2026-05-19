@@ -28,7 +28,7 @@ import java.util.Set;
  * 聚合边界：
  * <ul>
  *   <li>聚合内部：UserProfile（值对象）、Address（值对象）</li>
- *   <li>聚合外部引用：AccountId、DeptId、RoleIds、PostIds（只保存 ID）</li>
+ *   <li>聚合外部引用：AccountId、RoleIds（只保存 ID）</li>
  * </ul>
  * <p>
  * 业务不变性：
@@ -38,6 +38,7 @@ import java.util.Set;
  * </ul>
  * <p>
  * 认证相关字段（password、phone、locked、wechatBinding）已迁移至 auth 域的 Account 聚合。
+ * 部门 / 岗位模块已下线，原 deptId / postIds 字段一并移除。
  *
  * @author sunshixiong
  */
@@ -47,8 +48,7 @@ import java.util.Set;
 @Table(name = "sys_user", comment = "系统用户表", indexes = {
         @Index(name = "idx_account_id", columnList = "account_id", unique = true),
         @Index(name = "idx_username", columnList = "username"),
-        @Index(name = "idx_email", columnList = "email"),
-        @Index(name = "idx_user_dept_id", columnList = "dept_id")
+        @Index(name = "idx_email", columnList = "email")
 })
 public class User extends BaseAggregateRoot<User> {
 
@@ -73,20 +73,11 @@ public class User extends BaseAggregateRoot<User> {
 
     // ==================== 聚合外部引用（只保存 ID）====================
 
-    @Column(name = "dept_id", comment = "部门 ID")
-    private Long deptId;
-
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "sys_user_role",
             joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role_id")
     private Set<Long> roleIds = new HashSet<>();
-
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "sys_user_post",
-            joinColumns = @JoinColumn(name = "user_id"))
-    @Column(name = "post_id")
-    private Set<Long> postIds = new HashSet<>();
 
     // ==================== 业务方法（充血模型）====================
 
@@ -96,7 +87,7 @@ public class User extends BaseAggregateRoot<User> {
      * 业务规则：
      * <ul>
      *   <li>accountId 必填（关联认证账号）</li>
-     *   <li>新用户默认无部门、无角色</li>
+     *   <li>新用户默认无角色</li>
      * </ul>
      *
      * @param accountId 关联的 Account ID（必填）
@@ -180,25 +171,6 @@ public class User extends BaseAggregateRoot<User> {
         this.roleIds.clear();
         if (roleIds != null) {
             this.roleIds.addAll(roleIds);
-        }
-        this.registerEvent(new UserUpdatedEvent(this.getId(), this.username));
-    }
-
-    /**
-     * 分配部门
-     */
-    public void assignDept(Long deptId) {
-        this.deptId = deptId;
-        this.registerEvent(new UserUpdatedEvent(this.getId(), this.username));
-    }
-
-    /**
-     * 分配岗位
-     */
-    public void assignPosts(Set<Long> postIds) {
-        this.postIds.clear();
-        if (postIds != null) {
-            this.postIds.addAll(postIds);
         }
         this.registerEvent(new UserUpdatedEvent(this.getId(), this.username));
     }

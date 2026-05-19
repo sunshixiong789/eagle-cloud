@@ -33,8 +33,6 @@ import java.util.Set;
  *   <li>User 的创建和删除由 auth 域通过事件驱动（AccountRegisteredEvent / AccountDeletedEvent）</li>
  *   <li>认证凭据操作（密码、锁定）由 auth 域的 AccountController 直接处理</li>
  * </ul>
- * <p>
- * 部门/岗位管理已下线，但 User.deptId 仍作为外部 ID 引用保留。
  *
  * @author sunshixiong
  */
@@ -95,7 +93,6 @@ public class UserApplicationService {
     public Page<UserResponse> queryUsers(UserQueryRequest request, Pageable pageable) {
         Specification<User> spec = Specification
                 .where(UserSpecification.usernameLike(request.getUsername()))
-                .and(UserSpecification.deptIdEquals(request.getDepartmentId()))
                 .and(UserSpecification.emailLike(request.getEmail()));
         return userRepository.findAll(spec, pageable).map(userMapper::toResponse);
     }
