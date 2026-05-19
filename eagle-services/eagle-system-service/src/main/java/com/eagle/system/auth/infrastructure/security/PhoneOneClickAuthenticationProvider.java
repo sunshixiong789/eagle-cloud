@@ -160,8 +160,9 @@ public class PhoneOneClickAuthenticationProvider implements AuthenticationProvid
                 .attribute(Principal.class.getName(), userAuthentication);
 
         if (generatedAccessToken instanceof ClaimAccessor claimAccessor) {
+            Map<String, Object> safeClaims = ClaimsMetadataSanitizer.sanitize(claimAccessor.getClaims());
             authorizationBuilder.token(accessToken, metadata ->
-                    metadata.put(OAuth2Authorization.Token.CLAIMS_METADATA_NAME, claimAccessor.getClaims()));
+                    metadata.put(OAuth2Authorization.Token.CLAIMS_METADATA_NAME, safeClaims));
         } else {
             authorizationBuilder.accessToken(accessToken);
         }
