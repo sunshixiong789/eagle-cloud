@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -93,7 +94,11 @@ public class WechatAppAuthenticationProvider implements AuthenticationProvider {
                                                                 RegisteredClient registeredClient,
                                                                 OAuth2ClientAuthenticationToken clientPrincipal,
                                                                 Map<String, Object> additionalParameters) {
-        EagleUserAuthenticationToken userAuthentication = new EagleUserAuthenticationToken(eagleUser);
+        // OAuth2Authorization 中的 Principal 必须是 SAS Jackson 白名单内的类型，
+        // 否则 /userinfo 等回读授权信息的端点反序列化会被 PolymorphicTypeValidator 拒绝。
+        // 这里只持久化 username，业务扩展字段由 jwtTokenCustomizer 经 UserDetailsService 二次加载写入 JWT claims。
+        UsernamePasswordAuthenticationToken userAuthentication =
+                new UsernamePasswordAuthenticationToken(eagleUser.getUsername(), null, eagleUser.getAuthorities());
 
         DefaultOAuth2TokenContext.Builder tokenContextBuilder = DefaultOAuth2TokenContext.builder()
                 .registeredClient(registeredClient)

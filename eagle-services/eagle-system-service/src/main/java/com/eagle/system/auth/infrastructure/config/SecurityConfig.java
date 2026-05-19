@@ -5,7 +5,6 @@ import com.eagle.common.dto.EagleUser;
 import com.eagle.system.auth.infrastructure.security.BlacklistAwareJwtDecoder;
 import com.eagle.system.auth.infrastructure.security.CustomGrantClientAuthenticationProvider;
 import com.eagle.system.auth.infrastructure.security.CustomGrantPublicClientAuthenticationConverter;
-import com.eagle.system.auth.infrastructure.security.EagleUserAuthenticationToken;
 import com.eagle.system.auth.infrastructure.security.JwtKeyProperties;
 import com.eagle.system.auth.infrastructure.security.LoginRateLimitFilter;
 import com.eagle.system.auth.infrastructure.security.PhoneOneClickAuthenticationConverter;
@@ -278,16 +277,11 @@ public class SecurityConfig {
         return context -> {
             if (context.getTokenType().equals(OAuth2TokenType.ACCESS_TOKEN)) {
                 Authentication principal = context.getPrincipal();
-                EagleUser user;
-
-                // 自定义 grant type（微信/短信）已经在 Provider 中构建了 EagleUser
-                if (principal instanceof EagleUserAuthenticationToken eagleAuth) {
-                    user = (EagleUser) eagleAuth.getPrincipal();
-                } else {
-                    // 标准授权码流程，通过 UserDetailsService 加载
-                    String username = principal.getName();
-                    user = (EagleUser) userDetailsService.loadUserByUsername(username);
-                }
+                // 所有 grant type（密码 / 微信 / 短信 / 一键登录）的 Principal 在 OAuth2Authorization
+                // 中均只持久化 username（SAS Jackson 白名单兼容），此处统一经 UserDetailsService 二次加载，
+                // 把业务扩展字段写入 JWT claims；下游资源服务器由 EagleJwtAuthenticationConverter
+                // 从 claims 重建 EagleUser，业务层 Authentication.getPrincipal() 仍是 EagleUser。
+                EagleUser user = (EagleUser) userDetailsService.loadUserByUsername(principal.getName());
                 if (user != null) {
                     context.getClaims()
                             // JWT claim 中存业务角色 code（不含 ROLE_ 前缀），
