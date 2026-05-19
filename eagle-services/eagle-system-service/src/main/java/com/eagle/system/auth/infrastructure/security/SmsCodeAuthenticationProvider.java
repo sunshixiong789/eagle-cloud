@@ -184,6 +184,11 @@ public class SmsCodeAuthenticationProvider implements AuthenticationProvider {
             authorizationBuilder.refreshToken(refreshToken);
         }
 
+        // 若 client 授予 openid scope，必须同时签发 OIDC ID Token，否则 refresh_token grant
+        // 在 SAS 内部生成新 ID Token 时会因 authorization 缺少 OidcIdToken 上下文而 NPE。
+        OidcIdTokenIssuer.issueIfOpenid(authorizationBuilder, registeredClient, userAuthentication,
+                SmsCodeAuthenticationToken.SMS_CODE, tokenGenerator);
+
         OAuth2Authorization authorization = authorizationBuilder.build();
         authorizationService.save(authorization);
 
