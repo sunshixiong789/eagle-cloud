@@ -25,16 +25,14 @@ public class BlacklistCacheSyncHandler {
     @Async("taskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onAdded(BlacklistAddedEvent event) {
-        cacheStore.add(event.tenantId(), event.type(), event.value());
-        log.info("blacklist cache add: tenant={}, type={}, value={}",
-                event.tenantId(), event.type(), event.value());
+        cacheStore.add(event.type(), event.value());
+        log.info("blacklist cache add: type={}, value={}", event.type(), event.value());
     }
 
     @Async("taskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onRemoved(BlacklistRemovedEvent event) {
-        cacheStore.remove(event.tenantId(), event.type(), event.value());
-        log.info("blacklist cache remove: tenant={}, type={}, value={}",
-                event.tenantId(), event.type(), event.value());
+        cacheStore.remove(event.type(), event.value());
+        log.info("blacklist cache remove: type={}, value={}", event.type(), event.value());
     }
 }

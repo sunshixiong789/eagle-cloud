@@ -37,7 +37,7 @@ public class BlacklistCacheWarmer {
         long start = System.currentTimeMillis();
         List<Blacklist> all = repository.findAllActiveForCacheWarmup(LocalDateTime.now());
         for (Blacklist b : all) {
-            cacheStore.add(b.getTenantId(), b.getType(), b.getValue());
+            cacheStore.add(b.getType(), b.getValue());
         }
         log.info("blacklist cache warmed: count={}, costMs={}",
                 all.size(), System.currentTimeMillis() - start);

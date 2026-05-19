@@ -4,29 +4,23 @@ import com.eagle.common.base.BaseAggregateRoot;
 import com.eagle.system.auth.domain.event.BlacklistAddedEvent;
 import com.eagle.system.auth.domain.event.BlacklistRemovedEvent;
 import com.eagle.system.auth.domain.model.enums.BlacklistType;
-import com.eagle.tenant.TenantAware;
-import com.eagle.tenant.TenantContextHolder;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Index;
 import jakarta.persistence.PostPersist;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.ParamDef;
 
 import java.time.LocalDateTime;
 
 /**
- * 身份黑名单聚合根（租户级）。
+ * 身份黑名单聚合根（全局，不区分租户）。
  *
  * <p>支持 PHONE / EMAIL / IP / ACCOUNT_ID / OPENID 五种黑名单类型，
- * 同一租户下 {@code (type, value)} 唯一。过期时间为 {@code null} 表示永久生效。
+ * 全局 {@code (type, value)} 唯一。过期时间为 {@code null} 表示永久生效。
  *
  * @author sunshixiong
  */
@@ -34,19 +28,12 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @Table(name = "auth_blacklist", indexes = {
-        @Index(name = "uk_blacklist_tenant_type_value",
-                columnList = "tenant_id, type, value", unique = true),
-        @Index(name = "idx_blacklist_tenant_expires",
-                columnList = "tenant_id, expires_at")
+        @Index(name = "uk_blacklist_type_value",
+                columnList = "type, value", unique = true),
+        @Index(name = "idx_blacklist_expires",
+                columnList = "expires_at")
 })
-@FilterDef(name = "tenantFilter",
-        parameters = @ParamDef(name = "tenantId", type = String.class))
-@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
-public class Blacklist extends BaseAggregateRoot<Blacklist> implements TenantAware {
-
-    @Column(name = "tenant_id", nullable = false, updatable = false, length = 64,
-            comment = "租户ID")
-    private String tenantId;
+public class Blacklist extends BaseAggregateRoot<Blacklist> {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20, comment = "黑名单类型")
@@ -70,12 +57,12 @@ public class Blacklist extends BaseAggregateRoot<Blacklist> implements TenantAwa
     /**
      * 创建黑名单条目。
      *
-     * @param type          黑名单类型
-     * @param value         黑名单值（手机号/IP 等）
-     * @param reason        加黑原因，可为 null
-     * @param expiresAt     过期时间，null 表示永久
-     * @param operatorId    操作人 ID，null 表示系统自动
-     * @param operatorName  操作人姓名，可为 null
+     * @param type         黑名单类型
+     * @param value        黑名单值（手机号/IP 等）
+     * @param reason       加黑原因，可为 null
+     * @param expiresAt    过期时间，null 表示永久
+     * @param operatorId   操作人 ID，null 表示系统自动
+     * @param operatorName 操作人姓名，可为 null
      * @return 新建的 Blacklist 聚合根（尚未持久化）
      */
     public static Blacklist create(BlacklistType type, String value, String reason,
@@ -90,23 +77,16 @@ public class Blacklist extends BaseAggregateRoot<Blacklist> implements TenantAwa
         return b;
     }
 
-    @PrePersist
-    void fillTenant() {
-        if (tenantId == null) {
-            tenantId = TenantContextHolder.getTenantId();
-        }
-    }
-
     @PostPersist
     void onPostPersist() {
-        registerEvent(new BlacklistAddedEvent(getId(), tenantId, type, value, expiresAt));
+        registerEvent(new BlacklistAddedEvent(getId(), type, value, expiresAt));
     }
 
     /**
      * 删除前调用，注册 {@link BlacklistRemovedEvent} 事件（应用服务负责在删除前调用）。
      */
     public void publishRemovedEvent() {
-        registerEvent(new BlacklistRemovedEvent(getId(), tenantId, type, value));
+        registerEvent(new BlacklistRemovedEvent(getId(), type, value));
     }
 
     /**
@@ -117,15 +97,5 @@ public class Blacklist extends BaseAggregateRoot<Blacklist> implements TenantAwa
      */
     public boolean isExpired(LocalDateTime now) {
         return expiresAt != null && now.isAfter(expiresAt);
-    }
-
-    @Override
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    @Override
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
     }
 }

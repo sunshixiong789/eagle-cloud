@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 /**
  * BlacklistCacheStore 的 Redis Set 实现
  *
- * <p>Key 格式：{@code auth:blacklist:{tenantId}:{TYPE}}
+ * <p>Key 格式：{@code auth:blacklist:{TYPE}}
  *
  * @author sunshixiong
  */
@@ -23,38 +23,36 @@ public class RedisBlacklistCacheStore implements BlacklistCacheStore {
     private final StringRedisTemplate redisTemplate;
 
     @Override
-    public void add(String tenantId, BlacklistType type, String value) {
+    public void add(BlacklistType type, String value) {
         try {
-            redisTemplate.opsForSet().add(key(tenantId, type), value);
+            redisTemplate.opsForSet().add(key(type), value);
         } catch (Exception e) {
-            log.warn("blacklist cache add failed: tenant={}, type={}, value={}",
-                    tenantId, type, value, e);
+            log.warn("blacklist cache add failed: type={}, value={}", type, value, e);
         }
     }
 
     @Override
-    public void remove(String tenantId, BlacklistType type, String value) {
+    public void remove(BlacklistType type, String value) {
         try {
-            redisTemplate.opsForSet().remove(key(tenantId, type), value);
+            redisTemplate.opsForSet().remove(key(type), value);
         } catch (Exception e) {
-            log.warn("blacklist cache remove failed: tenant={}, type={}, value={}",
-                    tenantId, type, value, e);
+            log.warn("blacklist cache remove failed: type={}, value={}", type, value, e);
         }
     }
 
     @Override
-    public boolean isMember(String tenantId, BlacklistType type, String value) {
+    public boolean isMember(BlacklistType type, String value) {
         try {
-            Boolean hit = redisTemplate.opsForSet().isMember(key(tenantId, type), value);
+            Boolean hit = redisTemplate.opsForSet().isMember(key(type), value);
             return Boolean.TRUE.equals(hit);
         } catch (Exception e) {
-            log.warn("blacklist cache check failed (fallback to DB): tenant={}, type={}, value={}",
-                    tenantId, type, value, e);
+            log.warn("blacklist cache check failed (fallback to DB): type={}, value={}",
+                    type, value, e);
             return false;
         }
     }
 
-    private String key(String tenantId, BlacklistType type) {
-        return KEY_PREFIX + (tenantId != null ? tenantId : "0") + ":" + type.name();
+    private String key(BlacklistType type) {
+        return KEY_PREFIX + type.name();
     }
 }

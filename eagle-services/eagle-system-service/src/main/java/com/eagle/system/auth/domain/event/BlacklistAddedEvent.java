@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
  */
 public record BlacklistAddedEvent(
         Long id,
-        String tenantId,
         BlacklistType type,
         String value,
         LocalDateTime expiresAt) {

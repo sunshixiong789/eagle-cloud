@@ -8,9 +8,6 @@ import com.eagle.system.auth.domain.model.Blacklist;
 import com.eagle.system.auth.domain.model.enums.BlacklistType;
 import com.eagle.system.auth.domain.repository.BlacklistRepository;
 import com.eagle.system.auth.infrastructure.cache.BlacklistCacheStore;
-import com.eagle.tenant.TenantContextHolder;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -35,11 +32,6 @@ class BlacklistApplicationServiceTest {
     @Mock BlacklistMapper mapper;
     @Mock BlacklistCacheStore cacheStore;
     @InjectMocks BlacklistApplicationService service;
-
-    @BeforeEach
-    void setUp() { TenantContextHolder.setTenantId("t1"); }
-    @AfterEach
-    void tearDown() { TenantContextHolder.clear(); }
 
     @Nested
     @DisplayName("addToBlacklist")
@@ -89,7 +81,7 @@ class BlacklistApplicationServiceTest {
         @Test
         @DisplayName("should hit cache")
         void hit() {
-            when(cacheStore.isMember("t1", BlacklistType.IP, "1.1.1.1")).thenReturn(true);
+            when(cacheStore.isMember(BlacklistType.IP, "1.1.1.1")).thenReturn(true);
             when(repository.findByTypeAndValue(BlacklistType.IP, "1.1.1.1"))
                     .thenReturn(Optional.of(Blacklist.create(
                             BlacklistType.IP, "1.1.1.1", null, null, null, null)));

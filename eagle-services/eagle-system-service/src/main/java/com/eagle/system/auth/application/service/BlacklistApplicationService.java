@@ -9,8 +9,6 @@ import com.eagle.system.auth.domain.model.enums.BlacklistType;
 import com.eagle.system.auth.domain.repository.BlacklistRepository;
 import com.eagle.system.auth.infrastructure.cache.BlacklistCacheStore;
 import com.eagle.system.auth.interfaces.dto.response.BlacklistResponse;
-import com.eagle.tenant.TenantContextHolder;
-import com.eagle.tenant.annotation.TenantFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -22,7 +20,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
- * 黑名单应用服务
+ * 黑名单应用服务（全局，不区分租户）
  *
  * @author sunshixiong
  */
@@ -35,7 +33,6 @@ public class BlacklistApplicationService {
     private final BlacklistMapper mapper;
     private final BlacklistCacheStore cacheStore;
 
-    @TenantFilter
     @Transactional(readOnly = true)
     public Page<BlacklistResponse> queryBlacklist(BlacklistQuery query, Pageable pageable) {
         Page<Blacklist> page;
@@ -49,7 +46,6 @@ public class BlacklistApplicationService {
         return page.map(mapper::toResponse);
     }
 
-    @TenantFilter
     @Transactional(rollbackFor = Exception.class)
     public BlacklistResponse addToBlacklist(AddBlacklistCommand cmd) {
         if (cmd.expiresAt() != null && !cmd.expiresAt().isAfter(LocalDateTime.now())) {
@@ -67,7 +63,6 @@ public class BlacklistApplicationService {
         return mapper.toResponse(saved);
     }
 
-    @TenantFilter
     @Transactional(rollbackFor = Exception.class)
     public void removeFromBlacklist(Long id) {
         Blacklist blacklist = repository.findById(id)
@@ -86,13 +81,11 @@ public class BlacklistApplicationService {
      * @param value 黑名单值
      * @return {@code true} 表示仍在黑名单且未过期
      */
-    @TenantFilter
     public boolean isBlacklisted(BlacklistType type, String value) {
-        String tenantId = TenantContextHolder.getTenantId();
-        if (cacheStore.isMember(tenantId, type, value)) {
+        if (cacheStore.isMember(type, value)) {
             Optional<Blacklist> entry = repository.findByTypeAndValue(type, value);
             if (entry.isEmpty()) {
-                cacheStore.remove(tenantId, type, value);
+                cacheStore.remove(type, value);
                 return false;
             }
             if (entry.get().isExpired(LocalDateTime.now())) {

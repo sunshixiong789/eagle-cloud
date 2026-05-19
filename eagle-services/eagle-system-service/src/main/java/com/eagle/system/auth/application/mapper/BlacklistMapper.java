@@ -18,7 +18,6 @@ public class BlacklistMapper {
     }
     BlacklistResponse response = new BlacklistResponse();
     response.setId(blacklist.getId());
-    response.setTenantId(blacklist.getTenantId());
     response.setType(blacklist.getType());
     response.setValue(blacklist.getValue());
     response.setReason(blacklist.getReason());

@@ -9,7 +9,6 @@ import com.eagle.system.auth.domain.model.enums.BlacklistType;
  */
 public record BlacklistRemovedEvent(
         Long id,
-        String tenantId,
         BlacklistType type,
         String value) {
 }

@@ -17,9 +17,6 @@ public class BlacklistResponse {
     @Schema(description = "黑名单ID", example = "1")
     private Long id;
 
-    @Schema(description = "租户ID", example = "t001")
-    private String tenantId;
-
     @Schema(description = "黑名单类型", example = "PHONE")
     private BlacklistType type;
 
