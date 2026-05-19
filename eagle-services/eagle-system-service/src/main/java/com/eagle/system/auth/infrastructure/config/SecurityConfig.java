@@ -145,7 +145,8 @@ public class SecurityConfig {
                                            PhoneOneClickAuthenticationProvider phoneOneClickProvider,
                                            SecurityContextRepository securityContextRepository,
                                            TokenTrackingHandler tokenTrackingHandler,
-                                           RegisteredClientRepository registeredClientRepository) throws Exception {
+                                           RegisteredClientRepository registeredClientRepository,
+                                           BlacklistAwareJwtDecoder jwtDecoder) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .securityContext(sc -> sc.securityContextRepository(securityContextRepository))
@@ -179,7 +180,14 @@ public class SecurityConfig {
                                 new LoginUrlAuthenticationEntryPoint("/login"),
                                 new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
                         )
-                );
+                )
+                // OIDC /userinfo、token introspection、revoke 等端点需要 Bearer access_token；
+                // oauth2AuthorizationServer().oidc(Customizer.withDefaults()) 自身不会注册
+                // BearerTokenAuthenticationFilter——必须在 @Order 1 chain 显式启用 OAuth2
+                // Resource Server + JwtDecoder，SecurityContext 才会带上 JwtAuthenticationToken，
+                // 否则 OidcUserInfoAuthenticationProvider 拿不到 accessTokenAuthentication，
+                // 直接抛 invalid_token。
+                .oauth2ResourceServer(rs -> rs.jwt(jwt -> jwt.decoder(jwtDecoder)));
 
         return http.build();
     }
