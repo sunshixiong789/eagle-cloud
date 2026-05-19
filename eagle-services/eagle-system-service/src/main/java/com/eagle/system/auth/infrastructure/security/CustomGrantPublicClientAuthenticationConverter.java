@@ -3,6 +3,7 @@ package com.eagle.system.auth.infrastructure.security;
 import jakarta.servlet.http.HttpServletRequest;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
@@ -37,7 +38,11 @@ public final class CustomGrantPublicClientAuthenticationConverter implements Aut
             SmsCodeAuthenticationToken.SMS_CODE.getValue(),
             WechatAppAuthenticationToken.WECHAT_APP.getValue(),
             WechatMiniProgramAuthenticationToken.WECHAT_MINI_PROGRAM.getValue(),
-            PhoneOneClickAuthenticationToken.PHONE_ONE_CLICK.getValue()
+            PhoneOneClickAuthenticationToken.PHONE_ONE_CLICK.getValue(),
+            // 公共客户端（无 secret）刷新 token：SAS 内置 4 个 client auth converter 都不识别
+            // grant_type=refresh_token + 无 secret + 无 PKCE 的组合，因此 fallback 到 invalid_client。
+            // 这里把 refresh_token 也放进自定义 public client 链路。
+            AuthorizationGrantType.REFRESH_TOKEN.getValue()
     );
 
     @Nullable

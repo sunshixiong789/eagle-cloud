@@ -46,7 +46,10 @@ public class CustomGrantClientAuthenticationProvider implements AuthenticationPr
             SmsCodeAuthenticationToken.SMS_CODE.getValue(),
             WechatAppAuthenticationToken.WECHAT_APP.getValue(),
             WechatMiniProgramAuthenticationToken.WECHAT_MINI_PROGRAM.getValue(),
-            PhoneOneClickAuthenticationToken.PHONE_ONE_CLICK.getValue()
+            PhoneOneClickAuthenticationToken.PHONE_ONE_CLICK.getValue(),
+            // 与 CustomGrantPublicClientAuthenticationConverter 对齐：放行公共客户端 refresh_token，
+            // 跳过 PKCE 校验；后续 SAS 标准 RefreshTokenAuthenticationProvider 仍会校验 refresh_token 有效性。
+            AuthorizationGrantType.REFRESH_TOKEN.getValue()
     );
 
     private final RegisteredClientRepository registeredClientRepository;
