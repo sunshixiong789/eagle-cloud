@@ -9,7 +9,6 @@
  *   <li>{@code SmsCodeAuthenticationProvider}           — 短信验证码认证提供者</li>
  *   <li>{@code WechatMiniProgramAuthenticationConverter} — 微信小程序请求转换器</li>
  *   <li>{@code WechatMiniProgramAuthenticationProvider} — 微信小程序认证提供者</li>
- *   <li>{@code EagleUserAuthenticationToken}            — 自定义认证 Token</li>
  * </ul>
  * <p>
  * <strong>架构说明</strong>
