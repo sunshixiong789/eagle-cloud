@@ -84,7 +84,7 @@ public class OpenApiRouteLocator implements RouteDefinitionLocator {
         setPath.addArg("template", GatewayOpenApiConfig.API_DOCS_PATH);
         route.setFilters(List.of(setPath));
 
-        log.info("OpenAPI route: {} -> lb://{}{}", pattern, serviceId, GatewayOpenApiConfig.API_DOCS_PATH);
+        log.debug("OpenAPI route: {} -> lb://{}{}", pattern, serviceId, GatewayOpenApiConfig.API_DOCS_PATH);
         return route;
     }
 }
