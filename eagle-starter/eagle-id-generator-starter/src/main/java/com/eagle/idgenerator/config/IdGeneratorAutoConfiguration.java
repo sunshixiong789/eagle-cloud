@@ -84,7 +84,7 @@ public class IdGeneratorAutoConfiguration {
      */
     @Bean
     @Primary
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean(name = "idGenerator")
     public IdGenerator idGenerator(
             IdGeneratorProperties properties,
             SnowflakeIdGenerator snowflakeIdGenerator,
