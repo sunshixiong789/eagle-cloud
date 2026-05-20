@@ -2,6 +2,7 @@ package com.eagle.system.auth.infrastructure.config;
 
 import com.eagle.common.constant.SecurityConstants;
 import com.eagle.common.dto.EagleUser;
+import com.eagle.resource.server.config.EagleJwtAuthenticationConverter;
 import com.eagle.system.auth.infrastructure.security.BlacklistAwareJwtDecoder;
 import com.eagle.system.auth.infrastructure.security.CustomGrantClientAuthenticationProvider;
 import com.eagle.system.auth.infrastructure.security.CustomGrantPublicClientAuthenticationConverter;
@@ -134,7 +135,7 @@ public class SecurityConfig {
 
     @Bean
     @Order(1)
-    public SecurityFilterChain filterChain(HttpSecurity http, WechatAppAuthenticationProvider wechatAppProvider, WechatMiniProgramAuthenticationProvider wechatProvider, SmsCodeAuthenticationProvider smsProvider, PhoneOneClickAuthenticationProvider phoneOneClickProvider, SecurityContextRepository securityContextRepository, TokenTrackingHandler tokenTrackingHandler, RegisteredClientRepository registeredClientRepository, BlacklistAwareJwtDecoder jwtDecoder) {
+    public SecurityFilterChain filterChain(HttpSecurity http, WechatAppAuthenticationProvider wechatAppProvider, WechatMiniProgramAuthenticationProvider wechatProvider, SmsCodeAuthenticationProvider smsProvider, PhoneOneClickAuthenticationProvider phoneOneClickProvider, SecurityContextRepository securityContextRepository, TokenTrackingHandler tokenTrackingHandler, RegisteredClientRepository registeredClientRepository, BlacklistAwareJwtDecoder jwtDecoder, EagleJwtAuthenticationConverter jwtAuthenticationConverter) {
         http.csrf(AbstractHttpConfigurer::disable).securityContext(sc -> sc.securityContextRepository(securityContextRepository)).oauth2AuthorizationServer((authorizationServer) -> {
                     http.securityMatcher(authorizationServer.getEndpointsMatcher());
                     authorizationServer.clientAuthentication(clientAuth -> clientAuth.authenticationConverter(new CustomGrantPublicClientAuthenticationConverter()).authenticationProvider(new CustomGrantClientAuthenticationProvider(registeredClientRepository))).tokenEndpoint(tokenEndpoint -> tokenEndpoint.accessTokenRequestConverter(new WechatAppAuthenticationConverter()).authenticationProvider(wechatAppProvider).accessTokenRequestConverter(new WechatMiniProgramAuthenticationConverter()).authenticationProvider(wechatProvider).accessTokenRequestConverter(new SmsCodeAuthenticationConverter()).authenticationProvider(smsProvider).accessTokenRequestConverter(new PhoneOneClickAuthenticationConverter()).authenticationProvider(phoneOneClickProvider).accessTokenResponseHandler(tokenTrackingHandler)).oidc(Customizer.withDefaults());
@@ -145,7 +146,7 @@ public class SecurityConfig {
                 // Resource Server + JwtDecoder，SecurityContext 才会带上 JwtAuthenticationToken，
                 // 否则 OidcUserInfoAuthenticationProvider 拿不到 accessTokenAuthentication，
                 // 直接抛 invalid_token。
-                .oauth2ResourceServer(rs -> rs.jwt(jwt -> jwt.decoder(jwtDecoder)));
+                .oauth2ResourceServer(rs -> rs.jwt(jwt -> jwt.decoder(jwtDecoder).jwtAuthenticationConverter(jwtAuthenticationConverter)));
 
         return http.build();
     }
@@ -153,7 +154,7 @@ public class SecurityConfig {
 
     @Bean
     @Order(2)
-    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, SecurityContextRepository securityContextRepository, BlacklistAwareJwtDecoder jwtDecoder) {
+    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, SecurityContextRepository securityContextRepository, BlacklistAwareJwtDecoder jwtDecoder, EagleJwtAuthenticationConverter jwtAuthenticationConverter) {
         http
                 // JWT 无状态，必须禁用 CSRF
                 .csrf(AbstractHttpConfigurer::disable).securityContext(sc -> sc.securityContextRepository(securityContextRepository)).authorizeHttpRequests((authorize) -> authorize.requestMatchers("/login", "/login/sms", SecurityConstants.AUTH_TOKEN).permitAll().requestMatchers("/accounts/register").permitAll().requestMatchers("/accounts/password/reset").permitAll().requestMatchers("/sms/code/reset").permitAll().requestMatchers("/login/reset-password").permitAll().requestMatchers("/login/bind-phone").permitAll().requestMatchers("/login/wechat/**").permitAll().requestMatchers("/sms/code").permitAll().requestMatchers("/public/**").permitAll()
@@ -170,7 +171,7 @@ public class SecurityConfig {
                         // 指定上面的自定义 HTML 页面路径
                         .loginPage("/login").permitAll()).logout(logout -> logout
                         // 注销后带参数跳转
-                        .logoutSuccessUrl(SecurityConstants.TOKEN_LOGOUT).permitAll()).oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder)));
+                        .logoutSuccessUrl(SecurityConstants.TOKEN_LOGOUT).permitAll()).oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder).jwtAuthenticationConverter(jwtAuthenticationConverter)));
         return http.build();
     }
 
