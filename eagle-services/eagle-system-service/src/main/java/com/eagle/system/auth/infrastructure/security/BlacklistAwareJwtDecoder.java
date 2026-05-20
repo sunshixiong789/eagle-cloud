@@ -4,6 +4,7 @@ import com.eagle.system.auth.domain.port.OnlineUserPort;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -27,6 +28,7 @@ public class BlacklistAwareJwtDecoder implements JwtDecoder {
 
     private JwtDecoder delegate;
 
+    @Autowired
     public BlacklistAwareJwtDecoder(JWKSource<SecurityContext> jwkSource,
                                     OnlineUserPort onlineUserPort) {
         this.jwkSource = jwkSource;
