@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.restclient.autoconfigure.RestClientAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.web.client.RestClient;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;

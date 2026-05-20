@@ -1,6 +1,5 @@
 package com.eagle.system.auth.infrastructure.security;
 
-import com.alibaba.fastjson2.JSON;
 import com.eagle.system.auth.domain.port.OnlineUserInfo;
 import com.eagle.system.auth.domain.port.OnlineUserPort;
 import org.junit.jupiter.api.AfterEach;

@@ -3,7 +3,6 @@ package com.eagle.system.auth.infrastructure.security;
 import com.eagle.common.dto.EagleUser;
 import com.eagle.system.auth.application.service.AccountApplicationService;
 import com.eagle.system.auth.domain.model.Account;
-import com.eagle.system.auth.domain.model.enums.AccountStatus;
 import com.eagle.system.auth.domain.model.enums.FreezeReason;
 import com.eagle.system.auth.domain.model.valueobject.ProfileHints;
 import com.eagle.system.auth.domain.service.SmsService;

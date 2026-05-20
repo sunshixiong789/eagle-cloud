@@ -3,8 +3,6 @@ package com.eagle.system.auth.interfaces.controller;
 import com.eagle.common.dto.EagleUser;
 import com.eagle.system.auth.application.command.FreezeAccountCommand;
 import com.eagle.system.auth.application.service.AccountApplicationService;
-import com.eagle.system.auth.infrastructure.security.BlacklistChecker;
-import com.eagle.system.auth.infrastructure.security.ClientIpHolder;
 import com.eagle.system.auth.interfaces.dto.request.BindPhoneRequest;
 import com.eagle.system.auth.interfaces.dto.request.ChangePasswordRequest;
 import com.eagle.system.auth.interfaces.dto.request.CreateAccountRequest;

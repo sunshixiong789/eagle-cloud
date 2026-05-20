@@ -1,6 +1,5 @@
 package com.eagle.system.file.application.service;
 
-import com.eagle.common.exception.AppException;
 import com.eagle.oss.service.StorageService;
 import com.eagle.resource.server.util.SecurityUtils;
 import com.eagle.system.file.application.mapper.FileMapper;
