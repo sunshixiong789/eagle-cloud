@@ -156,7 +156,17 @@ public class SecurityConfig {
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, SecurityContextRepository securityContextRepository, BlacklistAwareJwtDecoder jwtDecoder) {
         http
                 // JWT 无状态，必须禁用 CSRF
-                .csrf(AbstractHttpConfigurer::disable).securityContext(sc -> sc.securityContextRepository(securityContextRepository)).authorizeHttpRequests((authorize) -> authorize.requestMatchers("/login", "/login/sms", SecurityConstants.AUTH_TOKEN).permitAll().requestMatchers("/accounts/register").permitAll().requestMatchers("/accounts/password/reset").permitAll().requestMatchers("/sms/code/reset").permitAll().requestMatchers("/login/reset-password").permitAll().requestMatchers("/login/bind-phone").permitAll().requestMatchers("/login/wechat/**").permitAll().requestMatchers("/sms/code").permitAll().requestMatchers("/public/**").permitAll().requestMatchers("/css/**", "/js/**", "/images/**", "/static/**", "/favicon.ico").permitAll().requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll().requestMatchers("/actuator/health").permitAll().requestMatchers("/actuator/**").hasRole("admin").anyRequest().authenticated()).addFilterBefore(loginRateLimitFilter, UsernamePasswordAuthenticationFilter.class).formLogin(form -> form
+                .csrf(AbstractHttpConfigurer::disable).securityContext(sc -> sc.securityContextRepository(securityContextRepository)).authorizeHttpRequests((authorize) -> authorize.requestMatchers("/login", "/login/sms", SecurityConstants.AUTH_TOKEN).permitAll().requestMatchers("/accounts/register").permitAll().requestMatchers("/accounts/password/reset").permitAll().requestMatchers("/sms/code/reset").permitAll().requestMatchers("/login/reset-password").permitAll().requestMatchers("/login/bind-phone").permitAll().requestMatchers("/login/wechat/**").permitAll().requestMatchers("/sms/code").permitAll().requestMatchers("/public/**").permitAll()
+                        // SockJS 探针 (/ws-stomp/info) 是普通 HTTP GET，浏览器 XHR 无法注入自定义 header，
+                        // 必须放行 HTTP 层鉴权；连接鉴权由 STOMP CONNECT 帧的 ChannelInterceptor 负责。
+                        .requestMatchers("/ws-stomp/**").permitAll()
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**", "/favicon.ico").permitAll()
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
+                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/actuator/**").hasRole("admin")
+                        .anyRequest().authenticated())
+                .addFilterBefore(loginRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+                .formLogin(form -> form
                         // 指定上面的自定义 HTML 页面路径
                         .loginPage("/login").permitAll()).logout(logout -> logout
                         // 注销后带参数跳转
