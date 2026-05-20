@@ -58,7 +58,3 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
     com.eagle.system.auth: DEBUG
-    com.eagle.system.auth.infrastructure.external.SmsServiceImpl: DEBUG
-    com.eagle.message.channel.sms.HnslsSmsProvider: DEBUG
-    org.springframework.security: DEBUG
-    org.springframework.security.web.FilterChainProxy: TRACE
