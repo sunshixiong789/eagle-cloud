@@ -35,7 +35,9 @@ import java.util.List;
 @ConfigurationProperties(prefix = "eagle.security")
 public class TrustedProxyProperties {
 
-    /** 可信代理 CIDR 列表（IPv4 / IPv6）；空列表表示完全不信任 X-Forwarded-For */
+    /**
+     * 可信代理 CIDR 列表（IPv4 / IPv6）；空列表表示完全不信任 X-Forwarded-For
+     */
     private List<String> trustedProxies = new ArrayList<>(List.of(
             "127.0.0.0/8",
             "::1/128",

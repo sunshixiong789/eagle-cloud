@@ -71,7 +71,9 @@ class AbstractCachedSmsServiceTest {
         volatile String lastCode;
 
         @Override
-        protected boolean isConfigured() { return true; }
+        protected boolean isConfigured() {
+            return true;
+        }
 
         @Override
         protected void doSend(String phone, String code) {
@@ -80,6 +82,8 @@ class AbstractCachedSmsServiceTest {
         }
 
         @Override
-        protected String providerName() { return "test"; }
+        protected String providerName() {
+            return "test";
+        }
     }
 }

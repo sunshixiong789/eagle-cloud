@@ -18,8 +18,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class BlacklistCheckerTest {
 
-    @Mock BlacklistApplicationService blacklist;
-    @InjectMocks BlacklistChecker checker;
+    @Mock
+    BlacklistApplicationService blacklist;
+    @InjectMocks
+    BlacklistChecker checker;
 
     @Test
     void shouldThrowWhenIpBlacklisted() {

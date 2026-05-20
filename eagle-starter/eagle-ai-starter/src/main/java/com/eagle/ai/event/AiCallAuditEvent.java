@@ -13,14 +13,14 @@ package com.eagle.ai.event;
  * }
  * }</pre>
  *
- * @param conversationId  会话 ID（来自 advisor context）
- * @param tenantId        租户 ID（来自 advisor context，可能为 null）
- * @param model           模型名称（来自响应元数据，可能为 unknown）
- * @param inputTokens     输入 Token 数
- * @param outputTokens    输出 Token 数
- * @param totalTokens     总 Token 数
- * @param latencyMs       本次调用延迟（毫秒）
- * @param success         是否成功（false 表示发生异常）
+ * @param conversationId 会话 ID（来自 advisor context）
+ * @param tenantId       租户 ID（来自 advisor context，可能为 null）
+ * @param model          模型名称（来自响应元数据，可能为 unknown）
+ * @param inputTokens    输入 Token 数
+ * @param outputTokens   输出 Token 数
+ * @param totalTokens    总 Token 数
+ * @param latencyMs      本次调用延迟（毫秒）
+ * @param success        是否成功（false 表示发生异常）
  */
 public record AiCallAuditEvent(
         String conversationId,
@@ -31,4 +31,5 @@ public record AiCallAuditEvent(
         int totalTokens,
         long latencyMs,
         boolean success
-) {}
+) {
+}

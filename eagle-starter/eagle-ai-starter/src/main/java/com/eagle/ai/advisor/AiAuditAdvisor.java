@@ -40,18 +40,15 @@ import org.springframework.core.Ordered;
  */
 public class AiAuditAdvisor implements BaseAdvisor {
 
+    static final String CONTEXT_KEY_TENANT = "tenantId";
     private static final Logger log = LoggerFactory.getLogger(AiAuditAdvisor.class);
     private static final Logger auditLog = LoggerFactory.getLogger("audit.eagle.ai");
-
     /**
      * 在 TokenUsageAdvisor（LOWEST_PRECEDENCE-100）之前运行，
      * 确保审计日志在 token 指标记录之后获取数据。
      */
     private static final int ORDER = Ordered.LOWEST_PRECEDENCE - 200;
     private static final String UNKNOWN = "unknown";
-
-    static final String CONTEXT_KEY_TENANT = "tenantId";
-
     private final ApplicationEventPublisher eventPublisher;
     private final ThreadLocal<Long> startTimeHolder = new ThreadLocal<>();
 

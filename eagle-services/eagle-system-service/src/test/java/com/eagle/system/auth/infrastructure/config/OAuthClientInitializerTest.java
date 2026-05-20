@@ -37,10 +37,12 @@ import static org.mockito.Mockito.when;
 @DisplayName("OAuthClientInitializer")
 class OAuthClientInitializerTest {
 
-    @Mock OAuthClientRepository repository;
+    @Mock
+    OAuthClientRepository repository;
     OAuthClientProperties webProperties;
     OAuthAppClientProperties appProperties;
-    @InjectMocks OAuthClientInitializer initializer;
+    @InjectMocks
+    OAuthClientInitializer initializer;
 
     @BeforeEach
     void setUp() {
@@ -48,6 +50,53 @@ class OAuthClientInitializerTest {
         appProperties = newAppProps();
         initializer = new OAuthClientInitializer(repository, webProperties, appProperties);
     }
+
+    private OAuthClientProperties newWebProps() {
+        OAuthClientProperties p = new OAuthClientProperties();
+        p.setEnabled(true);
+        p.setClientId("eagleWeb");
+        p.setClientName("Eagle Web");
+        p.setClientSecret("");
+        p.setClientAuthenticationMethods(Set.of("none"));
+        p.setAuthorizationGrantTypes(Set.of("authorization_code", "refresh_token"));
+        p.setRedirectUris(Set.of("http://localhost/cb"));
+        p.setScopes(Set.of("openid"));
+        p.setRequireProofKey(true);
+        p.setRequireAuthorizationConsent(false);
+        p.setAccessTokenTtlSeconds(3600);
+        p.setRefreshTokenTtlSeconds(86400);
+        p.setSyncMode(SyncMode.OVERWRITE);
+        return p;
+    }
+
+    private OAuthAppClientProperties newAppProps() {
+        OAuthAppClientProperties p = new OAuthAppClientProperties();
+        p.setEnabled(true);
+        p.setClientId("eagleApp");
+        p.setClientName("Eagle App");
+        p.setClientSecret("");
+        p.setClientAuthenticationMethods(Set.of("none"));
+        p.setAuthorizationGrantTypes(Set.of("refresh_token", "sms_code"));
+        p.setRedirectUris(Set.of());
+        p.setScopes(Set.of("openid"));
+        p.setRequireProofKey(false);
+        p.setRequireAuthorizationConsent(false);
+        p.setAccessTokenTtlSeconds(3600);
+        p.setRefreshTokenTtlSeconds(86400);
+        p.setSyncMode(SyncMode.OVERWRITE);
+        return p;
+    }
+
+    private OAuthClient existingWebClient() {
+        return OAuthClient.create(
+                "eagleWeb", null, "Eagle Web",
+                "none",
+                "authorization_code,refresh_token",
+                "http://localhost/cb",
+                "openid");
+    }
+
+    // ====================== helpers ======================
 
     @Nested
     @DisplayName("when client missing in DB")
@@ -129,52 +178,5 @@ class OAuthClientInitializerTest {
             verify(repository, never()).findByClientId(any());
             verify(repository, never()).save(any());
         }
-    }
-
-    // ====================== helpers ======================
-
-    private OAuthClientProperties newWebProps() {
-        OAuthClientProperties p = new OAuthClientProperties();
-        p.setEnabled(true);
-        p.setClientId("eagleWeb");
-        p.setClientName("Eagle Web");
-        p.setClientSecret("");
-        p.setClientAuthenticationMethods(Set.of("none"));
-        p.setAuthorizationGrantTypes(Set.of("authorization_code", "refresh_token"));
-        p.setRedirectUris(Set.of("http://localhost/cb"));
-        p.setScopes(Set.of("openid"));
-        p.setRequireProofKey(true);
-        p.setRequireAuthorizationConsent(false);
-        p.setAccessTokenTtlSeconds(3600);
-        p.setRefreshTokenTtlSeconds(86400);
-        p.setSyncMode(SyncMode.OVERWRITE);
-        return p;
-    }
-
-    private OAuthAppClientProperties newAppProps() {
-        OAuthAppClientProperties p = new OAuthAppClientProperties();
-        p.setEnabled(true);
-        p.setClientId("eagleApp");
-        p.setClientName("Eagle App");
-        p.setClientSecret("");
-        p.setClientAuthenticationMethods(Set.of("none"));
-        p.setAuthorizationGrantTypes(Set.of("refresh_token", "sms_code"));
-        p.setRedirectUris(Set.of());
-        p.setScopes(Set.of("openid"));
-        p.setRequireProofKey(false);
-        p.setRequireAuthorizationConsent(false);
-        p.setAccessTokenTtlSeconds(3600);
-        p.setRefreshTokenTtlSeconds(86400);
-        p.setSyncMode(SyncMode.OVERWRITE);
-        return p;
-    }
-
-    private OAuthClient existingWebClient() {
-        return OAuthClient.create(
-                "eagleWeb", null, "Eagle Web",
-                "none",
-                "authorization_code,refresh_token",
-                "http://localhost/cb",
-                "openid");
     }
 }

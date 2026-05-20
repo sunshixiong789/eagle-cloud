@@ -82,6 +82,38 @@ import static com.eagle.common.constant.SecurityConstants.DETAILS_ROLES;
 @RequiredArgsConstructor(onConstructor_ = {@Autowired})
 public class SecurityConfig {
 
+    /**
+     * 表单登录入口（含 Thymeleaf 登录页）。
+     */
+    private static final String[] FORM_LOGIN_PATHS = {
+            "/login", "/login/sms", SecurityConstants.AUTH_TOKEN
+    };
+    /**
+     * 注册 / 密码找回 / 短信发送 / 微信扫码回调 等业务入口公开路径。
+     *
+     * <p>system-service 用独立的两个 SecurityFilterChain（@Order 1 + @Order 2），不走
+     * {@code eagle-resource-server-starter} 的自动 chain，因此 {@code eagle.resource-server.permit-paths}
+     * 在此处不生效；公开路径以该常量为单一来源，避免散落在多处字符串。
+     */
+    private static final String[] BUSINESS_PUBLIC_PATHS = {
+            "/accounts/register",
+            "/accounts/password/reset",
+            "/sms/code",
+            "/sms/code/reset",
+            "/login/reset-password",
+            "/login/bind-phone",
+            "/login/wechat/**",
+            "/public/**"
+    };
+    /**
+     * 静态资源 / Swagger / Actuator health 等基础设施公开路径。
+     */
+    private static final String[] INFRASTRUCTURE_PUBLIC_PATHS = {
+            "/css/**", "/js/**", "/images/**", "/static/**", "/favicon.ico",
+            "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**",
+            "/swagger-resources/**", "/webjars/**",
+            "/actuator/health"
+    };
     private final LoginRateLimitFilter loginRateLimitFilter;
     private final JwtKeyProperties jwtKeyProperties;
 
@@ -205,39 +237,6 @@ public class SecurityConfig {
                 .authenticationProvider(phoneOneClickProvider)
                 .accessTokenResponseHandler(tokenTrackingHandler);
     }
-
-    /**
-     * 表单登录入口（含 Thymeleaf 登录页）。
-     */
-    private static final String[] FORM_LOGIN_PATHS = {
-            "/login", "/login/sms", SecurityConstants.AUTH_TOKEN
-    };
-
-    /**
-     * 注册 / 密码找回 / 短信发送 / 微信扫码回调 等业务入口公开路径。
-     *
-     * <p>system-service 用独立的两个 SecurityFilterChain（@Order 1 + @Order 2），不走
-     * {@code eagle-resource-server-starter} 的自动 chain，因此 {@code eagle.resource-server.permit-paths}
-     * 在此处不生效；公开路径以该常量为单一来源，避免散落在多处字符串。
-     */
-    private static final String[] BUSINESS_PUBLIC_PATHS = {
-            "/accounts/register",
-            "/accounts/password/reset",
-            "/sms/code",
-            "/sms/code/reset",
-            "/login/reset-password",
-            "/login/bind-phone",
-            "/login/wechat/**",
-            "/public/**"
-    };
-
-    /** 静态资源 / Swagger / Actuator health 等基础设施公开路径。 */
-    private static final String[] INFRASTRUCTURE_PUBLIC_PATHS = {
-            "/css/**", "/js/**", "/images/**", "/static/**", "/favicon.ico",
-            "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**",
-            "/swagger-resources/**", "/webjars/**",
-            "/actuator/health"
-    };
 
     @Bean
     @Order(2)

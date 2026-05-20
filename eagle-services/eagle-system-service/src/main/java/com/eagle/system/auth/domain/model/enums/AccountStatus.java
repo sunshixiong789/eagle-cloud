@@ -6,8 +6,12 @@ package com.eagle.system.auth.domain.model.enums;
  * @author sunshixiong
  */
 public enum AccountStatus {
-    /** 活跃（可登录）*/
+    /**
+     * 活跃（可登录）
+     */
     ACTIVE,
-    /** 已冻结（不可登录）*/
+    /**
+     * 已冻结（不可登录）
+     */
     FROZEN
 }

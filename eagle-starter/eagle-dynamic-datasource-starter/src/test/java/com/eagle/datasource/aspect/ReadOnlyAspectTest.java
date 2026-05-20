@@ -28,6 +28,38 @@ class ReadOnlyAspectTest {
     @Mock
     ProceedingJoinPoint pjp;
 
+    @ReadOnly
+    static void annotatedWithReadOnly() {
+    }
+
+    @Transactional(readOnly = true)
+    static void annotatedWithReadOnlyTx() {
+    }
+
+    @Transactional
+    static void annotatedWithWriteTx() {
+    }
+
+    // --- annotation helpers ---
+
+    private static ReadOnly readOnlyAnnotation() throws NoSuchMethodException {
+        return ReadOnlyAspectTest.class
+                .getDeclaredMethod("annotatedWithReadOnly")
+                .getAnnotation(ReadOnly.class);
+    }
+
+    private static Transactional readOnlyTxAnnotation() throws NoSuchMethodException {
+        return ReadOnlyAspectTest.class
+                .getDeclaredMethod("annotatedWithReadOnlyTx")
+                .getAnnotation(Transactional.class);
+    }
+
+    private static Transactional writeTxAnnotation() throws NoSuchMethodException {
+        return ReadOnlyAspectTest.class
+                .getDeclaredMethod("annotatedWithWriteTx")
+                .getAnnotation(Transactional.class);
+    }
+
     @AfterEach
     void cleanup() {
         DataSourceContextHolder.clear();
@@ -145,37 +177,5 @@ class ReadOnlyAspectTest {
 
             assertNull(DataSourceContextHolder.getRaw());
         }
-    }
-
-    // --- annotation helpers ---
-
-    @ReadOnly
-    static void annotatedWithReadOnly() {
-    }
-
-    @Transactional(readOnly = true)
-    static void annotatedWithReadOnlyTx() {
-    }
-
-    @Transactional
-    static void annotatedWithWriteTx() {
-    }
-
-    private static ReadOnly readOnlyAnnotation() throws NoSuchMethodException {
-        return ReadOnlyAspectTest.class
-                .getDeclaredMethod("annotatedWithReadOnly")
-                .getAnnotation(ReadOnly.class);
-    }
-
-    private static Transactional readOnlyTxAnnotation() throws NoSuchMethodException {
-        return ReadOnlyAspectTest.class
-                .getDeclaredMethod("annotatedWithReadOnlyTx")
-                .getAnnotation(Transactional.class);
-    }
-
-    private static Transactional writeTxAnnotation() throws NoSuchMethodException {
-        return ReadOnlyAspectTest.class
-                .getDeclaredMethod("annotatedWithWriteTx")
-                .getAnnotation(Transactional.class);
     }
 }

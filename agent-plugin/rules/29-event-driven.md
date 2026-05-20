@@ -1,14 +1,15 @@
 # 事件驱动架构规范（Event-Driven）
 
-本规则覆盖领域事件（Domain Event）与集成事件（Integration Event）的设计、发布与消费规范。与 `08-concurrency.md`（事务）、`15-messaging.md`（MQ 实现）互补。
+本规则覆盖领域事件（Domain Event）与集成事件（Integration Event）的设计、发布与消费规范。与 `08-concurrency.md`（事务）、
+`15-messaging.md`（MQ 实现）互补。
 
 ## 事件分类
 
-| 类型          | 作用域         | 传输载体                     | 包位置                     |
-|-------------|-------------|--------------------------|-------------------------|
-| **领域事件**    | 单域内（聚合根 → 同域处理器） | Spring `ApplicationEvent` | `{module}/domain/event/` |
-| **集成事件**    | 跨域 / 跨服务     | Spring Event（单体）→ MQ（微服务） | `{module}/domain/event/` |
-| **命令（Command）** | 外部意图输入   | HTTP / MQ                | `{module}/application/`  |
+| 类型              | 作用域              | 传输载体                      | 包位置                      |
+|-----------------|------------------|---------------------------|--------------------------|
+| **领域事件**        | 单域内（聚合根 → 同域处理器） | Spring `ApplicationEvent` | `{module}/domain/event/` |
+| **集成事件**        | 跨域 / 跨服务         | Spring Event（单体）→ MQ（微服务） | `{module}/domain/event/` |
+| **命令（Command）** | 外部意图输入           | HTTP / MQ                 | `{module}/application/`  |
 
 **禁止**跨域直接消费对方内部领域事件——必须发布为集成事件。
 
@@ -29,6 +30,7 @@ public record OrderPaidEvent(Order order) { }
 ```
 
 **领域事件规范：**
+
 - 类名：`{聚合根}{动作}Event`，过去时（`Paid`、`Created`、`Cancelled`）
 - 字段：只含**跨域消费所需**的最小字段（id + 关键业务属性）
 - 不可变（`record` 或 `@Value`），无 setter
@@ -84,6 +86,7 @@ public void onOrderPaid(OrderPaidEvent event) {
 ```
 
 **处理器规范：**
+
 - `@Async`：异步，不阻塞主事务
 - `@TransactionalEventListener(phase = AFTER_COMMIT)`：主事务提交后才触发
 - 跨域额外加 `@Transactional(propagation = REQUIRES_NEW)`：独立事务，避免级联失败
@@ -109,6 +112,7 @@ public record OrderPaidIntegrationEvent(
 ```
 
 **版本管理：**
+
 - 新增字段（Optional / 有默认值）→ 保持版本，消费方按需读取
 - 字段类型变更 / 删除 → 升版本（`eventVersion: "2.0"`），旧版本消费方继续消费 v1
 - 版本过渡期：同时发布两个版本，至少维护 3 个月再下线旧版本
@@ -218,4 +222,5 @@ public void compensate() {
 - 禁止删除或修改已发布的集成事件字段（向后兼容）
 - 禁止用链式 `@EventListener` 实现多步骤 Saga（用编排器替代）
 - 禁止事件处理器非幂等（MQ 至少一次投递必须幂等）
-- 禁止在 `@Transactional` 中使用 `ApplicationEventPublisher.publishEvent()`（应用 `registerEvent()`，让 Spring Data 在 `save()` 后自动发布）
+- 禁止在 `@Transactional` 中使用 `ApplicationEventPublisher.publishEvent()`（应用 `registerEvent()`，让 Spring Data 在
+  `save()` 后自动发布）

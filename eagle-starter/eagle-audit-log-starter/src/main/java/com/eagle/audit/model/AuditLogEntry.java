@@ -19,42 +19,68 @@ public class AuditLogEntry implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 操作者 ID。 */
+    /**
+     * 操作者 ID。
+     */
     private String operatorId;
 
-    /** 操作者名称。 */
+    /**
+     * 操作者名称。
+     */
     private String operatorName;
 
-    /** 租户 ID。 */
+    /**
+     * 租户 ID。
+     */
     private String tenantId;
 
-    /** 所属模块。 */
+    /**
+     * 所属模块。
+     */
     private String module;
 
-    /** 操作描述。 */
+    /**
+     * 操作描述。
+     */
     private String action;
 
-    /** 请求参数（JSON）。 */
+    /**
+     * 请求参数（JSON）。
+     */
     private String requestArgs;
 
-    /** 返回结果（JSON）。 */
+    /**
+     * 返回结果（JSON）。
+     */
     private String responseData;
 
-    /** 客户端 IP。 */
+    /**
+     * 客户端 IP。
+     */
     private String clientIp;
 
-    /** User-Agent。 */
+    /**
+     * User-Agent。
+     */
     private String userAgent;
 
-    /** 操作耗时（毫秒）。 */
+    /**
+     * 操作耗时（毫秒）。
+     */
     private long costMs;
 
-    /** 操作是否成功。 */
+    /**
+     * 操作是否成功。
+     */
     private boolean success;
 
-    /** 异常信息（失败时）。 */
+    /**
+     * 异常信息（失败时）。
+     */
     private String errorMessage;
 
-    /** 操作发生时间。 */
+    /**
+     * 操作发生时间。
+     */
     private LocalDateTime occurredAt;
 }

@@ -60,38 +60,56 @@ import java.util.List;
 @ConfigurationProperties(prefix = "eagle.ai")
 public class AiProperties {
 
-    /** 是否启用 Eagle AI 自动配置（默认开启）。 */
+    /**
+     * 是否启用 Eagle AI 自动配置（默认开启）。
+     */
     private boolean enabled = true;
 
-    /** 对话（Chat）配置。 */
+    /**
+     * 对话（Chat）配置。
+     */
     @Valid
     private Chat chat = new Chat();
 
-    /** 对话记忆存储配置。 */
+    /**
+     * 对话记忆存储配置。
+     */
     @Valid
     private Memory memory = new Memory();
 
-    /** 限流配置（需要 Redis）。 */
+    /**
+     * 限流配置（需要 Redis）。
+     */
     @Valid
     private RateLimit rateLimit = new RateLimit();
 
-    /** 指标上报配置（需要 Micrometer）。 */
+    /**
+     * 指标上报配置（需要 Micrometer）。
+     */
     @Valid
     private Metrics metrics = new Metrics();
 
-    /** Token 月度配额管理配置（需要 Redis）。 */
+    /**
+     * Token 月度配额管理配置（需要 Redis）。
+     */
     @Valid
     private Budget budget = new Budget();
 
-    /** 内容安全过滤配置。 */
+    /**
+     * 内容安全过滤配置。
+     */
     @Valid
     private Safety safety = new Safety();
 
-    /** Resilience4J 容错配置。 */
+    /**
+     * Resilience4J 容错配置。
+     */
     @Valid
     private Resilience resilience = new Resilience();
 
-    /** Embedding 向量检索配置（需要 EmbeddingModel）。 */
+    /**
+     * Embedding 向量检索配置（需要 EmbeddingModel）。
+     */
     @Valid
     private Embedding embedding = new Embedding();
 

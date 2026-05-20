@@ -36,9 +36,12 @@ class AuthorizationAdapterTest {
 
     private static final Long ACCOUNT_ID = 100L;
 
-    @Mock UserRepository userRepository;
-    @Mock RoleRepository roleRepository;
-    @InjectMocks AuthorizationAdapter adapter;
+    @Mock
+    UserRepository userRepository;
+    @Mock
+    RoleRepository roleRepository;
+    @InjectMocks
+    AuthorizationAdapter adapter;
 
     private User sampleUser(Set<Long> roleIds) {
         UserProfile profile = new UserProfile("https://a.png", "Alice", "Alice Real", Gender.FEMALE, "bio");

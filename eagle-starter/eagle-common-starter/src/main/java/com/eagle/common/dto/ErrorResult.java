@@ -22,7 +22,9 @@ import java.time.Instant;
 @Data
 public class ErrorResult {
 
-    /** MDC 中 requestId 的 key,与 RequestIdMdcFilter / 日志格式保持一致 */
+    /**
+     * MDC 中 requestId 的 key,与 RequestIdMdcFilter / 日志格式保持一致
+     */
     public static final String MDC_REQUEST_ID = "requestId";
 
     private Instant timestamp;

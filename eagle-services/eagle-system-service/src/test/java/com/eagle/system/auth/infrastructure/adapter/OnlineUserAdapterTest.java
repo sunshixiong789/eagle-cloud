@@ -36,9 +36,26 @@ class OnlineUserAdapterTest {
 
     private static final String JTI = "jti-abc";
 
-    @Mock StringRedisTemplate redisTemplate;
-    @Mock ValueOperations<String, String> valueOps;
-    @InjectMocks OnlineUserAdapter adapter;
+    @Mock
+    StringRedisTemplate redisTemplate;
+    @Mock
+    ValueOperations<String, String> valueOps;
+    @InjectMocks
+    OnlineUserAdapter adapter;
+
+    /**
+     * Mockito 桩：把固定 keys 列表包装为 Cursor。
+     * 用 {@link Answers#CALLS_REAL_METHODS} 让 Iterator 的 {@code forEachRemaining} 默认方法
+     * 真正调用 {@code hasNext} / {@code next}，否则 mock 默认会把所有方法（包括默认方法）返回空值。
+     */
+    @SuppressWarnings("unchecked")
+    private static Cursor<String> stubCursor(List<String> keys) {
+        Iterator<String> it = keys.iterator();
+        Cursor<String> cursor = mock(Cursor.class, Answers.CALLS_REAL_METHODS);
+        when(cursor.hasNext()).thenAnswer(inv -> it.hasNext());
+        when(cursor.next()).thenAnswer(inv -> it.next());
+        return cursor;
+    }
 
     private OnlineUserInfo info(long expiresIn) {
         return new OnlineUserInfo(JTI, 1L, "alice", "127.0.0.1",
@@ -133,6 +150,8 @@ class OnlineUserAdapterTest {
         }
     }
 
+    // ---- helpers ----
+
     @Nested
     @DisplayName("isBlacklisted")
     class IsBlacklisted {
@@ -157,21 +176,5 @@ class OnlineUserAdapterTest {
                     .thenThrow(new RedisConnectionFailureException("redis down"));
             assertFalse(adapter.isBlacklisted(JTI));
         }
-    }
-
-    // ---- helpers ----
-
-    /**
-     * Mockito 桩：把固定 keys 列表包装为 Cursor。
-     * 用 {@link Answers#CALLS_REAL_METHODS} 让 Iterator 的 {@code forEachRemaining} 默认方法
-     * 真正调用 {@code hasNext} / {@code next}，否则 mock 默认会把所有方法（包括默认方法）返回空值。
-     */
-    @SuppressWarnings("unchecked")
-    private static Cursor<String> stubCursor(List<String> keys) {
-        Iterator<String> it = keys.iterator();
-        Cursor<String> cursor = mock(Cursor.class, Answers.CALLS_REAL_METHODS);
-        when(cursor.hasNext()).thenAnswer(inv -> it.hasNext());
-        when(cursor.next()).thenAnswer(inv -> it.next());
-        return cursor;
     }
 }

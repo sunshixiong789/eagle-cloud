@@ -185,6 +185,7 @@ public class {Aggregate}Mapper {
 ```
 
 要点：
+
 - 入参为 `null` 直接返回 `null`
 - 枚举字段调用 `.name()` 转 String（响应 DTO 推荐用 String，便于演进）
 - 不要再写 `toResponseList`，调用方用 `list.stream().map(mapper::toResponse).toList()` 更直观

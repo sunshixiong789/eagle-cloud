@@ -10,13 +10,19 @@ package com.eagle.audit.context;
  */
 public interface AuditLogUserProvider {
 
-    /** 当前操作者 ID，无登录上下文返回 null。 */
+    /**
+     * 当前操作者 ID，无登录上下文返回 null。
+     */
     String getCurrentUserId();
 
-    /** 当前操作者名称，无登录上下文返回 null。 */
+    /**
+     * 当前操作者名称，无登录上下文返回 null。
+     */
     String getCurrentUserName();
 
-    /** 当前租户 ID，无多租户场景返回 null。 */
+    /**
+     * 当前租户 ID，无多租户场景返回 null。
+     */
     default String getCurrentTenantId() {
         return null;
     }

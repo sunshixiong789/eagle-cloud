@@ -7,8 +7,8 @@
 ## 前置准备
 
 - [ ] Plugin 已通过 marketplace 安装（详见 `README.md` 安装章节）
-  - Claude Code: `/plugin marketplace add … && /plugin install eagle-cloud@eagle-cloud`
-  - Codex CLI: `codex plugin marketplace add … && codex plugin install eagle-cloud@eagle-cloud`
+    - Claude Code: `/plugin marketplace add … && /plugin install eagle-cloud@eagle-cloud`
+    - Codex CLI: `codex plugin marketplace add … && codex plugin install eagle-cloud@eagle-cloud`
 - [ ] 启动会话（`claude` 或 `codex` 命令）
 - [ ] 执行 `/help`（Claude）或 `/plugins`（Codex）应能看到 plugin 已加载
 
@@ -295,12 +295,12 @@ order 模块需要调用 user 模块的查询能力，怎么写？
 
 ## 失败排查
 
-| 现象            | 可能原因            | 排查                                                                              |
-|---------------|-----------------|---------------------------------------------------------------------------------|
+| 现象            | 可能原因            | 排查                                                                                   |
+|---------------|-----------------|--------------------------------------------------------------------------------------|
 | `/help` 看不到命令 | plugin 未加载      | Claude: 检查 `.claude/settings.json` `enabledPlugins`；Codex: `codex plugin list` 看是否已装 |
-| AI 用编造的 API   | skill 未触发       | 在询问中明确说"用 eagle-cloud 的 X starter"                                              |
-| 全部失败          | marketplace 配置错 | 检查 `.claude-plugin/marketplace.json` 中 `source` 是否指向 `./agent-plugin`            |
-| 部分 skill 缺失   | sync.sh 未跑      | `bash ./agent-plugin/scripts/sync.sh` 后重启会话                                     |
+| AI 用编造的 API   | skill 未触发       | 在询问中明确说"用 eagle-cloud 的 X starter"                                                   |
+| 全部失败          | marketplace 配置错 | 检查 `.claude-plugin/marketplace.json` 中 `source` 是否指向 `./agent-plugin`                |
+| 部分 skill 缺失   | sync.sh 未跑      | `bash ./agent-plugin/scripts/sync.sh` 后重启会话                                          |
 
 ## 报告模板
 

@@ -39,11 +39,16 @@ class UserApplicationServiceTest {
     private static final Long USER_ID = 100L;
     private static final Long ACCOUNT_ID = 200L;
 
-    @Mock UserRepository userRepository;
-    @Mock UserMapper userMapper;
-    @Mock RoleValidationService roleValidationService;
-    @Mock RoleRepository roleRepository;
-    @InjectMocks UserApplicationService service;
+    @Mock
+    UserRepository userRepository;
+    @Mock
+    UserMapper userMapper;
+    @Mock
+    RoleValidationService roleValidationService;
+    @Mock
+    RoleRepository roleRepository;
+    @InjectMocks
+    UserApplicationService service;
 
     private User sampleUser() {
         UserProfile profile = new UserProfile("https://a.png", "Alice", "Alice Real", Gender.FEMALE, "bio");

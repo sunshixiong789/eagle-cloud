@@ -12,10 +12,14 @@ import java.util.List;
 @Builder
 public class ServiceStatusResponse {
 
-    /** 服务 ID（注册中心名称） */
+    /**
+     * 服务 ID（注册中心名称）
+     */
     private String serviceId;
 
-    /** 显示名称（来自 metadata.spring-doc-name，或 serviceId） */
+    /**
+     * 显示名称（来自 metadata.spring-doc-name，或 serviceId）
+     */
     private String displayName;
 
     /**
@@ -33,10 +37,14 @@ public class ServiceStatusResponse {
      */
     private String healthStatus;
 
-    /** 当前健康实例数 */
+    /**
+     * 当前健康实例数
+     */
     private int healthyCount;
 
-    /** 实例列表 */
+    /**
+     * 实例列表
+     */
     private List<ServiceInstanceInfo> instances;
 
     /**

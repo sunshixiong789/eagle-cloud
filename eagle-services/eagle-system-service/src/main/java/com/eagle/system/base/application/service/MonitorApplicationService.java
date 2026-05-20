@@ -60,6 +60,13 @@ public class MonitorApplicationService {
     // 在线用户
     // -------------------------------------------------------------------------
 
+    private static SimpleClientHttpRequestFactory actuatorRequestFactory() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(2));
+        factory.setReadTimeout(Duration.ofSeconds(3));
+        return factory;
+    }
+
     public OnlineUserListResponse listOnlineUsers() {
         List<OnlineUserInfo> infos = onlineUserPort.listOnlineUsers();
         List<OnlineUserResponse> responses = infos.stream()
@@ -77,6 +84,10 @@ public class MonitorApplicationService {
         return new OnlineUserListResponse(responses.size(), responses);
     }
 
+    // -------------------------------------------------------------------------
+    // 登录日志
+    // -------------------------------------------------------------------------
+
     public void forceLogout(String tokenId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String currentJti = getCurrentJti(auth);
@@ -87,7 +98,7 @@ public class MonitorApplicationService {
     }
 
     // -------------------------------------------------------------------------
-    // 登录日志
+    // 服务注册中心监控
     // -------------------------------------------------------------------------
 
     @Transactional(readOnly = true)
@@ -117,10 +128,6 @@ public class MonitorApplicationService {
                 .build();
     }
 
-    // -------------------------------------------------------------------------
-    // 服务注册中心监控
-    // -------------------------------------------------------------------------
-
     /**
      * 从 Nacos 拉取所有服务，并并行探测每个服务第一个健康实例的 actuator 指标。
      * <p>
@@ -136,6 +143,10 @@ public class MonitorApplicationService {
                 .toList();
         return futures.stream().map(CompletableFuture::join).toList();
     }
+
+    // -------------------------------------------------------------------------
+    // Actuator 探测工具方法
+    // -------------------------------------------------------------------------
 
     private ServiceStatusResponse buildServiceStatus(String serviceId) {
         List<ServiceInstance> instances = discoveryClient.getInstances(serviceId);
@@ -179,10 +190,6 @@ public class MonitorApplicationService {
                 .build();
     }
 
-    // -------------------------------------------------------------------------
-    // Actuator 探测工具方法
-    // -------------------------------------------------------------------------
-
     /**
      * 探测指定 actuator 指标的 VALUE 值（0.0~1.0 或字节数等）。
      * 任何异常（404/超时/网络不通）均返回 null。
@@ -208,7 +215,9 @@ public class MonitorApplicationService {
         }
     }
 
-    /** 与 fetchMetricValue 相同，结果转为 Long（用于内存字节数）。 */
+    /**
+     * 与 fetchMetricValue 相同，结果转为 Long（用于内存字节数）。
+     */
     private Long fetchMetricLong(String baseUrl, String metricName) {
         Double val = fetchMetricValue(baseUrl, metricName);
         return val != null ? val.longValue() : null;
@@ -230,13 +239,6 @@ public class MonitorApplicationService {
             log.debug("actuator health probe failed [{}]: {}", baseUrl, e.getMessage());
             return null;
         }
-    }
-
-    private static SimpleClientHttpRequestFactory actuatorRequestFactory() {
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(Duration.ofSeconds(2));
-        factory.setReadTimeout(Duration.ofSeconds(3));
-        return factory;
     }
 
     // -------------------------------------------------------------------------

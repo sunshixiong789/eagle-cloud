@@ -62,6 +62,11 @@ class TokenUsageAdvisorTest {
         assertSame(request, advisor.before(request, chain));
     }
 
+    private double findCounter(String name) {
+        Counter counter = meterRegistry.find(name).counter();
+        return counter != null ? counter.count() : 0.0;
+    }
+
     @Nested
     @DisplayName("after")
     class After {
@@ -109,10 +114,5 @@ class TokenUsageAdvisorTest {
 
             assertEquals(0.0, findCounter("eagle.ai.token.total"));
         }
-    }
-
-    private double findCounter(String name) {
-        Counter counter = meterRegistry.find(name).counter();
-        return counter != null ? counter.count() : 0.0;
     }
 }

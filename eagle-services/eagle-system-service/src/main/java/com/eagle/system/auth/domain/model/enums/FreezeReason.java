@@ -6,10 +6,16 @@ package com.eagle.system.auth.domain.model.enums;
  * @author sunshixiong
  */
 public enum FreezeReason {
-    /** 管理员手动冻结 */
+    /**
+     * 管理员手动冻结
+     */
     ADMIN,
-    /** 风控触发（预留）*/
+    /**
+     * 风控触发（预留）
+     */
     RISK_CONTROL,
-    /** 其他（兼容旧 locked 迁移）*/
+    /**
+     * 其他（兼容旧 locked 迁移）
+     */
     OTHER
 }

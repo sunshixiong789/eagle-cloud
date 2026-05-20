@@ -26,10 +26,23 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class DashboardApplicationServiceTest {
 
-    @Mock UserRepository userRepository;
-    @Mock RoleRepository roleRepository;
-    @Mock LogRepository logRepository;
-    @InjectMocks DashboardApplicationService service;
+    @Mock
+    UserRepository userRepository;
+    @Mock
+    RoleRepository roleRepository;
+    @Mock
+    LogRepository logRepository;
+    @InjectMocks
+    DashboardApplicationService service;
+
+    // ----- Mockito helpers for shorter call sites -----
+    private static <T> T mock(Class<T> type) {
+        return org.mockito.Mockito.mock(type);
+    }
+
+    private static <T> T eq(T value) {
+        return org.mockito.ArgumentMatchers.eq(value);
+    }
 
     @Nested
     @DisplayName("getStats")
@@ -118,9 +131,4 @@ class DashboardApplicationServiceTest {
             assertEquals(7L, trend.get(2).getCount());
         }
     }
-
-    // ----- Mockito helpers for shorter call sites -----
-    private static <T> T mock(Class<T> type) { return org.mockito.Mockito.mock(type); }
-
-    private static <T> T eq(T value) { return org.mockito.ArgumentMatchers.eq(value); }
 }

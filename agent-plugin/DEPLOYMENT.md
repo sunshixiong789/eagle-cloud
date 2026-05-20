@@ -1,6 +1,7 @@
 # 私有 Marketplace 部署指南
 
-把 `eagle-cloud` Agent Plugin（同时支持 Claude Code + Codex CLI）发布到内部 Git 服务，让团队所有业务项目通过 Marketplace 引用。
+把 `eagle-cloud` Agent Plugin（同时支持 Claude Code + Codex CLI）发布到内部 Git 服务，让团队所有业务项目通过 Marketplace
+引用。
 
 ## 部署架构
 
@@ -61,7 +62,8 @@ codex plugin marketplace add https://gitlab.your-domain.com/eagle/eagle-cloud.gi
 codex plugin install eagle-cloud@eagle-cloud
 ```
 
-安装完成后重启会话即可加载。默认跟踪 `main` 主干。如需冻结版本，可加 `--ref <sha-or-tag>`（Codex）或在 marketplace 配置里指定 commit SHA（Claude）。
+安装完成后重启会话即可加载。默认跟踪 `main` 主干。如需冻结版本，可加 `--ref <sha-or-tag>`（Codex）或在 marketplace 配置里指定
+commit SHA（Claude）。
 
 ## 选项 2：GitHub Enterprise / GitHub.com（私有仓库）
 
@@ -334,7 +336,8 @@ jobs:
 1. 修改源：`agent-plugin/rules/*` 直接编辑，或修改 `eagle-starter/*/USAGE.md`
 2. 重新生成 skills：`bash ./agent-plugin/scripts/sync.sh`
 3. 更新 `agent-plugin/CHANGELOG.md` 添加新条目
-4. 同步改三处版本号：`.claude-plugin/marketplace.json` / `agent-plugin/.claude-plugin/plugin.json` / `agent-plugin/.codex-plugin/plugin.json`
+4. 同步改三处版本号：`.claude-plugin/marketplace.json` / `agent-plugin/.claude-plugin/plugin.json` /
+   `agent-plugin/.codex-plugin/plugin.json`
 5. 修改了 `agent-plugin/CLAUDE.md` 时**对照检查** `agent-plugin/AGENTS.md` 是否需要同步修改
 6. `git commit && git push origin main`
 7. CI 自动校验通过后通知业务项目（如有 breaking change）
@@ -344,8 +347,8 @@ jobs:
 1. 重启 Claude Code 或 Codex CLI 会话——Plugin 会自动拉取最新版本
 2. 按 `INTEGRATION-TEST.md` 阶段 1 + 阶段 2 验证关键 API
 3. 如需临时回退：
-   - Claude: 重新运行 `/plugin install eagle-cloud@eagle-cloud` 指定旧版本
-   - Codex: `codex plugin marketplace add <url>#v1.0.0` 或 `--ref <sha>` pin 到旧版本
+    - Claude: 重新运行 `/plugin install eagle-cloud@eagle-cloud` 指定旧版本
+    - Codex: `codex plugin marketplace add <url>#v1.0.0` 或 `--ref <sha>` pin 到旧版本
 
 ## 监控与反馈
 

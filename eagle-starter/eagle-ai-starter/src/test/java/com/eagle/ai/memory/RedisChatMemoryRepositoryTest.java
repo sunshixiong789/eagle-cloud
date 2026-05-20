@@ -40,19 +40,27 @@ import static org.mockito.Mockito.when;
 @DisplayName("RedisChatMemoryRepository")
 class RedisChatMemoryRepositoryTest {
 
+    private static final String KEY_PREFIX = "eagle:ai:chat:memory";
+    private final ObjectMapper objectMapper = new ObjectMapper();
     @Mock
     private StringRedisTemplate redisTemplate;
     @Mock
     private ValueOperations<String, String> valueOps;
-
     private RedisChatMemoryRepository repository;
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    private static final String KEY_PREFIX = "eagle:ai:chat:memory";
 
     @BeforeEach
     void setUp() {
         AiProperties properties = new AiProperties();
         repository = new RedisChatMemoryRepository(redisTemplate, objectMapper, properties);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Cursor<String> mockCursor(List<String> keys) {
+        Cursor<String> cursor = mock(Cursor.class);
+        Iterator<String> it = keys.iterator();
+        when(cursor.hasNext()).thenAnswer(inv -> it.hasNext());
+        when(cursor.next()).thenAnswer(inv -> it.next());
+        return cursor;
     }
 
     @Nested
@@ -244,14 +252,5 @@ class RedisChatMemoryRepositoryTest {
 
             verify(redisTemplate).delete(KEY_PREFIX + ":conv-1");
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Cursor<String> mockCursor(List<String> keys) {
-        Cursor<String> cursor = mock(Cursor.class);
-        Iterator<String> it = keys.iterator();
-        when(cursor.hasNext()).thenAnswer(inv -> it.hasNext());
-        when(cursor.next()).thenAnswer(inv -> it.next());
-        return cursor;
     }
 }

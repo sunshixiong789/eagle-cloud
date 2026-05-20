@@ -69,12 +69,12 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 | `eagle-data-jpa-starter`           | JPA/Hibernate 配置、审计、MySQL/PostgreSQL/H2 支持                                                     |
 | `eagle-redis-starter`              | Redisson + Caffeine 多级缓存 + CacheProtectionUtil（穿透/击穿防护）                                        |
 | `eagle-resource-server-starter`    | OAuth2 资源服务器 JWT 验证                                                                            |
-| `http-client-starter`              | RestClient / HTTP Service 客户端配置（含 Seata XID 透传）                                                 |
+| `http-client-starter`              | RestClient / HTTP Service 客户端配置（含 Seata XID 透传）                                                |
 | `eagle-tracing-starter`            | 分布式链路追踪（Brave/Zipkin）                                                                          |
-| `eagle-rocketmq-starter`           | RocketMQ v5 消息队列（事务消息、DLQ、AbstractRocketMqListener）                                           |
+| `eagle-rocketmq-starter`           | RocketMQ v5 消息队列（事务消息、DLQ、AbstractRocketMqListener）                                            |
 | `eagle-row-security-starter`       | 行级数据权限控制（@DataPermission，AspectJ + JPA Specification）                                          |
 | `eagle-dynamic-datasource-starter` | 多数据源动态路由（主从切换、@ReadOnly、轮询负载均衡）                                                                |
-| `eagle-tenant-starter`             | 多租户支持（COLUMN/DATABASE 隔离模式、TenantContextHolder）                                               |
+| `eagle-tenant-starter`             | 多租户支持（COLUMN/DATABASE 隔离模式、TenantContextHolder）                                                |
 | `eagle-oss-minio-starter`          | 对象存储（MinIO 8.x，签名 URL、分片上传）                                                                    |
 | `eagle-notification-starter`       | 多渠道消息（阿里云 SMS、Spring Mail）                                                                     |
 | `eagle-scheduler-starter`          | 分布式定时任务（XXL-JOB 2.4.2）                                                                         |
@@ -89,10 +89,10 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 | `eagle-websocket-starter`          | WebSocket 实时通信（STOMP + SockJS）                                                                 |
 | `eagle-sharding-starter`           | 分库分表（Apache ShardingSphere 5.5.0，YAML 驱动）                                                      |
 | `eagle-excel-starter`              | Excel 导入导出（Apache POI，@ExcelColumn，大数据流式写入）                                                    |
-| `eagle-resilience-starter`         | 容错弹性（Resilience4J，熔断器 / 重试 / 超时，eagle-default 命名实例）                                           |
+| `eagle-resilience-starter`         | 容错弹性（Resilience4J，熔断器 / 重试 / 超时，eagle-default 命名实例）                                            |
 | `eagle-encrypt-starter`            | 字段级加密（AES-256，JPA AttributeConverter，@Convert 注解驱动）                                            |
-| `eagle-audit-log-starter`          | 操作审计日志（@AuditLog，AOP 切面 + 异步事件 + 可插拔 Handler）                                                 |
-| `eagle-ai-starter`                 | AI 集成（Spring AI 2.x，ChatClient、EmbeddingClient）                                               |
+| `eagle-audit-log-starter`          | 操作审计日志（@AuditLog，AOP 切面 + 异步事件 + 可插拔 Handler）                                                  |
+| `eagle-ai-starter`                 | AI 集成（Spring AI 2.x，ChatClient、EmbeddingClient）                                                |
 
 Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖使用 `api` 范围暴露传递依赖。
 
@@ -148,7 +148,7 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 | `.claude/rules/08-concurrency.md`             | 事务、领域事件 `@Async + AFTER_COMMIT`、缓存失效          |
 | `.claude/rules/09-testing.md`                 | JUnit 5 + Mockito、AAA、命名、覆盖要求                 |
 | `.claude/rules/10-starter.md`                 | `@AutoConfiguration` + Properties + imports   |
-| `.claude/rules/11-feign.md`                   | HTTP Service 客户端位置、错误处理、分页参数       |
+| `.claude/rules/11-feign.md`                   | HTTP Service 客户端位置、错误处理、分页参数                  |
 | `.claude/rules/12-security.md`                | OAuth2 / JWT、密码、CORS、敏感数据脱敏、审计                |
 | `.claude/rules/13-logging.md`                 | SLF4J 占位符、MDC、异常日志、敏感字段脱敏                     |
 | `.claude/rules/14-cache.md`                   | Redis+Caffeine、Key 命名、TTL、击穿/穿透/雪崩            |
@@ -158,7 +158,7 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 | `.claude/rules/18-openapi.md`                 | SpringDoc 注解、版本、错误码文档化                        |
 | `.claude/rules/19-config.md`                  | Properties、Nacos、profile、Jasypt 加密            |
 | `.claude/rules/20-i18n.md`                    | messages 组织、key 规则、Locale 解析                  |
-| `.claude/rules/21-resilience.md`              | Resilience4J 熔断/重试/超时、Fallback、注解组合顺序        |
+| `.claude/rules/21-resilience.md`              | Resilience4J 熔断/重试/超时、Fallback、注解组合顺序         |
 | `.claude/rules/22-git.md`                     | 分支模型、Conventional Commits、PR、Tag              |
 | `.claude/rules/23-performance.md`             | N+1、慢 SQL、连接池、Async 池、JVM                     |
 | `.claude/rules/24-deployment.md`              | Dockerfile、健康检查、优雅停机、K8s                      |
@@ -166,14 +166,14 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 | `.claude/rules/26-file-storage.md`            | MinIO Bucket、Object Key、上传校验、签名 URL           |
 | `.claude/rules/27-scheduling.md`              | XXL-JOB 路由、分片、幂等、超时                           |
 | `.claude/rules/28-migration.md`               | Flyway 命名、不可变、回滚                              |
-| `.claude/rules/29-event-driven.md`            | 领域事件 vs 集成事件、Saga 编排、Event Sourcing、幂等       |
+| `.claude/rules/29-event-driven.md`            | 领域事件 vs 集成事件、Saga 编排、Event Sourcing、幂等        |
 | `.claude/rules/30-dependency.md`              | Gradle 范围、BOM、版本升级、CVE                        |
 
 ## 项目级 Commands（slash command）
 
 | 命令                | 作用                                                                              |
 |-------------------|---------------------------------------------------------------------------------|
-| `/eagle-flow`     | **启动 6 阶段端到端流程**（自然语言"做一个新功能"等价触发；详见 `eagle-feature-flow` skill） |
+| `/eagle-flow`     | **启动 6 阶段端到端流程**（自然语言"做一个新功能"等价触发；详见 `eagle-feature-flow` skill）                |
 | `/check-arch`     | Modulith 架构验证 + 模块测试 + 全量构建一键检查                                                 |
 | `/new-module`     | 按 DDD 模板创建新业务模块（含 `package-info.java` + 四层骨架）                                   |
 | `/new-aggregate`  | 创建聚合根全栈骨架（聚合根 + Repository + ErrorCode + ApplicationService + Controller + DTO） |
@@ -182,18 +182,20 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 
 ## 端到端开发流程（eagle-feature-flow skill）
 
-主干用 **Superpowers 6 阶段**，在 **规划** 与 **写代码** 阶段嵌入式调用本仓库的 rules / commands / starter skills（不使用 OpenSpec）：
+主干用 **Superpowers 6 阶段**，在 **规划** 与 **写代码** 阶段嵌入式调用本仓库的 rules / commands / starter skills（不使用
+OpenSpec）：
 
-| 阶段 | 名称         | 主干调用                                          | agent-plugin 注入                                                            |
-|----|------------|-----------------------------------------------|---------------------------------------------------------------------------|
-| 1  | Brainstorm | `superpowers:brainstorming`                   | （无，聚焦需求澄清）                                                                |
-| 2  | Plan       | `superpowers:writing-plans`                   | ★ 必读相关 `.claude/rules/*` + 在 plan 中预定要触发的 commands（`/new-module` 等）       |
-| 3  | TDD        | `superpowers:test-driven-development`         | ★ 加载相关 starter skills（`eagle-common` / `eagle-rocketmq` 等）+ 执行 plan 中的 commands |
-| 4  | Verify     | `superpowers:verification-before-completion`  | ★ 强制 `/check-arch`                                                        |
-| 5  | Review     | `superpowers:requesting-code-review`          | ★ 对照 `.claude/rules/25-review-checklist.md`（16 大类自检）                       |
-| 6  | Finish     | `superpowers:finishing-a-development-branch`  | 按 `.claude/rules/22-git.md` 整理 commit + PR 描述                              |
+| 阶段 | 名称         | 主干调用                                         | agent-plugin 注入                                                                 |
+|----|------------|----------------------------------------------|---------------------------------------------------------------------------------|
+| 1  | Brainstorm | `superpowers:brainstorming`                  | （无，聚焦需求澄清）                                                                      |
+| 2  | Plan       | `superpowers:writing-plans`                  | ★ 必读相关 `.claude/rules/*` + 在 plan 中预定要触发的 commands（`/new-module` 等）             |
+| 3  | TDD        | `superpowers:test-driven-development`        | ★ 加载相关 starter skills（`eagle-common` / `eagle-rocketmq` 等）+ 执行 plan 中的 commands |
+| 4  | Verify     | `superpowers:verification-before-completion` | ★ 强制 `/check-arch`                                                              |
+| 5  | Review     | `superpowers:requesting-code-review`         | ★ 对照 `.claude/rules/25-review-checklist.md`（16 大类自检）                            |
+| 6  | Finish     | `superpowers:finishing-a-development-branch` | 按 `.claude/rules/22-git.md` 整理 commit + PR 描述                                   |
 
 **设计哲学**：Superpowers 提供工程纪律（brainstorm → plan → TDD → verify → review → finish），
 本仓库的 `agent-plugin` 提供 Eagle 平台的"约束"（rules）和"工具箱"（commands + per-starter skills），后者在主流程的关键节点被嵌入式调用。
 
-详见 `agent-plugin/skills/eagle-feature-flow/SKILL.md`。模型在识别到"做一个新功能 / 加一个模块 / 重构 X"等触发短语时自动激活；手动触发可直接说"按 eagle flow 走"。
+详见 `agent-plugin/skills/eagle-feature-flow/SKILL.md`。模型在识别到"做一个新功能 / 加一个模块 / 重构 X"
+等触发短语时自动激活；手动触发可直接说"按 eagle flow 走"。

@@ -24,13 +24,17 @@ public abstract class AbstractCachedSmsService implements SmsService {
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    /** 验证码缓存：phone → code，5 分钟过期 */
+    /**
+     * 验证码缓存：phone → code，5 分钟过期
+     */
     private final Cache<String, String> codeCache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofMinutes(5))
             .maximumSize(10000)
             .build();
 
-    /** 发送频率限制缓存：phone → timestamp，60 秒过期 */
+    /**
+     * 发送频率限制缓存：phone → timestamp，60 秒过期
+     */
     private final Cache<String, Long> rateLimitCache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofSeconds(60))
             .maximumSize(10000)

@@ -36,6 +36,28 @@ public class AesEncryptionService implements EncryptionService {
         this.keyBytes = deriveKey(secretKey);
     }
 
+    private static byte[] deriveKey(String secretKey) {
+        try {
+            MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
+            return sha256.digest(secretKey.getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            throw new IllegalStateException("密钥派生失败", e);
+        }
+    }
+
+    private static byte[] generateIv() {
+        byte[] iv = new byte[IV_LENGTH];
+        new SecureRandom().nextBytes(iv);
+        return iv;
+    }
+
+    private static byte[] concat(byte[] a, byte[] b) {
+        byte[] result = new byte[a.length + b.length];
+        System.arraycopy(a, 0, result, 0, a.length);
+        System.arraycopy(b, 0, result, a.length, b.length);
+        return result;
+    }
+
     @Override
     public String encrypt(String plaintext) {
         if (plaintext == null) {
@@ -75,27 +97,5 @@ public class AesEncryptionService implements EncryptionService {
         } catch (Exception e) {
             throw new IllegalStateException("字段解密失败", e);
         }
-    }
-
-    private static byte[] deriveKey(String secretKey) {
-        try {
-            MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
-            return sha256.digest(secretKey.getBytes(StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            throw new IllegalStateException("密钥派生失败", e);
-        }
-    }
-
-    private static byte[] generateIv() {
-        byte[] iv = new byte[IV_LENGTH];
-        new SecureRandom().nextBytes(iv);
-        return iv;
-    }
-
-    private static byte[] concat(byte[] a, byte[] b) {
-        byte[] result = new byte[a.length + b.length];
-        System.arraycopy(a, 0, result, 0, a.length);
-        System.arraycopy(b, 0, result, a.length, b.length);
-        return result;
     }
 }

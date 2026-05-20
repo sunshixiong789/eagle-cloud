@@ -22,7 +22,9 @@ public final class LogMask {
     private LogMask() {
     }
 
-    /** 手机号脱敏：13800001234 → 138****1234 */
+    /**
+     * 手机号脱敏：13800001234 → 138****1234
+     */
     public static String phone(String phone) {
         if (phone == null || phone.length() < 7) {
             return MASKED;
@@ -30,7 +32,9 @@ public final class LogMask {
         return phone.substring(0, 3) + "****" + phone.substring(phone.length() - 4);
     }
 
-    /** 邮箱脱敏：alice@example.com → a***@example.com */
+    /**
+     * 邮箱脱敏：alice@example.com → a***@example.com
+     */
     public static String email(String email) {
         if (email == null) {
             return MASKED;
@@ -42,7 +46,9 @@ public final class LogMask {
         return email.charAt(0) + MASKED + email.substring(at);
     }
 
-    /** 身份证脱敏：110101199001011234 → 110***********1234 */
+    /**
+     * 身份证脱敏：110101199001011234 → 110***********1234
+     */
     public static String idCard(String idCard) {
         if (idCard == null || idCard.length() < 8) {
             return MASKED;
@@ -50,7 +56,9 @@ public final class LogMask {
         return idCard.substring(0, 3) + "*".repeat(idCard.length() - 7) + idCard.substring(idCard.length() - 4);
     }
 
-    /** Token 脱敏：仅保留前 8 位 + *** */
+    /**
+     * Token 脱敏：仅保留前 8 位 + ***
+     */
     public static String token(String token) {
         if (token == null || token.length() < 8) {
             return MASKED;

@@ -53,6 +53,48 @@ import java.util.Set;
 public class RedisCacheConfig {
 
     /**
+     * 把 final 实现的根级集合替换成 Jackson 可识别的可变实现。
+     *
+     * <p>仅当根值是 final {@link Collection} / {@link Map} 时替换：
+     * {@code List.of() / Map.of() / Set.of() / Stream.toList() /
+     * Collections.empty*() / Collections.singleton*()} 等返回的都是 final 类，
+     * 无 public 构造器，Jackson 既写不出可还原的类型包装、也无法直接构造。
+     * 非 final 实现（{@code ArrayList / HashMap / TreeMap / LinkedHashSet} 等）原样放行，
+     * 由 {@code DefaultTyping.NON_FINAL} 正常处理。
+     *
+     * <p>嵌套集合作为 POJO 字段时由 Jackson 声明类型静态推断，无需深拷贝。
+     */
+    private static Object normalizeRoot(Object value) {
+        if (!Modifier.isFinal(value.getClass().getModifiers())) {
+            return value;
+        }
+        if (value instanceof Map<?, ?> m) {
+            return new LinkedHashMap<>(m);
+        }
+        if (value instanceof Set<?> s) {
+            return new LinkedHashSet<>(s);
+        }
+        if (value instanceof Collection<?> c) {
+            return new ArrayList<>(c);
+        }
+        return value;
+    }
+
+    /**
+     * 老数据兼容：识别 fix 前写入 Redis 的裸空 {@code []} / {@code {}}。
+     */
+    private static @Nullable Object tryFallback(byte[] bytes) {
+        String json = new String(bytes, StandardCharsets.UTF_8).trim();
+        if ("[]".equals(json)) {
+            return new ArrayList<>();
+        }
+        if ("{}".equals(json)) {
+            return new LinkedHashMap<>();
+        }
+        return null;
+    }
+
+    /**
      * 专用于 Redis 序列化的 ObjectMapper。
      *
      * <p>开启 {@code DefaultTyping.NON_FINAL}，在 JSON 中写入 {@code @class} 字段，
@@ -119,48 +161,6 @@ public class RedisCacheConfig {
                 }
             }
         };
-    }
-
-    /**
-     * 把 final 实现的根级集合替换成 Jackson 可识别的可变实现。
-     *
-     * <p>仅当根值是 final {@link Collection} / {@link Map} 时替换：
-     * {@code List.of() / Map.of() / Set.of() / Stream.toList() /
-     * Collections.empty*() / Collections.singleton*()} 等返回的都是 final 类，
-     * 无 public 构造器，Jackson 既写不出可还原的类型包装、也无法直接构造。
-     * 非 final 实现（{@code ArrayList / HashMap / TreeMap / LinkedHashSet} 等）原样放行，
-     * 由 {@code DefaultTyping.NON_FINAL} 正常处理。
-     *
-     * <p>嵌套集合作为 POJO 字段时由 Jackson 声明类型静态推断，无需深拷贝。
-     */
-    private static Object normalizeRoot(Object value) {
-        if (!Modifier.isFinal(value.getClass().getModifiers())) {
-            return value;
-        }
-        if (value instanceof Map<?, ?> m) {
-            return new LinkedHashMap<>(m);
-        }
-        if (value instanceof Set<?> s) {
-            return new LinkedHashSet<>(s);
-        }
-        if (value instanceof Collection<?> c) {
-            return new ArrayList<>(c);
-        }
-        return value;
-    }
-
-    /**
-     * 老数据兼容：识别 fix 前写入 Redis 的裸空 {@code []} / {@code {}}。
-     */
-    private static @Nullable Object tryFallback(byte[] bytes) {
-        String json = new String(bytes, StandardCharsets.UTF_8).trim();
-        if ("[]".equals(json)) {
-            return new ArrayList<>();
-        }
-        if ("{}".equals(json)) {
-            return new LinkedHashMap<>();
-        }
-        return null;
     }
 
     /**

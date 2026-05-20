@@ -38,15 +38,14 @@ import java.util.concurrent.TimeUnit;
  */
 public class AiRateLimitAdvisor implements BaseAdvisor {
 
+    static final String CONTEXT_KEY_TENANT = "tenantId";
     private static final Logger log = LoggerFactory.getLogger(AiRateLimitAdvisor.class);
-
-    /** 在所有 Advisor 链的最外侧运行（最早 before），限流通过后才进入后续链路。 */
+    /**
+     * 在所有 Advisor 链的最外侧运行（最早 before），限流通过后才进入后续链路。
+     */
     private static final int ORDER = Ordered.HIGHEST_PRECEDENCE + 100;
     private static final String KEY_PREFIX = "eagle:ai:rate:limit:";
     private static final String GLOBAL_KEY = "global";
-
-    static final String CONTEXT_KEY_TENANT = "tenantId";
-
     private final StringRedisTemplate redisTemplate;
     private final int requestsPerMinute;
     private final boolean perConversation;

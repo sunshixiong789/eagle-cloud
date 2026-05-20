@@ -42,7 +42,9 @@ public class ContentSafetyAdvisor implements BaseAdvisor {
 
     private static final Logger log = LoggerFactory.getLogger(ContentSafetyAdvisor.class);
 
-    /** 在配额检查（HIGHEST_PRECEDENCE+200）之后运行，避免对不合规内容消耗配额。 */
+    /**
+     * 在配额检查（HIGHEST_PRECEDENCE+200）之后运行，避免对不合规内容消耗配额。
+     */
     private static final int ORDER = Ordered.HIGHEST_PRECEDENCE + 300;
 
     private final List<Pattern> compiledPatterns;

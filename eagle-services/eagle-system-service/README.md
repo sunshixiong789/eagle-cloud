@@ -60,31 +60,31 @@ spring-dotenv                                  # 本地 .env 自动加载
 
 启动成功后控制台打印 Swagger / OAuth2 入口 URL。
 
-| 端点                | 默认地址                              | 说明                |
-|-------------------|-----------------------------------|-------------------|
-| Swagger UI        | http://localhost/swagger-ui.html  | API 文档 + OAuth2 调试 |
-| OpenAPI JSON      | http://localhost/v3/api-docs      | 契约导出              |
-| OAuth2 Token      | http://localhost/oauth2/token     | 令牌端点              |
-| OAuth2 Authorize  | http://localhost/oauth2/authorize | 授权端点              |
-| JWK Set           | http://localhost/oauth2/jwks      | 资源服务器拉取公钥         |
-| WebSocket（STOMP） | ws://localhost/ws-stomp           | 实时推送握手端点          |
-| Actuator Health   | http://localhost/actuator/health  | 健康检查              |
+| 端点               | 默认地址                              | 说明                 |
+|------------------|-----------------------------------|--------------------|
+| Swagger UI       | http://localhost/swagger-ui.html  | API 文档 + OAuth2 调试 |
+| OpenAPI JSON     | http://localhost/v3/api-docs      | 契约导出               |
+| OAuth2 Token     | http://localhost/oauth2/token     | 令牌端点               |
+| OAuth2 Authorize | http://localhost/oauth2/authorize | 授权端点               |
+| JWK Set          | http://localhost/oauth2/jwks      | 资源服务器拉取公钥          |
+| WebSocket（STOMP） | ws://localhost/ws-stomp           | 实时推送握手端点           |
+| Actuator Health  | http://localhost/actuator/health  | 健康检查               |
 
 ## 关键配置（前缀 `eagle.*`）
 
-| 配置项                              | 默认                                  | 说明                              |
-|----------------------------------|-------------------------------------|---------------------------------|
-| `eagle.jwt.keystore-location`    | `classpath:jwt-keystore.p12`        | JWT 签名 keystore（生产请挂外部）         |
-| `eagle.jwt.keystore-password`    | `eagle-jwt-dev-2026`                | keystore 密码（生产必须改）              |
-| `eagle.admin.password`           | env `EAGLE_ADMIN_PASSWORD`          | 初始管理员密码（必填）                     |
-| `eagle.oauth.default-client.*`   | —                                   | 默认 OAuth2 公开客户端（PKCE）           |
-| `eagle.wechat.mini-program.*`    | env `WECHAT_MINI_APP_*`             | 微信小程序 AppID / Secret            |
-| `eagle.wechat.web.pc/h5.*`       | env `WECHAT_WEB_*` / `WECHAT_MP_*`  | 微信网页/H5 登录                      |
+| 配置项                              | 默认                                  | 说明                                         |
+|----------------------------------|-------------------------------------|--------------------------------------------|
+| `eagle.jwt.keystore-location`    | `classpath:jwt-keystore.p12`        | JWT 签名 keystore（生产请挂外部）                    |
+| `eagle.jwt.keystore-password`    | `eagle-jwt-dev-2026`                | keystore 密码（生产必须改）                         |
+| `eagle.admin.password`           | env `EAGLE_ADMIN_PASSWORD`          | 初始管理员密码（必填）                                |
+| `eagle.oauth.default-client.*`   | —                                   | 默认 OAuth2 公开客户端（PKCE）                      |
+| `eagle.wechat.mini-program.*`    | env `WECHAT_MINI_APP_*`             | 微信小程序 AppID / Secret                       |
+| `eagle.wechat.web.pc/h5.*`       | env `WECHAT_WEB_*` / `WECHAT_MP_*`  | 微信网页/H5 登录                                 |
 | `eagle.message.sms.*`            | env `SMS_*` / `HNSLS_SMS_*`         | 短信服务商配置（由 eagle-notification-starter 统一处理） |
-| `eagle.auth.one-click.*`         | provider 默认 `mock`                  | 一键登录提供方 / 阿里云 dypnsapi 配置       |
-| `eagle.log.cleanup.cron`         | `0 0 2 * * ?`                       | 审计日志每日清理                        |
-| `eagle.websocket.endpoint`       | `/ws-stomp`                         | STOMP 握手路径                      |
-| `spring.cloud.nacos.discovery.*` | env `NACOS_SERVER_ADDR / NAMESPACE` | Nacos 注册中心地址 / 命名空间             |
+| `eagle.auth.one-click.*`         | provider 默认 `mock`                  | 一键登录提供方 / 阿里云 dypnsapi 配置                  |
+| `eagle.log.cleanup.cron`         | `0 0 2 * * ?`                       | 审计日志每日清理                                   |
+| `eagle.websocket.endpoint`       | `/ws-stomp`                         | STOMP 握手路径                                 |
+| `spring.cloud.nacos.discovery.*` | env `NACOS_SERVER_ADDR / NAMESPACE` | Nacos 注册中心地址 / 命名空间                        |
 
 完整字段见 `src/main/resources/application.yml` 与 `application-{profile}.yml`。
 
@@ -92,12 +92,12 @@ spring-dotenv                                  # 本地 .env 自动加载
 
 所有登录方式最终都通过 OAuth2 授权服务器签发 access_token + refresh_token。下表汇总现有 grant_type：
 
-| grant_type            | 用途           | 关键参数                                          | Provider                                  |
-|-----------------------|--------------|-----------------------------------------------|-------------------------------------------|
-| `authorization_code`  | 标准授权码 + PKCE | `code` / `code_verifier`                      | Spring Authorization Server 内置            |
-| `refresh_token`       | 刷新令牌         | `refresh_token`                               | Spring Authorization Server 内置            |
-| `wechat_mini_program` | 微信小程序登录      | `js_code`                                     | `WechatMiniProgramAuthenticationProvider` |
-| `sms_code`            | 短信验证码登录      | `phone` / `code`                              | `SmsCodeAuthenticationProvider`           |
+| grant_type            | 用途           | 关键参数                                       | Provider                                  |
+|-----------------------|--------------|--------------------------------------------|-------------------------------------------|
+| `authorization_code`  | 标准授权码 + PKCE | `code` / `code_verifier`                   | Spring Authorization Server 内置            |
+| `refresh_token`       | 刷新令牌         | `refresh_token`                            | Spring Authorization Server 内置            |
+| `wechat_mini_program` | 微信小程序登录      | `js_code`                                  | `WechatMiniProgramAuthenticationProvider` |
+| `sms_code`            | 短信验证码登录      | `phone` / `code`                           | `SmsCodeAuthenticationProvider`           |
 | `phone_one_click`     | 手机号一键登录      | `access_token`（运营商 / 阿里云 dypnsapi 颁发的短期凭证） | `PhoneOneClickAuthenticationProvider`     |
 
 ### 手机号一键登录
@@ -158,25 +158,26 @@ eagle:
 
 **默认客户端的 grant_types**
 
-`OAuthClientProperties.authorizationGrantTypes` 默认已包含 `phone_one_click`；通过 `OAuthClientInitializer` 在启动时同步到 DB，旧环境重启即可生效。
+`OAuthClientProperties.authorizationGrantTypes` 默认已包含 `phone_one_click`；通过 `OAuthClientInitializer` 在启动时同步到
+DB，旧环境重启即可生效。
 
 **错误码（11034–11037）**
 
-| 错误码 | 含义                                |
-|--------|-----------------------------------|
-| 11034  | 一键登录 access_token 不能为空            |
-| 11035  | 一键登录校验失败（运营商接口异常 / 业务码非 OK）       |
-| 11036  | 一键登录服务未启用（开关关闭或未配置 AccessKey）    |
-| 11037  | 一键登录获取手机号失败（响应缺失 mobile 或格式异常）   |
+| 错误码   | 含义                             |
+|-------|--------------------------------|
+| 11034 | 一键登录 access_token 不能为空         |
+| 11035 | 一键登录校验失败（运营商接口异常 / 业务码非 OK）    |
+| 11036 | 一键登录服务未启用（开关关闭或未配置 AccessKey）  |
+| 11037 | 一键登录获取手机号失败（响应缺失 mobile 或格式异常） |
 
 i18n 消息见 `messages_zh_CN.properties` / `messages_en.properties` 中的 `error.auth.one_click_*`。
 
 ## Profile
 
-| Profile | 默认数据源       | 用途                |
-|---------|-------------|-------------------|
-| `local` | H2（内存）      | 本机快速启动，零依赖        |
-| `dev`   | MySQL + 真实依赖 | 开发联调环境            |
+| Profile | 默认数据源        | 用途         |
+|---------|--------------|------------|
+| `local` | H2（内存）       | 本机快速启动，零依赖 |
+| `dev`   | MySQL + 真实依赖 | 开发联调环境     |
 
 切换：`SPRING_PROFILES_ACTIVE=dev` 或 `--spring.profiles.active=dev`。
 

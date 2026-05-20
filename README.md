@@ -503,7 +503,8 @@ SENTINEL_DASHBOARD=localhost:8858
 ```
 
 > **注意：** `.env` 仅在本地开发时由 IDE / IntelliJ 的 [EnvFile 插件](https://plugins.jetbrains.com/plugin/7861-envfile)
-> 或 `--env-file` 参数加载。Docker Compose 会自动读取同目录下的 `.env` 文件。生产环境通过 Kubernetes Secret / 容器编排平台的环境变量注入，
+> 或 `--env-file` 参数加载。Docker Compose 会自动读取同目录下的 `.env` 文件。生产环境通过 Kubernetes Secret /
+> 容器编排平台的环境变量注入，
 **不使用** `.env` 文件。
 
 ### Profile 配置
@@ -568,7 +569,8 @@ gradle nativeCompile
 
 核心功能：
 
-- **请求增强** — `RequestEnrichmentGlobalFilter` 注入 `X-Request-Id`（UUID v4，全链路追溯）+ `X-Real-IP`（从 XFF / RemoteAddress 提取）
+- **请求增强** — `RequestEnrichmentGlobalFilter` 注入 `X-Request-Id`（UUID v4，全链路追溯）+ `X-Real-IP`（从 XFF /
+  RemoteAddress 提取）
 - **请求日志** — 记录请求方法、路径、状态码、耗时、客户端 IP、链路 Trace ID
 - **Sentinel 限流** — 网关流控规则 + 降级规则，通过 sentinel-datasource-nacos 持久化到 Nacos，重启不丢规则
 - **Seata 事务透传** — 自动传递分布式事务 XID
@@ -607,11 +609,14 @@ throw PaymentErrorCode.GATEWAY_ERROR.toServiceException(cause);        // → 50
 
 ### 编码规范
 
-项目编码规范定义在 `.claude/rules/` 目录下，涵盖命名、架构分层、RESTful API、日志、安全、并发、测试、代码风格、异常处理、数据库、配置注入、模块治理、消息、多租户、数据权限、OpenAPI、i18n、容错弹性、事件驱动、Git 工作流、性能、部署、审查清单、文件存储、定时任务、迁移、依赖管理等 30 项规范。
+项目编码规范定义在 `.claude/rules/` 目录下，涵盖命名、架构分层、RESTful
+API、日志、安全、并发、测试、代码风格、异常处理、数据库、配置注入、模块治理、消息、多租户、数据权限、OpenAPI、i18n、容错弹性、事件驱动、Git
+工作流、性能、部署、审查清单、文件存储、定时任务、迁移、依赖管理等 30 项规范。
 
 ## Agent Plugin（AI 辅助编码，支持 Claude Code + Codex CLI）
 
-本仓库内置 **Eagle Cloud Agent Plugin**——同时面向 **Claude Code** 与 **Codex CLI** 的开发插件，包含 30 份开发规范（rules）、6 个项目命令（commands）、29 个 starter / 编排 skill，帮助 AI 在编写 Eagle 平台代码时自动遵循架构约定。
+本仓库内置 **Eagle Cloud Agent Plugin**——同时面向 **Claude Code** 与 **Codex CLI** 的开发插件，包含 30 份开发规范（rules）、6
+个项目命令（commands）、29 个 starter / 编排 skill，帮助 AI 在编写 Eagle 平台代码时自动遵循架构约定。
 
 ### Claude Code 安装
 
@@ -635,7 +640,8 @@ codex plugin install eagle-cloud@eagle-cloud
 
 ### 验证
 
-会话内输入 `/check-arch` 应被识别为本插件提供的命令；写 `SecurityUtils.getCurrentUserId()` 一类 Eagle starter API 时，AI 会自动加载对应 skill（如 `eagle-resource-server`）。
+会话内输入 `/check-arch` 应被识别为本插件提供的命令；写 `SecurityUtils.getCurrentUserId()` 一类 Eagle starter API 时，AI
+会自动加载对应 skill（如 `eagle-resource-server`）。
 
 详细使用说明见 [`agent-plugin/README.md`](agent-plugin/README.md) 与 [`agent-plugin/USAGE.md`](agent-plugin/USAGE.md)。
 

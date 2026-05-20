@@ -27,13 +27,19 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class LoginAttemptService {
 
-    /** 同一 IP 在统计窗口内允许的最大失败次数 */
+    /**
+     * 同一 IP 在统计窗口内允许的最大失败次数
+     */
     private static final int MAX_ATTEMPTS = 5;
 
-    /** 失败计数 key 的统计窗口 */
+    /**
+     * 失败计数 key 的统计窗口
+     */
     private static final Duration ATTEMPT_WINDOW = Duration.ofMinutes(10);
 
-    /** 达到阈值后封锁持续时长 */
+    /**
+     * 达到阈值后封锁持续时长
+     */
     private static final Duration BLOCK_DURATION = Duration.ofMinutes(30);
 
     private static final String ATTEMPT_KEY_PREFIX = "auth:login-fail:";

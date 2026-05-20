@@ -61,28 +61,40 @@ public class Account extends BaseAggregateRoot<Account> {
     public static final String DISABLED_PASSWORD =
             "$2a$10$0000000000000000000000.0000000000000000000000000000000000";
 
-    /** 用户名（唯一） */
+    /**
+     * 用户名（唯一）
+     */
     @Column(nullable = false, length = 64, unique = true, comment = "用户名")
     private String username;
 
-    /** 密码（BCrypt 加密；或 {@link #DISABLED_PASSWORD} 占位） */
+    /**
+     * 密码（BCrypt 加密；或 {@link #DISABLED_PASSWORD} 占位）
+     */
     @Column(nullable = false, length = 128, comment = "密码（BCrypt 或 {disabled} 占位）")
     private String password;
 
-    /** 手机号 */
+    /**
+     * 手机号
+     */
     @Column(length = 20, comment = "手机号")
     private String phone;
 
-    /** 账号状态 */
+    /**
+     * 账号状态
+     */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20, comment = "账号状态")
     private AccountStatus status = AccountStatus.ACTIVE;
 
-    /** 冻结信息（status=FROZEN 时非 null） */
+    /**
+     * 冻结信息（status=FROZEN 时非 null）
+     */
     @Embedded
     private AccountFreeze freeze;
 
-    /** 微信绑定信息 */
+    /**
+     * 微信绑定信息
+     */
     @Embedded
     private WechatBinding wechatBinding;
 
@@ -222,7 +234,9 @@ public class Account extends BaseAggregateRoot<Account> {
         }
     }
 
-    /** 发布账号删除事件（跨域事件，system 域级联删除 User）。 */
+    /**
+     * 发布账号删除事件（跨域事件，system 域级联删除 User）。
+     */
     public void publishDeletedEvent() {
         registerEvent(new AccountDeletedEvent(getId()));
     }
@@ -241,7 +255,9 @@ public class Account extends BaseAggregateRoot<Account> {
         this.password = newPassword;
     }
 
-    /** 当前账号是否禁用密码登录（密码字段为 {@link #DISABLED_PASSWORD}）。 */
+    /**
+     * 当前账号是否禁用密码登录（密码字段为 {@link #DISABLED_PASSWORD}）。
+     */
     public boolean isPasswordLoginDisabled() {
         return DISABLED_PASSWORD.equals(this.password);
     }

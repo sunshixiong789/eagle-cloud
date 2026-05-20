@@ -44,6 +44,16 @@ public class DynamicDataSourceConfig {
     private final DynamicDataSourceProperties properties;
 
     /**
+     * 脱敏 JDBC URL 中内嵌的密码（如 {@code jdbc:mysql://user:pass@host/db}）。
+     */
+    private static String maskUrl(String url) {
+        if (url == null) {
+            return null;
+        }
+        return url.replaceAll("(://[^:/@]+:)[^@]+@", "$1***@");
+    }
+
+    /**
      * 注册主从动态路由数据源（Primary，供 JPA / MyBatis 使用）。
      *
      * <p>多从库时以 {@code "slave-0"}、{@code "slave-1"} 等 key 注册，路由层轮询选择。
@@ -123,7 +133,7 @@ public class DynamicDataSourceConfig {
         if (properties.resolveSlaves().isEmpty()) {
             throw new IllegalStateException(
                     "At least one slave datasource must be configured " +
-                    "(eagle.datasource.slave.url or eagle.datasource.slaves[0].url)");
+                            "(eagle.datasource.slave.url or eagle.datasource.slaves[0].url)");
         }
     }
 
@@ -138,13 +148,5 @@ public class DynamicDataSourceConfig {
         }
         log.debug("{} datasource configured: {}", name, maskUrl(config.getUrl()));
         return builder.build();
-    }
-
-    /** 脱敏 JDBC URL 中内嵌的密码（如 {@code jdbc:mysql://user:pass@host/db}）。 */
-    private static String maskUrl(String url) {
-        if (url == null) {
-            return null;
-        }
-        return url.replaceAll("(://[^:/@]+:)[^@]+@", "$1***@");
     }
 }

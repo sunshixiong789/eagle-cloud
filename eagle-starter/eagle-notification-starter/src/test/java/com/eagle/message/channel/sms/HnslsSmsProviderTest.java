@@ -32,6 +32,19 @@ class HnslsSmsProviderTest {
             Instant.parse("2013-08-06T02:20:30Z"),
             ZoneId.of("Asia/Shanghai"));
 
+    private MessageProperties properties() {
+        MessageProperties properties = new MessageProperties();
+        MessageProperties.Sms sms = properties.getSms();
+        sms.setProvider(HnslsSmsProvider.NAME);
+        sms.setUsername("test");
+        sms.setPassword("123456");
+        sms.setSignName("鹰云");
+        sms.setContentTemplate("您的验证码是{code}，5分钟内有效。");
+        sms.setSendUrl(SEND_URL);
+        sms.setCharset(StandardCharsets.UTF_8.name());
+        return properties;
+    }
+
     @Nested
     @DisplayName("send")
     class Send {
@@ -115,18 +128,5 @@ class HnslsSmsProviderTest {
                     properties(), RestClient.builder(), FIXED_CLOCK);
             assertEquals(HnslsSmsProvider.NAME, provider.name());
         }
-    }
-
-    private MessageProperties properties() {
-        MessageProperties properties = new MessageProperties();
-        MessageProperties.Sms sms = properties.getSms();
-        sms.setProvider(HnslsSmsProvider.NAME);
-        sms.setUsername("test");
-        sms.setPassword("123456");
-        sms.setSignName("鹰云");
-        sms.setContentTemplate("您的验证码是{code}，5分钟内有效。");
-        sms.setSendUrl(SEND_URL);
-        sms.setCharset(StandardCharsets.UTF_8.name());
-        return properties;
     }
 }

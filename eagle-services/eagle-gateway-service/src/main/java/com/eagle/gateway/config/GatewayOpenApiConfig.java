@@ -43,13 +43,19 @@ import java.util.Set;
 @ConditionalOnProperty(name = "eagle.gateway.openapi.discovery-enabled", havingValue = "true", matchIfMissing = true)
 public class GatewayOpenApiConfig implements InitializingBean, ApplicationListener<ApplicationReadyEvent> {
 
-    /** Nacos 实例 metadata 中声明 OpenAPI alias 的 key */
+    /**
+     * Nacos 实例 metadata 中声明 OpenAPI alias 的 key
+     */
     public static final String METADATA_KEY = "spring-doc";
 
-    /** Nacos 实例 metadata 中可选的展示名 key（缺省按 alias 首字母大写） */
+    /**
+     * Nacos 实例 metadata 中可选的展示名 key（缺省按 alias 首字母大写）
+     */
     public static final String METADATA_DISPLAY_NAME_KEY = "spring-doc-name";
 
-    /** 网关侧聚合 URL 模板：{@code /v3/api-docs/{alias}} */
+    /**
+     * 网关侧聚合 URL 模板：{@code /v3/api-docs/{alias}}
+     */
     public static final String API_DOCS_PATH = "/v3/api-docs";
 
     private final DiscoveryClient discoveryClient;

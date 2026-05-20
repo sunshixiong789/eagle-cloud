@@ -1,6 +1,7 @@
 # Eagle Cloud Plugin 团队使用指南
 
-> 面向**业务项目开发者**(plugin 使用方)的日常上手文档。**同时适用 Claude Code 与 Codex CLI**——下文 `/plugin` 命令为 Claude 会话内语法，Codex 用 `codex plugin …` shell 命令，行为等价。
+> 面向**业务项目开发者**(plugin 使用方)的日常上手文档。**同时适用 Claude Code 与 Codex CLI**——下文 `/plugin` 命令为
+> Claude 会话内语法，Codex 用 `codex plugin …` shell 命令，行为等价。
 > 如果你是 plugin 维护者(改 rules / 加 starter skill),请看 `README.md` 与 `DEPLOYMENT.md`。
 
 ## 目录
@@ -82,11 +83,11 @@ codex plugin install superpowers@superpowers
 
 ## 核心概念
 
-| 概念 | 是什么 | 何时用 |
-|---|---|---|
-| **eagle-cloud plugin** | 本仓库提供的 **agent plugin（同时支持 Claude Code + Codex CLI）**,含 30 份规则(rules)、6 个项目命令(commands)、23 个 starter / 编排 skill | 写 Eagle 平台代码时 |
-| **Superpowers plugin** | 第三方 plugin,提供工程纪律 skill(brainstorming / writing-plans / TDD / verification / code-review / finishing-branch) | 做非 trivial 变更时 |
-| **eagle-feature-flow skill** | 本 plugin 的"编排型 skill",把 Superpowers 的 6 阶段 + Eagle 的 rules/commands/starter skills 串起来 | 启动新功能、新模块、重构时 |
+| 概念                           | 是什么                                                                                                             | 何时用            |
+|------------------------------|-----------------------------------------------------------------------------------------------------------------|----------------|
+| **eagle-cloud plugin**       | 本仓库提供的 **agent plugin（同时支持 Claude Code + Codex CLI）**,含 30 份规则(rules)、6 个项目命令(commands)、23 个 starter / 编排 skill | 写 Eagle 平台代码时  |
+| **Superpowers plugin**       | 第三方 plugin,提供工程纪律 skill(brainstorming / writing-plans / TDD / verification / code-review / finishing-branch)    | 做非 trivial 变更时 |
+| **eagle-feature-flow skill** | 本 plugin 的"编排型 skill",把 Superpowers 的 6 阶段 + Eagle 的 rules/commands/starter skills 串起来                          | 启动新功能、新模块、重构时  |
 
 **它们的关系**:
 
@@ -116,12 +117,12 @@ eagle-feature-flow 激活(本 plugin)
 
 模型在以下情况自动起作用:
 
-| 情况 | 模型自动做 |
-|---|---|
-| 启动会话 | 读 plugin 的 CLAUDE.md → 知道 Eagle 平台规范 |
+| 情况            | 模型自动做                                |
+|---------------|--------------------------------------|
+| 启动会话          | 读 plugin 的 CLAUDE.md → 知道 Eagle 平台规范 |
 | 写 RocketMQ 代码 | 自动激活 `eagle-rocketmq` skill,使用正确 API |
-| 写缓存 / 锁代码 | 自动激活 `eagle-redis` skill |
-| 用户问"怎么做幂等" | 自动激活 `eagle-idempotency` skill |
+| 写缓存 / 锁代码     | 自动激活 `eagle-redis` skill             |
+| 用户问"怎么做幂等"    | 自动激活 `eagle-idempotency` skill       |
 
 **适合**:个人项目、小修小补、不要求严格流程。
 
@@ -238,6 +239,7 @@ eagle-feature-flow 激活(本 plugin)
 ```
 
 模型自动走 6 阶段。Phase 2 会读:
+
 - `rules/03-architecture.md`(发票算独立聚合根还是订单子实体?)
 - `rules/05-api.md`(URL 设计)
 - `rules/15-messaging.md`(开票完成事件)
@@ -256,6 +258,7 @@ Phase 3 会触发:`/new-aggregate order Invoice` 或 `/new-module invoice`(取�
 Phase 1 澄清:是否改外部行为?是否引入新 starter?
 
 Phase 2 plan 重点:
+
 - 读 `rules/03-architecture.md` 的 Port/Adapter 章节
 - 决定 Port 接口放在 `payment::port`,加 `@NamedInterface`
 
@@ -269,7 +272,8 @@ Phase 3 跳过 commands(纯重构),直接 TDD:先确保测试覆盖现有行为 
 > Order.markPaid() 在并发场景下偶尔报 OptimisticLockingFailureException
 ```
 
-L1 模式即可:模型读 CLAUDE.md → 知道 Eagle 用乐观锁(`@Version`)→ 加载 `eagle-common` skill → 给出"应用层重试"或"改悲观锁"两种方案。
+L1 模式即可:模型读 CLAUDE.md → 知道 Eagle 用乐观锁(`@Version`)→ 加载 `eagle-common` skill → 给出"应用层重试"或"改悲观锁"
+两种方案。
 
 不需要 6 阶段流程。
 
@@ -289,20 +293,20 @@ L1 模式即可:模型读 CLAUDE.md → 知道 Eagle 用乐观锁(`@Version`)→
 
 **两种触发方式,等价**:
 
-| 方式 | 例子 | 适合 |
-|---|---|---|
+| 方式                    | 例子                   | 适合                     |
+|-----------------------|----------------------|------------------------|
 | **Slash command(显式)** | `/eagle-flow 用户积分系统` | 新人 / 需要审计 / 不确定短语是否能激活 |
-| **自然语言(隐式)** | `我要做一个用户积分系统` | 老成员 / 对话流自然延续 |
+| **自然语言(隐式)**          | `我要做一个用户积分系统`        | 老成员 / 对话流自然延续          |
 
 模型识别这些**自然语言短语**会自动激活 `eagle-feature-flow`:
 
-| 短语 | 激活原因 |
-|---|---|
-| "新功能 / 加一个 X / 加一个模块" | 新增非 trivial 变更 |
-| "新增聚合根 / 新增实体" | 涉及 DDD 骨架 |
-| "重构 X / 抽取 / 拆分" | 跨模块结构变更 |
-| "build feature / refactor / add aggregate" | 英文同义触发 |
-| "按 eagle flow 走" / "启动 eagle flow" | 显式手动触发 |
+| 短语                                         | 激活原因           |
+|--------------------------------------------|----------------|
+| "新功能 / 加一个 X / 加一个模块"                      | 新增非 trivial 变更 |
+| "新增聚合根 / 新增实体"                             | 涉及 DDD 骨架      |
+| "重构 X / 抽取 / 拆分"                           | 跨模块结构变更        |
+| "build feature / refactor / add aggregate" | 英文同义触发         |
+| "按 eagle flow 走" / "启动 eagle flow"         | 显式手动触发         |
 
 **不会**激活的(用 L1 / L2 即可):
 
@@ -316,14 +320,14 @@ L1 模式即可:模型读 CLAUDE.md → 知道 Eagle 用乐观锁(`@Version`)→
 
 本 plugin 提供的命令(全部在 `agent-plugin/commands/`):
 
-| 命令 | 参数 | 作用 |
-|---|---|---|
-| `/eagle-flow` | `[功能描述,可选]` | **启动 6 阶段端到端流程**(等价于自然语言"我要做 X")|
-| `/check-arch` | `[模块路径,可选]` | Modulith 架构验证 + 模块测试 + 全量构建 |
-| `/new-module` | `<module-name>` | 按 DDD 模板创建新业务模块 |
-| `/new-aggregate` | `<module> <aggregate-name>` | 创建聚合根 + Repository + ErrorCode + ApplicationService + Controller + DTO |
-| `/new-starter` | `<starter-name>` | 按 Spring Boot 4 模板创建新 starter |
-| `/add-error-code` | `<enum-class> <CODE> <i18n-key>` | 在 ErrorCode 枚举追加常量 + i18n 三语翻译 |
+| 命令                | 参数                               | 作用                                                                     |
+|-------------------|----------------------------------|------------------------------------------------------------------------|
+| `/eagle-flow`     | `[功能描述,可选]`                      | **启动 6 阶段端到端流程**(等价于自然语言"我要做 X")                                       |
+| `/check-arch`     | `[模块路径,可选]`                      | Modulith 架构验证 + 模块测试 + 全量构建                                            |
+| `/new-module`     | `<module-name>`                  | 按 DDD 模板创建新业务模块                                                        |
+| `/new-aggregate`  | `<module> <aggregate-name>`      | 创建聚合根 + Repository + ErrorCode + ApplicationService + Controller + DTO |
+| `/new-starter`    | `<starter-name>`                 | 按 Spring Boot 4 模板创建新 starter                                          |
+| `/add-error-code` | `<enum-class> <CODE> <i18n-key>` | 在 ErrorCode 枚举追加常量 + i18n 三语翻译                                         |
 
 **强烈建议**:在团队会议上每个命令演示一次,新人才会用。
 
@@ -333,30 +337,30 @@ L1 模式即可:模型读 CLAUDE.md → 知道 Eagle 用乐观锁(`@Version`)→
 
 写代码涉及哪个 starter,对应 skill 自动激活(也可手动 invoke):
 
-| 写到这类代码 | 自动加载的 skill |
-|---|---|
-| 聚合根 / 异常 / 事件 / `EagleUser` | `eagle-common` |
-| JPA 实体 / 审计字段 / 索引 | `eagle-data-jpa` |
-| MyBatis-Plus(可选) | `eagle-mybatis` |
-| 多数据源主从分离 | `eagle-dynamic-datasource` |
-| Elasticsearch 检索 | `eagle-elasticsearch` |
-| Redis 缓存 / 分布式锁 / 限流 / 布隆 | `eagle-redis` |
-| RocketMQ 发布 / 消费 / 事务消息 / 死信 | `eagle-rocketmq` |
-| ID 生成(雪花/TSID/订单号) | `eagle-id-generator` |
-| 接口幂等 | `eagle-idempotency` |
-| 多租户隔离 | `eagle-tenant` |
-| 行级数据权限 | `eagle-row-security` |
-| OAuth2 资源服务器(JWT 校验) | `eagle-resource-server` |
-| RestClient 远程调用(自动透传) | `eagle-feign-client` |
-| 链路追踪(Brave/Zipkin) | `eagle-tracing` |
-| Swagger / OpenAPI 文档 | `eagle-openapi` |
-| MinIO 对象存储 | `eagle-oss-minio` |
-| 短信 / 邮件 / 站内信 | `eagle-notification` |
-| 支付宝 / 微信支付 | `eagle-payment` |
-| XXL-JOB 定时任务 | `eagle-scheduler` |
-| Seata 分布式事务 | `eagle-seata` |
-| Sentinel 限流 | `eagle-sentinel` |
-| WebSocket / SSE | `eagle-websocket` |
+| 写到这类代码                       | 自动加载的 skill                |
+|------------------------------|----------------------------|
+| 聚合根 / 异常 / 事件 / `EagleUser`  | `eagle-common`             |
+| JPA 实体 / 审计字段 / 索引           | `eagle-data-jpa`           |
+| MyBatis-Plus(可选)             | `eagle-mybatis`            |
+| 多数据源主从分离                     | `eagle-dynamic-datasource` |
+| Elasticsearch 检索             | `eagle-elasticsearch`      |
+| Redis 缓存 / 分布式锁 / 限流 / 布隆    | `eagle-redis`              |
+| RocketMQ 发布 / 消费 / 事务消息 / 死信 | `eagle-rocketmq`           |
+| ID 生成(雪花/TSID/订单号)           | `eagle-id-generator`       |
+| 接口幂等                         | `eagle-idempotency`        |
+| 多租户隔离                        | `eagle-tenant`             |
+| 行级数据权限                       | `eagle-row-security`       |
+| OAuth2 资源服务器(JWT 校验)         | `eagle-resource-server`    |
+| RestClient 远程调用(自动透传)        | `eagle-feign-client`       |
+| 链路追踪(Brave/Zipkin)           | `eagle-tracing`            |
+| Swagger / OpenAPI 文档         | `eagle-openapi`            |
+| MinIO 对象存储                   | `eagle-oss-minio`          |
+| 短信 / 邮件 / 站内信                | `eagle-notification`       |
+| 支付宝 / 微信支付                   | `eagle-payment`            |
+| XXL-JOB 定时任务                 | `eagle-scheduler`          |
+| Seata 分布式事务                  | `eagle-seata`              |
+| Sentinel 限流                  | `eagle-sentinel`           |
+| WebSocket / SSE              | `eagle-websocket`          |
 
 写 Eagle 代码前看一眼这张表,**手动 invoke 对应 skill 比凭记忆写更可靠**。
 
@@ -417,7 +421,8 @@ L3 流程的 Phase 4 / Phase 5 已自动包含以上;L1 / L2 必须手动。
 
 **Q4:Plugin 升级会破坏我的项目吗?**
 
-Plugin 团队遵循向后兼容原则，breaking change 会提前在 `CHANGELOG.md` 说明。每次重启 Claude Code 会话会自动拉取最新版本。如需暂停升级，可临时卸载旧版并安装指定版本（需提前打 Tag 或记录 commit SHA，联系 Plugin 维护者）。
+Plugin 团队遵循向后兼容原则，breaking change 会提前在 `CHANGELOG.md` 说明。每次重启 Claude Code
+会话会自动拉取最新版本。如需暂停升级，可临时卸载旧版并安装指定版本（需提前打 Tag 或记录 commit SHA，联系 Plugin 维护者）。
 
 详见 `CHANGELOG.md`。
 
@@ -425,7 +430,8 @@ Plugin 团队遵循向后兼容原则，breaking change 会提前在 `CHANGELOG.
 
 **Q5:能在 plugin 之外加自己项目的规则吗?**
 
-可以,而且推荐。业务项目自己的 `CLAUDE.md`、`.claude/rules/`、`.claude/commands/` **都会生效**,与 plugin 内容并列。Plugin 提供"基线",项目可以扩展。
+可以,而且推荐。业务项目自己的 `CLAUDE.md`、`.claude/rules/`、`.claude/commands/` **都会生效**,与 plugin 内容并列。Plugin
+提供"基线",项目可以扩展。
 
 ---
 
@@ -500,11 +506,11 @@ codex plugin install eagle-cloud@eagle-cloud
 
 **可能原因**:
 
-| 原因 | 处理 |
-|---|---|
-| 触发短语不够明确 | 改用"按 eagle flow 走" |
-| Superpowers 没装 | flow 依赖 superpowers 的 skill,必须装 |
-| 短语命中其他 skill 优先级更高 | 显式说"用 eagle-feature-flow" |
+| 原因                 | 处理                              |
+|--------------------|---------------------------------|
+| 触发短语不够明确           | 改用"按 eagle flow 走"              |
+| Superpowers 没装     | flow 依赖 superpowers 的 skill,必须装 |
+| 短语命中其他 skill 优先级更高 | 显式说"用 eagle-feature-flow"       |
 
 ---
 
@@ -512,10 +518,10 @@ codex plugin install eagle-cloud@eagle-cloud
 
 业务项目自身的指令文件优先级 **高于** plugin 注入内容：
 
-| 工具 | 业务项目优先 | plugin 注入 |
-|---|---|---|
+| 工具          | 业务项目优先                         | plugin 注入                                        |
+|-------------|--------------------------------|--------------------------------------------------|
 | Claude Code | `CLAUDE.md` + `.claude/rules/` | `agent-plugin/CLAUDE.md` + `agent-plugin/rules/` |
-| Codex CLI | `AGENTS.md` + `.codex/rules/` | `agent-plugin/AGENTS.md` + `agent-plugin/rules/` |
+| Codex CLI   | `AGENTS.md` + `.codex/rules/`  | `agent-plugin/AGENTS.md` + `agent-plugin/rules/` |
 
 如果发现规则打架:
 
@@ -530,7 +536,8 @@ codex plugin install eagle-cloud@eagle-cloud
 
 1. **小问题**(错别字 / 补充示例)→ 在 `eagle-cloud` 仓库 `agent-plugin/` 直接 PR
 2. **架构变更**(新增 rule、改变 flow 顺序、加新阶段)→ 先在 `#eagle-arch` 群讨论,再 PR
-3. **新增 starter**:在 `eagle-starter/` 加新 starter → 在 `agent-plugin/skills/` 加对应 SKILL.md → 跑 `./agent-plugin/sync.sh`
+3. **新增 starter**:在 `eagle-starter/` 加新 starter → 在 `agent-plugin/skills/` 加对应 SKILL.md → 跑
+   `./agent-plugin/sync.sh`
 
 详见 `README.md` "维护流程"章节。
 

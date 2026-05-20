@@ -12,7 +12,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class FileMapper {
 
-    /** 文件下载 URL 模板：调用方自己的 controller endpoint */
+    /**
+     * 文件下载 URL 模板：调用方自己的 controller endpoint
+     */
     private static final String URL_TEMPLATE = "/api/files/%d";
 
     public FileMetadataResponse toResponse(FileMetadata metadata) {

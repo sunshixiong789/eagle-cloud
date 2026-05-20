@@ -4,13 +4,13 @@
 
 ## 何时使用容错机制
 
-| 场景                          | 选型                |
-|-----------------------------|-------------------|
-| 外部服务调用（Feign、HTTP Client）    | CircuitBreaker + TimeLimiter |
-| 数据库 / Redis 瞬时故障             | Retry（指数退避）        |
-| 批处理 / 非核心后台任务               | Retry + Fallback  |
-| 核心支付 / 下单流程                  | 不使用容错（快速失败 + 告警）   |
-| 读操作（查询接口）                    | CircuitBreaker + Fallback |
+| 场景                        | 选型                           |
+|---------------------------|------------------------------|
+| 外部服务调用（Feign、HTTP Client） | CircuitBreaker + TimeLimiter |
+| 数据库 / Redis 瞬时故障          | Retry（指数退避）                  |
+| 批处理 / 非核心后台任务             | Retry + Fallback             |
+| 核心支付 / 下单流程               | 不使用容错（快速失败 + 告警）             |
+| 读操作（查询接口）                 | CircuitBreaker + Fallback    |
 
 **核心原则**：容错不能替代正确设计——它只是"最后防线"。优先修复根本原因，而非无限添加重试。
 
@@ -66,6 +66,7 @@ public class InventoryApplicationService {
 ```
 
 **Fallback 规范：**
+
 - fallback 方法**必须**有与原方法相同的参数 + `Throwable` 尾参数
 - fallback 中**禁止**再次调用同一外部依赖（无限循环）
 - fallback 返回降级默认值或抛出 `ServiceException`（不吞掉）
@@ -86,6 +87,7 @@ private UserResponse findUserFallback(Long userId, Throwable t) {
 ```
 
 **重试规范：**
+
 - **禁止**对非幂等操作（POST/PUT/DELETE）使用 `@Retry`（会造成重复操作）
 - 重试 + 指数退避（默认 2x），防止雪崩冲击下游
 - 重试次数 ≤ 3，单次最大等待 ≤ 10s（`eagle.resilience.retry.*`）
@@ -160,12 +162,12 @@ eagle:
 
 `eagle-resilience-starter` 集成 Micrometer，自动暴露：
 
-| 指标                                          | 含义      |
-|---------------------------------------------|---------|
-| `resilience4j_circuitbreaker_state`         | 熔断器状态   |
-| `resilience4j_circuitbreaker_calls_total`   | 调用次数/结果 |
-| `resilience4j_retry_calls_total`            | 重试次数    |
-| `resilience4j_timelimiter_calls_total`      | 超时统计    |
+| 指标                                        | 含义      |
+|-------------------------------------------|---------|
+| `resilience4j_circuitbreaker_state`       | 熔断器状态   |
+| `resilience4j_circuitbreaker_calls_total` | 调用次数/结果 |
+| `resilience4j_retry_calls_total`          | 重试次数    |
+| `resilience4j_timelimiter_calls_total`    | 超时统计    |
 
 告警阈值：熔断器状态为 OPEN 持续 > 1 分钟 → 立即告警。
 

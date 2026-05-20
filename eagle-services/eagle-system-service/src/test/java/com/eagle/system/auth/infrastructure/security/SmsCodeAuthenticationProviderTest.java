@@ -49,14 +49,66 @@ import static org.mockito.Mockito.when;
 @DisplayName("SmsCodeAuthenticationProvider")
 class SmsCodeAuthenticationProviderTest {
 
-    @Mock OAuth2AuthorizationService authorizationService;
-    @Mock @SuppressWarnings("rawtypes") OAuth2TokenGenerator tokenGenerator;
-    @Mock UserDetailsService userDetailsService;
-    @Mock SmsService smsService;
-    @Mock AccountApplicationService accountApplicationService;
-    @Mock BlacklistChecker blacklistChecker;
+    @Mock
+    OAuth2AuthorizationService authorizationService;
+    @Mock
+    @SuppressWarnings("rawtypes")
+    OAuth2TokenGenerator tokenGenerator;
+    @Mock
+    UserDetailsService userDetailsService;
+    @Mock
+    SmsService smsService;
+    @Mock
+    AccountApplicationService accountApplicationService;
+    @Mock
+    BlacklistChecker blacklistChecker;
 
     SmsCodeAuthenticationProvider provider;
+
+    private static RegisteredClient clientWithGrants(AuthorizationGrantType... grants) {
+        RegisteredClient.Builder b = RegisteredClient.withId("c-1")
+                .clientId("eagleApp")
+                .clientName("App");
+        for (AuthorizationGrantType g : grants) {
+            b.authorizationGrantType(g);
+        }
+        return b.scope("openid").build();
+    }
+
+    private static OAuth2ClientAuthenticationToken authedClient(RegisteredClient client) {
+        return new OAuth2ClientAuthenticationToken(
+                client, ClientAuthenticationMethod.NONE, null);
+    }
+
+    private static Account activeAccount() {
+        Account account = Account.create("alice",
+                "$2a$10$Eu6yJzqg.qd3.kmkBeAUkOnhwx7ZNZ8XHaVgkrkR.RZcMz1XqWQGS",
+                "13800138000", new ProfileHints(null, null, null));
+        return account;
+    }
+
+    // ====================== helpers ======================
+
+    private static EagleUser eagleUser() {
+        return new EagleUser(1L, "alice", "$2a$10$xx", "Alice", "13800138000",
+                true, true, true, true, Collections.emptyList());
+    }
+
+    private static OAuth2Token stubJwt() {
+        Instant iat = Instant.now();
+        return Jwt.withTokenValue("token.value")
+                .header("alg", "RS256")
+                .jti("jti-1")
+                .subject("alice")
+                .issuedAt(iat)
+                .expiresAt(iat.plusSeconds(3600))
+                .build();
+    }
+
+    @SuppressWarnings("unused")
+    private static List<RegisteredClient> noop() {
+        return Collections.emptyList();
+    }
 
     @BeforeEach
     @SuppressWarnings("unchecked")
@@ -67,12 +119,22 @@ class SmsCodeAuthenticationProviderTest {
 
         AuthorizationServerContextHolder.setContext(new AuthorizationServerContext() {
             @Override
-            public String getIssuer() { return "https://issuer"; }
+            public String getIssuer() {
+                return "https://issuer";
+            }
+
             @Override
             public AuthorizationServerSettings getAuthorizationServerSettings() {
                 return AuthorizationServerSettings.builder().issuer("https://issuer").build();
             }
         });
+    }
+
+    @Test
+    @DisplayName("supports SmsCodeAuthenticationToken")
+    void supportsToken() {
+        org.junit.jupiter.api.Assertions.assertTrue(provider.supports(SmsCodeAuthenticationToken.class));
+        org.junit.jupiter.api.Assertions.assertFalse(provider.supports(WechatAppAuthenticationToken.class));
     }
 
     @Nested
@@ -163,57 +225,5 @@ class SmsCodeAuthenticationProviderTest {
             assertThrows(RuntimeException.class, () -> provider.authenticate(authToken));
             verify(smsService, never()).verifyCode(any(), any());
         }
-    }
-
-    @Test
-    @DisplayName("supports SmsCodeAuthenticationToken")
-    void supportsToken() {
-        org.junit.jupiter.api.Assertions.assertTrue(provider.supports(SmsCodeAuthenticationToken.class));
-        org.junit.jupiter.api.Assertions.assertFalse(provider.supports(WechatAppAuthenticationToken.class));
-    }
-
-    // ====================== helpers ======================
-
-    private static RegisteredClient clientWithGrants(AuthorizationGrantType... grants) {
-        RegisteredClient.Builder b = RegisteredClient.withId("c-1")
-                .clientId("eagleApp")
-                .clientName("App");
-        for (AuthorizationGrantType g : grants) {
-            b.authorizationGrantType(g);
-        }
-        return b.scope("openid").build();
-    }
-
-    private static OAuth2ClientAuthenticationToken authedClient(RegisteredClient client) {
-        return new OAuth2ClientAuthenticationToken(
-                client, ClientAuthenticationMethod.NONE, null);
-    }
-
-    private static Account activeAccount() {
-        Account account = Account.create("alice",
-                "$2a$10$Eu6yJzqg.qd3.kmkBeAUkOnhwx7ZNZ8XHaVgkrkR.RZcMz1XqWQGS",
-                "13800138000", new ProfileHints(null, null, null));
-        return account;
-    }
-
-    private static EagleUser eagleUser() {
-        return new EagleUser(1L, "alice", "$2a$10$xx", "Alice", "13800138000",
-                true, true, true, true, Collections.emptyList());
-    }
-
-    private static OAuth2Token stubJwt() {
-        Instant iat = Instant.now();
-        return Jwt.withTokenValue("token.value")
-                .header("alg", "RS256")
-                .jti("jti-1")
-                .subject("alice")
-                .issuedAt(iat)
-                .expiresAt(iat.plusSeconds(3600))
-                .build();
-    }
-
-    @SuppressWarnings("unused")
-    private static List<RegisteredClient> noop() {
-        return Collections.emptyList();
     }
 }

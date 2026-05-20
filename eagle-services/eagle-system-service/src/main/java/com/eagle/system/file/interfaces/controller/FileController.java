@@ -123,7 +123,9 @@ public class FileController {
         }
     }
 
-    /** Swagger 用：multipart 上传表单结构 */
+    /**
+     * Swagger 用：multipart 上传表单结构
+     */
     @Schema(description = "上传表单")
     private record UploadForm(
             @Schema(type = "string", format = "binary", description = "待上传文件") MultipartFile file

@@ -33,7 +33,9 @@ import java.util.regex.Pattern;
 public class PhoneOneClickServiceImpl implements PhoneOneClickService {
 
     private static final Pattern PHONE_PATTERN = Pattern.compile("^1[3-9]\\d{9}$");
-    /** 阿里云号码认证业务成功状态码 */
+    /**
+     * 阿里云号码认证业务成功状态码
+     */
     private static final String ALIYUN_SUCCESS_CODE = "OK";
 
     private final PhoneOneClickProperties properties;

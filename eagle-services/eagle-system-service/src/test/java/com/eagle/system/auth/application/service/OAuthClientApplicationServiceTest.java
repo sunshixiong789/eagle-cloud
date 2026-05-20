@@ -43,10 +43,14 @@ class OAuthClientApplicationServiceTest {
     private static final Long ID = 10L;
     private static final String CLIENT_ID = "eagleWeb";
 
-    @Mock OAuthClientRepository oAuthClientRepository;
-    @Mock OAuthClientMapper oAuthClientMapper;
-    @Mock PasswordEncoder passwordEncoder;
-    @InjectMocks OAuthClientApplicationService service;
+    @Mock
+    OAuthClientRepository oAuthClientRepository;
+    @Mock
+    OAuthClientMapper oAuthClientMapper;
+    @Mock
+    PasswordEncoder passwordEncoder;
+    @InjectMocks
+    OAuthClientApplicationService service;
 
     private OAuthClient sampleClient() {
         return OAuthClient.create(CLIENT_ID, "{bcrypt}secret", "Eagle Web", "none",

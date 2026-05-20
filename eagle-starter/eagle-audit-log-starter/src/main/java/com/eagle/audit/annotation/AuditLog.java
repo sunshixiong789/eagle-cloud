@@ -22,15 +22,23 @@ import java.lang.annotation.Target;
 @Documented
 public @interface AuditLog {
 
-    /** 操作所属模块。 */
+    /**
+     * 操作所属模块。
+     */
     String module() default "";
 
-    /** 操作描述，支持 Spring EL（引用方法参数）。 */
+    /**
+     * 操作描述，支持 Spring EL（引用方法参数）。
+     */
     String action() default "";
 
-    /** 是否记录请求参数（敏感接口设为 false）。 */
+    /**
+     * 是否记录请求参数（敏感接口设为 false）。
+     */
     boolean logArgs() default true;
 
-    /** 是否记录返回结果。 */
+    /**
+     * 是否记录返回结果。
+     */
     boolean logResult() default false;
 }

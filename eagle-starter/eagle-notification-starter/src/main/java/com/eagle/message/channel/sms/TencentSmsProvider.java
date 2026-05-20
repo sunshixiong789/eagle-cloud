@@ -28,7 +28,9 @@ public class TencentSmsProvider implements SmsProvider {
 
     public static final String NAME = "tencent";
 
-    /** 腾讯云 SMS API 默认 Endpoint。 */
+    /**
+     * 腾讯云 SMS API 默认 Endpoint。
+     */
     private static final String DEFAULT_ENDPOINT = "sms.tencentcloudapi.com";
 
     private final SmsClient client;
@@ -72,7 +74,7 @@ public class TencentSmsProvider implements SmsProvider {
             request.setSmsSdkAppId(sdkAppId);
             request.setSignName(signName);
             request.setTemplateId(templateId);
-            request.setPhoneNumberSet(new String[] {normalizePhone(phone)});
+            request.setPhoneNumberSet(new String[]{normalizePhone(phone)});
             request.setTemplateParamSet(toOrderedParams(params));
 
             SendSmsResponse response = client.SendSms(request);

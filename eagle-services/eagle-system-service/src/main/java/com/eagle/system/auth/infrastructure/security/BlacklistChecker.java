@@ -19,7 +19,9 @@ public class BlacklistChecker {
 
     private final BlacklistApplicationService blacklist;
 
-    /** 用户名/手机号登录前置校验 */
+    /**
+     * 用户名/手机号登录前置校验
+     */
     public void checkLogin(String username, String phone, String ip, Long accountId) {
         if (ip != null && blacklist.isBlacklisted(BlacklistType.IP, ip)) {
             throw AuthErrorCode.IP_BLACKLISTED.toServiceException();
@@ -34,7 +36,9 @@ public class BlacklistChecker {
         }
     }
 
-    /** 注册前置校验 */
+    /**
+     * 注册前置校验
+     */
     public void checkRegister(String phone, String email, String ip) {
         if (ip != null && blacklist.isBlacklisted(BlacklistType.IP, ip)) {
             throw AuthErrorCode.IP_BLACKLISTED.toServiceException();
@@ -49,7 +53,9 @@ public class BlacklistChecker {
         }
     }
 
-    /** 微信登录前置校验 */
+    /**
+     * 微信登录前置校验
+     */
     public void checkWechat(String openid, String ip) {
         if (ip != null && blacklist.isBlacklisted(BlacklistType.IP, ip)) {
             throw AuthErrorCode.IP_BLACKLISTED.toServiceException();

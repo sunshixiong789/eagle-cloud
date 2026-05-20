@@ -26,7 +26,9 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 @RequiredArgsConstructor
 public class GatewayCorsConfig {
 
-    /** 路径模板：与原 globalcors 的 [/**] 等价 */
+    /**
+     * 路径模板：与原 globalcors 的 [/**] 等价
+     */
     private static final String PATH_PATTERN = "/**";
 
     private final GatewayCorsProperties properties;

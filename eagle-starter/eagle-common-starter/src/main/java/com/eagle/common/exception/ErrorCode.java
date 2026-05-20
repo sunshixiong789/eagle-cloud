@@ -27,16 +27,6 @@ import java.util.Locale;
 public interface ErrorCode {
 
     /**
-     * 聚合错误码全部元数据的 Record，由枚举构造器包装后通过 {@link #meta()} 返回。
-     * 实现类只需持有一个此字段即可，无需再单独声明 code / messageKey / defaultMessage 三个字段。
-     *
-     * @param code           数字错误码，用于 API 响应和日志定位
-     * @param messageKey     i18n 资源键，对应 messages_*.properties 中的 key
-     * @param defaultMessage 当 i18n 解析失败时的中文降级消息
-     */
-    record Meta(int code, String messageKey, String defaultMessage) {}
-
-    /**
      * 返回当前错误码的元数据，这是实现类<strong>唯一需要覆写</strong>的方法。
      *
      * <p>标准实现：
@@ -53,24 +43,32 @@ public interface ErrorCode {
      */
     Meta meta();
 
-    // ==================== 消息解析（由 Meta 委托，实现类无需覆写）====================
-
-    /** 数字错误码，用于 API 响应和日志定位 */
+    /**
+     * 数字错误码，用于 API 响应和日志定位
+     */
     default int getCode() {
         return meta().code();
     }
 
-    /** i18n 资源键，对应 messages_*.properties 中的 key */
+    // ==================== 消息解析（由 Meta 委托，实现类无需覆写）====================
+
+    /**
+     * i18n 资源键，对应 messages_*.properties 中的 key
+     */
     default String getMessageKey() {
         return meta().messageKey();
     }
 
-    /** 当 i18n 解析失败时的中文降级消息 */
+    /**
+     * 当 i18n 解析失败时的中文降级消息
+     */
     default String getDefaultMessage() {
         return meta().defaultMessage();
     }
 
-    /** 使用 LocaleContextHolder 解析当前语言消息（MVC 上下文） */
+    /**
+     * 使用 LocaleContextHolder 解析当前语言消息（MVC 上下文）
+     */
     default String getMessage() {
         return MessageSourceUtil.getMessage(getMessageKey(), null, getDefaultMessage());
     }
@@ -93,8 +91,6 @@ public interface ErrorCode {
         return MessageSourceUtil.getMessage(getMessageKey(), null, getDefaultMessage(), locale);
     }
 
-    // ==================== 异常工厂方法 ====================
-
     /**
      * 创建 HTTP 404 Not Found 异常
      *
@@ -103,6 +99,8 @@ public interface ErrorCode {
     default NotFoundException toNotFoundException(Object... args) {
         return new NotFoundException(this, args);
     }
+
+    // ==================== 异常工厂方法 ====================
 
     /**
      * 创建 HTTP 409 Conflict 异常
@@ -138,5 +136,16 @@ public interface ErrorCode {
      */
     default ServiceException toServiceException(Throwable cause) {
         return new ServiceException(this, cause);
+    }
+
+    /**
+     * 聚合错误码全部元数据的 Record，由枚举构造器包装后通过 {@link #meta()} 返回。
+     * 实现类只需持有一个此字段即可，无需再单独声明 code / messageKey / defaultMessage 三个字段。
+     *
+     * @param code           数字错误码，用于 API 响应和日志定位
+     * @param messageKey     i18n 资源键，对应 messages_*.properties 中的 key
+     * @param defaultMessage 当 i18n 解析失败时的中文降级消息
+     */
+    record Meta(int code, String messageKey, String defaultMessage) {
     }
 }

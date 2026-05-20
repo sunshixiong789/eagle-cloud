@@ -36,10 +36,14 @@ class DictApplicationServiceTest {
 
     private static final Long DICT_ID = 10L;
 
-    @Mock DictRepository dictRepository;
-    @Mock DictMapper dictMapper;
-    @Mock DictItemMapper dictItemMapper;
-    @InjectMocks DictApplicationService service;
+    @Mock
+    DictRepository dictRepository;
+    @Mock
+    DictMapper dictMapper;
+    @Mock
+    DictItemMapper dictItemMapper;
+    @InjectMocks
+    DictApplicationService service;
 
     private Dict sampleDict() {
         Dict dict = Dict.create(DictType.USER_STATUS, "用户状态", null, null);

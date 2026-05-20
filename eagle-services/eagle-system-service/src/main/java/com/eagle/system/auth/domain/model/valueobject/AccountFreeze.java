@@ -43,7 +43,9 @@ public class AccountFreeze {
     @Column(name = "frozen_at", comment = "冻结时间")
     private LocalDateTime frozenAt;
 
-    /** 判断当前冻结是否已到期。永久冻结永远返回 false */
+    /**
+     * 判断当前冻结是否已到期。永久冻结永远返回 false
+     */
     public boolean isExpired(LocalDateTime now) {
         return freezeUntil != null && now.isAfter(freezeUntil);
     }

@@ -8,15 +8,15 @@
 
 ## Gradle 依赖范围
 
-| 范围                    | 含义                     | 何时使用                                            |
-|-----------------------|------------------------|-------------------------------------------------|
-| `api`                 | 编译期 + 运行期 + **暴露给消费方** | starter 公开 API；BOM 入口                           |
-| `implementation`      | 编译期 + 运行期，**不暴露**      | 业务服务依赖；私有实现细节                                   |
-| `compileOnly`         | 仅编译期                   | 注解处理器、可选依赖（`@ConditionalOnClass`）               |
-| `runtimeOnly`         | 仅运行期                   | JDBC 驱动、Logback 实现                              |
-| `annotationProcessor` | 注解处理                   | Lombok、Spring Configuration Processor          |
-| `testImplementation`  | 测试编译 + 运行              | JUnit、Mockito                                   |
-| `testCompileOnly`     | 仅测试编译                  | 测试用 Lombok                                      |
+| 范围                    | 含义                     | 何时使用                                  |
+|-----------------------|------------------------|---------------------------------------|
+| `api`                 | 编译期 + 运行期 + **暴露给消费方** | starter 公开 API；BOM 入口                 |
+| `implementation`      | 编译期 + 运行期，**不暴露**      | 业务服务依赖；私有实现细节                         |
+| `compileOnly`         | 仅编译期                   | 注解处理器、可选依赖（`@ConditionalOnClass`）     |
+| `runtimeOnly`         | 仅运行期                   | JDBC 驱动、Logback 实现                    |
+| `annotationProcessor` | 注解处理                   | Lombok、Spring Configuration Processor |
+| `testImplementation`  | 测试编译 + 运行              | JUnit、Mockito                         |
+| `testCompileOnly`     | 仅测试编译                  | 测试用 Lombok                            |
 
 ## 典型 starter 依赖（详见 `10-starter.md`）
 

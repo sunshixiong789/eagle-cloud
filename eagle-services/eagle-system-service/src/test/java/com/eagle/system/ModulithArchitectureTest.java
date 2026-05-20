@@ -42,10 +42,40 @@ class ModulithArchitectureTest {
     private static final ApplicationModules MODULES =
             ApplicationModules.of(EagleSystemApplication.class);
 
+    private static void assertNamedInterfacePresent(String moduleName, String interfaceName) {
+        ApplicationModule module = MODULES.getModuleByName(moduleName)
+                .orElseThrow(() -> new AssertionError(moduleName + " 模块未找到"));
+        if (module.getNamedInterfaces().getByName(interfaceName).isEmpty()) {
+            fail(moduleName + " 缺少 '" + interfaceName + "' 命名接口（@NamedInterface），"
+                    + "请检查对应 package-info.java");
+        }
+    }
+
+    /**
+     * 断言模块的（直接或传递）依赖中不包含目标模块。
+     */
+    private static void assertModuleNotDependsOn(ApplicationModule module, String forbiddenModule) {
+        boolean depends = module.getDependencies(MODULES).stream()
+                .map(dep -> dep.getTargetModule().getName())
+                .anyMatch(forbiddenModule::equals);
+        if (depends) {
+            fail(module.getName() + " 不应依赖 " + forbiddenModule + " 模块；"
+                    + "请检查 import 语句和 package-info.java 的 allowedDependencies");
+        }
+    }
+
     @Test
     @DisplayName("verify() 验证所有模块依赖合法、无循环依赖、无非法跨模块访问")
     void verifiesModularStructure() {
         MODULES.verify();
+    }
+
+    @Test
+    @DisplayName("生成模块依赖图文档（PlantUML）")
+    void writeDocumentationSnippets() {
+        new Documenter(MODULES)
+                .writeModulesAsPlantUml()
+                .writeIndividualModulesAsPlantUml();
     }
 
     @Nested
@@ -93,6 +123,8 @@ class ModulithArchitectureTest {
         }
     }
 
+    // ============ helpers ============
+
     @Nested
     @DisplayName("base 模块边界")
     class BaseBoundary {
@@ -127,38 +159,6 @@ class ModulithArchitectureTest {
                     "实际模块: " + moduleNames);
             assertTrue(moduleNames.contains("base"),
                     "实际模块: " + moduleNames);
-        }
-    }
-
-    @Test
-    @DisplayName("生成模块依赖图文档（PlantUML）")
-    void writeDocumentationSnippets() {
-        new Documenter(MODULES)
-                .writeModulesAsPlantUml()
-                .writeIndividualModulesAsPlantUml();
-    }
-
-    // ============ helpers ============
-
-    private static void assertNamedInterfacePresent(String moduleName, String interfaceName) {
-        ApplicationModule module = MODULES.getModuleByName(moduleName)
-                .orElseThrow(() -> new AssertionError(moduleName + " 模块未找到"));
-        if (module.getNamedInterfaces().getByName(interfaceName).isEmpty()) {
-            fail(moduleName + " 缺少 '" + interfaceName + "' 命名接口（@NamedInterface），"
-                    + "请检查对应 package-info.java");
-        }
-    }
-
-    /**
-     * 断言模块的（直接或传递）依赖中不包含目标模块。
-     */
-    private static void assertModuleNotDependsOn(ApplicationModule module, String forbiddenModule) {
-        boolean depends = module.getDependencies(MODULES).stream()
-                .map(dep -> dep.getTargetModule().getName())
-                .anyMatch(forbiddenModule::equals);
-        if (depends) {
-            fail(module.getName() + " 不应依赖 " + forbiddenModule + " 模块；"
-                    + "请检查 import 语句和 package-info.java 的 allowedDependencies");
         }
     }
 }

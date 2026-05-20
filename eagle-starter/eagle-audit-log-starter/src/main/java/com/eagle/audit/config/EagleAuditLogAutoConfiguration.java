@@ -56,7 +56,9 @@ public class EagleAuditLogAutoConfiguration {
         return new AuditLogEventListener(handler);
     }
 
-    /** 无用户上下文时降级为匿名。 */
+    /**
+     * 无用户上下文时降级为匿名。
+     */
     static class AnonymousAuditLogUserProvider implements AuditLogUserProvider {
         @Override
         public String getCurrentUserId() {

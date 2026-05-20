@@ -63,20 +63,20 @@ SPRING_DATASOURCE_URL=jdbc:mysql://... \
 ./gradlew :eagle-services:eagle-monolith-service:bootRun
 ```
 
-| 端点                | 默认地址                              | 说明                |
-|-------------------|-----------------------------------|-------------------|
-| Swagger UI        | http://localhost/swagger-ui.html  | API 文档            |
-| OAuth2 Token      | http://localhost/oauth2/token     | 令牌端点              |
-| OAuth2 Authorize  | http://localhost/oauth2/authorize | 授权码端点             |
-| WebSocket（STOMP） | ws://localhost/ws-stomp           | 实时推送              |
-| Actuator Health   | http://localhost/actuator/health  | 健康检查              |
+| 端点               | 默认地址                              | 说明     |
+|------------------|-----------------------------------|--------|
+| Swagger UI       | http://localhost/swagger-ui.html  | API 文档 |
+| OAuth2 Token     | http://localhost/oauth2/token     | 令牌端点   |
+| OAuth2 Authorize | http://localhost/oauth2/authorize | 授权码端点  |
+| WebSocket（STOMP） | ws://localhost/ws-stomp           | 实时推送   |
+| Actuator Health  | http://localhost/actuator/health  | 健康检查   |
 
 ## Profile
 
-| Profile | 数据源        | 缓存       | 用途              |
-|---------|------------|----------|-----------------|
-| `local` | H2（内存）     | Caffeine | 本机快速验证 / 默认     |
-| `prod`  | MySQL（外部）  | Redis    | 生产 / 容器化部署      |
+| Profile | 数据源       | 缓存       | 用途          |
+|---------|-----------|----------|-------------|
+| `local` | H2（内存）    | Caffeine | 本机快速验证 / 默认 |
+| `prod`  | MySQL（外部） | Redis    | 生产 / 容器化部署  |
 
 切换：`SPRING_PROFILES_ACTIVE=prod` 或 `--spring.profiles.active=prod`。
 
@@ -96,15 +96,15 @@ SPRING_DATASOURCE_URL=jdbc:mysql://... \
 
 ## 单体 vs 微服务取舍
 
-| 维度       | 单体（本服务）             | 微服务（system + gateway）        |
-|----------|---------------------|------------------------------|
-| 部署       | 单 JAR / 单容器         | 至少 2 服务（system + gateway）   |
-| 注册中心     | 不需要                 | 需要 Nacos                     |
-| 网关       | 不需要                 | 需要 eagle-gateway-service     |
-| 限流 / 链路  | 业务内 Spring AOP 即可  | Sentinel + Zipkin            |
-| 服务发现     | N/A                 | Nacos `lb://`                |
-| 启动复杂度    | 极低                  | 中等                           |
-| 适用规模     | 小型 SaaS / PoC / 私有部署 | 中大型团队 / 多业务域 / 高可用要求       |
+| 维度      | 单体（本服务）              | 微服务（system + gateway）     |
+|---------|----------------------|---------------------------|
+| 部署      | 单 JAR / 单容器          | 至少 2 服务（system + gateway） |
+| 注册中心    | 不需要                  | 需要 Nacos                  |
+| 网关      | 不需要                  | 需要 eagle-gateway-service  |
+| 限流 / 链路 | 业务内 Spring AOP 即可    | Sentinel + Zipkin         |
+| 服务发现    | N/A                  | Nacos `lb://`             |
+| 启动复杂度   | 极低                   | 中等                        |
+| 适用规模    | 小型 SaaS / PoC / 私有部署 | 中大型团队 / 多业务域 / 高可用要求      |
 
 业务代码完全相同 — 当规模增长时，可平滑切换到 `eagle-system-service` + `eagle-gateway-service` 部署模式，无需改业务代码。
 

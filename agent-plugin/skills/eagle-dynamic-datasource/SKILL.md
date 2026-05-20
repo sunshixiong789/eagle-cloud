@@ -63,16 +63,16 @@ eagle:
 
 ## 核心 API
 
-| 类 / 注解                              | 用途                                                           |
-|--------------------------------------|--------------------------------------------------------------|
-| `@ReadOnly`                          | 方法或类级注解：路由到 slave                                          |
-| `ReadOnlyAspect`                     | 拦截 `@ReadOnly` + `@Transactional(readOnly=true)` 自动切换从库     |
-| `DataSourceContextHolder.set(key)`   | 编程式设置数据源                                                    |
-| `DataSourceContextHolder.get()`      | 获取当前数据源，默认 `"master"`                                       |
-| `DataSourceContextHolder.getRaw()`   | 获取原始 ThreadLocal 值（未设置时返回 `null`，用于区分"未设置"与"明确设置为 master"）  |
-| `DataSourceContextHolder.clear()`    | 清除 ThreadLocal（线程池场景必须在 finally 中调用）                        |
-| `DynamicDataSource`                  | `AbstractRoutingDataSource` 子类，多从库时内部轮询                      |
-| `DynamicDataSourceProperties`        | 配置属性类（`eagle.datasource.*`）                                  |
+| 类 / 注解                             | 用途                                                         |
+|------------------------------------|------------------------------------------------------------|
+| `@ReadOnly`                        | 方法或类级注解：路由到 slave                                          |
+| `ReadOnlyAspect`                   | 拦截 `@ReadOnly` + `@Transactional(readOnly=true)` 自动切换从库    |
+| `DataSourceContextHolder.set(key)` | 编程式设置数据源                                                   |
+| `DataSourceContextHolder.get()`    | 获取当前数据源，默认 `"master"`                                      |
+| `DataSourceContextHolder.getRaw()` | 获取原始 ThreadLocal 值（未设置时返回 `null`，用于区分"未设置"与"明确设置为 master"） |
+| `DataSourceContextHolder.clear()`  | 清除 ThreadLocal（线程池场景必须在 finally 中调用）                       |
+| `DynamicDataSource`                | `AbstractRoutingDataSource` 子类，多从库时内部轮询                    |
+| `DynamicDataSourceProperties`      | 配置属性类（`eagle.datasource.*`）                                |
 
 ## 使用示例
 
@@ -149,27 +149,27 @@ public TaskDecorator combinedDecorator(TaskDecorator tenantDecorator) {
 
 ## 配置项
 
-| 配置键                                           | 类型       | 默认值       | 说明                              |
-|-------------------------------------------------|----------|-----------|-----------------------------------|
-| `eagle.datasource.enabled`                      | boolean  | `false`   | 总开关，必须显式设为 `true`         |
-| `eagle.datasource.master.url`                   | String   | —         | 主库 JDBC URL（必填）             |
-| `eagle.datasource.master.username`              | String   | —         | 主库用户名                        |
-| `eagle.datasource.master.password`              | String   | —         | 主库密码                          |
-| `eagle.datasource.master.driver-class-name`     | String   | 自动推断   | 驱动类名（可省略）                |
-| `eagle.datasource.slave.*`                      | —        | —         | 单从库配置，结构同 master          |
-| `eagle.datasource.slaves[n].*`                  | —        | —         | 多从库列表；非空时取代 slave 字段  |
+| 配置键                                         | 类型      | 默认值     | 说明                   |
+|---------------------------------------------|---------|---------|----------------------|
+| `eagle.datasource.enabled`                  | boolean | `false` | 总开关，必须显式设为 `true`    |
+| `eagle.datasource.master.url`               | String  | —       | 主库 JDBC URL（必填）      |
+| `eagle.datasource.master.username`          | String  | —       | 主库用户名                |
+| `eagle.datasource.master.password`          | String  | —       | 主库密码                 |
+| `eagle.datasource.master.driver-class-name` | String  | 自动推断    | 驱动类名（可省略）            |
+| `eagle.datasource.slave.*`                  | —       | —       | 单从库配置，结构同 master     |
+| `eagle.datasource.slaves[n].*`              | —       | —       | 多从库列表；非空时取代 slave 字段 |
 
 ## 常见错误
 
-| 错误 | 正确做法 |
-|------|---------|
-| ❌ 写操作加 `@ReadOnly` | ✅ 仅查询方法使用 |
-| ❌ `finally` 里 `set("master")` 而非 `clear()` | ✅ 必须 `clear()` 防止线程池泄漏 |
-| ❌ 主从延迟未考虑（写后立即读） | ✅ 强一致性读不加 `@ReadOnly` |
+| 错误                                              | 正确做法                                                            |
+|-------------------------------------------------|-----------------------------------------------------------------|
+| ❌ 写操作加 `@ReadOnly`                              | ✅ 仅查询方法使用                                                       |
+| ❌ `finally` 里 `set("master")` 而非 `clear()`      | ✅ 必须 `clear()` 防止线程池泄漏                                          |
+| ❌ 主从延迟未考虑（写后立即读）                                | ✅ 强一致性读不加 `@ReadOnly`                                           |
 | ❌ 期望 `@Transactional(readOnly=true)` 类级注解自动路由从库 | ✅ 类级 `@Transactional` 不被 `@annotation` 切点拦截，请用 `@ReadOnly` 类级注解 |
-| ❌ 配置写 `spring.datasource.dynamic.*` | ✅ 正确前缀是 `eagle.datasource.*` |
-| ❌ 期望默认开启 | ✅ `enabled` 默认 `false`，需显式开启 |
-| ❌ 使用已废弃的 `DataSourceProperties` 类 | ✅ 改用 `DynamicDataSourceProperties` |
+| ❌ 配置写 `spring.datasource.dynamic.*`             | ✅ 正确前缀是 `eagle.datasource.*`                                    |
+| ❌ 期望默认开启                                        | ✅ `enabled` 默认 `false`，需显式开启                                    |
+| ❌ 使用已废弃的 `DataSourceProperties` 类               | ✅ 改用 `DynamicDataSourceProperties`                              |
 
 ## 关联规范
 

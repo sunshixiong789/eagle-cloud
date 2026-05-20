@@ -33,12 +33,12 @@ class RemoteClientConfiguration {
 
 `http-client-starter` 内置 `EagleResponseErrorHandler`，自动将下游 HTTP 错误转换为项目异常体系：
 
-| 下游状态码 | 转换结果 |
-|------------|----------|
-| 400 | `DomainException` |
-| 404 | `NotFoundException` |
-| 409 | `ConflictException` |
-| 403 / 429 / 5xx / 其他 | `ServiceException` |
+| 下游状态码                | 转换结果                |
+|----------------------|---------------------|
+| 400                  | `DomainException`   |
+| 404                  | `NotFoundException` |
+| 409                  | `ConflictException` |
+| 403 / 429 / 5xx / 其他 | `ServiceException`  |
 
 调用方无需手动 try-catch HTTP 客户端异常，全局异常处理器统一处理。
 

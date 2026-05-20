@@ -84,8 +84,8 @@ public class DictController {
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public Page<DictResponse> queryDict(@ParameterObject
-                                         @Parameter(description = "分页参数（page=页码从0开始, size=每页条数, sort=排序字段）")
-                                         @PageableDefault Pageable pageable) {
+                                        @Parameter(description = "分页参数（page=页码从0开始, size=每页条数, sort=排序字段）")
+                                        @PageableDefault Pageable pageable) {
         return dictApplicationService.queryDict(pageable);
     }
 

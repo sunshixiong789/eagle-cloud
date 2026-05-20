@@ -36,14 +36,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class TokenBudgetAdvisor implements BaseAdvisor {
 
+    static final String CONTEXT_KEY_TENANT = "tenantId";
     private static final Logger log = LoggerFactory.getLogger(TokenBudgetAdvisor.class);
-
-    /** 在限流检查（HIGHEST_PRECEDENCE+100）之后运行，配额耗尽则早于实际调用拒绝。 */
+    /**
+     * 在限流检查（HIGHEST_PRECEDENCE+100）之后运行，配额耗尽则早于实际调用拒绝。
+     */
     private static final int ORDER = Ordered.HIGHEST_PRECEDENCE + 200;
     private static final DateTimeFormatter MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM");
-
-    static final String CONTEXT_KEY_TENANT = "tenantId";
-
     private final StringRedisTemplate redisTemplate;
     private final String keyPrefix;
     private final long defaultMonthlyTokens;

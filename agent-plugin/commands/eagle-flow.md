@@ -17,19 +17,19 @@ argument-hint: "[功能描述,可选;如\"用户积分系统\"]"
 
 2. **解析参数**
 
-   - 若 `$ARGUMENTS` 非空 → 作为本次功能描述传给 Phase 1(Brainstorm),
-     直接进入需求澄清,无需用户再开口
-   - 若 `$ARGUMENTS` 为空 → 询问"本次要做的功能是什么?",
-     收到回复后进入 Phase 1
+    - 若 `$ARGUMENTS` 非空 → 作为本次功能描述传给 Phase 1(Brainstorm),
+      直接进入需求澄清,无需用户再开口
+    - 若 `$ARGUMENTS` 为空 → 询问"本次要做的功能是什么?",
+      收到回复后进入 Phase 1
 
 3. **TodoWrite 创建 6 项 todo**
 
-   - [ ] Phase 1/6: Brainstorm
-   - [ ] Phase 2/6: Plan
-   - [ ] Phase 3/6: TDD
-   - [ ] Phase 4/6: Verify
-   - [ ] Phase 5/6: Review
-   - [ ] Phase 6/6: Finish
+    - [ ] Phase 1/6: Brainstorm
+    - [ ] Phase 2/6: Plan
+    - [ ] Phase 3/6: TDD
+    - [ ] Phase 4/6: Verify
+    - [ ] Phase 5/6: Review
+    - [ ] Phase 6/6: Finish
 
 4. **按 skill 定义的顺序执行**
 
@@ -70,10 +70,10 @@ argument-hint: "[功能描述,可选;如\"用户积分系统\"]"
 
 以下两种方式效果完全相同:
 
-| 方式 | 例子 |
-|---|---|
+| 方式            | 例子                   |
+|---------------|----------------------|
 | Slash command | `/eagle-flow 用户积分系统` |
-| 自然语言 | `我要做一个用户积分系统` |
+| 自然语言          | `我要做一个用户积分系统`        |
 
 `eagle-feature-flow` skill 的 description 已经覆盖"新功能/加一个模块/重构 X"等触发短语,
 模型会自动激活;slash command 是**显式入口**,适合:

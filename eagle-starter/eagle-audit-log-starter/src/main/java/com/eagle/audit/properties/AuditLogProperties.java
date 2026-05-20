@@ -21,12 +21,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "eagle.audit-log")
 public class AuditLogProperties {
 
-    /** 是否启用审计日志。 */
+    /**
+     * 是否启用审计日志。
+     */
     private boolean enabled = true;
 
-    /** 请求参数序列化后的最大字符数，超出截断。 */
+    /**
+     * 请求参数序列化后的最大字符数，超出截断。
+     */
     private int maxArgsLength = 2000;
 
-    /** 返回结果序列化后的最大字符数，超出截断。 */
+    /**
+     * 返回结果序列化后的最大字符数，超出截断。
+     */
     private int maxResultLength = 2000;
 }

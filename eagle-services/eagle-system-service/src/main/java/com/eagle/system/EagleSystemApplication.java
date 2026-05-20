@@ -54,15 +54,15 @@ public class EagleSystemApplication {
 
         log.info(
                 """
-
-                ╔══════════════════════════════════════════════════════════════╗
-                ║  🚀 Eagle Application Started Successfully!                  ║
-                ╠══════════════════════════════════════════════════════════════╣
-                ║  📚 Swagger UI:      {}║
-                ║  📖 API Docs:        {}║
-                ║  🔐 OAuth2 Token:    {}║
-                ╚══════════════════════════════════════════════════════════════╝
-                """,
+                        
+                        ╔══════════════════════════════════════════════════════════════╗
+                        ║  🚀 Eagle Application Started Successfully!                  ║
+                        ╠══════════════════════════════════════════════════════════════╣
+                        ║  📚 Swagger UI:      {}║
+                        ║  📖 API Docs:        {}║
+                        ║  🔐 OAuth2 Token:    {}║
+                        ╚══════════════════════════════════════════════════════════════╝
+                        """,
                 padRight(baseUrl + "/swagger-ui.html", 38),
                 padRight(baseUrl + "/v3/api-docs", 38),
                 padRight(baseUrl + "/oauth2/token", 38));

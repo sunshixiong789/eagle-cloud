@@ -96,7 +96,9 @@ public class AccountApplicationService {
         accountRepository.save(account);
     }
 
-    /** 冻结账号（管理员显式触发）。 */
+    /**
+     * 冻结账号（管理员显式触发）。
+     */
     @Transactional(rollbackFor = Exception.class)
     public void freezeAccount(Long accountId, FreezeAccountCommand cmd) {
         Account account = findAccountById(accountId);
@@ -105,7 +107,9 @@ public class AccountApplicationService {
         accountRepository.save(account);
     }
 
-    /** 解冻账号（管理员显式触发）。 */
+    /**
+     * 解冻账号（管理员显式触发）。
+     */
     @Transactional(rollbackFor = Exception.class)
     public void unfreezeAccount(Long accountId, Long operatorId, String operatorName) {
         Account account = findAccountById(accountId);

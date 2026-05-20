@@ -23,21 +23,33 @@ import java.util.List;
 @ConfigurationProperties(prefix = "eagle.gateway.cors")
 public class GatewayCorsProperties {
 
-    /** 允许的源（支持通配），缺省 *（基线放开；prod profile 强制注入并覆盖） */
+    /**
+     * 允许的源（支持通配），缺省 *（基线放开；prod profile 强制注入并覆盖）
+     */
     private List<String> allowedOriginPatterns = List.of("*");
 
-    /** 允许的 HTTP 方法 */
+    /**
+     * 允许的 HTTP 方法
+     */
     private List<String> allowedMethods = List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS");
 
-    /** 允许的请求头，* 表示放开所有 */
+    /**
+     * 允许的请求头，* 表示放开所有
+     */
     private List<String> allowedHeaders = List.of("*");
 
-    /** 暴露给前端 JS 的响应头（前端需要读取的自定义头必须列在这里） */
+    /**
+     * 暴露给前端 JS 的响应头（前端需要读取的自定义头必须列在这里）
+     */
     private List<String> exposedHeaders = List.of();
 
-    /** 是否允许携带 Cookie / Authorization 凭据 */
+    /**
+     * 是否允许携带 Cookie / Authorization 凭据
+     */
     private boolean allowCredentials = true;
 
-    /** 预检请求缓存秒数 */
+    /**
+     * 预检请求缓存秒数
+     */
     private long maxAge = 3600L;
 }

@@ -1,12 +1,16 @@
 # 黑名单 + 用户冻结 实现计划
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:
+> executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 升级账号锁定为完整的"冻结"模型（原因/到期/操作人/审计），新增租户级身份黑名单聚合并接入登录与注册链路，冻结时强制下线已签发 token。
+**Goal:** 升级账号锁定为完整的"冻结"模型（原因/到期/操作人/审计），新增租户级身份黑名单聚合并接入登录与注册链路，冻结时强制下线已签发
+token。
 
-**Architecture:** 方案 A —— 扩展 auth.Account 聚合（嵌入 `AccountFreeze` 值对象 + `AccountStatus` 枚举）+ 新建 `auth.Blacklist` 租户级聚合根（`@FilterDef` Hibernate 过滤 + Redis Set 缓存）。冻结/解冻通过领域事件驱动缓存失效与强制下线。
+**Architecture:** 方案 A —— 扩展 auth.Account 聚合（嵌入 `AccountFreeze` 值对象 + `AccountStatus` 枚举）+ 新建
+`auth.Blacklist` 租户级聚合根（`@FilterDef` Hibernate 过滤 + Redis Set 缓存）。冻结/解冻通过领域事件驱动缓存失效与强制下线。
 
-**Tech Stack:** Spring Boot 4 / Spring Modulith / JPA / Redis (StringRedisTemplate) / Spring Security OAuth2 / `eagle-tenant-starter` / JUnit 5 + Mockito。
+**Tech Stack:** Spring Boot 4 / Spring Modulith / JPA / Redis (StringRedisTemplate) / Spring Security OAuth2 /
+`eagle-tenant-starter` / JUnit 5 + Mockito。
 
 **Spec:** `docs/superpowers/specs/2026-05-19-blacklist-and-freeze-design.md`
 
@@ -15,49 +19,51 @@
 ## File Structure
 
 ### 新建文件
-| 文件 | 职责 |
-|------|------|
-| `auth/domain/model/enums/AccountStatus.java` | Account 状态枚举（ACTIVE/FROZEN）|
-| `auth/domain/model/enums/FreezeReason.java` | 冻结原因枚举 |
-| `auth/domain/model/enums/BlacklistType.java` | 黑名单类型枚举 |
-| `auth/domain/model/valueobject/AccountFreeze.java` | 冻结信息值对象（@Embeddable）|
-| `auth/domain/model/Blacklist.java` | 黑名单聚合根（租户级）|
-| `auth/domain/event/AccountFrozenEvent.java` | 账号冻结领域事件 |
-| `auth/domain/event/AccountUnfrozenEvent.java` | 账号解冻领域事件 |
-| `auth/domain/event/BlacklistAddedEvent.java` | 黑名单新增事件 |
-| `auth/domain/event/BlacklistRemovedEvent.java` | 黑名单删除事件 |
-| `auth/domain/repository/BlacklistRepository.java` | 黑名单仓储接口 |
-| `auth/application/command/FreezeAccountCommand.java` | 冻结命令对象 |
-| `auth/application/command/AddBlacklistCommand.java` | 添加黑名单命令对象 |
-| `auth/application/command/BlacklistQuery.java` | 黑名单查询参数 |
-| `auth/application/service/BlacklistApplicationService.java` | 黑名单应用服务 |
-| `auth/application/mapper/BlacklistMapper.java` | Blacklist → Response 映射 |
-| `auth/interfaces/controller/BlacklistController.java` | 黑名单 REST 控制器 |
-| `auth/interfaces/dto/request/FreezeAccountRequest.java` | 冻结请求 DTO |
-| `auth/interfaces/dto/request/AddBlacklistRequest.java` | 添加黑名单请求 DTO |
-| `auth/interfaces/dto/response/BlacklistResponse.java` | 黑名单响应 DTO |
-| `auth/infrastructure/security/BlacklistChecker.java` | 登录链路黑名单校验器 |
-| `auth/infrastructure/cache/BlacklistCacheWarmer.java` | 启动期黑名单全量加载 |
-| `auth/infrastructure/event/AccountSecurityEventHandler.java` | 冻结事件 → 强制下线处理器 |
-| `auth/infrastructure/event/BlacklistCacheSyncHandler.java` | 黑名单事件 → Redis 同步 |
+
+| 文件                                                           | 职责                          |
+|--------------------------------------------------------------|-----------------------------|
+| `auth/domain/model/enums/AccountStatus.java`                 | Account 状态枚举（ACTIVE/FROZEN） |
+| `auth/domain/model/enums/FreezeReason.java`                  | 冻结原因枚举                      |
+| `auth/domain/model/enums/BlacklistType.java`                 | 黑名单类型枚举                     |
+| `auth/domain/model/valueobject/AccountFreeze.java`           | 冻结信息值对象（@Embeddable）        |
+| `auth/domain/model/Blacklist.java`                           | 黑名单聚合根（租户级）                 |
+| `auth/domain/event/AccountFrozenEvent.java`                  | 账号冻结领域事件                    |
+| `auth/domain/event/AccountUnfrozenEvent.java`                | 账号解冻领域事件                    |
+| `auth/domain/event/BlacklistAddedEvent.java`                 | 黑名单新增事件                     |
+| `auth/domain/event/BlacklistRemovedEvent.java`               | 黑名单删除事件                     |
+| `auth/domain/repository/BlacklistRepository.java`            | 黑名单仓储接口                     |
+| `auth/application/command/FreezeAccountCommand.java`         | 冻结命令对象                      |
+| `auth/application/command/AddBlacklistCommand.java`          | 添加黑名单命令对象                   |
+| `auth/application/command/BlacklistQuery.java`               | 黑名单查询参数                     |
+| `auth/application/service/BlacklistApplicationService.java`  | 黑名单应用服务                     |
+| `auth/application/mapper/BlacklistMapper.java`               | Blacklist → Response 映射     |
+| `auth/interfaces/controller/BlacklistController.java`        | 黑名单 REST 控制器                |
+| `auth/interfaces/dto/request/FreezeAccountRequest.java`      | 冻结请求 DTO                    |
+| `auth/interfaces/dto/request/AddBlacklistRequest.java`       | 添加黑名单请求 DTO                 |
+| `auth/interfaces/dto/response/BlacklistResponse.java`        | 黑名单响应 DTO                   |
+| `auth/infrastructure/security/BlacklistChecker.java`         | 登录链路黑名单校验器                  |
+| `auth/infrastructure/cache/BlacklistCacheWarmer.java`        | 启动期黑名单全量加载                  |
+| `auth/infrastructure/event/AccountSecurityEventHandler.java` | 冻结事件 → 强制下线处理器              |
+| `auth/infrastructure/event/BlacklistCacheSyncHandler.java`   | 黑名单事件 → Redis 同步            |
 
 ### 修改文件
-| 文件 | 改动 |
-|------|------|
-| `auth/domain/model/Account.java` | 移除 `locked`，新增 `status / freeze`；新增 freezeByAdmin / unfreeze；旧 lock/unlock 委托 |
-| `auth/domain/AuthErrorCode.java` | 新增 11038–11044 错误码，区间注释更新 |
-| `auth/domain/port/OnlineUserPort.java` | 新增 `listJtisByAccount(Long)` |
-| `auth/infrastructure/adapter/OnlineUserAdapter.java` | 维护 `account:online:{accountId}` 反向索引 Set，实现 `listJtisByAccount` |
-| `auth/infrastructure/adapter/EagleUserDetailsServiceImpl.java` | locked 判断改为 status；前置 BlacklistChecker |
-| `auth/application/service/AccountApplicationService.java` | 新增 freezeAccount/unfreezeAccount；旧 lockAccount/unlockAccount 委托并 @Deprecated；resetPasswordByPhone/bindPhone 内 `account.getLocked()` 改为 status |
-| `auth/interfaces/controller/AccountController.java` | 新增 /freeze /unfreeze；/lock /unlock @Deprecated 转发 |
-| `auth/infrastructure/security/SmsCodeAuthenticationProvider.java` | 注入 BlacklistChecker，authenticate 前调用 |
-| `auth/infrastructure/security/WechatMiniProgramAuthenticationProvider.java` | 同上 checkWechat |
-| `auth/infrastructure/security/WechatAppAuthenticationProvider.java` | 同上 checkWechat |
-| `src/main/resources/messages_zh_CN.properties` | 新增 7 条 i18n |
-| `src/main/resources/messages_en.properties` | 新增 7 条 i18n |
-| `base/domain/event/UserLockedEvent.java` | 删除（遗留清理）|
-| `base/infrastructure/event/UserEventHandler.java` | 删除 handleUserLocked |
+
+| 文件                                                                          | 改动                                                                                                                                            |
+|-----------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| `auth/domain/model/Account.java`                                            | 移除 `locked`，新增 `status / freeze`；新增 freezeByAdmin / unfreeze；旧 lock/unlock 委托                                                                 |
+| `auth/domain/AuthErrorCode.java`                                            | 新增 11038–11044 错误码，区间注释更新                                                                                                                     |
+| `auth/domain/port/OnlineUserPort.java`                                      | 新增 `listJtisByAccount(Long)`                                                                                                                  |
+| `auth/infrastructure/adapter/OnlineUserAdapter.java`                        | 维护 `account:online:{accountId}` 反向索引 Set，实现 `listJtisByAccount`                                                                               |
+| `auth/infrastructure/adapter/EagleUserDetailsServiceImpl.java`              | locked 判断改为 status；前置 BlacklistChecker                                                                                                        |
+| `auth/application/service/AccountApplicationService.java`                   | 新增 freezeAccount/unfreezeAccount；旧 lockAccount/unlockAccount 委托并 @Deprecated；resetPasswordByPhone/bindPhone 内 `account.getLocked()` 改为 status |
+| `auth/interfaces/controller/AccountController.java`                         | 新增 /freeze /unfreeze；/lock /unlock @Deprecated 转发                                                                                             |
+| `auth/infrastructure/security/SmsCodeAuthenticationProvider.java`           | 注入 BlacklistChecker，authenticate 前调用                                                                                                          |
+| `auth/infrastructure/security/WechatMiniProgramAuthenticationProvider.java` | 同上 checkWechat                                                                                                                                |
+| `auth/infrastructure/security/WechatAppAuthenticationProvider.java`         | 同上 checkWechat                                                                                                                                |
+| `src/main/resources/messages_zh_CN.properties`                              | 新增 7 条 i18n                                                                                                                                   |
+| `src/main/resources/messages_en.properties`                                 | 新增 7 条 i18n                                                                                                                                   |
+| `base/domain/event/UserLockedEvent.java`                                    | 删除（遗留清理）                                                                                                                                      |
+| `base/infrastructure/event/UserEventHandler.java`                           | 删除 handleUserLocked                                                                                                                           |
 
 ---
 
@@ -76,7 +82,9 @@
 ### Task 1.1：新增 AccountStatus 枚举
 
 **Files:**
-- Create: `eagle-services/eagle-system-service/src/main/java/com/eagle/system/auth/domain/model/enums/AccountStatus.java`
+
+- Create:
+  `eagle-services/eagle-system-service/src/main/java/com/eagle/system/auth/domain/model/enums/AccountStatus.java`
 
 - [ ] **Step 1: 创建枚举**
 
@@ -113,6 +121,7 @@ git commit -m "feat(auth): 新增 AccountStatus 枚举"
 ### Task 1.2：新增 FreezeReason 枚举
 
 **Files:**
+
 - Create: `auth/domain/model/enums/FreezeReason.java`
 
 - [ ] **Step 1: 创建枚举**
@@ -148,6 +157,7 @@ git commit -m "feat(auth): 新增 FreezeReason 枚举"
 ### Task 1.3：新增 AccountFreeze 值对象
 
 **Files:**
+
 - Create: `auth/domain/model/valueobject/AccountFreeze.java`
 
 - [ ] **Step 1: 创建 @Embeddable 值对象**
@@ -218,6 +228,7 @@ git commit -m "feat(auth): 新增 AccountFreeze 值对象"
 ### Task 1.4：新增 AccountFrozenEvent / AccountUnfrozenEvent
 
 **Files:**
+
 - Create: `auth/domain/event/AccountFrozenEvent.java`
 - Create: `auth/domain/event/AccountUnfrozenEvent.java`
 
@@ -283,6 +294,7 @@ git commit -m "feat(auth): 新增 AccountFrozen/Unfrozen 领域事件"
 ### Task 1.5：扩展 AuthErrorCode 新增冻结相关错误码
 
 **Files:**
+
 - Modify: `auth/domain/AuthErrorCode.java`
 
 - [ ] **Step 1: 在枚举末尾追加 7 个新错误码**
@@ -307,10 +319,13 @@ git commit -m "feat(auth): 新增 AccountFrozen/Unfrozen 领域事件"
 - [ ] **Step 2: 更新文件顶部 Javadoc 区间**
 
 把第 6 行：
+
 ```java
  * 认证领域错误码（11001–11033）
 ```
+
 改为：
+
 ```java
  * 认证领域错误码（11001–11044）
  */
@@ -318,11 +333,13 @@ git commit -m "feat(auth): 新增 AccountFrozen/Unfrozen 领域事件"
 
 - [ ] **Step 3: 标记 ACCOUNT_LOCKED / ACCOUNT_NOT_LOCKED 为 @Deprecated**
 
-定位到 `ACCOUNT_LOCKED(11024, …)` 与 `ACCOUNT_NOT_LOCKED(11025, …)` 两行，**保留枚举值**，但在调用处用 `ACCOUNT_FROZEN` 替代（其他 Slice 处理）。本步骤无代码改动，仅记录约束：新代码禁止再用 11024/11025。
+定位到 `ACCOUNT_LOCKED(11024, …)` 与 `ACCOUNT_NOT_LOCKED(11025, …)` 两行，**保留枚举值**，但在调用处用 `ACCOUNT_FROZEN`
+替代（其他 Slice 处理）。本步骤无代码改动，仅记录约束：新代码禁止再用 11024/11025。
 
 - [ ] **Step 4: 同步 i18n 文件**
 
 `src/main/resources/messages_zh_CN.properties` 追加：
+
 ```
 error.account.frozen=账号已被冻结：{0}
 error.account.not_frozen=账号未被冻结
@@ -334,6 +351,7 @@ error.blacklist.not_found=黑名单条目不存在
 ```
 
 `src/main/resources/messages_en.properties` 追加：
+
 ```
 error.account.frozen=Account has been frozen: {0}
 error.account.not_frozen=Account is not frozen
@@ -359,6 +377,7 @@ git commit -m "feat(auth): 新增冻结+黑名单错误码 11038-11044 及 i18n 
 ### Task 1.6：Account 聚合根升级 — 字段与业务方法
 
 **Files:**
+
 - Modify: `auth/domain/model/Account.java`
 
 - [ ] **Step 1: 写失败单测先（TDD）**
@@ -493,7 +512,8 @@ Expected: FAIL（`Account.freezeByAdmin` 不存在）
 
 - [ ] **Step 3: 修改 Account.java**
 
-把 `Account.java` 完整替换为下面内容（字段移除 locked，新增 status + freeze；业务方法新增 freezeByAdmin / unfreeze / tryAutoUnfreezeIfExpired；旧 lock/unlock 委托并 @Deprecated）：
+把 `Account.java` 完整替换为下面内容（字段移除 locked，新增 status + freeze；业务方法新增 freezeByAdmin / unfreeze /
+tryAutoUnfreezeIfExpired；旧 lock/unlock 委托并 @Deprecated）：
 
 ```java
 package com.eagle.system.auth.domain.model;
@@ -791,6 +811,7 @@ Expected: PASS（7 个用例）
 - [ ] **Step 5: 调整 AccountApplicationService 内的 `getLocked()` 引用**
 
 在 `AccountApplicationService.java` 中：
+
 - Line 177：`if (Boolean.TRUE.equals(account.getLocked()))` → `if (account.getStatus() == AccountStatus.FROZEN)`
 - Line 215：同样替换
 - 顶部 import 增加：`import com.eagle.system.auth.domain.model.enums.AccountStatus;`
@@ -798,6 +819,7 @@ Expected: PASS（7 个用例）
 - [ ] **Step 6: 调整 EagleUserDetailsServiceImpl**
 
 在 `EagleUserDetailsServiceImpl.java`：
+
 - Line 58、61：`!Boolean.TRUE.equals(account.getLocked())` → `account.getStatus() == AccountStatus.ACTIVE`
 - 顶部 import 增加：`import com.eagle.system.auth.domain.model.enums.AccountStatus;`
 
@@ -826,6 +848,7 @@ git commit -m "feat(auth): Account 聚合根升级为冻结模型（替换 locke
 ### Task 1.7：AccountApplicationService 新增 freeze/unfreeze 接口
 
 **Files:**
+
 - Create: `auth/application/command/FreezeAccountCommand.java`
 - Modify: `auth/application/service/AccountApplicationService.java`
 
@@ -894,6 +917,7 @@ Expected: FAIL（找不到方法 `freezeAccount` / `unfreezeAccount`）
 - [ ] **Step 3: 创建 FreezeAccountCommand**
 
 `auth/application/command/FreezeAccountCommand.java`：
+
 ```java
 package com.eagle.system.auth.application.command;
 
@@ -961,6 +985,7 @@ public record FreezeAccountCommand(
 ```
 
 并在顶部 import 增加：
+
 ```java
 import com.eagle.system.auth.application.command.FreezeAccountCommand;
 ```
@@ -984,6 +1009,7 @@ git commit -m "feat(auth): AccountApplicationService 新增 freezeAccount/unfree
 ### Task 1.8：AccountController 新增 /freeze /unfreeze 端点 + 旧端点转发
 
 **Files:**
+
 - Create: `auth/interfaces/dto/request/FreezeAccountRequest.java`
 - Modify: `auth/interfaces/controller/AccountController.java`
 
@@ -1072,6 +1098,7 @@ public class FreezeAccountRequest {
 ```
 
 并在顶部增加 import：
+
 ```java
 import com.eagle.common.dto.EagleUser;
 import com.eagle.system.auth.application.command.FreezeAccountCommand;
@@ -1141,12 +1168,14 @@ git commit -m "feat(auth): 新增 BlacklistType 枚举"
 ### Task 2.2：BlacklistAddedEvent / BlacklistRemovedEvent
 
 **Files:**
+
 - Create: `auth/domain/event/BlacklistAddedEvent.java`
 - Create: `auth/domain/event/BlacklistRemovedEvent.java`
 
 - [ ] **Step 1: 创建两个 record 事件**
 
 `BlacklistAddedEvent.java`：
+
 ```java
 package com.eagle.system.auth.domain.event;
 
@@ -1169,6 +1198,7 @@ public record BlacklistAddedEvent(
 ```
 
 `BlacklistRemovedEvent.java`：
+
 ```java
 package com.eagle.system.auth.domain.event;
 
@@ -1200,12 +1230,14 @@ git commit -m "feat(auth): 新增 BlacklistAdded/Removed 领域事件"
 ### Task 2.3：Blacklist 聚合根（租户级）+ 单元测试
 
 **Files:**
+
 - Create: `auth/domain/model/Blacklist.java`
 - Test: `auth/domain/model/BlacklistTest.java`
 
 - [ ] **Step 1: 写失败单测**
 
 `src/test/java/com/eagle/system/auth/domain/model/BlacklistTest.java`：
+
 ```java
 package com.eagle.system.auth.domain.model;
 
@@ -1440,6 +1472,7 @@ git commit -m "feat(auth): 新增 BlacklistRepository"
 - [ ] **Step 1: AddBlacklistRequest**
 
 `auth/interfaces/dto/request/AddBlacklistRequest.java`：
+
 ```java
 package com.eagle.system.auth.interfaces.dto.request;
 
@@ -1482,6 +1515,7 @@ public class AddBlacklistRequest {
 - [ ] **Step 2: BlacklistResponse**
 
 `auth/interfaces/dto/response/BlacklistResponse.java`：
+
 ```java
 package com.eagle.system.auth.interfaces.dto.response;
 
@@ -1514,6 +1548,7 @@ public class BlacklistResponse {
 - [ ] **Step 3: BlacklistQuery**
 
 `auth/application/command/BlacklistQuery.java`：
+
 ```java
 package com.eagle.system.auth.application.command;
 
@@ -1531,6 +1566,7 @@ public record BlacklistQuery(BlacklistType type, String value) {
 - [ ] **Step 4: AddBlacklistCommand**
 
 `auth/application/command/AddBlacklistCommand.java`：
+
 ```java
 package com.eagle.system.auth.application.command;
 
@@ -1606,7 +1642,8 @@ public class BlacklistMapper {
 }
 ```
 
-> 注意：`BaseAggregateRoot` 提供 `getCreatedAt()`（项目约定，若属性名为 `createTime` 改对应 getter，本步若编译错误参照 BaseAggregateRoot 内字段名调整一次）。
+> 注意：`BaseAggregateRoot` 提供 `getCreatedAt()`（项目约定，若属性名为 `createTime` 改对应 getter，本步若编译错误参照
+> BaseAggregateRoot 内字段名调整一次）。
 
 - [ ] **Step 2: 编译 + Commit**
 
@@ -1621,6 +1658,7 @@ git commit -m "feat(auth): 新增 BlacklistMapper"
 ### Task 2.7：BlacklistApplicationService 接口骨架 + 单元测试
 
 **Files:**
+
 - Create: `auth/application/service/BlacklistApplicationService.java`
 - Test: `auth/application/service/BlacklistApplicationServiceTest.java`
 
@@ -1735,6 +1773,7 @@ Expected: FAIL（类不存在）
 - [ ] **Step 3: 创建 BlacklistCacheStore 端口**
 
 `auth/infrastructure/cache/BlacklistCacheStore.java`（接口先空实现稍后补 Redis）：
+
 ```java
 package com.eagle.system.auth.infrastructure.cache;
 
@@ -2190,9 +2229,11 @@ Expected: BUILD SUCCESSFUL
 - [ ] **Step 2: 启动应用本地验证表结构创建**
 
 Run（如本地 dev 环境就绪）：
+
 ```bash
 ./gradlew :eagle-services:eagle-system-service:bootRun
 ```
+
 查看启动日志确认 Hibernate 自动创建 `auth_blacklist` 表，无报错；关闭进程（Ctrl+C）。
 
 > 若 dev 环境暂未就绪可跳过此步骤；记录在 PR 描述中由 reviewer 验证。
@@ -2208,6 +2249,7 @@ Run（如本地 dev 环境就绪）：
 - [ ] **Step 1: 写失败单测**
 
 `src/test/java/com/eagle/system/auth/infrastructure/security/BlacklistCheckerTest.java`：
+
 ```java
 package com.eagle.system.auth.infrastructure.security;
 
@@ -2353,6 +2395,7 @@ git commit -m "feat(auth): BlacklistChecker 登录/注册/微信前置校验"
 - [ ] **Step 1: 注入 BlacklistChecker 并调用两次（前置 IP + 加载 Account 后 phone/accountId）**
 
 修改方法：
+
 ```java
 @Override
 @Transactional(readOnly = true)
@@ -2390,6 +2433,7 @@ public @NonNull UserDetails loadUserByUsername(@NonNull String username) throws 
 ```
 
 新增字段：
+
 ```java
 private final BlacklistChecker blacklistChecker;
 ```
@@ -2397,6 +2441,7 @@ private final BlacklistChecker blacklistChecker;
 - [ ] **Step 2: 新增 ClientIpHolder（ThreadLocal 持有当前请求 IP）**
 
 `auth/infrastructure/security/ClientIpHolder.java`：
+
 ```java
 package com.eagle.system.auth.infrastructure.security;
 
@@ -2417,7 +2462,9 @@ public final class ClientIpHolder {
 }
 ```
 
-并在 `LoginRateLimitFilter`（已存在）尾部 finally 块前补充 `ClientIpHolder.set(ip)`，filter 退出前 `ClientIpHolder.clear()`。具体位置：
+并在 `LoginRateLimitFilter`（已存在）尾部 finally 块前补充 `ClientIpHolder.set(ip)`，filter 退出前 `ClientIpHolder.clear()`
+。具体位置：
+
 ```java
 // LoginRateLimitFilter.doFilterInternal 内最外层 try-finally
 String ip = ...; // 已有
@@ -2433,10 +2480,12 @@ try {
 - [ ] **Step 3: 编译 + 跑 modulith 测试**
 
 Run:
+
 ```bash
 ./gradlew :eagle-services:eagle-system-service:compileJava
 ./gradlew :eagle-services:eagle-system-service:test --tests "*.ModulithArchitectureTest"
 ```
+
 Expected: PASS
 
 - [ ] **Step 4: Commit**
@@ -2456,16 +2505,19 @@ git commit -m "feat(auth): 密码登录前置黑名单校验（IP + phone + acco
 
 - [ ] **Step 1: 读取该文件，定位 `authenticate(Authentication)` 方法入口**
 
-Run: `grep -n "authenticate" eagle-services/eagle-system-service/src/main/java/com/eagle/system/auth/infrastructure/security/SmsCodeAuthenticationProvider.java`
+Run:
+`grep -n "authenticate" eagle-services/eagle-system-service/src/main/java/com/eagle/system/auth/infrastructure/security/SmsCodeAuthenticationProvider.java`
 
 - [ ] **Step 2: 在 authenticate 方法开头注入并调用**
 
 在 `private final ...` 字段段末尾增加：
+
 ```java
 private final BlacklistChecker blacklistChecker;
 ```
 
 在 `authenticate(Authentication authentication)` 方法首行（提取 phone 之后）插入：
+
 ```java
 String phone = /* 现有代码提取的手机号 */;
 blacklistChecker.checkLogin(null, phone, ClientIpHolder.get(), null);
@@ -2494,6 +2546,7 @@ private final BlacklistChecker blacklistChecker;
 ```
 
 并在 `authenticate(Authentication)` 提取 openid 之后插入：
+
 ```java
 blacklistChecker.checkWechat(openid, ClientIpHolder.get());
 ```
@@ -2516,11 +2569,13 @@ git commit -m "feat(auth): 微信登录前置黑名单校验（openid + IP）"
 - [ ] **Step 1: 在 register 端点开头注入 BlacklistChecker 并调用**
 
 在 controller 字段段增加：
+
 ```java
 private final BlacklistChecker blacklistChecker;
 ```
 
 修改 `register` 方法：
+
 ```java
 @Operation(summary = "用户自主注册")
 @PostMapping("/register")
@@ -2557,6 +2612,7 @@ git commit -m "feat(auth): 注册端点前置黑名单校验"
 - [ ] **Step 1: 接口追加方法**
 
 在 `boolean isBlacklisted(String jti);` 之前追加：
+
 ```java
     /**
      * 反查某账号当前所有在线 JTI。
@@ -2731,6 +2787,7 @@ git commit -m "feat(auth): OnlineUserPort 新增 listJtisByAccount 反向索引"
 ### Task 4.3：AccountSecurityEventHandler — 冻结事件强制下线
 
 **Files:**
+
 - Create: `auth/infrastructure/event/AccountSecurityEventHandler.java`
 - Test: `auth/infrastructure/event/AccountSecurityEventHandlerTest.java`
 
@@ -2841,6 +2898,7 @@ git commit -m "feat(auth): 冻结事件触发强制下线该账号所有 token"
 ### Task 5.1：删除 UserLockedEvent 与 handler
 
 **Files:**
+
 - Delete: `base/domain/event/UserLockedEvent.java`
 - Modify: `base/infrastructure/event/UserEventHandler.java`
 
@@ -2853,15 +2911,18 @@ rm eagle-services/eagle-system-service/src/main/java/com/eagle/system/base/domai
 - [ ] **Step 2: 在 UserEventHandler.java 中删除 handleUserLocked 方法 + 顶部 import**
 
 定位 `import com.eagle.system.base.domain.event.UserLockedEvent;` 行删除；
-定位 `public void handleUserLocked(UserLockedEvent event)` 方法（包含其上的 `@Async / @TransactionalEventListener` 注解块），整段删除。
+定位 `public void handleUserLocked(UserLockedEvent event)` 方法（包含其上的 `@Async / @TransactionalEventListener`
+注解块），整段删除。
 
 - [ ] **Step 3: 编译 + Modulith 验证**
 
 Run:
+
 ```bash
 ./gradlew :eagle-services:eagle-system-service:compileJava
 ./gradlew :eagle-services:eagle-system-service:test --tests "*.ModulithArchitectureTest"
 ```
+
 Expected: BUILD SUCCESSFUL
 
 - [ ] **Step 4: Commit**
@@ -2900,42 +2961,49 @@ Expected: 25 条左右 commits，scope 一致（auth/base），符合 Convention
 
 ### Spec 覆盖
 
-| Spec 章节 | 对应 Task |
-|----------|----------|
-| 2.1 Account 冻结模型 | Task 1.1 – 1.6 |
-| 2.2 Blacklist 聚合 | Task 2.1, 2.3 |
-| 2.3 领域事件 | Task 1.4, 2.2 |
-| 3.1 auth_account 字段 | Task 1.3, 1.6（@Embedded 自动 ddl-auto 同步）|
-| 3.2 auth_blacklist 表 | Task 2.3（@Table + @Index 自动 ddl-auto 同步）|
-| 4.1 AccountApplicationService | Task 1.7 |
-| 4.2 BlacklistApplicationService | Task 2.7 |
-| 5.1 AccountController | Task 1.8 |
-| 5.2 BlacklistController | Task 2.11 |
-| 6.1 BlacklistChecker | Task 3.1 |
-| 6.2 接入 5 个位点 | Task 3.2 – 3.5 |
-| 6.3 冻结强制下线 | Task 4.1 – 4.3 |
-| 7.1/7.2 Redis 缓存 | Task 2.8, 2.9, 2.10 |
-| 7.3 用户缓存失效 | 由现有 `UserEventHandler` 处理；冻结/解冻事件复用现有 evict 机制（在 Task 5.1 后通过 UserUpdatedEvent 路径自然失效；如未生效请新增 `evictUserCache` 调用到 AccountSecurityEventHandler，本计划内默认依赖 username 缓存 TTL）|
-| 8 错误码 + i18n | Task 1.5 |
-| 9 单元测试 | Task 1.6, 1.7, 2.3, 2.7, 3.1, 4.3（共 6 个测试类）|
-| 10 回滚 | 通过 `@ConditionalOnProperty` 在配置项 `eagle.auth.blacklist.enabled` 落实（Task 2.10 已有），冻结回滚需手工切换 Controller 端点 |
-| 11 配置项 | `eagle.auth.blacklist.cache-warm-on-startup` 在 Task 2.10 落实 |
+| Spec 章节                         | 对应 Task                                                                                                                                                                  |
+|---------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 2.1 Account 冻结模型                | Task 1.1 – 1.6                                                                                                                                                           |
+| 2.2 Blacklist 聚合                | Task 2.1, 2.3                                                                                                                                                            |
+| 2.3 领域事件                        | Task 1.4, 2.2                                                                                                                                                            |
+| 3.1 auth_account 字段             | Task 1.3, 1.6（@Embedded 自动 ddl-auto 同步）                                                                                                                                  |
+| 3.2 auth_blacklist 表            | Task 2.3（@Table + @Index 自动 ddl-auto 同步）                                                                                                                                 |
+| 4.1 AccountApplicationService   | Task 1.7                                                                                                                                                                 |
+| 4.2 BlacklistApplicationService | Task 2.7                                                                                                                                                                 |
+| 5.1 AccountController           | Task 1.8                                                                                                                                                                 |
+| 5.2 BlacklistController         | Task 2.11                                                                                                                                                                |
+| 6.1 BlacklistChecker            | Task 3.1                                                                                                                                                                 |
+| 6.2 接入 5 个位点                    | Task 3.2 – 3.5                                                                                                                                                           |
+| 6.3 冻结强制下线                      | Task 4.1 – 4.3                                                                                                                                                           |
+| 7.1/7.2 Redis 缓存                | Task 2.8, 2.9, 2.10                                                                                                                                                      |
+| 7.3 用户缓存失效                      | 由现有 `UserEventHandler` 处理；冻结/解冻事件复用现有 evict 机制（在 Task 5.1 后通过 UserUpdatedEvent 路径自然失效；如未生效请新增 `evictUserCache` 调用到 AccountSecurityEventHandler，本计划内默认依赖 username 缓存 TTL） |
+| 8 错误码 + i18n                    | Task 1.5                                                                                                                                                                 |
+| 9 单元测试                          | Task 1.6, 1.7, 2.3, 2.7, 3.1, 4.3（共 6 个测试类）                                                                                                                              |
+| 10 回滚                           | 通过 `@ConditionalOnProperty` 在配置项 `eagle.auth.blacklist.enabled` 落实（Task 2.10 已有），冻结回滚需手工切换 Controller 端点                                                                 |
+| 11 配置项                          | `eagle.auth.blacklist.cache-warm-on-startup` 在 Task 2.10 落实                                                                                                              |
 
 ### 占位符扫描
-- 无 TBD / TODO；Task 2.6 BlacklistMapper 备注了 `getCreatedAt()` 字段名可能需要按 BaseAggregateRoot 实际名称调整一次，这是显式 escape hatch 不算占位符
-- Task 3.3 `phone = /* 现有代码提取的手机号 */` 是引用现有代码段的位置说明，**实施时需读取 SmsCodeAuthenticationProvider 内现有 phone 提取逻辑后替换** — 这一处需在实施时填充
+
+- 无 TBD / TODO；Task 2.6 BlacklistMapper 备注了 `getCreatedAt()` 字段名可能需要按 BaseAggregateRoot 实际名称调整一次，这是显式
+  escape hatch 不算占位符
+- Task 3.3 `phone = /* 现有代码提取的手机号 */` 是引用现有代码段的位置说明，**实施时需读取 SmsCodeAuthenticationProvider
+  内现有 phone 提取逻辑后替换** — 这一处需在实施时填充
 
 ### 类型一致性
+
 - `FreezeReason / AccountStatus / BlacklistType` 在所有 task 中拼写一致
 - `freezeByAdmin / unfreeze / tryAutoUnfreezeIfExpired` 方法名贯穿一致
 - `AccountFrozenEvent / AccountUnfrozenEvent.Source.ADMIN / AUTO` 一致
 - `BlacklistCacheStore.add/remove/isMember` 在 Service / Handler / RedisImpl 三处一致
 
 ### 已知补丁点（实施时）
+
 1. Task 2.6 BlacklistMapper：若 `BaseAggregateRoot` getter 名为 `getCreateTime()` 而非 `getCreatedAt()`，对应改用
 2. Task 3.3 SmsCodeAuthenticationProvider：插入位置需先读取该 Provider 现有代码定位 phone 提取行号
 3. Task 3.4 Wechat Providers：同上，需先读取定位 openid 提取行号
-4. 配置开关 `eagle.auth.blacklist.enabled` 若希望生效到 BlacklistChecker 阻塞行为，可在 Task 3.1 BlacklistChecker 类上额外加 `@ConditionalOnProperty(name="eagle.auth.blacklist.enabled", havingValue="true", matchIfMissing=true)`（本计划默认启用，需要时由实施者补）
+4. 配置开关 `eagle.auth.blacklist.enabled` 若希望生效到 BlacklistChecker 阻塞行为，可在 Task 3.1 BlacklistChecker 类上额外加
+   `@ConditionalOnProperty(name="eagle.auth.blacklist.enabled", havingValue="true", matchIfMissing=true)`
+   （本计划默认启用，需要时由实施者补）
 
 ---
 

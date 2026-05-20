@@ -10,7 +10,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DisplayName("DynamicDataSource")
 class DynamicDataSourceTest {
 
-    /** 暴露 protected 方法供白盒测试。 */
+    @AfterEach
+    void cleanup() {
+        DataSourceContextHolder.clear();
+    }
+
+    /**
+     * 暴露 protected 方法供白盒测试。
+     */
     private static class ExposedDynamicDataSource extends DynamicDataSource {
         ExposedDynamicDataSource(int slaveCount) {
             super(slaveCount);
@@ -19,11 +26,6 @@ class DynamicDataSourceTest {
         Object lookupKey() {
             return determineCurrentLookupKey();
         }
-    }
-
-    @AfterEach
-    void cleanup() {
-        DataSourceContextHolder.clear();
     }
 
     @Nested

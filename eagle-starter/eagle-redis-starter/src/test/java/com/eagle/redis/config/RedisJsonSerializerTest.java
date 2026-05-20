@@ -169,7 +169,9 @@ class RedisJsonSerializerTest {
         return serializer.deserialize(bytes);
     }
 
-    /** 测试用 POJO,非 final,public 构造器 + setter。 */
+    /**
+     * 测试用 POJO,非 final,public 构造器 + setter。
+     */
     public static class SamplePojo {
         private String name;
         private int age;

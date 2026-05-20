@@ -34,6 +34,17 @@ public class AuditLogAspect {
     private final ObjectMapper objectMapper;
     private final AuditLogUserProvider userProvider;
 
+    private static String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("X-Real-IP");
+        }
+        if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        return ip != null && ip.contains(",") ? ip.split(",")[0].strip() : ip;
+    }
+
     @Around("@annotation(auditLog)")
     public Object around(ProceedingJoinPoint joinPoint, AuditLog auditLog) throws Throwable {
         long start = System.currentTimeMillis();
@@ -120,17 +131,6 @@ public class AuditLogAspect {
             return value;
         }
         return value.substring(0, maxLength) + "...[truncated]";
-    }
-
-    private static String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("X-Real-IP");
-        }
-        if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-        return ip != null && ip.contains(",") ? ip.split(",")[0].strip() : ip;
     }
 
     private void publishQuietly(AuditLogEntry entry) {

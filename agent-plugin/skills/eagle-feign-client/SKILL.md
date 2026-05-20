@@ -39,15 +39,15 @@ eagle:
 
 ## 核心能力
 
-| 能力 | 默认行为 |
-|------|----------|
-| Header 透传 | 从当前 Servlet 请求透传 `Authorization`、`Accept-Language` 等配置项 |
-| 压测标记 | `PressureTestContext` 标记存在时透传 `X-Eagle-Gray: true` |
-| 租户透传 | 类路径存在 `eagle-tenant-starter` 时透传 `X-Tenant-Id` |
-| Seata 透传 | 类路径存在 Seata 时透传 `TX_XID` |
-| 错误转换 | 4xx / 5xx 转为项目 `AppException`，提取下游 `ErrorResult.message` |
-| 服务发现 | 自动提供 `loadBalancedRestClientBuilder` 与 `createLoadBalancedClient` |
-| 观测链路 | 复用 Spring Boot RestClient / Micrometer Observation 自动配置 |
+| 能力        | 默认行为                                                              |
+|-----------|-------------------------------------------------------------------|
+| Header 透传 | 从当前 Servlet 请求透传 `Authorization`、`Accept-Language` 等配置项           |
+| 压测标记      | `PressureTestContext` 标记存在时透传 `X-Eagle-Gray: true`                |
+| 租户透传      | 类路径存在 `eagle-tenant-starter` 时透传 `X-Tenant-Id`                    |
+| Seata 透传  | 类路径存在 Seata 时透传 `TX_XID`                                          |
+| 错误转换      | 4xx / 5xx 转为项目 `AppException`，提取下游 `ErrorResult.message`          |
+| 服务发现      | 自动提供 `loadBalancedRestClientBuilder` 与 `createLoadBalancedClient` |
+| 观测链路      | 复用 Spring Boot RestClient / Micrometer Observation 自动配置           |
 
 ## 声明式服务间调用
 
@@ -118,12 +118,12 @@ RestClient wechatRestClient(RestClient.Builder builder) {
 
 下游返回项目标准 `ErrorResult` 时自动提取 `message`：
 
-| 下游 HTTP | 抛出异常 |
-|-----------|----------|
-| 400 | `DomainException` |
-| 404 | `NotFoundException` |
-| 409 | `ConflictException` |
-| 403 / 429 / 5xx / 其他 | `ServiceException` |
+| 下游 HTTP              | 抛出异常                |
+|----------------------|---------------------|
+| 400                  | `DomainException`   |
+| 404                  | `NotFoundException` |
+| 409                  | `ConflictException` |
+| 403 / 429 / 5xx / 其他 | `ServiceException`  |
 
 调用方通常无需捕获 HTTP 客户端异常，由全局异常处理器统一处理。
 

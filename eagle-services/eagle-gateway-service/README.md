@@ -45,14 +45,14 @@ sentinel-datasource-nacos                         # 规则持久化到 Nacos
 
 ## 主要组件
 
-| 组件                              | 作用                                                                       |
-|---------------------------------|--------------------------------------------------------------------------|
-| `RequestEnrichmentGlobalFilter` | 注入 `X-Request-Id`（UUID v4，优先复用上游已传）+ `X-Real-IP`，写入 exchange.attribute 供异常处理器复用，响应头 `beforeCommit` 覆盖式注入 |
-| `SeataXidFilter`                | 解析 / 注入 `TX_XID` 头，跨服务透传分布式事务上下文                                         |
-| `RequestLoggingGlobalFilter`    | 请求/响应日志埋点，记录耗时与状态码                                                       |
+| 组件                              | 作用                                                                                                           |
+|---------------------------------|--------------------------------------------------------------------------------------------------------------|
+| `RequestEnrichmentGlobalFilter` | 注入 `X-Request-Id`（UUID v4，优先复用上游已传）+ `X-Real-IP`，写入 exchange.attribute 供异常处理器复用，响应头 `beforeCommit` 覆盖式注入     |
+| `SeataXidFilter`                | 解析 / 注入 `TX_XID` 头，跨服务透传分布式事务上下文                                                                             |
+| `RequestLoggingGlobalFilter`    | 请求/响应日志埋点，记录耗时与状态码                                                                                           |
 | `GatewayWebExceptionHandler`    | `@Order(-2)` 统一异常响应，覆盖超时 / 连接拒绝 / PrematureClose / ResponseStatusException，输出 `ErrorResult` JSON 含 requestId |
-| `SentinelGatewayConfig`         | 流控规则 BlockHandler 与默认拦截响应                                                |
-| `GatewayOpenApiConfig`          | 通过 Nacos 实例列表动态注册 SpringDoc Group                                        |
+| `SentinelGatewayConfig`         | 流控规则 BlockHandler 与默认拦截响应                                                                                    |
+| `GatewayOpenApiConfig`          | 通过 Nacos 实例列表动态注册 SpringDoc Group                                                                            |
 
 ## 启动
 
@@ -60,14 +60,14 @@ sentinel-datasource-nacos                         # 规则持久化到 Nacos
 ./gradlew :eagle-services:eagle-gateway-service:bootRun
 ```
 
-| 端点              | 默认地址                                                | 说明                            |
-|-----------------|-----------------------------------------------------|-------------------------------|
-| Swagger UI（聚合）  | http://localhost:8080/swagger-ui                    | 各服务接口聚合视图                     |
-| OpenAPI JSON    | http://localhost:8080/v3/api-docs                   | 配置中心                          |
-| 系统服务转发          | http://localhost:8080/api/system/**                 | → `lb://eagle-system-server`  |
-| OAuth2 转发       | http://localhost:8080/oauth2/**                     | → `lb://eagle-system-server`  |
-| WebSocket / STOMP | ws://localhost:8080/ws-stomp                       | → `lb:ws://eagle-system-server` |
-| Actuator        | http://localhost:8080/actuator/{health,info,gateway} | 健康检查 / 路由列表                   |
+| 端点                | 默认地址                                                 | 说明                              |
+|-------------------|------------------------------------------------------|---------------------------------|
+| Swagger UI（聚合）    | http://localhost:8080/swagger-ui                     | 各服务接口聚合视图                       |
+| OpenAPI JSON      | http://localhost:8080/v3/api-docs                    | 配置中心                            |
+| 系统服务转发            | http://localhost:8080/api/system/**                  | → `lb://eagle-system-server`    |
+| OAuth2 转发         | http://localhost:8080/oauth2/**                      | → `lb://eagle-system-server`    |
+| WebSocket / STOMP | ws://localhost:8080/ws-stomp                         | → `lb:ws://eagle-system-server` |
+| Actuator          | http://localhost:8080/actuator/{health,info,gateway} | 健康检查 / 路由列表                     |
 
 ## 关键配置
 
@@ -128,19 +128,19 @@ server.compression:
 
 ### 路由级超时（`routes[].metadata`）
 
-| 字段                 | 单位 | 说明                  |
-|--------------------|----|---------------------|
-| `connect-timeout`  | 毫秒 | 连接超时，下游不可达时快速失败     |
+| 字段                 | 单位 | 说明                              |
+|--------------------|----|---------------------------------|
+| `connect-timeout`  | 毫秒 | 连接超时，下游不可达时快速失败                 |
 | `response-timeout` | 毫秒 | 响应超时，路由级覆盖 httpclient 全局默认（30s） |
 
 ### Sentinel
 
-| 配置                | 说明                                                                          |
-|-------------------|-----------------------------------------------------------------------------|
-| `SENTINEL_DASHBOARD` | Dashboard 地址，docker-compose 默认 `sentinel-dashboard:8858`；留空禁用上报             |
-| `spring.cloud.sentinel.datasource.ds-flow.nacos` | 流控规则从 Nacos 加载并热刷新（dataId `eagle-gateway-server-flow-rules`，group `SENTINEL_GROUP`） |
-| `spring.cloud.sentinel.datasource.ds-degrade.nacos` | 降级规则（dataId `eagle-gateway-server-degrade-rules`）                          |
-| `spring.cloud.sentinel.filter.enabled: false` | Gateway 用 `SentinelGatewayFilter`，关闭 Servlet Filter                          |
+| 配置                                                  | 说明                                                                                  |
+|-----------------------------------------------------|-------------------------------------------------------------------------------------|
+| `SENTINEL_DASHBOARD`                                | Dashboard 地址，docker-compose 默认 `sentinel-dashboard:8858`；留空禁用上报                     |
+| `spring.cloud.sentinel.datasource.ds-flow.nacos`    | 流控规则从 Nacos 加载并热刷新（dataId `eagle-gateway-server-flow-rules`，group `SENTINEL_GROUP`） |
+| `spring.cloud.sentinel.datasource.ds-degrade.nacos` | 降级规则（dataId `eagle-gateway-server-degrade-rules`）                                   |
+| `spring.cloud.sentinel.filter.enabled: false`       | Gateway 用 `SentinelGatewayFilter`，关闭 Servlet Filter                                 |
 
 **Nacos 中需预先创建对应 dataId**（首次启动会 warn 一次，可忽略）：
 
@@ -190,14 +190,14 @@ Client ──→ Gateway
 
 ## Request ID 全链路追溯
 
-| 阶段              | 行为                                                                    |
-|-----------------|-----------------------------------------------------------------------|
-| 客户端 → 网关        | 可主动带 `X-Request-Id` 头（无则网关生成 UUID）                                    |
-| 网关入口            | `RequestEnrichmentGlobalFilter` 写入 exchange.attribute + 透传给下游请求       |
-| 网关响应            | `beforeCommit` 阶段 set 响应头 `X-Request-Id`                              |
-| 下游 Servlet 服务   | `RequestIdMdcFilter`（在 `eagle-common-starter` 自动装配）从请求头读取 → MDC + 响应头 |
-| 下游异常响应          | `ErrorResult.of(...)` 自动从 MDC 取 requestId 写入 JSON                     |
-| 网关异常响应          | `GatewayWebExceptionHandler` 从 exchange.attribute 取 requestId 写入 JSON |
+| 阶段            | 行为                                                                    |
+|---------------|-----------------------------------------------------------------------|
+| 客户端 → 网关      | 可主动带 `X-Request-Id` 头（无则网关生成 UUID）                                    |
+| 网关入口          | `RequestEnrichmentGlobalFilter` 写入 exchange.attribute + 透传给下游请求       |
+| 网关响应          | `beforeCommit` 阶段 set 响应头 `X-Request-Id`                              |
+| 下游 Servlet 服务 | `RequestIdMdcFilter`（在 `eagle-common-starter` 自动装配）从请求头读取 → MDC + 响应头 |
+| 下游异常响应        | `ErrorResult.of(...)` 自动从 MDC 取 requestId 写入 JSON                     |
+| 网关异常响应        | `GatewayWebExceptionHandler` 从 exchange.attribute 取 requestId 写入 JSON |
 
 前端可同时通过响应头 `X-Request-Id` 与 body `requestId` 字段定位整条链路的日志/堆栈。
 
@@ -233,5 +233,7 @@ docker build -t eagle/gateway-service:1.0.0 eagle-services/eagle-gateway-service
 
 - **WebFlux 服务**：禁止在过滤器或路由中调用阻塞 API（JDBC / JPA / 同步 Feign）；如必需用 `Schedulers.boundedElastic()`
 - 生产 `allowedOriginPatterns` 必须显式枚举具体域名，禁止 `*` + `allowCredentials: true` 同时开启
-- `springdoc.api-docs.enabled` / `springdoc.swagger-ui.enabled` 在生产环境**必须关闭**（详见 `.claude/rules/18-openapi.md`）
-- **网关不做鉴权**：所有 JWT 校验在下游 `eagle-resource-server-starter`；如新增需要鉴权的端点，确保下游路径未在 `eagle.resource-server.permit-paths` 中放行
+- `springdoc.api-docs.enabled` / `springdoc.swagger-ui.enabled` 在生产环境**必须关闭**（详见
+  `.claude/rules/18-openapi.md`）
+- **网关不做鉴权**：所有 JWT 校验在下游 `eagle-resource-server-starter`；如新增需要鉴权的端点，确保下游路径未在
+  `eagle.resource-server.permit-paths` 中放行

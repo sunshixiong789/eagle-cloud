@@ -32,10 +32,14 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class BlacklistApplicationServiceTest {
 
-    @Mock BlacklistRepository repository;
-    @Mock BlacklistMapper mapper;
-    @Mock BlacklistCacheStore cacheStore;
-    @InjectMocks BlacklistApplicationService service;
+    @Mock
+    BlacklistRepository repository;
+    @Mock
+    BlacklistMapper mapper;
+    @Mock
+    BlacklistCacheStore cacheStore;
+    @InjectMocks
+    BlacklistApplicationService service;
 
     @Nested
     @DisplayName("addToBlacklist")

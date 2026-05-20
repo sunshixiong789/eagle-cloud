@@ -7,17 +7,17 @@
 
 ## 1. 连接信息
 
-| 项 | 值 |
-|---|---|
-| Endpoint（STOMP over SockJS） | `/ws-stomp` |
-| 完整 URL（直连） | `ws://{host}:{port}/ws-stomp` |
-| 完整 URL（经网关） | `wss://{gateway-host}/system/ws-stomp` |
-| 协议 | STOMP 1.2 over WebSocket，支持 SockJS 降级 |
-| 客户端消息发送前缀（`@MessageMapping`） | `/message` |
-| 广播订阅前缀 | `/topic` |
-| 点对点订阅前缀（用户专属） | `/user`（实际下行：`/user/queue/xxx`） |
-| 心跳 | 10 000 ms（服务端 ↔ 客户端） |
-| 跨域 | `application.yml: eagle.websocket.allowed-origins`（生产必须收敛到具体域名） |
+| 项                            | 值                                                               |
+|------------------------------|-----------------------------------------------------------------|
+| Endpoint（STOMP over SockJS）  | `/ws-stomp`                                                     |
+| 完整 URL（直连）                   | `ws://{host}:{port}/ws-stomp`                                   |
+| 完整 URL（经网关）                  | `wss://{gateway-host}/system/ws-stomp`                          |
+| 协议                           | STOMP 1.2 over WebSocket，支持 SockJS 降级                           |
+| 客户端消息发送前缀（`@MessageMapping`） | `/message`                                                      |
+| 广播订阅前缀                       | `/topic`                                                        |
+| 点对点订阅前缀（用户专属）                | `/user`（实际下行：`/user/queue/xxx`）                                 |
+| 心跳                           | 10 000 ms（服务端 ↔ 客户端）                                            |
+| 跨域                           | `application.yml: eagle.websocket.allowed-origins`（生产必须收敛到具体域名） |
 
 ### 鉴权（握手阶段）
 
@@ -32,17 +32,17 @@
 
 ## 2. 客户端 → 服务端（PUBLISH）
 
-| 操作 | 目的地（含 appPrefix） | Payload | 触发的下行 |
-|---|---|---|---|
-| 发送广播消息 | `/message/broadcast-message` | [`ChatMessage`](#chatmessage) | 推送到 `/topic/public` |
-| 发送私信 | `/message/message-to-one` | [`PrivateMessage`](#privatemessage) | 推送到目标用户的 `/user/queue/private` |
+| 操作     | 目的地（含 appPrefix）             | Payload                             | 触发的下行                          |
+|--------|------------------------------|-------------------------------------|--------------------------------|
+| 发送广播消息 | `/message/broadcast-message` | [`ChatMessage`](#chatmessage)       | 推送到 `/topic/public`            |
+| 发送私信   | `/message/message-to-one`    | [`PrivateMessage`](#privatemessage) | 推送到目标用户的 `/user/queue/private` |
 
 ### 校验规则
 
-| 校验失败 | 错误码 | i18n key | 默认消息 |
-|---|---|---|---|
-| 广播 / 私信内容为空或空白 | `13005` | `error.chat.message_required` | 消息内容不能为空 |
-| 私信缺少收件人 `to` | `13006` | `error.chat.recipient_required` | 接收者不能为空 |
+| 校验失败           | 错误码     | i18n key                        | 默认消息     |
+|----------------|---------|---------------------------------|----------|
+| 广播 / 私信内容为空或空白 | `13005` | `error.chat.message_required`   | 消息内容不能为空 |
+| 私信缺少收件人 `to`   | `13006` | `error.chat.recipient_required` | 接收者不能为空  |
 
 > 错误通过 `@MessageExceptionHandler` 记录到服务端日志；当前实现**未**把错误回推给客户端，前端需通过业务确认/超时来感知失败。
 
@@ -50,10 +50,10 @@
 
 ## 3. 服务端 → 客户端（SUBSCRIBE）
 
-| 订阅目的地 | 谁会收到 | Payload | 触发来源 |
-|---|---|---|---|
-| `/topic/public` | 所有订阅者 | [`ChatMessage`](#chatmessage) | 客户端调用 `/message/broadcast-message`，或服务端业务代码调用 `WebSocketSessionManager.broadcast(...)` |
-| `/user/queue/private` | 仅当前登录用户 | [`PrivateMessage`](#privatemessage) | 其他用户发送 `/message/message-to-one` |
+| 订阅目的地                 | 谁会收到    | Payload                             | 触发来源                                                                                   |
+|-----------------------|---------|-------------------------------------|----------------------------------------------------------------------------------------|
+| `/topic/public`       | 所有订阅者   | [`ChatMessage`](#chatmessage)       | 客户端调用 `/message/broadcast-message`，或服务端业务代码调用 `WebSocketSessionManager.broadcast(...)` |
+| `/user/queue/private` | 仅当前登录用户 | [`PrivateMessage`](#privatemessage) | 其他用户发送 `/message/message-to-one`                                                       |
 
 > 自定义业务推送可继续按 `eagle-websocket-starter` 的 `WebSocketSessionManager.broadcast / sendToUser` 扩展；
 > 新增 destination 时请同步更新本文档。
@@ -71,10 +71,10 @@
 }
 ```
 
-| 字段 | 类型 | 必填 | 说明 |
-|---|---|---|---|
-| `content` | string | ✅ | 消息正文；空白将被拒绝（`13005`） |
-| `sender` | string | ❌ | 发送者标识；如未填，服务端会忽略（不强制覆写） |
+| 字段        | 类型     | 必填 | 说明                      |
+|-----------|--------|----|-------------------------|
+| `content` | string | ✅  | 消息正文；空白将被拒绝（`13005`）    |
+| `sender`  | string | ❌  | 发送者标识；如未填，服务端会忽略（不强制覆写） |
 
 ### PrivateMessage
 
@@ -86,11 +86,11 @@
 }
 ```
 
-| 字段 | 类型 | 必填 | 说明 |
-|---|---|---|---|
-| `to` | string | ✅ | 收件人用户 ID;空白将被拒绝（`13006`） |
-| `content` | string | ✅ | 消息正文；空白将被拒绝（`13005`） |
-| `from` | string | ❌ | 发送者标识；建议服务端基于 `Principal` 覆写（防伪造） |
+| 字段        | 类型     | 必填 | 说明                                |
+|-----------|--------|----|-----------------------------------|
+| `to`      | string | ✅  | 收件人用户 ID;空白将被拒绝（`13006`）          |
+| `content` | string | ✅  | 消息正文；空白将被拒绝（`13005`）              |
+| `from`    | string | ❌  | 发送者标识；建议服务端基于 `Principal` 覆写（防伪造） |
 
 ---
 
@@ -163,6 +163,6 @@ wscat -c "ws://localhost/ws-stomp/websocket?token=${ACCESS_TOKEN}"
 
 ## 8. 变更记录
 
-| 日期 | 变更 | 作者 |
-|---|---|---|
+| 日期         | 变更                                                     | 作者        |
+|------------|--------------------------------------------------------|-----------|
 | 2026-05-15 | 初版：覆盖 ChatController 的 broadcast / point-to-point 两个端点 | system 模块 |

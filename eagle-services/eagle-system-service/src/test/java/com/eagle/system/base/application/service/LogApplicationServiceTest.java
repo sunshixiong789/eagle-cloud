@@ -39,9 +39,12 @@ class LogApplicationServiceTest {
 
     private static final Long ID = 100L;
 
-    @Mock LogRepository logRepository;
-    @Mock LogMapper logMapper;
-    @InjectMocks LogApplicationService service;
+    @Mock
+    LogRepository logRepository;
+    @Mock
+    LogMapper logMapper;
+    @InjectMocks
+    LogApplicationService service;
 
     @Nested
     @DisplayName("getLogById")

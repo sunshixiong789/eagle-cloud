@@ -19,6 +19,8 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "eagle.security.login-rate-limit")
 public class LoginRateLimitProperties {
 
-    /** 是否启用登录频率限制，默认 true */
+    /**
+     * 是否启用登录频率限制，默认 true
+     */
     private boolean enabled = true;
 }

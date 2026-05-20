@@ -1,14 +1,15 @@
 # Eagle Cloud Agent Plugin
 
-> 把 `eagle-cloud` 基础架子的开发规范、28 个 starter 使用指南、项目级脚手架命令打包成 **同时支持 Claude Code 与 Codex CLI** 的 agent plugin。
+> 把 `eagle-cloud` 基础架子的开发规范、28 个 starter 使用指南、项目级脚手架命令打包成 **同时支持 Claude Code 与 Codex CLI
+** 的 agent plugin。
 > 业务项目接入后，AI（Claude 或 Codex）在编码时自动获得全部约定与 API 知识。
 
 ## 内容清单
 
-| 类型              | 数量 | 说明                                                                            |
-|-----------------|----|-------------------------------------------------------------------------------|
-| Rules（自动注入）     | 30 | DDD / Modulith / 安全 / 日志 / 缓存 / 消息 / 事务 / 多租户 / 性能 / 部署 / 容错弹性 / 事件驱动 等全部开发规范 |
-| Commands（slash） | 6  | `/eagle-flow` `/check-arch` `/new-module` `/new-aggregate` `/new-starter` `/add-error-code` |
+| 类型              | 数量 | 说明                                                                                                                 |
+|-----------------|----|--------------------------------------------------------------------------------------------------------------------|
+| Rules（自动注入）     | 30 | DDD / Modulith / 安全 / 日志 / 缓存 / 消息 / 事务 / 多租户 / 性能 / 部署 / 容错弹性 / 事件驱动 等全部开发规范                                      |
+| Commands（slash） | 6  | `/eagle-flow` `/check-arch` `/new-module` `/new-aggregate` `/new-starter` `/add-error-code`                        |
 | Skills（按需加载）    | 29 | 28 个 starter skill + 1 个端到端编排 skill `eagle-feature-flow`，每个含 `SKILL.md` + Codex marketplace 用 `agents/openai.yaml` |
 
 ## 安装
@@ -60,12 +61,12 @@ codex plugin install eagle-cloud@eagle-cloud
 
 ### 验证安装
 
-| 测试         | Claude Code                                                                 | Codex CLI                                                          |
-|------------|------------------------------------------------------------------------------|--------------------------------------------------------------------|
-| Slash 命令识别 | 输入 `/check-arch`，应该补全到 Eagle Cloud 提供的命令                                  | 输入 `/check-arch`，同上                                            |
-| 自动加载 skill | 输入 `SecurityUtils.getCurrentUserId()`，AI 应自动加载 `eagle-resource-server` skill | 同上                                                               |
-| 关键词触发      | 提问"怎么做缓存击穿防护？" → AI 用 `CacheProtectionUtil.getWithMutex(key, ttl, loader, type)` 4 参数 | 同上                                                               |
-| 入口文档识别     | 业务项目根目录看到 `CLAUDE.md` 出现 Eagle 规范条目                                       | 业务项目根目录看到 `AGENTS.md` 出现 Eagle 规范条目                          |
+| 测试         | Claude Code                                                                           | Codex CLI                           |
+|------------|---------------------------------------------------------------------------------------|-------------------------------------|
+| Slash 命令识别 | 输入 `/check-arch`，应该补全到 Eagle Cloud 提供的命令                                              | 输入 `/check-arch`，同上                 |
+| 自动加载 skill | 输入 `SecurityUtils.getCurrentUserId()`，AI 应自动加载 `eagle-resource-server` skill          | 同上                                  |
+| 关键词触发      | 提问"怎么做缓存击穿防护？" → AI 用 `CacheProtectionUtil.getWithMutex(key, ttl, loader, type)` 4 参数 | 同上                                  |
+| 入口文档识别     | 业务项目根目录看到 `CLAUDE.md` 出现 Eagle 规范条目                                                   | 业务项目根目录看到 `AGENTS.md` 出现 Eagle 规范条目 |
 
 ### 兜底方案：Submodule + 软链
 
@@ -118,13 +119,15 @@ eagle-cloud/                                  仓库根（monorepo）
 
 ## Skill 触发机制
 
-每个 `SKILL.md` 的 frontmatter 有 `description` 字段（精心写的英文触发关键词）。Codex 还额外读 `agents/openai.yaml` 的 `display_name` + `short_description` 作 marketplace UI 展示。两个工具自动加载 skill 的时机：
+每个 `SKILL.md` 的 frontmatter 有 `description` 字段（精心写的英文触发关键词）。Codex 还额外读 `agents/openai.yaml` 的
+`display_name` + `short_description` 作 marketplace UI 展示。两个工具自动加载 skill 的时机：
 
 - 业务代码涉及该 starter 的功能（如代码 import 了 `RedisDistributedLock` 会触发 `eagle-redis`）
 - 用户提问涉及该领域（如"怎么做幂等？"会触发 `eagle-idempotency`）
 - 检测到该 starter 的依赖在 `build.gradle` 中
 
-**查看当前已加载的 skill**：在 Claude Code 或 Codex CLI 会话中，AI 会在系统提示中列出可用 skill 名称；Codex 用户也可在会话内打 `/plugins` 浏览。
+**查看当前已加载的 skill**：在 Claude Code 或 Codex CLI 会话中，AI 会在系统提示中列出可用 skill 名称；Codex 用户也可在会话内打
+`/plugins` 浏览。
 
 ## 维护流程（开发者侧）
 
@@ -149,16 +152,19 @@ git commit -m "docs(plugin): update redis usage"
 # 按 SemVer：bug 修复 → patch；新增 skill/rule → minor；breaking change → major
 ```
 
-> **注意**：`agent-plugin/CLAUDE.md` 与 `agent-plugin/AGENTS.md` 是两份独立的指令文件（不再 symlink），共享 ~95% 内容。修改其中一份时务必对照另一份保持同步——首部声明和"Codex 使用提示"那一节允许不同，其它（rules / commands / starter skill / 高频陷阱）应一致。
+> **注意**：`agent-plugin/CLAUDE.md` 与 `agent-plugin/AGENTS.md` 是两份独立的指令文件（不再 symlink），共享 ~95%
+> 内容。修改其中一份时务必对照另一份保持同步——首部声明和"Codex 使用提示"那一节允许不同，其它（rules / commands / starter
+> skill / 高频陷阱）应一致。
 
 ## 版本兼容矩阵
 
-| Plugin 版本 | eagle-cloud（基建版本） | Spring Boot | 说明                                        |
-|-----------|-------------------|-------------|---------------------------------------------|
+| Plugin 版本 | eagle-cloud（基建版本） | Spring Boot | 说明                                           |
+|-----------|-------------------|-------------|----------------------------------------------|
 | 1.1.0     | 当前主干（2026-05-16）  | 4.0.6       | Codex CLI 支持、AGENTS.md 独立、agents/openai.yaml |
-| 1.0.0     | 2026-04-30 主干     | 4.0.6       | 初始版本，仅 Claude Code                       |
+| 1.0.0     | 2026-04-30 主干     | 4.0.6       | 初始版本，仅 Claude Code                           |
 
-**`ref` 建议使用 `"main"`**，直接跟踪主干，无需提前打 Tag。如团队有版本冻结需求，也可指定 commit SHA（如 `"ref": "a5e251f"`）或 tag。
+**`ref` 建议使用 `"main"`**，直接跟踪主干，无需提前打 Tag。如团队有版本冻结需求，也可指定 commit SHA（如 `"ref": "a5e251f"`）或
+tag。
 
 ## 升级建议
 
@@ -170,7 +176,8 @@ git commit -m "docs(plugin): update redis usage"
 
 ## 反馈
 
-发现 USAGE/规则错漏 → 在 `eagle-cloud` 仓库提 PR 修改源（`agent-plugin/rules/` 或 `eagle-starter/{name}/USAGE.md`），CI 跑 `sync.sh` 后合并即可。
+发现 USAGE/规则错漏 → 在 `eagle-cloud` 仓库提 PR 修改源（`agent-plugin/rules/` 或 `eagle-starter/{name}/USAGE.md`），CI 跑
+`sync.sh` 后合并即可。
 
 ## 许可
 

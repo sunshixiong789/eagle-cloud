@@ -74,6 +74,13 @@ public class HnslsSmsProvider implements SmsProvider {
         this.restClient = builder.build();
     }
 
+    private static SimpleClientHttpRequestFactory createRequestFactory(MessageProperties properties) {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofMillis(properties.getSms().getConnectTimeoutMs()));
+        factory.setReadTimeout(Duration.ofMillis(properties.getSms().getReadTimeoutMs()));
+        return factory;
+    }
+
     @Override
     public String name() {
         return NAME;
@@ -157,13 +164,6 @@ public class HnslsSmsProvider implements SmsProvider {
 
     private String buildKey(String password, String seed) {
         return md5(md5(password) + seed);
-    }
-
-    private static SimpleClientHttpRequestFactory createRequestFactory(MessageProperties properties) {
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(Duration.ofMillis(properties.getSms().getConnectTimeoutMs()));
-        factory.setReadTimeout(Duration.ofMillis(properties.getSms().getReadTimeoutMs()));
-        return factory;
     }
 
     private String extractErrorCode(String response) {

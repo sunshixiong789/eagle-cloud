@@ -14,21 +14,33 @@ public class LoginLogItemResponse {
     private Long userId;
     private String username;
 
-    /** 登录 IP（来自 remoteAddr） */
+    /**
+     * 登录 IP（来自 remoteAddr）
+     */
     private String ip;
 
-    /** 浏览器（解析自 userAgent） */
+    /**
+     * 浏览器（解析自 userAgent）
+     */
     private String browser;
 
-    /** 操作系统（解析自 userAgent） */
+    /**
+     * 操作系统（解析自 userAgent）
+     */
     private String os;
 
-    /** 状态：SUCCESS 或 FAIL（FAILURE 映射为 FAIL） */
+    /**
+     * 状态：SUCCESS 或 FAIL（FAILURE 映射为 FAIL）
+     */
     private String status;
 
-    /** 登录时间（来自 createTime） */
+    /**
+     * 登录时间（来自 createTime）
+     */
     private String loginTime;
 
-    /** 失败原因（来自 exception 字段） */
+    /**
+     * 失败原因（来自 exception 字段）
+     */
     private String failReason;
 }

@@ -6,14 +6,24 @@ package com.eagle.system.auth.domain.model.enums;
  * @author sunshixiong
  */
 public enum BlacklistType {
-    /** 账号 ID（值为 Long 字符串）*/
+    /**
+     * 账号 ID（值为 Long 字符串）
+     */
     ACCOUNT_ID,
-    /** 手机号 */
+    /**
+     * 手机号
+     */
     PHONE,
-    /** 邮箱 */
+    /**
+     * 邮箱
+     */
     EMAIL,
-    /** IP 地址 */
+    /**
+     * IP 地址
+     */
     IP,
-    /** 微信 openid */
+    /**
+     * 微信 openid
+     */
     OPENID
 }

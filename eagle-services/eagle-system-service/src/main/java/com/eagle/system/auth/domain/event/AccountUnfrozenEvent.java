@@ -12,9 +12,13 @@ public record AccountUnfrozenEvent(
         Long operatorId) {
 
     public enum Source {
-        /** 管理员显式解冻 */
+        /**
+         * 管理员显式解冻
+         */
         ADMIN,
-        /** 到期自动解冻 */
+        /**
+         * 到期自动解冻
+         */
         AUTO
     }
 }

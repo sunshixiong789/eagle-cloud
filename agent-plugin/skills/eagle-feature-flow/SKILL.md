@@ -51,6 +51,7 @@ Phase 6  Finish        ← superpowers:finishing-a-development-branch
 **目的**:把模糊需求收敛到"做什么 / 不做什么 / 验收标准"
 
 **通过条件**:
+
 - 用户痛点 / 业务目标已明确
 - 功能边界(in scope / out of scope)
 - 验收标准(可测试)
@@ -72,30 +73,30 @@ Phase 6  Finish        ← superpowers:finishing-a-development-branch
 
 **A. 必读以下 rules**(写 plan 前先读,把约束体现在 plan 里):
 
-| 涉及 | 必读规则 |
-|---|---|
-| 新模块 / 跨模块 | `rules/03-architecture.md` + `rules/04-modulith.md` |
-| 新聚合根 / 实体 | `rules/03-architecture.md` + `rules/06-database.md` |
-| 新接口 | `rules/05-api.md` + `rules/18-openapi.md` |
-| 新错误码 | `rules/07-exception.md` + `rules/20-i18n.md` |
-| 新事件 / MQ 消费 | `rules/15-messaging.md` + `rules/08-concurrency.md` |
-| 新缓存 / 锁 | `rules/14-cache.md` |
-| 多租户 / 数据权限 | `rules/17-tenant-permission.md` |
-| 涉及金额 / 分布式事务 | `rules/16-transaction-distributed.md` |
-| 新 starter | `rules/10-starter.md` |
-| 新定时任务 | `rules/27-scheduling.md` |
-| DB 变更 | `rules/28-migration.md` |
+| 涉及           | 必读规则                                                |
+|--------------|-----------------------------------------------------|
+| 新模块 / 跨模块    | `rules/03-architecture.md` + `rules/04-modulith.md` |
+| 新聚合根 / 实体    | `rules/03-architecture.md` + `rules/06-database.md` |
+| 新接口          | `rules/05-api.md` + `rules/18-openapi.md`           |
+| 新错误码         | `rules/07-exception.md` + `rules/20-i18n.md`        |
+| 新事件 / MQ 消费  | `rules/15-messaging.md` + `rules/08-concurrency.md` |
+| 新缓存 / 锁      | `rules/14-cache.md`                                 |
+| 多租户 / 数据权限   | `rules/17-tenant-permission.md`                     |
+| 涉及金额 / 分布式事务 | `rules/16-transaction-distributed.md`               |
+| 新 starter    | `rules/10-starter.md`                               |
+| 新定时任务        | `rules/27-scheduling.md`                            |
+| DB 变更        | `rules/28-migration.md`                             |
 
 不确定要读哪些 → 读 `rules/25-review-checklist.md`(汇总索引)。
 
 **B. 在 plan 中预先决定要触发哪些 Eagle commands**:
 
-| 需求 | Command | 何时用 |
-|---|---|---|
-| 新增业务模块 | `/new-module {name}` | 引入新有界上下文 |
-| 新增聚合根 | `/new-aggregate {module} {name}` | 已有模块内加新聚合根全栈骨架 |
-| 新增 starter | `/new-starter {name}` | 抽取通用能力(谨慎,需架构组同意) |
-| 新增错误码 | `/add-error-code {enum} {code} {key}` | 业务需要新 ErrorCode + i18n 三语 |
+| 需求         | Command                               | 何时用                       |
+|------------|---------------------------------------|---------------------------|
+| 新增业务模块     | `/new-module {name}`                  | 引入新有界上下文                  |
+| 新增聚合根      | `/new-aggregate {module} {name}`      | 已有模块内加新聚合根全栈骨架            |
+| 新增 starter | `/new-starter {name}`                 | 抽取通用能力(谨慎,需架构组同意)         |
+| 新增错误码      | `/add-error-code {enum} {code} {key}` | 业务需要新 ErrorCode + i18n 三语 |
 
 **C. plan 文件格式**(写在 `.superpowers/plans/{slug}.md` 或 PR 描述草稿):
 
@@ -144,34 +145,35 @@ Phase 6  Finish        ← superpowers:finishing-a-development-branch
 
 **C. 按需加载 Eagle starter skills**(模型在写涉及对应 starter 的代码时自动激活,但本 flow 必须显式确认加载):
 
-| 写到这类代码 | 必须加载 skill |
-|---|---|
-| 聚合根 / 异常 / 事件 / `EagleUser` | `eagle-common` |
-| JPA 实体 / 审计字段 / 索引 | `eagle-data-jpa` |
-| Redis 缓存 / 分布式锁 / 限流 / 布隆 | `eagle-redis` |
-| RocketMQ 发布 / 消费 / 事务消息 / 死信 | `eagle-rocketmq` |
-| ID 生成(雪花/TSID/订单号) | `eagle-id-generator` |
-| 接口幂等 | `eagle-idempotency` |
-| 多租户隔离 | `eagle-tenant` |
-| 行级数据权限 | `eagle-row-security` |
-| OAuth2 资源服务器 | `eagle-resource-server` |
-| Feign 远程调用 | `eagle-feign-client` |
-| MinIO 对象存储 | `eagle-oss-minio` |
-| 短信 / 邮件 / 站内信 | `eagle-notification` |
-| 支付宝 / 微信支付 | `eagle-payment` |
-| XXL-JOB 定时任务 | `eagle-scheduler` |
-| Seata 分布式事务 | `eagle-seata` |
-| Sentinel 限流 | `eagle-sentinel` |
-| WebSocket / SSE | `eagle-websocket` |
-| 链路追踪 | `eagle-tracing` |
-| Swagger / OpenAPI | `eagle-openapi` |
-| MyBatis-Plus(可选,与 JPA 二选一) | `eagle-mybatis` |
-| 多数据源 | `eagle-dynamic-datasource` |
-| Elasticsearch | `eagle-elasticsearch` |
+| 写到这类代码                       | 必须加载 skill                 |
+|------------------------------|----------------------------|
+| 聚合根 / 异常 / 事件 / `EagleUser`  | `eagle-common`             |
+| JPA 实体 / 审计字段 / 索引           | `eagle-data-jpa`           |
+| Redis 缓存 / 分布式锁 / 限流 / 布隆    | `eagle-redis`              |
+| RocketMQ 发布 / 消费 / 事务消息 / 死信 | `eagle-rocketmq`           |
+| ID 生成(雪花/TSID/订单号)           | `eagle-id-generator`       |
+| 接口幂等                         | `eagle-idempotency`        |
+| 多租户隔离                        | `eagle-tenant`             |
+| 行级数据权限                       | `eagle-row-security`       |
+| OAuth2 资源服务器                 | `eagle-resource-server`    |
+| Feign 远程调用                   | `eagle-feign-client`       |
+| MinIO 对象存储                   | `eagle-oss-minio`          |
+| 短信 / 邮件 / 站内信                | `eagle-notification`       |
+| 支付宝 / 微信支付                   | `eagle-payment`            |
+| XXL-JOB 定时任务                 | `eagle-scheduler`          |
+| Seata 分布式事务                  | `eagle-seata`              |
+| Sentinel 限流                  | `eagle-sentinel`           |
+| WebSocket / SSE              | `eagle-websocket`          |
+| 链路追踪                         | `eagle-tracing`            |
+| Swagger / OpenAPI            | `eagle-openapi`            |
+| MyBatis-Plus(可选,与 JPA 二选一)   | `eagle-mybatis`            |
+| 多数据源                         | `eagle-dynamic-datasource` |
+| Elasticsearch                | `eagle-elasticsearch`      |
 
 每个 skill 内含 starter 的 API、配置、典型用法、陷阱。**写涉及该 starter 的代码前必须先 invoke 对应 skill**,而不是凭记忆写。
 
 **D. 测试规范**(`rules/09-testing.md`):
+
 - JUnit 5 + Mockito + AAA 结构
 - `@Nested` + `@DisplayName` 分组
 - 覆盖正常路径 / 边界 / 异常路径
@@ -193,9 +195,9 @@ Phase 6  Finish        ← superpowers:finishing-a-development-branch
 **强制动作**:
 
 1. **`/check-arch`**(agent-plugin 提供) — Modulith 静态验证 + 模块测试 + 全量构建,3/3 全绿
-   - Modulith 违规 → 按 `rules/04-modulith.md` 加 `@NamedInterface` / 改 `allowedDependencies` / 重构 Port-Adapter
-   - 编译失败 → 调用 `everything-claude-code:java-build-resolver` agent 修
-   - 测试回归 → 回到 Phase 3 修测试和实现
+    - Modulith 违规 → 按 `rules/04-modulith.md` 加 `@NamedInterface` / 改 `allowedDependencies` / 重构 Port-Adapter
+    - 编译失败 → 调用 `everything-claude-code:java-build-resolver` agent 修
+    - 测试回归 → 回到 Phase 3 修测试和实现
 2. **`./gradlew clean build`** 通过(`/check-arch` 内部已包含)
 3. **涉及 UI** 的特性已手工启动 dev server 在浏览器验证(单元测试不能替代 UI 验证)
 4. **涉及 DB** 的变更已在本地数据库跑过 Flyway migration,确认能 up 也能(若有)down
@@ -213,7 +215,8 @@ Phase 6  Finish        ← superpowers:finishing-a-development-branch
 
 **强制动作**:
 
-1. 打开 `agent-plugin/rules/25-review-checklist.md`,逐项对照(命名 / 架构 / API / 数据库 / 异常 / 日志 / 并发 / 测试 / Starter / Feign / 安全 / 缓存 / 消息 / 多租户 / 配置 / 性能,共 16 大类)
+1. 打开 `agent-plugin/rules/25-review-checklist.md`,逐项对照(命名 / 架构 / API / 数据库 / 异常 / 日志 / 并发 / 测试 /
+   Starter / Feign / 安全 / 缓存 / 消息 / 多租户 / 配置 / 性能,共 16 大类)
 2. 发现的问题 → 修复(回到 Phase 3 局部迭代)或显式记入 PR 描述的"已知风险与跟进项"
 3. 可选:调用 `everything-claude-code:java-reviewer` agent 做第二轮自动评审
 
@@ -228,11 +231,13 @@ Phase 6  Finish        ← superpowers:finishing-a-development-branch
 **目的**:决定如何收尾这条开发分支(直接合并 / 拆分 PR / 暂存继续 / ...)并执行
 
 **动作**:
+
 - 整理 commit(按 `rules/22-git.md` 的 Conventional Commits 与原子提交规范)
 - 写 PR 描述(模板见 `rules/25-review-checklist.md` 末尾)
 - push + open PR + 分配 reviewer
 
 **最后输出**:flow 总结报告
+
 - 涉及模块 / 聚合根 / starter
 - 新增测试数量、覆盖率变化
 - 新增 / 变更的公共契约(API / 事件 / Port)
@@ -297,12 +302,12 @@ Phase 6: 收尾
 
 ## agent-plugin 知识库总览(供 Phase 2 / Phase 3 查阅)
 
-| 资源类型              | 路径                                  | 用途                       |
-|-------------------|-------------------------------------|--------------------------|
-| **规范文档(必读)**     | `agent-plugin/rules/01-30*.md`     | Phase 2 写 plan 的约束输入     |
-| **PR 自检清单**      | `agent-plugin/rules/25-review-checklist.md` | Phase 5 评审依据          |
-| **Slash Commands** | `agent-plugin/commands/*.md`       | Phase 3 触发的脚手架命令         |
-| **Starter Skills** | `agent-plugin/skills/eagle-*/SKILL.md` | Phase 3 写代码时按需加载         |
+| 资源类型               | 路径                                          | 用途                   |
+|--------------------|---------------------------------------------|----------------------|
+| **规范文档(必读)**       | `agent-plugin/rules/01-30*.md`              | Phase 2 写 plan 的约束输入 |
+| **PR 自检清单**        | `agent-plugin/rules/25-review-checklist.md` | Phase 5 评审依据         |
+| **Slash Commands** | `agent-plugin/commands/*.md`                | Phase 3 触发的脚手架命令     |
+| **Starter Skills** | `agent-plugin/skills/eagle-*/SKILL.md`      | Phase 3 写代码时按需加载     |
 
 主索引在 `agent-plugin/CLAUDE.md`。
 
@@ -310,11 +315,11 @@ Phase 6: 收尾
 
 ## 与 Superpowers 的边界(避免概念混淆)
 
-| Superpowers 提供                | agent-plugin 提供                |
-|-------------------------------|---------------------------------|
+| Superpowers 提供                | agent-plugin 提供                             |
+|-------------------------------|---------------------------------------------|
 | 工程纪律(brainstorm/plan/TDD/...) | Eagle 平台领域知识(rules + commands + starter 用法) |
-| 通用、不绑定项目                       | 项目专属、绑定 eagle-cloud 技术栈          |
-| 主干流程的 6 个阶段                    | 在 Phase 2 / 3 / 4 / 5 被 superpowers 主流程调用 |
+| 通用、不绑定项目                      | 项目专属、绑定 eagle-cloud 技术栈                     |
+| 主干流程的 6 个阶段                   | 在 Phase 2 / 3 / 4 / 5 被 superpowers 主流程调用   |
 
 **两者不冲突,是"通用工程纪律 × 平台专属约束"的组合。**
 
@@ -328,15 +333,15 @@ Phase 6: 收尾
 
 ## 红线(必须避免)
 
-| 反例 | 为什么错 |
-|---|---|
-| 跳过 Phase 1 直接写 plan | 需求没澄清,plan 是空中楼阁 |
-| Phase 2 写 plan 不读 rules | plan 与 Eagle 规范脱节,Phase 5 review 时一片红 |
+| 反例                                                     | 为什么错                                                                                 |
+|--------------------------------------------------------|--------------------------------------------------------------------------------------|
+| 跳过 Phase 1 直接写 plan                                    | 需求没澄清,plan 是空中楼阁                                                                     |
+| Phase 2 写 plan 不读 rules                                | plan 与 Eagle 规范脱节,Phase 5 review 时一片红                                                |
 | Phase 3 写 RocketMQ 消费者却不 invoke `eagle-rocketmq` skill | 凭记忆写,API 错(常见:用了 `@RocketMQMessageListener` 注解,而 Eagle 用 `AbstractRocketMqListener`) |
-| Phase 3 先写实现再补测试 | 违反 TDD,覆盖率注水 |
-| Phase 4 跳过 `/check-arch` | Modulith 违规进 PR,合并后才发现 |
-| Phase 4 用"我看了一遍代码"代替跑命令 | "已完成"必须跑命令证明 |
-| Phase 5 不看 25-review-checklist | 评审标准不一致,PR 反复打回 |
+| Phase 3 先写实现再补测试                                       | 违反 TDD,覆盖率注水                                                                         |
+| Phase 4 跳过 `/check-arch`                               | Modulith 违规进 PR,合并后才发现                                                               |
+| Phase 4 用"我看了一遍代码"代替跑命令                                | "已完成"必须跑命令证明                                                                         |
+| Phase 5 不看 25-review-checklist                         | 评审标准不一致,PR 反复打回                                                                      |
 
 ## 配套 hook(可选,锁死关键节点)
 

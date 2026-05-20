@@ -44,9 +44,12 @@ import static org.mockito.Mockito.when;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class TokenTrackingHandlerTest {
 
-    @Mock OnlineUserPort onlineUserPort;
-    @Mock OAuth2AuthorizationService authorizationService;
-    @InjectMocks TokenTrackingHandler handler;
+    @Mock
+    OnlineUserPort onlineUserPort;
+    @Mock
+    OAuth2AuthorizationService authorizationService;
+    @InjectMocks
+    TokenTrackingHandler handler;
 
     @AfterEach
     void cleanup() {

@@ -26,8 +26,10 @@ import static org.mockito.Mockito.when;
 @DisplayName("SmsSendRateLimiter")
 class SmsSendRateLimiterTest {
 
-    @Mock StringRedisTemplate redis;
-    @Mock ValueOperations<String, String> ops;
+    @Mock
+    StringRedisTemplate redis;
+    @Mock
+    ValueOperations<String, String> ops;
 
     SmsSendRateLimiter limiter;
 

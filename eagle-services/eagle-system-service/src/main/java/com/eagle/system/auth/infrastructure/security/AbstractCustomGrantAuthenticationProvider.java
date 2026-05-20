@@ -69,10 +69,14 @@ public abstract class AbstractCustomGrantAuthenticationProvider implements Authe
         this.userDetailsService = userDetailsService;
     }
 
-    /** 子类暴露当前 grant_type，用于 client 注册校验 + token context。 */
+    /**
+     * 子类暴露当前 grant_type，用于 client 注册校验 + token context。
+     */
     protected abstract AuthorizationGrantType grantType();
 
-    /** 子类暴露 token class，用于 supports() 判断。 */
+    /**
+     * 子类暴露 token class，用于 supports() 判断。
+     */
     protected abstract Class<? extends Authentication> authenticationTokenClass();
 
     /**

@@ -28,8 +28,10 @@ class WechatWebUserServiceTest {
     private static final String OPENID = "wx_openid_abcdef0123456789";
     private static final String UNIONID = "wx_unionid_xyz";
 
-    @Mock AccountRepository accountRepository;
-    @InjectMocks WechatWebUserService service;
+    @Mock
+    AccountRepository accountRepository;
+    @InjectMocks
+    WechatWebUserService service;
 
     private WechatWebUserInfo info(String channel, String openid, String unionid) {
         return new WechatWebUserInfo(openid, unionid, "Nick", "https://a.png", channel);

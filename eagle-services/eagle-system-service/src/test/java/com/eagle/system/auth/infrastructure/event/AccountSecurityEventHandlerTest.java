@@ -19,8 +19,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AccountSecurityEventHandlerTest {
 
-    @Mock OnlineUserPort onlineUserPort;
-    @InjectMocks AccountSecurityEventHandler handler;
+    @Mock
+    OnlineUserPort onlineUserPort;
+    @InjectMocks
+    AccountSecurityEventHandler handler;
 
     @Test
     void shouldForceLogoutAllJtis() {

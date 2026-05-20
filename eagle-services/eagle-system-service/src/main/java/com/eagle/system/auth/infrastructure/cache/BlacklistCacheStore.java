@@ -9,6 +9,8 @@ import com.eagle.system.auth.domain.model.enums.BlacklistType;
  */
 public interface BlacklistCacheStore {
     void add(BlacklistType type, String value);
+
     void remove(BlacklistType type, String value);
+
     boolean isMember(BlacklistType type, String value);
 }

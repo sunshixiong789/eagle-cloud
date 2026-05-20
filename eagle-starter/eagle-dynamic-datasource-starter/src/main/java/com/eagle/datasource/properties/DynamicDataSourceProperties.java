@@ -19,16 +19,24 @@ import java.util.List;
 @ConfigurationProperties(prefix = "eagle.datasource")
 public class DynamicDataSourceProperties {
 
-    /** 是否启用动态数据源。 */
+    /**
+     * 是否启用动态数据源。
+     */
     private boolean enabled = false;
 
-    /** 主库（写库）配置。 */
+    /**
+     * 主库（写库）配置。
+     */
     private SingleDataSource master = new SingleDataSource();
 
-    /** 单从库配置（向后兼容）；若同时配置了 {@link #slaves}，则此字段被忽略。 */
+    /**
+     * 单从库配置（向后兼容）；若同时配置了 {@link #slaves}，则此字段被忽略。
+     */
     private SingleDataSource slave = new SingleDataSource();
 
-    /** 多从库配置列表；非空时取代单从库配置，路由策略为轮询。 */
+    /**
+     * 多从库配置列表；非空时取代单从库配置，路由策略为轮询。
+     */
     private List<SingleDataSource> slaves = new ArrayList<>();
 
     /**
@@ -49,16 +57,24 @@ public class DynamicDataSourceProperties {
     @Data
     public static class SingleDataSource {
 
-        /** JDBC URL。 */
+        /**
+         * JDBC URL。
+         */
         private String url;
 
-        /** 用户名。 */
+        /**
+         * 用户名。
+         */
         private String username;
 
-        /** 密码（生产必须使用 Jasypt ENC() 加密）。 */
+        /**
+         * 密码（生产必须使用 Jasypt ENC() 加密）。
+         */
         private String password;
 
-        /** 驱动类名（可选，Spring Boot 自动推断）。 */
+        /**
+         * 驱动类名（可选，Spring Boot 自动推断）。
+         */
         private String driverClassName;
     }
 }

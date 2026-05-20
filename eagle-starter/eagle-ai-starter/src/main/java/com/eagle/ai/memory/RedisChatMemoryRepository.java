@@ -90,7 +90,8 @@ public class RedisChatMemoryRepository implements ChatMemoryRepository {
             return Collections.emptyList();
         }
         try {
-            List<MessageDto> dtos = objectMapper.readValue(json, new TypeReference<>() {});
+            List<MessageDto> dtos = objectMapper.readValue(json, new TypeReference<>() {
+            });
             return dtos.stream()
                     .map(this::toMessage)
                     .toList();
@@ -151,5 +152,6 @@ public class RedisChatMemoryRepository implements ChatMemoryRepository {
      * 保存消息类型名（type）和文本内容（content），支持 USER / ASSISTANT / SYSTEM 完整还原。
      * 多模态内容（图片等）和工具调用元数据当前仅保留文本部分。
      */
-    record MessageDto(String type, String content) {}
+    record MessageDto(String type, String content) {
+    }
 }

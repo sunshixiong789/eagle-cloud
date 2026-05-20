@@ -27,8 +27,10 @@ import static org.mockito.Mockito.when;
 @DisplayName("LoginAttemptService")
 class LoginAttemptServiceTest {
 
-    @Mock StringRedisTemplate redis;
-    @Mock ValueOperations<String, String> ops;
+    @Mock
+    StringRedisTemplate redis;
+    @Mock
+    ValueOperations<String, String> ops;
 
     LoginAttemptService service;
 

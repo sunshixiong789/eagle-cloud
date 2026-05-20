@@ -36,16 +36,15 @@ import org.springframework.core.Ordered;
  */
 public class TokenUsageAdvisor implements BaseAdvisor {
 
+    static final String CONTEXT_KEY_TENANT = "tenantId";
     private static final Logger log = LoggerFactory.getLogger(TokenUsageAdvisor.class);
-
-    /** 在所有 Advisor 链的最内层运行（最晚 before，最早 after），确保获取到完整响应。 */
+    /**
+     * 在所有 Advisor 链的最内层运行（最晚 before，最早 after），确保获取到完整响应。
+     */
     private static final int ORDER = Ordered.LOWEST_PRECEDENCE - 100;
-
     private static final String TAG_MODEL = "model";
     private static final String TAG_TENANT = "tenant";
     private static final String UNKNOWN = "unknown";
-    static final String CONTEXT_KEY_TENANT = "tenantId";
-
     private final MeterRegistry meterRegistry;
     private final String metricPrefix;
     private final boolean includeModelTag;

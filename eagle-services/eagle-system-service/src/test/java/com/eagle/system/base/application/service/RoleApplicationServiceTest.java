@@ -37,11 +37,16 @@ class RoleApplicationServiceTest {
 
     private static final Long ID = 10L;
 
-    @Mock RoleRepository roleRepository;
-    @Mock RoleMapper roleMapper;
-    @Mock UserRepository userRepository;
-    @Mock UserMapper userMapper;
-    @InjectMocks RoleApplicationService service;
+    @Mock
+    RoleRepository roleRepository;
+    @Mock
+    RoleMapper roleMapper;
+    @Mock
+    UserRepository userRepository;
+    @Mock
+    UserMapper userMapper;
+    @InjectMocks
+    RoleApplicationService service;
 
     private Role businessRole() {
         return Role.create("Manager", "manager", "manager role", 10);

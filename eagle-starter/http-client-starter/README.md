@@ -6,14 +6,14 @@
 
 ## 模块能力
 
-| 组件 | 说明 |
-|------|------|
+| 组件                                               | 说明                                              |
+|--------------------------------------------------|-------------------------------------------------|
 | `PropagatingHeadersClientHttpRequestInterceptor` | 透传 `Authorization`、`Accept-Language`、请求 ID、压测标记 |
-| `TenantClientHttpRequestInterceptor` | 透传 `X-Tenant-Id`，仅存在 `eagle-tenant-starter` 时注册 |
-| `SeataXidClientHttpRequestInterceptor` | 透传 `TX_XID`，仅存在 Seata 时注册 |
-| `EagleResponseErrorHandler` | 将下游 HTTP 错误转换为项目异常体系 |
-| `EagleRestClientCustomizer` | 为所有自动配置的 `RestClient.Builder` 注入超时、拦截器、错误处理 |
-| `EagleHttpServiceClientFactory` | 创建 Spring HTTP Service Interface 代理 |
+| `TenantClientHttpRequestInterceptor`             | 透传 `X-Tenant-Id`，仅存在 `eagle-tenant-starter` 时注册 |
+| `SeataXidClientHttpRequestInterceptor`           | 透传 `TX_XID`，仅存在 Seata 时注册                       |
+| `EagleResponseErrorHandler`                      | 将下游 HTTP 错误转换为项目异常体系                            |
+| `EagleRestClientCustomizer`                      | 为所有自动配置的 `RestClient.Builder` 注入超时、拦截器、错误处理     |
+| `EagleHttpServiceClientFactory`                  | 创建 Spring HTTP Service Interface 代理             |
 
 ## 依赖关系
 
@@ -75,25 +75,25 @@ eagle:
       - X-Correlation-Id
 ```
 
-| 配置项 | 类型 | 默认值 | 说明 |
-|--------|------|--------|------|
-| `eagle.http-client.connect-timeout` | `Duration` | `2s` | TCP 连接建立超时 |
-| `eagle.http-client.read-timeout` | `Duration` | `5s` | 响应读取超时 |
-| `eagle.http-client.error-handler-enabled` | `boolean` | `true` | 是否启用统一错误转换 |
-| `eagle.http-client.buffer-content` | `boolean` | `true` | 是否缓冲响应体，便于错误处理和日志重复读取 |
-| `eagle.http-client.pressure-test-header-enabled` | `boolean` | `true` | 是否透传压测标记 |
-| `eagle.http-client.propagated-headers` | `List<String>` | 见上方 YAML | 从入站请求自动透传的 Header |
+| 配置项                                              | 类型             | 默认值      | 说明                    |
+|--------------------------------------------------|----------------|----------|-----------------------|
+| `eagle.http-client.connect-timeout`              | `Duration`     | `2s`     | TCP 连接建立超时            |
+| `eagle.http-client.read-timeout`                 | `Duration`     | `5s`     | 响应读取超时                |
+| `eagle.http-client.error-handler-enabled`        | `boolean`      | `true`   | 是否启用统一错误转换            |
+| `eagle.http-client.buffer-content`               | `boolean`      | `true`   | 是否缓冲响应体，便于错误处理和日志重复读取 |
+| `eagle.http-client.pressure-test-header-enabled` | `boolean`      | `true`   | 是否透传压测标记              |
+| `eagle.http-client.propagated-headers`           | `List<String>` | 见上方 YAML | 从入站请求自动透传的 Header     |
 
 ## 自动配置 Bean
 
-| Bean | 类型 | 说明 |
-|------|------|------|
-| `propagatingHeadersClientHttpRequestInterceptor` | `PropagatingHeadersClientHttpRequestInterceptor` | 基础 Header 透传 |
-| `eagleResponseErrorHandler` | `EagleResponseErrorHandler` | 统一错误转换 |
-| `eagleRestClientCustomizer` | `EagleRestClientCustomizer` | 全局 RestClient 定制 |
-| `eagleHttpServiceProxyFactory` | `HttpServiceProxyFactory` | 默认 HTTP Service 代理工厂 |
-| `eagleHttpServiceClientFactory` | `EagleHttpServiceClientFactory` | 业务侧创建声明式客户端的入口 |
-| `loadBalancedRestClientBuilder` | `RestClient.Builder` | 带 Spring Cloud LoadBalancer 的 Builder |
+| Bean                                             | 类型                                               | 说明                                    |
+|--------------------------------------------------|--------------------------------------------------|---------------------------------------|
+| `propagatingHeadersClientHttpRequestInterceptor` | `PropagatingHeadersClientHttpRequestInterceptor` | 基础 Header 透传                          |
+| `eagleResponseErrorHandler`                      | `EagleResponseErrorHandler`                      | 统一错误转换                                |
+| `eagleRestClientCustomizer`                      | `EagleRestClientCustomizer`                      | 全局 RestClient 定制                      |
+| `eagleHttpServiceProxyFactory`                   | `HttpServiceProxyFactory`                        | 默认 HTTP Service 代理工厂                  |
+| `eagleHttpServiceClientFactory`                  | `EagleHttpServiceClientFactory`                  | 业务侧创建声明式客户端的入口                        |
+| `loadBalancedRestClientBuilder`                  | `RestClient.Builder`                             | 带 Spring Cloud LoadBalancer 的 Builder |
 
 ## 外部 HTTP API
 
@@ -122,12 +122,12 @@ RestClient wechatRestClient(RestClient.Builder builder) {
 
 异常映射：
 
-| HTTP 状态 | 异常 |
-|-----------|------|
-| 400 | `DomainException` |
-| 404 | `NotFoundException` |
-| 409 | `ConflictException` |
-| 403 / 429 / 5xx / 其他 | `ServiceException` |
+| HTTP 状态              | 异常                  |
+|----------------------|---------------------|
+| 400                  | `DomainException`   |
+| 404                  | `NotFoundException` |
+| 409                  | `ConflictException` |
+| 403 / 429 / 5xx / 其他 | `ServiceException`  |
 
 ## 业务场景覆盖
 

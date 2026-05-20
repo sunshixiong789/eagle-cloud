@@ -32,10 +32,14 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class MonitorApplicationServiceTest {
 
-    @Mock OnlineUserPort onlineUserPort;
-    @Mock LogApplicationService logApplicationService;
-    @Mock LogRepository logRepository;
-    @InjectMocks MonitorApplicationService service;
+    @Mock
+    OnlineUserPort onlineUserPort;
+    @Mock
+    LogApplicationService logApplicationService;
+    @Mock
+    LogRepository logRepository;
+    @InjectMocks
+    MonitorApplicationService service;
 
     @AfterEach
     void clearSecurityContext() {
