@@ -52,7 +52,14 @@ public class OAuthClientInitializer implements ApplicationRunner {
             return;
         }
         oAuthClientRepository.findByClientId(spec.clientId()).ifPresentOrElse(
-                existing -> syncExistingClient(existing, spec, label),
+                existing -> {
+                    if (spec.syncMode() == SyncMode.CREATE_ONLY) {
+                        log.info("{}客户端已存在，syncMode=CREATE_ONLY 跳过同步, clientId: {}",
+                                label, spec.clientId());
+                        return;
+                    }
+                    syncExistingClient(existing, spec, label);
+                },
                 () -> createNewClient(spec, label));
     }
 
@@ -132,8 +139,9 @@ public class OAuthClientInitializer implements ApplicationRunner {
     /**
      * 把两类 Properties 抽象为统一的客户端规格，避免重复实现。
      */
-    private record ClientSpec(
+    record ClientSpec(
             boolean enabled,
+            SyncMode syncMode,
             String clientId,
             String clientName,
             String clientSecret,
@@ -147,7 +155,8 @@ public class OAuthClientInitializer implements ApplicationRunner {
             long refreshTokenTtlSeconds) {
 
         static ClientSpec ofWeb(OAuthClientProperties p) {
-            return new ClientSpec(p.isEnabled(), p.getClientId(), p.getClientName(),
+            return new ClientSpec(p.isEnabled(), p.getSyncMode(),
+                    p.getClientId(), p.getClientName(),
                     p.getClientSecret(), p.getClientAuthenticationMethods(),
                     p.getAuthorizationGrantTypes(), p.getRedirectUris(), p.getScopes(),
                     p.isRequireProofKey(), p.isRequireAuthorizationConsent(),
@@ -155,7 +164,8 @@ public class OAuthClientInitializer implements ApplicationRunner {
         }
 
         static ClientSpec ofApp(OAuthAppClientProperties p) {
-            return new ClientSpec(p.isEnabled(), p.getClientId(), p.getClientName(),
+            return new ClientSpec(p.isEnabled(), p.getSyncMode(),
+                    p.getClientId(), p.getClientName(),
                     p.getClientSecret(), p.getClientAuthenticationMethods(),
                     p.getAuthorizationGrantTypes(), p.getRedirectUris(), p.getScopes(),
                     p.isRequireProofKey(), p.isRequireAuthorizationConsent(),

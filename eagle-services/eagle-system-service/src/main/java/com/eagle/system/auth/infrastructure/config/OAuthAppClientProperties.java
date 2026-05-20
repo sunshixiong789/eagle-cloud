@@ -28,6 +28,9 @@ public class OAuthAppClientProperties {
 
     private boolean enabled = true;
 
+    /** 启动时与 DB 已有配置的同步策略；详见 {@link OAuthClientProperties#getSyncMode}。 */
+    private SyncMode syncMode = SyncMode.OVERWRITE;
+
     private String clientId = "eagleApp";
 
     private String clientName = "Eagle App 移动端";

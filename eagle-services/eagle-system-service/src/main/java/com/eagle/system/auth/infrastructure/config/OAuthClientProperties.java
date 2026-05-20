@@ -27,6 +27,16 @@ public class OAuthClientProperties {
     private boolean enabled = true;
 
     /**
+     * 启动时与已有 DB 配置的同步策略。
+     *
+     * <ul>
+     *   <li>{@link SyncMode#OVERWRITE}（默认，向后兼容）：yml 变更覆盖 DB</li>
+     *   <li>{@link SyncMode#CREATE_ONLY}：DB 已有客户端时跳过，保留运维通过 DB 做的调整</li>
+     * </ul>
+     */
+    private SyncMode syncMode = SyncMode.OVERWRITE;
+
+    /**
      * 客户端 ID
      */
     private String clientId = "eagleWeb";

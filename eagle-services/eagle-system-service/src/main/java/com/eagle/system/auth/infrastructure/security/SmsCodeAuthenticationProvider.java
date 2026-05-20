@@ -1,204 +1,68 @@
 package com.eagle.system.auth.infrastructure.security;
 
-import com.eagle.common.dto.EagleUser;
 import com.eagle.system.auth.application.service.AccountApplicationService;
 import com.eagle.system.auth.domain.model.Account;
 import com.eagle.system.auth.domain.service.SmsService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NonNull;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
-import org.springframework.security.oauth2.core.ClaimAccessor;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
-import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.core.OAuth2Token;
-import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
-import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
-import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AccessTokenAuthenticationToken;
-import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
-import org.springframework.security.oauth2.server.authorization.context.AuthorizationServerContextHolder;
-import org.springframework.security.oauth2.server.authorization.token.DefaultOAuth2TokenContext;
-import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.stereotype.Component;
 
-import java.security.Principal;
-import java.util.Collections;
-import java.util.Map;
-
 /**
- * 短信验证码登录认证提供者
- * <p>
- * 实现 Spring Security OAuth2 的自定义 grant_type: sms_code
- * <p>
- * 认证流程:
+ * 短信验证码登录认证提供者（grant_type = sms_code）。
+ *
+ * <p>具体差异点（其余流程由 {@link AbstractCustomGrantAuthenticationProvider} 接管）：
  * <ol>
- *   <li>验证客户端是否支持 sms_code 授权类型</li>
- *   <li>验证短信验证码是否有效</li>
- *   <li>查找或自动创建账号(首次短信登录自动注册)</li>
- *   <li>生成 OAuth2 access_token 和 refresh_token</li>
- *   <li>保存授权信息到 OAuth2AuthorizationService</li>
+ *   <li>IP / PHONE 黑名单前置拦截</li>
+ *   <li>短信验证码校验</li>
+ *   <li>findOrCreateByPhone 自动注册</li>
  * </ol>
  *
  * @author sunshixiong
  */
-@Slf4j
 @Component
-@RequiredArgsConstructor
-public class SmsCodeAuthenticationProvider implements AuthenticationProvider {
+public class SmsCodeAuthenticationProvider extends AbstractCustomGrantAuthenticationProvider {
 
-    private final OAuth2AuthorizationService authorizationService;
-    private final OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator;
     private final SmsService smsService;
     private final AccountApplicationService accountApplicationService;
-    private final UserDetailsService userDetailsService;
     private final BlacklistChecker blacklistChecker;
 
-    private static OAuth2ClientAuthenticationToken getAuthenticatedClient(Authentication authentication) {
-        OAuth2ClientAuthenticationToken clientPrincipal = null;
-        if (authentication.getPrincipal() instanceof OAuth2ClientAuthenticationToken token) {
-            clientPrincipal = token;
-        }
-        if (clientPrincipal == null || !clientPrincipal.isAuthenticated()) {
-            throw new OAuth2AuthenticationException("invalid_client");
-        }
-        return clientPrincipal;
+    public SmsCodeAuthenticationProvider(OAuth2AuthorizationService authorizationService,
+                                         OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator,
+                                         UserDetailsService userDetailsService,
+                                         SmsService smsService,
+                                         AccountApplicationService accountApplicationService,
+                                         BlacklistChecker blacklistChecker) {
+        super(authorizationService, tokenGenerator, userDetailsService);
+        this.smsService = smsService;
+        this.accountApplicationService = accountApplicationService;
+        this.blacklistChecker = blacklistChecker;
     }
 
     @Override
-    public Authentication authenticate(@NonNull Authentication authentication) throws AuthenticationException {
+    protected AuthorizationGrantType grantType() {
+        return SmsCodeAuthenticationToken.SMS_CODE;
+    }
+
+    @Override
+    protected Class<? extends Authentication> authenticationTokenClass() {
+        return SmsCodeAuthenticationToken.class;
+    }
+
+    @Override
+    protected Account authenticateGrant(Authentication authentication) {
         SmsCodeAuthenticationToken authToken = (SmsCodeAuthenticationToken) authentication;
-
-        // 1. 验证客户端是否支持 sms_code 授权类型
-        OAuth2ClientAuthenticationToken clientPrincipal = getAuthenticatedClient(authToken);
-        RegisteredClient registeredClient = clientPrincipal.getRegisteredClient();
-
-        if (registeredClient == null ||
-                !registeredClient.getAuthorizationGrantTypes().contains(SmsCodeAuthenticationToken.SMS_CODE)) {
-            throw new OAuth2AuthenticationException(new OAuth2Error("unauthorized_client"));
-        }
-
-        // 2. 黑名单前置：拦截 IP / PHONE
         blacklistChecker.checkLogin(null, authToken.getPhone(), ClientIpHolder.get(), null);
 
-        // 3. 验证短信验证码
         if (!smsService.verifyCode(authToken.getPhone(), authToken.getCode())) {
-            throw new OAuth2AuthenticationException(new OAuth2Error("invalid_grant", "验证码错误或已过期", null));
+            throw new OAuth2AuthenticationException(new OAuth2Error(
+                    "invalid_grant", "验证码错误或已过期", null));
         }
-
-        // 3. 查找或自动创建账号(首次短信登录自动注册)
-        Account account = accountApplicationService.findOrCreateByPhone(authToken.getPhone());
-
-        // 4. 通过 UserDetailsService 加载真实用户（携带数据库实际角色 / 部门信息），
-        // 与密码登录路径保持一致，避免硬编码 ROLE_USER 覆盖管理员权限。
-        EagleUser eagleUser = (EagleUser) userDetailsService.loadUserByUsername(account.getUsername());
-
-        // 5. 生成 OAuth2 Token
-        return generateTokens(eagleUser, registeredClient, clientPrincipal,
-                authToken.getAdditionalParameters());
-    }
-
-    @Override
-    public boolean supports(@NonNull Class<?> authentication) {
-        return SmsCodeAuthenticationToken.class.isAssignableFrom(authentication);
-    }
-
-    /**
-     * 生成 OAuth2 Token (access_token + refresh_token)
-     * <p>
-     * 使用 Spring Authorization Server 的 TokenGenerator 生成标准 OAuth2 Token,
-     * 并保存授权信息到 OAuth2AuthorizationService 以支持后续的 token 验证和刷新。
-     *
-     * @param eagleUser            认证用户
-     * @param registeredClient     OAuth2 客户端信息
-     * @param clientPrincipal      客户端认证信息
-     * @param additionalParameters 额外参数
-     * @return OAuth2AccessTokenAuthenticationToken 包含 access_token 和 refresh_token
-     */
-    private OAuth2AccessTokenAuthenticationToken generateTokens(EagleUser eagleUser,
-                                                                RegisteredClient registeredClient,
-                                                                OAuth2ClientAuthenticationToken clientPrincipal,
-                                                                Map<String, Object> additionalParameters) {
-        // OAuth2Authorization 中的 Principal 必须是 SAS Jackson 白名单内的类型，
-        // 否则 /userinfo 等回读授权信息的端点反序列化会被 PolymorphicTypeValidator 拒绝。
-        // 这里只持久化 username，业务扩展字段由 jwtTokenCustomizer 经 UserDetailsService 二次加载写入 JWT claims。
-        UsernamePasswordAuthenticationToken userAuthentication =
-                new UsernamePasswordAuthenticationToken(eagleUser.getUsername(), null, eagleUser.getAuthorities());
-
-        DefaultOAuth2TokenContext.Builder tokenContextBuilder = DefaultOAuth2TokenContext.builder()
-                .registeredClient(registeredClient)
-                .principal(userAuthentication)
-                .authorizationServerContext(AuthorizationServerContextHolder.getContext())
-                .authorizationGrantType(SmsCodeAuthenticationToken.SMS_CODE)
-                .authorizedScopes(registeredClient.getScopes());
-
-        // 生成 access token
-        OAuth2TokenContext tokenContext = tokenContextBuilder
-                .tokenType(OAuth2TokenType.ACCESS_TOKEN)
-                .build();
-        OAuth2Token generatedAccessToken = tokenGenerator.generate(tokenContext);
-        if (generatedAccessToken == null) {
-            throw new OAuth2AuthenticationException(new OAuth2Error("server_error", "Failed to generate access token", null));
-        }
-
-        OAuth2AccessToken accessToken = new OAuth2AccessToken(
-                OAuth2AccessToken.TokenType.BEARER,
-                generatedAccessToken.getTokenValue(),
-                generatedAccessToken.getIssuedAt(),
-                generatedAccessToken.getExpiresAt(),
-                registeredClient.getScopes()
-        );
-
-        // 生成 refresh token
-        OAuth2RefreshToken refreshToken = null;
-        if (registeredClient.getAuthorizationGrantTypes().contains(AuthorizationGrantType.REFRESH_TOKEN)) {
-            OAuth2TokenContext refreshTokenContext = tokenContextBuilder
-                    .tokenType(OAuth2TokenType.REFRESH_TOKEN)
-                    .build();
-            OAuth2Token generatedRefreshToken = tokenGenerator.generate(refreshTokenContext);
-            if (generatedRefreshToken != null) {
-                refreshToken = (OAuth2RefreshToken) generatedRefreshToken;
-            }
-        }
-
-        // 保存授权信息
-        OAuth2Authorization.Builder authorizationBuilder = OAuth2Authorization.withRegisteredClient(registeredClient)
-                .principalName(eagleUser.getUsername())
-                .authorizationGrantType(SmsCodeAuthenticationToken.SMS_CODE)
-                .authorizedScopes(registeredClient.getScopes())
-                .attribute(Principal.class.getName(), userAuthentication);
-
-        if (generatedAccessToken instanceof ClaimAccessor claimAccessor) {
-            Map<String, Object> safeClaims = ClaimsMetadataSanitizer.sanitize(claimAccessor.getClaims());
-            authorizationBuilder.token(accessToken, metadata ->
-                    metadata.put(OAuth2Authorization.Token.CLAIMS_METADATA_NAME, safeClaims));
-        } else {
-            authorizationBuilder.accessToken(accessToken);
-        }
-        if (refreshToken != null) {
-            authorizationBuilder.refreshToken(refreshToken);
-        }
-
-        // 若 client 授予 openid scope，必须同时签发 OIDC ID Token，否则 refresh_token grant
-        // 在 SAS 内部生成新 ID Token 时会因 authorization 缺少 OidcIdToken 上下文而 NPE。
-        OidcIdTokenIssuer.issueIfOpenid(authorizationBuilder, registeredClient, userAuthentication,
-                SmsCodeAuthenticationToken.SMS_CODE, tokenGenerator);
-
-        OAuth2Authorization authorization = authorizationBuilder.build();
-        authorizationService.save(authorization);
-
-        return new OAuth2AccessTokenAuthenticationToken(
-                registeredClient, clientPrincipal, accessToken, refreshToken,
-                Collections.emptyMap()
-        );
+        return accountApplicationService.findOrCreateByPhone(authToken.getPhone());
     }
 }

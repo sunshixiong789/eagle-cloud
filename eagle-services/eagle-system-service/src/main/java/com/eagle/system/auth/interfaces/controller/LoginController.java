@@ -12,7 +12,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.FactorGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -57,6 +59,7 @@ public class LoginController {
     private final UserDetailsService userDetailsService;
     private final SecurityContextRepository securityContextRepository;
     private final WechatWebProperties wechatWebProperties;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 渲染登录页面
@@ -133,6 +136,10 @@ public class LoginController {
         context.setAuthentication(authToken);
         SecurityContextHolder.setContext(context);
         securityContextRepository.saveContext(context, request, response);
+
+        // 手工 setAuthentication 不会触发 ProviderManager 的 AuthenticationSuccessEvent，
+        // 导致 LoginAttemptService 失败计数不会被重置；此处显式发布，保持与表单登录行为一致。
+        eventPublisher.publishEvent(new AuthenticationSuccessEvent(authToken));
 
         HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
         SavedRequest savedRequest = requestCache.getRequest(request, response);

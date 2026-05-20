@@ -49,10 +49,9 @@ public class AccountController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("permitAll()")
-    public Map<String, Long> register(@Valid @RequestBody RegisterAccountRequest request,
-                                      jakarta.servlet.http.HttpServletRequest httpRequest) {
+    public Map<String, Long> register(@Valid @RequestBody RegisterAccountRequest request) {
         blacklistChecker.checkRegister(request.getPhone(), request.getEmail(),
-                httpRequest.getRemoteAddr());
+                com.eagle.system.auth.infrastructure.security.ClientIpHolder.get());
         Long accountId = accountApplicationService.register(
                 request.getUsername(), request.getPassword(), request.getPhone(),
                 request.getEmail(), request.getNickname());
@@ -121,26 +120,6 @@ public class AccountController {
         accountApplicationService.unfreezeAccount(accountId,
                 principal != null ? principal.getId() : null,
                 principal != null ? principal.getName() : "admin");
-    }
-
-    /** @deprecated 改用 /freeze */
-    @Deprecated
-    @Operation(summary = "[Deprecated] 锁定账号", description = "请改用 /freeze")
-    @PatchMapping("/{accountId}/lock")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('admin')")
-    public void lockAccount(@Parameter(description = "账号ID") @PathVariable Long accountId) {
-        accountApplicationService.lockAccount(accountId);
-    }
-
-    /** @deprecated 改用 /unfreeze */
-    @Deprecated
-    @Operation(summary = "[Deprecated] 解锁账号", description = "请改用 /unfreeze")
-    @PatchMapping("/{accountId}/unlock")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('admin')")
-    public void unlockAccount(@Parameter(description = "账号ID") @PathVariable Long accountId) {
-        accountApplicationService.unlockAccount(accountId);
     }
 
     @Operation(summary = "删除账号")

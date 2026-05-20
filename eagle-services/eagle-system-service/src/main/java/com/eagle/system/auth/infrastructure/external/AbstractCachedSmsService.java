@@ -38,13 +38,15 @@ public abstract class AbstractCachedSmsService implements SmsService {
 
     @Override
     public void sendCode(String phone) {
-        if (rateLimitCache.getIfPresent(phone) != null) {
+        // 原子检查：putIfAbsent 在并发场景下保证同一 phone 60 秒只能进入一次发送流程。
+        // 之前 getIfPresent + put 两步存在并发窗口，多线程可能同时通过校验后重复发送。
+        Long previous = rateLimitCache.asMap().putIfAbsent(phone, System.currentTimeMillis());
+        if (previous != null) {
             throw AuthErrorCode.SMS_RATE_LIMIT.toServiceException();
         }
 
         String code = generateCode();
         codeCache.put(phone, code);
-        rateLimitCache.put(phone, System.currentTimeMillis());
 
         if (isConfigured()) {
             doSend(phone, code);

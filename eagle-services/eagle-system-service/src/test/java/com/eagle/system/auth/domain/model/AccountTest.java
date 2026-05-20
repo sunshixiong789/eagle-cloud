@@ -75,7 +75,7 @@ class AccountTest {
 
             assertEquals(PHONE, account.getUsername());
             assertEquals(PHONE, account.getPhone());
-            assertEquals("", account.getPassword());
+            assertEquals(Account.DISABLED_PASSWORD, account.getPassword());
             assertEquals(AccountStatus.ACTIVE, account.getStatus());
             assertSame(ProfileHints.EMPTY, account.getProfileHints());
         }
@@ -94,12 +94,13 @@ class AccountTest {
     class CreateFromWechat {
 
         @Test
-        @DisplayName("should derive username from first 16 openid chars and set wechat binding")
+        @DisplayName("should derive username from sha-256 of openid (no first-16-char collision)")
         void shouldCreateMiniProgramAccount() {
             Account account = Account.createFromWechat(OPENID, UNIONID);
 
-            assertEquals("wx_" + OPENID.substring(0, 16), account.getUsername());
-            assertEquals("", account.getPassword());
+            // SHA-256 短哈希前 16 hex 字符，避免单纯截 openid 前 16 字符碰撞
+            assertEquals(16 + "wx_".length(), account.getUsername().length());
+            assertEquals(Account.DISABLED_PASSWORD, account.getPassword());
             assertNotNull(account.getWechatBinding());
             assertEquals(OPENID, account.getWechatBinding().getOpenid());
             assertEquals(UNIONID, account.getWechatBinding().getUnionid());
@@ -122,7 +123,8 @@ class AccountTest {
         @DisplayName("should set web binding and merge profile hints")
         void shouldCreateWebAccount() {
             Account account = Account.createFromWechatWeb(OPENID, UNIONID, "NickName", "https://a.png");
-            assertEquals("wxweb_" + OPENID.substring(0, 16), account.getUsername());
+            assertEquals(16 + "wxweb_".length(), account.getUsername().length());
+            assertTrue(account.getUsername().startsWith("wxweb_"));
             assertEquals(OPENID, account.getWechatBinding().getWebOpenid());
             assertEquals("NickName", account.getProfileHints().nickname());
             assertEquals("https://a.png", account.getProfileHints().avatar());
@@ -145,7 +147,8 @@ class AccountTest {
         @DisplayName("should set mp binding")
         void shouldCreateH5Account() {
             Account account = Account.createFromWechatH5(OPENID, UNIONID, null, null);
-            assertEquals("wxmp_" + OPENID.substring(0, 16), account.getUsername());
+            assertEquals(16 + "wxmp_".length(), account.getUsername().length());
+            assertTrue(account.getUsername().startsWith("wxmp_"));
             assertEquals(OPENID, account.getWechatBinding().getMpOpenid());
         }
 
@@ -211,40 +214,45 @@ class AccountTest {
     }
 
     @Nested
-    @DisplayName("lock / unlock (deprecated delegates to freeze/unfreeze)")
-    class LockUnlock {
+    @DisplayName("freeze / unfreeze")
+    class FreezeUnfreeze {
 
         @Test
-        @DisplayName("should freeze an active account via lock()")
-        void shouldLockActive() {
+        @DisplayName("should freeze an active account via freezeByAdmin()")
+        void shouldFreezeActive() {
             Account account = Account.create(USERNAME, PASSWORD, PHONE, HINTS);
-            account.lock();
+            account.freezeByAdmin(null, "tester",
+                    com.eagle.system.auth.domain.model.enums.FreezeReason.OTHER, null, "test");
             assertEquals(AccountStatus.FROZEN, account.getStatus());
         }
 
         @Test
-        @DisplayName("should throw ACCOUNT_FROZEN when locking an already-locked account")
-        void shouldThrowWhenAlreadyLocked() {
+        @DisplayName("should throw ACCOUNT_FROZEN when freezing an already-frozen account")
+        void shouldThrowWhenAlreadyFrozen() {
             Account account = Account.create(USERNAME, PASSWORD, PHONE, HINTS);
-            account.lock();
-            AppException ex = assertThrows(DomainException.class, account::lock);
+            account.freezeByAdmin(null, "tester",
+                    com.eagle.system.auth.domain.model.enums.FreezeReason.OTHER, null, null);
+            AppException ex = assertThrows(DomainException.class, () -> account.freezeByAdmin(
+                    null, "tester",
+                    com.eagle.system.auth.domain.model.enums.FreezeReason.OTHER, null, null));
             assertEquals(AuthErrorCode.ACCOUNT_FROZEN, ex.getErrorCode());
         }
 
         @Test
-        @DisplayName("should unfreeze a locked account via unlock()")
-        void shouldUnlockLocked() {
+        @DisplayName("should unfreeze a frozen account via unfreeze()")
+        void shouldUnfreezeFrozen() {
             Account account = Account.create(USERNAME, PASSWORD, PHONE, HINTS);
-            account.lock();
-            account.unlock();
+            account.freezeByAdmin(null, "tester",
+                    com.eagle.system.auth.domain.model.enums.FreezeReason.OTHER, null, null);
+            account.unfreeze(null, "tester");
             assertEquals(AccountStatus.ACTIVE, account.getStatus());
         }
 
         @Test
-        @DisplayName("should throw ACCOUNT_NOT_FROZEN when unlocking an active account")
-        void shouldThrowWhenNotLocked() {
+        @DisplayName("should throw ACCOUNT_NOT_FROZEN when unfreezing an active account")
+        void shouldThrowWhenNotFrozen() {
             Account account = Account.create(USERNAME, PASSWORD, PHONE, HINTS);
-            AppException ex = assertThrows(DomainException.class, account::unlock);
+            AppException ex = assertThrows(DomainException.class, () -> account.unfreeze(null, "tester"));
             assertEquals(AuthErrorCode.ACCOUNT_NOT_FROZEN, ex.getErrorCode());
         }
     }

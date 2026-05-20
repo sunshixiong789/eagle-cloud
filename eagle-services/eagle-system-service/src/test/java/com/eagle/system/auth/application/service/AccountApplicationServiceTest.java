@@ -134,32 +134,6 @@ class AccountApplicationServiceTest {
     }
 
     @Nested
-    @DisplayName("lockAccount / unlockAccount")
-    class LockUnlock {
-
-        @Test
-        @DisplayName("should lock account via aggregate method")
-        void shouldLock() {
-            Account account = existingAccount();
-            when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
-            service.lockAccount(ACCOUNT_ID);
-            assertEquals(AccountStatus.FROZEN, account.getStatus());
-            verify(accountRepository).save(account);
-        }
-
-        @Test
-        @DisplayName("should unlock locked account")
-        void shouldUnlock() {
-            Account account = existingAccount();
-            account.lock();
-            when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
-            service.unlockAccount(ACCOUNT_ID);
-            assertEquals(AccountStatus.ACTIVE, account.getStatus());
-            verify(accountRepository).save(account);
-        }
-    }
-
-    @Nested
     @DisplayName("freezeAccount")
     class FreezeAccount {
         @Test
@@ -215,15 +189,14 @@ class AccountApplicationServiceTest {
     class Delete {
 
         @Test
-        @DisplayName("should save (to flush deleted event) then delete by id")
-        void shouldSaveThenDelete() {
+        @DisplayName("should register deleted event and call repository.delete")
+        void shouldRegisterEventAndDelete() {
             Account account = existingAccount();
             when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
 
             service.deleteAccount(ACCOUNT_ID);
 
-            verify(accountRepository).save(account);
-            verify(accountRepository).deleteById(ACCOUNT_ID);
+            verify(accountRepository).delete(account);
         }
     }
 

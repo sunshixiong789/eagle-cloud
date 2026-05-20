@@ -23,12 +23,16 @@ import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.HexFormat;
 
 /**
- * 账号聚合根
- * <p>
- * 管理用户的认证凭据（用户名、密码、微信绑定）和账号状态（冻结）。
+ * 账号聚合根。
+ *
+ * <p>管理用户的认证凭据（用户名、密码、微信绑定）和账号状态（冻结）。
  * 与 system 域的 User 通过 accountId 关联，Account 负责"你是谁"，
  * User 负责"你的组织信息和权限"。
  *
@@ -48,46 +52,44 @@ import java.time.LocalDateTime;
 public class Account extends BaseAggregateRoot<Account> {
 
     /**
-     * 用户名（唯一）
+     * 未启用密码登录的占位 BCrypt 哈希（格式合法但原文未知，{@code BCryptPasswordEncoder.matches}
+     * 对任意输入都返回 false，且不会打印 "Encoded password does not look like BCrypt" 警告）。
+     *
+     * <p>微信 / 短信 / 一键登录创建的账号使用此占位，DAO 表单密码登录路径自然失败；
+     * 自定义 grant 路径不走密码比对，不受影响。
      */
+    public static final String DISABLED_PASSWORD =
+            "$2a$10$0000000000000000000000.0000000000000000000000000000000000";
+
+    /** 用户名（唯一） */
     @Column(nullable = false, length = 64, unique = true, comment = "用户名")
     private String username;
 
-    /**
-     * 密码（BCrypt 加密）
-     */
-    @Column(nullable = false, length = 128, comment = "密码（BCrypt）")
+    /** 密码（BCrypt 加密；或 {@link #DISABLED_PASSWORD} 占位） */
+    @Column(nullable = false, length = 128, comment = "密码（BCrypt 或 {disabled} 占位）")
     private String password;
 
-    /**
-     * 手机号
-     */
+    /** 手机号 */
     @Column(length = 20, comment = "手机号")
     private String phone;
 
-    /**
-     * 账号状态
-     */
+    /** 账号状态 */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20, comment = "账号状态")
     private AccountStatus status = AccountStatus.ACTIVE;
 
-    /**
-     * 冻结信息（status=FROZEN 时非 null）
-     */
+    /** 冻结信息（status=FROZEN 时非 null） */
     @Embedded
     private AccountFreeze freeze;
 
-    /**
-     * 微信绑定信息
-     */
+    /** 微信绑定信息 */
     @Embedded
     private WechatBinding wechatBinding;
 
     /**
-     * 注册时的 profile 提示信息（瞬态，不持久化）
-     * <p>
-     * 工厂方法中设置，{@code @PostPersist} 回调中用于构建
+     * 注册时的 profile 提示信息（瞬态，不持久化）。
+     *
+     * <p>工厂方法中设置，{@code @PostPersist} 回调中用于构建
      * {@link AccountRegisteredEvent}，事件发布后自动清除。
      */
     @Transient
@@ -96,13 +98,7 @@ public class Account extends BaseAggregateRoot<Account> {
     // ==================== 工厂方法 ====================
 
     /**
-     * 通过用户名和密码创建账号（管理员/表单注册）
-     *
-     * @param username     用户名
-     * @param password     加密后的密码
-     * @param phone        手机号（可选）
-     * @param profileHints 用户画像提示（传递给 system 域创建 User）
-     * @return 新建的 Account 实例
+     * 通过用户名和密码创建账号（管理员 / 表单注册）。
      */
     public static Account create(String username, String password, String phone,
                                  ProfileHints profileHints) {
@@ -122,19 +118,18 @@ public class Account extends BaseAggregateRoot<Account> {
     }
 
     /**
-     * 通过微信小程序 openid 创建账号
+     * 通过微信小程序 openid 创建账号。
      *
-     * @param openid  微信小程序 openid
-     * @param unionid 微信 unionid（可选）
-     * @return 新建的 Account 实例
+     * <p>username 用 openid 的 SHA-256 哈希前 16 字符（小写 hex），避免单纯截前 16 字符导致碰撞。
+     * 密码占位为 {@link #DISABLED_PASSWORD}，不可通过表单密码登录。
      */
     public static Account createFromWechat(String openid, String unionid) {
         if (openid == null || openid.isBlank()) {
             throw AuthErrorCode.OPENID_REQUIRED.toDomainException();
         }
         Account account = new Account();
-        account.username = "wx_" + openid.substring(0, Math.min(16, openid.length()));
-        account.password = "";
+        account.username = "wx_" + shortHash(openid);
+        account.password = DISABLED_PASSWORD;
         account.status = AccountStatus.ACTIVE;
         account.wechatBinding = WechatBinding.create(openid, unionid);
         account.profileHints = ProfileHints.EMPTY;
@@ -142,10 +137,9 @@ public class Account extends BaseAggregateRoot<Account> {
     }
 
     /**
-     * 通过手机号创建账号（短信验证码登录）
+     * 通过手机号创建账号（短信验证码登录）。
      *
-     * @param phone 手机号
-     * @return 新建的 Account 实例
+     * <p>username 直接取手机号；密码占位 {@link #DISABLED_PASSWORD}。
      */
     public static Account createFromPhone(String phone) {
         if (phone == null || phone.isBlank()) {
@@ -153,7 +147,7 @@ public class Account extends BaseAggregateRoot<Account> {
         }
         Account account = new Account();
         account.username = phone;
-        account.password = "";
+        account.password = DISABLED_PASSWORD;
         account.phone = phone;
         account.status = AccountStatus.ACTIVE;
         account.profileHints = ProfileHints.EMPTY;
@@ -161,13 +155,7 @@ public class Account extends BaseAggregateRoot<Account> {
     }
 
     /**
-     * 通过微信网页（PC 扫码）登录创建账号
-     *
-     * @param webOpenid 微信网页 openid
-     * @param unionid   微信 unionid（可选）
-     * @param nickname  微信昵称（可选）
-     * @param avatar    微信头像 URL（可选）
-     * @return 新建的 Account 实例
+     * 通过微信网页（PC 扫码）登录创建账号。
      */
     public static Account createFromWechatWeb(String webOpenid, String unionid,
                                               String nickname, String avatar) {
@@ -175,9 +163,8 @@ public class Account extends BaseAggregateRoot<Account> {
             throw AuthErrorCode.WEB_OPENID_REQUIRED.toDomainException();
         }
         Account account = new Account();
-        account.username = "wxweb_"
-                + webOpenid.substring(0, Math.min(16, webOpenid.length()));
-        account.password = "";
+        account.username = "wxweb_" + shortHash(webOpenid);
+        account.password = DISABLED_PASSWORD;
         account.status = AccountStatus.ACTIVE;
         account.wechatBinding = WechatBinding.createForWeb(webOpenid, unionid);
         account.profileHints = ProfileHints.ofWechat(nickname, avatar);
@@ -185,13 +172,7 @@ public class Account extends BaseAggregateRoot<Account> {
     }
 
     /**
-     * 通过微信公众号 H5 登录创建账号
-     *
-     * @param mpOpenid 微信公众号 openid
-     * @param unionid  微信 unionid（可选）
-     * @param nickname 微信昵称（可选）
-     * @param avatar   微信头像 URL（可选）
-     * @return 新建的 Account 实例
+     * 通过微信公众号 H5 登录创建账号。
      */
     public static Account createFromWechatH5(String mpOpenid, String unionid,
                                              String nickname, String avatar) {
@@ -199,23 +180,35 @@ public class Account extends BaseAggregateRoot<Account> {
             throw AuthErrorCode.MP_OPENID_REQUIRED.toDomainException();
         }
         Account account = new Account();
-        account.username = "wxmp_"
-                + mpOpenid.substring(0, Math.min(16, mpOpenid.length()));
-        account.password = "";
+        account.username = "wxmp_" + shortHash(mpOpenid);
+        account.password = DISABLED_PASSWORD;
         account.status = AccountStatus.ACTIVE;
         account.wechatBinding = WechatBinding.createForH5(mpOpenid, unionid);
         account.profileHints = ProfileHints.ofWechat(nickname, avatar);
         return account;
     }
 
+    /**
+     * 取 openid 的 SHA-256 哈希前 16 字符（小写 hex）作为 username 后缀。
+     * 单纯截原始 openid 前 16 字符在多个 openid 共享前缀时会触发 username unique 冲突。
+     */
+    private static String shortHash(String source) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] digest = md.digest(source.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest).substring(0, 16);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 not available", e);
+        }
+    }
+
     // ==================== 事件发布 ====================
 
     /**
-     * JPA 持久化回调：首次 INSERT 后自动注册 AccountRegisteredEvent
-     * <p>
-     * 此时 ID 已由数据库分配（{@code GenerationType.IDENTITY}），
-     * 事件携带完整的 accountId。Spring Data 在 {@code save()} 返回前
-     * 读取已注册的领域事件并发布，因此只需一次 save 即可完成创建+事件发布。
+     * JPA 持久化回调：首次 INSERT 后自动注册 AccountRegisteredEvent。
+     *
+     * <p>此时 ID 已由数据库分配（{@code GenerationType.IDENTITY}），事件携带完整的 accountId。
+     * Spring Data 在 {@code save()} 返回前读取已注册的领域事件并发布。
      */
     @PostPersist
     private void onPostPersist() {
@@ -229,9 +222,7 @@ public class Account extends BaseAggregateRoot<Account> {
         }
     }
 
-    /**
-     * 发布账号删除事件（跨域事件，system 域级联删除 User）
-     */
+    /** 发布账号删除事件（跨域事件，system 域级联删除 User）。 */
     public void publishDeletedEvent() {
         registerEvent(new AccountDeletedEvent(getId()));
     }
@@ -239,7 +230,7 @@ public class Account extends BaseAggregateRoot<Account> {
     // ==================== 凭据管理 ====================
 
     /**
-     * 修改密码
+     * 修改密码。
      *
      * @param newPassword 新密码（已加密）
      */
@@ -250,8 +241,15 @@ public class Account extends BaseAggregateRoot<Account> {
         this.password = newPassword;
     }
 
+    /** 当前账号是否禁用密码登录（密码字段为 {@link #DISABLED_PASSWORD}）。 */
+    public boolean isPasswordLoginDisabled() {
+        return DISABLED_PASSWORD.equals(this.password);
+    }
+
     /**
-     * 绑定手机号（微信登录后补充手机号场景）
+     * 绑定手机号（微信登录后补充手机号场景）。
+     *
+     * <p>username 不随手机号变化——用户名是登录别名，与手机号脱钩，避免与已有用户名冲突。
      *
      * @param phone 手机号
      */
@@ -268,13 +266,7 @@ public class Account extends BaseAggregateRoot<Account> {
     // ==================== 冻结 / 解冻 ====================
 
     /**
-     * 管理员冻结账号
-     *
-     * @param operatorId   操作人 ID
-     * @param operatorName 操作人姓名
-     * @param reason       冻结原因
-     * @param freezeUntil  到期时间（null 表示永久冻结）
-     * @param remark       备注
+     * 管理员冻结账号。
      */
     public void freezeByAdmin(Long operatorId, String operatorName,
                               FreezeReason reason, LocalDateTime freezeUntil, String remark) {
@@ -291,10 +283,7 @@ public class Account extends BaseAggregateRoot<Account> {
     }
 
     /**
-     * 管理员解冻账号
-     *
-     * @param operatorId   操作人 ID
-     * @param operatorName 操作人姓名
+     * 管理员解冻账号。
      */
     public void unfreeze(Long operatorId, String operatorName) {
         if (this.status != AccountStatus.FROZEN) {
@@ -307,7 +296,7 @@ public class Account extends BaseAggregateRoot<Account> {
     }
 
     /**
-     * 尝试自动解冻（到期自动解冻）
+     * 尝试自动解冻（到期自动解冻）。
      *
      * @param now 当前时间
      * @return true 表示已解冻，false 表示未到期或非冻结状态
@@ -325,32 +314,10 @@ public class Account extends BaseAggregateRoot<Account> {
         return false;
     }
 
-    // ==================== 旧 lock/unlock @Deprecated 委托 ====================
-
-    /**
-     * @deprecated use {@link #freezeByAdmin}
-     */
-    @Deprecated
-    public void lock() {
-        freezeByAdmin(null, "system-legacy",
-                FreezeReason.OTHER, null, "legacy lock API");
-    }
-
-    /**
-     * @deprecated use {@link #unfreeze}
-     */
-    @Deprecated
-    public void unlock() {
-        unfreeze(null, "system-legacy");
-    }
-
     // ==================== 微信绑定 ====================
 
     /**
-     * 绑定微信小程序
-     *
-     * @param openid  微信小程序 openid
-     * @param unionid 微信 unionid（可选）
+     * 绑定微信小程序。
      */
     public void bindWechat(String openid, String unionid) {
         if (openid == null || openid.isBlank()) {
@@ -360,10 +327,7 @@ public class Account extends BaseAggregateRoot<Account> {
     }
 
     /**
-     * 绑定微信网页（PC 扫码）
-     *
-     * @param webOpenid 微信网页 openid
-     * @param unionid   微信 unionid（可选）
+     * 绑定微信网页（PC 扫码）。
      */
     public void bindWechatWeb(String webOpenid, String unionid) {
         if (webOpenid == null || webOpenid.isBlank()) {
@@ -380,10 +344,7 @@ public class Account extends BaseAggregateRoot<Account> {
     }
 
     /**
-     * 绑定微信公众号 H5
-     *
-     * @param mpOpenid 微信公众号 openid
-     * @param unionid  微信 unionid（可选）
+     * 绑定微信公众号 H5。
      */
     public void bindWechatH5(String mpOpenid, String unionid) {
         if (mpOpenid == null || mpOpenid.isBlank()) {

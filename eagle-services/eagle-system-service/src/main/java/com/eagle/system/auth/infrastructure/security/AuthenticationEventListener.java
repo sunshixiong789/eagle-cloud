@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.authentication.event.AuthenticationFailureBadCredentialsEvent;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
-import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.stereotype.Component;
 
 /**
@@ -36,7 +35,7 @@ public class AuthenticationEventListener {
      */
     @EventListener
     public void onAuthFailure(AuthenticationFailureBadCredentialsEvent event) {
-        String ip = extractIp(event.getAuthentication().getDetails());
+        String ip = ClientIpHolder.get();
         if (ip != null) {
             loginAttemptService.registerFailure(ip);
         }
@@ -52,16 +51,9 @@ public class AuthenticationEventListener {
      */
     @EventListener
     public void onAuthSuccess(AuthenticationSuccessEvent event) {
-        String ip = extractIp(event.getAuthentication().getDetails());
+        String ip = ClientIpHolder.get();
         if (ip != null) {
             loginAttemptService.registerSuccess(ip);
         }
-    }
-
-    private String extractIp(Object details) {
-        if (details instanceof WebAuthenticationDetails webDetails) {
-            return webDetails.getRemoteAddress();
-        }
-        return null;
     }
 }

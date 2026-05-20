@@ -1,7 +1,9 @@
 package com.eagle.system.auth.interfaces.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -24,13 +26,16 @@ public class CreateAccountRequest {
     @Schema(description = "密码", example = "123456", requiredMode = Schema.RequiredMode.REQUIRED)
     private String password;
 
-    @Size(max = 20, message = "手机号长度不能超过20个字符")
+    @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")
     @Schema(description = "手机号", example = "13800138000")
     private String phone;
 
+    @Email(message = "邮箱格式不正确")
+    @Size(max = 128, message = "邮箱长度不能超过128个字符")
     @Schema(description = "邮箱", example = "zhangsan@example.com")
     private String email;
 
+    @Size(max = 64, message = "昵称长度不能超过64个字符")
     @Schema(description = "昵称", example = "小张")
     private String nickname;
 
