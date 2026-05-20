@@ -15,6 +15,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 
 /**
@@ -129,4 +130,19 @@ public interface LogRepository extends JpaRepository<SysLog, Long>,
     List<LoginTrendProjection> findLoginTrendByPeriod(@Param("logType") LogType logType,
                                                       @Param("start") LocalDateTime start,
                                                       @Param("end") LocalDateTime end);
+
+    /**
+     * 查询用户最近一次指定类型和状态的日志时间。
+     *
+     * @param username 用户名
+     * @param logType  日志类型
+     * @param status   日志状态
+     * @return 最近日志创建时间
+     */
+    @Query("SELECT MAX(l.createTime) FROM SysLog l WHERE l.username = :username " +
+            "AND l.logType = :logType AND l.status = :status")
+    Optional<LocalDateTime> findLatestCreateTimeByUsernameAndLogTypeAndStatus(
+            @Param("username") String username,
+            @Param("logType") LogType logType,
+            @Param("status") LogStatus status);
 }

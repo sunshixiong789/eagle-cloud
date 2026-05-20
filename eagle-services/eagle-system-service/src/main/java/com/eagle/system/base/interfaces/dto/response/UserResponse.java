@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 用户响应对象
@@ -23,6 +24,9 @@ public class UserResponse {
 
     @Schema(description = "用户ID", example = "1")
     private Long id;
+
+    @Schema(description = "认证账号ID", example = "10")
+    private Long accountId;
 
     @Schema(description = "用户名", example = "zhangsan")
     private String username;
@@ -44,4 +48,13 @@ public class UserResponse {
 
     @Schema(description = "最后登录时间")
     private LocalDateTime lastLoginAt;
+
+    @Schema(description = "当前是否在线")
+    private boolean online;
+
+    @Schema(description = "登录状态：ONLINE 在线，OFFLINE 离线")
+    private String loginStatus;
+
+    @Schema(description = "已分配角色列表")
+    private List<AssignedRoleResponse> roles;
 }

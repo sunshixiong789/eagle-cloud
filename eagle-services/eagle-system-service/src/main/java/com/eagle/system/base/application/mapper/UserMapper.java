@@ -18,11 +18,13 @@ public class UserMapper {
         UserProfile profile = user.getProfile();
         return UserResponse.builder()
                 .id(user.getId())
+                .accountId(user.getAccountId())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .name(profile != null ? profile.getName() : null)
                 .nickname(profile != null ? profile.getNickname() : null)
                 .avatar(profile != null ? profile.getAvatar() : null)
+                .createdAt(user.getCreateTime())
                 .build();
     }
 }

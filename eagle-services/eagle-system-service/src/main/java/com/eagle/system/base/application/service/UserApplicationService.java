@@ -2,9 +2,12 @@ package com.eagle.system.base.application.service;
 
 import com.eagle.system.base.application.mapper.UserMapper;
 import com.eagle.system.base.domain.model.User;
+import com.eagle.system.base.domain.model.enums.LogStatus;
+import com.eagle.system.base.domain.model.enums.LogType;
 import com.eagle.system.base.domain.model.enums.RoleStatus;
 import com.eagle.system.base.domain.model.enums.UserErrorCode;
 import com.eagle.system.base.domain.model.valueobject.UserProfile;
+import com.eagle.system.base.domain.repository.LogRepository;
 import com.eagle.system.base.domain.repository.RoleRepository;
 import com.eagle.system.base.domain.repository.UserRepository;
 import com.eagle.system.base.domain.repository.UserSpecification;
@@ -14,6 +17,7 @@ import com.eagle.system.base.interfaces.dto.request.UpdateUserRequest;
 import com.eagle.system.base.interfaces.dto.request.UserQueryRequest;
 import com.eagle.system.base.interfaces.dto.response.AssignedRoleResponse;
 import com.eagle.system.base.interfaces.dto.response.UserResponse;
+import com.eagle.system.auth.domain.port.OnlineUserPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -44,6 +48,8 @@ public class UserApplicationService {
     private final UserMapper userMapper;
     private final RoleValidationService roleValidationService;
     private final RoleRepository roleRepository;
+    private final LogRepository logRepository;
+    private final OnlineUserPort onlineUserPort;
 
     /**
      * 更新用户档案信息
@@ -83,7 +89,7 @@ public class UserApplicationService {
      */
     @Transactional(readOnly = true)
     public Page<UserResponse> queryUsers(Pageable pageable) {
-        return userRepository.findAll(pageable).map(userMapper::toResponse);
+        return userRepository.findAll(pageable).map(this::toListResponse);
     }
 
     /**
@@ -94,7 +100,7 @@ public class UserApplicationService {
         Specification<User> spec = Specification
                 .where(UserSpecification.usernameLike(request.getUsername()))
                 .and(UserSpecification.emailLike(request.getEmail()));
-        return userRepository.findAll(spec, pageable).map(userMapper::toResponse);
+        return userRepository.findAll(spec, pageable).map(this::toListResponse);
     }
 
     /**
@@ -125,6 +131,25 @@ public class UserApplicationService {
     @Transactional(readOnly = true)
     public List<AssignedRoleResponse> getUserRoles(Long userId) {
         User user = findUserById(userId);
+        return getAssignedRoles(user);
+    }
+
+    private UserResponse toListResponse(User user) {
+        UserResponse response = userMapper.toResponse(user);
+        response.setRoles(getAssignedRoles(user));
+        response.setLastLoginAt(logRepository
+                .findLatestCreateTimeByUsernameAndLogTypeAndStatus(
+                        user.getUsername(), LogType.LOGIN, LogStatus.SUCCESS)
+                .orElse(null));
+
+        boolean online = user.getAccountId() != null
+                && !onlineUserPort.listJtisByAccount(user.getAccountId()).isEmpty();
+        response.setOnline(online);
+        response.setLoginStatus(online ? "ONLINE" : "OFFLINE");
+        return response;
+    }
+
+    private List<AssignedRoleResponse> getAssignedRoles(User user) {
         Set<Long> roleIds = user.getRoleIds();
         if (roleIds.isEmpty()) {
             return List.of();

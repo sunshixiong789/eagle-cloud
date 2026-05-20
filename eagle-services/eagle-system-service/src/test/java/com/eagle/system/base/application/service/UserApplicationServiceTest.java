@@ -6,14 +6,18 @@ import com.eagle.system.base.application.mapper.UserMapper;
 import com.eagle.system.base.domain.model.Role;
 import com.eagle.system.base.domain.model.User;
 import com.eagle.system.base.domain.model.enums.Gender;
+import com.eagle.system.base.domain.model.enums.LogStatus;
+import com.eagle.system.base.domain.model.enums.LogType;
 import com.eagle.system.base.domain.model.enums.UserErrorCode;
 import com.eagle.system.base.domain.model.valueobject.UserProfile;
+import com.eagle.system.base.domain.repository.LogRepository;
 import com.eagle.system.base.domain.repository.RoleRepository;
 import com.eagle.system.base.domain.repository.UserRepository;
 import com.eagle.system.base.domain.service.RoleValidationService;
 import com.eagle.system.base.interfaces.dto.request.UpdateUserRequest;
 import com.eagle.system.base.interfaces.dto.response.AssignedRoleResponse;
 import com.eagle.system.base.interfaces.dto.response.UserResponse;
+import com.eagle.system.auth.domain.port.OnlineUserPort;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -22,6 +26,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -47,6 +56,10 @@ class UserApplicationServiceTest {
     RoleValidationService roleValidationService;
     @Mock
     RoleRepository roleRepository;
+    @Mock
+    LogRepository logRepository;
+    @Mock
+    OnlineUserPort onlineUserPort;
     @InjectMocks
     UserApplicationService service;
 
@@ -97,6 +110,42 @@ class UserApplicationServiceTest {
             service.updateUser(USER_ID, new UpdateUserRequest());
 
             assertEquals(originalNick, user.getProfile().getNickname());
+        }
+    }
+
+    @Nested
+    @DisplayName("queryUsers")
+    class QueryUsers {
+        @Test
+        @DisplayName("should enrich user list with account id roles login time and online status")
+        void shouldEnrichUserList() {
+            User user = sampleUser();
+            user.assignRoles(Set.of(1L));
+            UserResponse base = UserResponse.builder()
+                    .id(USER_ID)
+                    .accountId(ACCOUNT_ID)
+                    .username("alice")
+                    .build();
+            Role admin = Role.create("Admin", "admin", null, 1);
+            LocalDateTime lastLoginAt = LocalDateTime.of(2026, 5, 20, 9, 30);
+
+            when(userRepository.findAll(PageRequest.of(0, 10)))
+                    .thenReturn(new PageImpl<>(List.of(user)));
+            when(userMapper.toResponse(user)).thenReturn(base);
+            when(roleRepository.findAllById(user.getRoleIds())).thenReturn(List.of(admin));
+            when(logRepository.findLatestCreateTimeByUsernameAndLogTypeAndStatus(
+                    "alice", LogType.LOGIN, LogStatus.SUCCESS)).thenReturn(Optional.of(lastLoginAt));
+            when(onlineUserPort.listJtisByAccount(ACCOUNT_ID)).thenReturn(List.of("jti-1"));
+
+            Page<UserResponse> page = service.queryUsers(PageRequest.of(0, 10));
+
+            UserResponse response = page.getContent().getFirst();
+            assertEquals(ACCOUNT_ID, response.getAccountId());
+            assertEquals(lastLoginAt, response.getLastLoginAt());
+            assertTrue(response.isOnline());
+            assertEquals("ONLINE", response.getLoginStatus());
+            assertEquals(1, response.getRoles().size());
+            assertEquals("Admin", response.getRoles().getFirst().getRoleName());
         }
     }
 
