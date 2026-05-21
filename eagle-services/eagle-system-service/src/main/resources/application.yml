@@ -119,6 +119,12 @@ eagle:
     # 必填，缺失即 fail-fast；dev / local profile 在 application-dev.yml / application-local.yml 注入默认值
     keystore-password: ${EAGLE_JWT_KEYSTORE_PASSWORD}
     key-alias: eagle-jwt
+  # ----- RocketMQ（站内消息消费）-----
+  # 默认 enabled；dev profile 可显式关闭以跳过 Consumer 注册（本地无 broker 时）
+  rocketmq:
+    endpoints: ${ROCKETMQ_ENDPOINTS:localhost:8081}
+    consumer-group: system_consumer
+    topic-env-prefix: ${ROCKETMQ_TOPIC_ENV_PREFIX:dev_}
   # ----- 文件存储（eagle-oss-minio-starter）-----
   # type 默认 local，本地文件系统存储；生产应切到 minio
   storage:

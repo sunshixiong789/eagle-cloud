@@ -146,11 +146,34 @@ class ModulithArchitectureTest {
     }
 
     @Nested
+    @DisplayName("message 模块边界（站内消息中心，平台级横切）")
+    class MessageBoundary {
+
+        @Test
+        @DisplayName("message 模块应存在")
+        void shouldExist() {
+            MODULES.getModuleByName("message")
+                    .orElseThrow(() -> new AssertionError("message 模块未找到"));
+        }
+
+        @Test
+        @DisplayName("message 应完全独立——不依赖 auth / base / config / file（拆分就绪原则）")
+        void shouldBeFullyIsolated() {
+            ApplicationModule message = MODULES.getModuleByName("message")
+                    .orElseThrow(() -> new AssertionError("message 模块未找到"));
+            assertModuleNotDependsOn(message, "auth");
+            assertModuleNotDependsOn(message, "base");
+            assertModuleNotDependsOn(message, "config");
+            assertModuleNotDependsOn(message, "file");
+        }
+    }
+
+    @Nested
     @DisplayName("跨模块依赖契约")
     class CrossModuleContract {
 
         @Test
-        @DisplayName("modules 集合应包含 auth + base 两个有界上下文")
+        @DisplayName("modules 集合应包含 auth + base + message 三个有界上下文")
         void shouldContainExpectedModules() {
             List<String> moduleNames = MODULES.stream()
                     .map(ApplicationModule::getName)
@@ -158,6 +181,8 @@ class ModulithArchitectureTest {
             assertTrue(moduleNames.contains("auth"),
                     "实际模块: " + moduleNames);
             assertTrue(moduleNames.contains("base"),
+                    "实际模块: " + moduleNames);
+            assertTrue(moduleNames.contains("message"),
                     "实际模块: " + moduleNames);
         }
     }

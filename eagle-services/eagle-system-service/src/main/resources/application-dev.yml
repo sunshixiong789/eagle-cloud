@@ -13,6 +13,10 @@ eagle:
     # dev 环境默认值；与项目内置 classpath:jwt-keystore.p12 的密码对齐，
     # 仅用于 dev profile；test/staging/prod 必须通过环境变量 EAGLE_JWT_KEYSTORE_PASSWORD 注入
     keystore-password: ${EAGLE_JWT_KEYSTORE_PASSWORD:eagle-jwt-dev-2026}
+  # 本地无 RocketMQ broker 时关闭 Consumer 注册；接入联调环境改为 true 即可
+  rocketmq:
+    enabled: ${ROCKETMQ_ENABLED:false}
+    topic-env-prefix: dev_
 
 spring:
   # dev 环境默认沿用 Nacos 内置 public 命名空间。
