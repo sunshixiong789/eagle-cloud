@@ -17,6 +17,8 @@ import com.eagle.system.base.domain.service.RoleValidationService;
 import com.eagle.system.base.interfaces.dto.request.UpdateUserRequest;
 import com.eagle.system.base.interfaces.dto.response.AssignedRoleResponse;
 import com.eagle.system.base.interfaces.dto.response.UserResponse;
+import com.eagle.system.auth.domain.port.AccountBlacklistInfo;
+import com.eagle.system.auth.domain.port.AccountBlacklistPort;
 import com.eagle.system.auth.domain.port.OnlineUserPort;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -60,6 +62,8 @@ class UserApplicationServiceTest {
     LogRepository logRepository;
     @Mock
     OnlineUserPort onlineUserPort;
+    @Mock
+    AccountBlacklistPort accountBlacklistPort;
     @InjectMocks
     UserApplicationService service;
 
@@ -117,7 +121,7 @@ class UserApplicationServiceTest {
     @DisplayName("queryUsers")
     class QueryUsers {
         @Test
-        @DisplayName("should enrich user list with account id roles login time and online status")
+        @DisplayName("should enrich user list with account id roles login time online status and blacklist status")
         void shouldEnrichUserList() {
             User user = sampleUser();
             user.assignRoles(Set.of(1L));
@@ -136,6 +140,8 @@ class UserApplicationServiceTest {
             when(logRepository.findLatestCreateTimeByUsernameAndLogTypeAndStatus(
                     "alice", LogType.LOGIN, LogStatus.SUCCESS)).thenReturn(Optional.of(lastLoginAt));
             when(onlineUserPort.listJtisByAccount(ACCOUNT_ID)).thenReturn(List.of("jti-1"));
+            when(accountBlacklistPort.findAccountBlacklist(ACCOUNT_ID))
+                    .thenReturn(Optional.of(new AccountBlacklistInfo(300L, ACCOUNT_ID.toString())));
 
             Page<UserResponse> page = service.queryUsers(PageRequest.of(0, 10));
 
@@ -144,6 +150,8 @@ class UserApplicationServiceTest {
             assertEquals(lastLoginAt, response.getLastLoginAt());
             assertTrue(response.isOnline());
             assertEquals("ONLINE", response.getLoginStatus());
+            assertTrue(response.isBlacklisted());
+            assertEquals(300L, response.getBlacklistId());
             assertEquals(1, response.getRoles().size());
             assertEquals("Admin", response.getRoles().getFirst().getRoleName());
         }

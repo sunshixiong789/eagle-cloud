@@ -17,6 +17,7 @@ import com.eagle.system.base.interfaces.dto.request.UpdateUserRequest;
 import com.eagle.system.base.interfaces.dto.request.UserQueryRequest;
 import com.eagle.system.base.interfaces.dto.response.AssignedRoleResponse;
 import com.eagle.system.base.interfaces.dto.response.UserResponse;
+import com.eagle.system.auth.domain.port.AccountBlacklistPort;
 import com.eagle.system.auth.domain.port.OnlineUserPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -50,6 +51,7 @@ public class UserApplicationService {
     private final RoleRepository roleRepository;
     private final LogRepository logRepository;
     private final OnlineUserPort onlineUserPort;
+    private final AccountBlacklistPort accountBlacklistPort;
 
     /**
      * 更新用户档案信息
@@ -146,7 +148,20 @@ public class UserApplicationService {
                 && !onlineUserPort.listJtisByAccount(user.getAccountId()).isEmpty();
         response.setOnline(online);
         response.setLoginStatus(online ? "ONLINE" : "OFFLINE");
+        enrichBlacklistStatus(user, response);
         return response;
+    }
+
+    private void enrichBlacklistStatus(User user, UserResponse response) {
+        response.setBlacklisted(false);
+        response.setBlacklistId(null);
+        if (user.getAccountId() == null) {
+            return;
+        }
+        accountBlacklistPort.findAccountBlacklist(user.getAccountId()).ifPresent(info -> {
+            response.setBlacklisted(true);
+            response.setBlacklistId(info.id());
+        });
     }
 
     private List<AssignedRoleResponse> getAssignedRoles(User user) {

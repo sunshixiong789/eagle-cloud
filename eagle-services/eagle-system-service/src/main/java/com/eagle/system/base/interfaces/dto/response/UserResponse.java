@@ -55,6 +55,12 @@ public class UserResponse {
     @Schema(description = "登录状态：ONLINE 在线，OFFLINE 离线")
     private String loginStatus;
 
+    @Schema(description = "账号是否已加入黑名单")
+    private boolean blacklisted;
+
+    @Schema(description = "账号黑名单记录 ID")
+    private Long blacklistId;
+
     @Schema(description = "已分配角色列表")
     private List<AssignedRoleResponse> roles;
 }
