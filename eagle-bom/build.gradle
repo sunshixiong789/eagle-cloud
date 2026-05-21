@@ -118,6 +118,7 @@ dependencies {
         add('api', "com.tencentcloudapi:tencentcloud-sdk-java-sms:${tencentCloudSmsVersion}")
 
         // API 文档
+        add('api', "org.springdoc:springdoc-openapi-starter-common:${springdocVersion}")
         add('api', "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}")
         add('api', "org.springdoc:springdoc-openapi-starter-webflux-ui:${springdocVersion}")
 
@@ -160,6 +161,7 @@ dependencies {
         // 内部 Starter 模块（消费方引用时无需写版本）
         add('api', "com.eagle:eagle-common-starter:${project.version}")
         add('api', "com.eagle:eagle-data-jpa-starter:${project.version}")
+        add('api', "com.eagle:eagle-data-r2dbc-starter:${project.version}")
         add('api', "com.eagle:http-client-starter:${project.version}")
         add('api', "com.eagle:eagle-openapi-starter:${project.version}")
         add('api', "com.eagle:eagle-redis-starter:${project.version}")
@@ -184,6 +186,7 @@ dependencies {
         add('api', "com.eagle:eagle-elasticsearch-starter:${project.version}")
         add('api', "com.eagle:eagle-mybatis-starter:${project.version}")
         add('api', "com.eagle:eagle-payment-starter:${project.version}")
+        add('api', "com.eagle:eagle-webflux-starter:${project.version}")
         add('api', "com.eagle:eagle-websocket-starter:${project.version}")
         add('api', "com.eagle:eagle-ai-starter:${project.version}")
         add('api', "com.eagle:eagle-zhetaoke-starter:${project.version}")

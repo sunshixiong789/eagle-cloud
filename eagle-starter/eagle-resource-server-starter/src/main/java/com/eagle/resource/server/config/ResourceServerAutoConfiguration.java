@@ -1,13 +1,11 @@
 package com.eagle.resource.server.config;
 
-import com.eagle.openapi.config.EagleOpenApiAutoConfiguration;
 import com.eagle.resource.server.properties.ResourceServerProperties;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 /**
  * 资源服务器自动配置入口。
@@ -25,13 +23,13 @@ import org.springframework.security.web.SecurityFilterChain;
  *
  * @author 孙士雄
  */
-@AutoConfiguration(before = EagleOpenApiAutoConfiguration.class)
-@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-@ConditionalOnClass(SecurityFilterChain.class)
+@AutoConfiguration(beforeName = "com.eagle.openapi.config.EagleOpenApiAutoConfiguration")
+@ConditionalOnClass(Jwt.class)
 @EnableConfigurationProperties(ResourceServerProperties.class)
 @Import({
         EagleJwtAuthenticationConverter.class,
         ResourceServerSecurityConfig.class,
+        ReactiveResourceServerSecurityConfig.class,
         CacheConfig.class,
         OpenApiConfig.class
 })
