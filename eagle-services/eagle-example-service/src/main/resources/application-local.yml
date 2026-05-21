@@ -1,0 +1,104 @@
+# ===========================================
+# Eagle Example Service · Local 开发配置
+# 使用 H2 内存数据库 + Caffeine 本地缓存，关闭外部依赖
+# ===========================================
+
+server:
+  port: 8080
+
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:eagle_example;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+    username: sa
+    password:
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+
+  cache:
+    type: caffeine
+
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+
+  # H2 Console 调试（仅本地）
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+# ---- 关闭本地无外部依赖的 starter ----
+eagle:
+  jwt:
+    keystore-password: example-local
+
+  rocketmq:
+    enabled: false
+
+  storage:
+    type: local
+    local:
+      base-path: ./data/eagle-example/storage
+
+  message:
+    enabled: false
+
+  xxl:
+    job:
+      admin:
+        addresses: http://127.0.0.1:8080/xxl-job-admin
+
+  tenant:
+    enabled: true
+
+  elasticsearch:
+    enabled: false
+
+  payment:
+    enabled: false
+
+  seata:
+    enabled: false
+
+  sentinel:
+    enabled: false
+
+  encrypt:
+    enabled: true
+    aes-key: example-local-32-byte-aes-key!!
+
+  id-generator:
+    type: snowflake
+    snowflake:
+      worker-id: 0
+      datacenter-id: 0
+
+# Actuator 本地全开
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+# 日志
+logging:
+  level:
+    root: DEBUG
+    com.eagle: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE

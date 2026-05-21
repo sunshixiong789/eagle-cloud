@@ -1,0 +1,67 @@
+// Eagle Example Service — Starter 全量验证模块
+// 集成除 eagle-ai-starter 外所有 starter，用于验证自动配置与核心功能
+configurations.all {
+    exclude group: 'xpp3', module: 'xpp3'
+    exclude group: 'xpp3', module: 'xpp3_min'
+    exclude group: 'xmlpull', module: 'xmlpull'
+    exclude group: 'io.github.x-stream', module: 'mxparser'
+    exclude group: 'pull-parser', module: 'pull-parser'
+}
+
+dependencies {
+    // ======================= 核心基础设施 =======================
+    implementation project(':eagle-starter:eagle-common-starter')
+    implementation project(':eagle-starter:eagle-data-jpa-starter')
+    implementation project(':eagle-starter:eagle-redis-starter')
+    implementation project(':eagle-starter:eagle-resource-server-starter')
+    implementation project(':eagle-starter:eagle-openapi-starter')
+    implementation project(':eagle-starter:eagle-tracing-starter')
+
+    // ======================= 数据访问扩展 =======================
+    implementation project(':eagle-starter:eagle-dynamic-datasource-starter')
+    implementation project(':eagle-starter:eagle-row-security-starter')
+    implementation project(':eagle-starter:eagle-mybatis-starter')
+    implementation project(':eagle-starter:eagle-sharding-starter')
+    implementation project(':eagle-starter:eagle-elasticsearch-starter')
+
+    // ======================= 消息与通信 =======================
+    implementation project(':eagle-starter:eagle-rocketmq-starter')
+    implementation project(':eagle-starter:eagle-websocket-starter')
+    implementation project(':eagle-starter:http-client-starter')
+
+    // ======================= 分布式能力 =======================
+    implementation project(':eagle-starter:eagle-seata-starter')
+    implementation project(':eagle-starter:eagle-sentinel-starter')
+    implementation project(':eagle-starter:eagle-id-generator-starter')
+    implementation project(':eagle-starter:eagle-idempotency-starter')
+
+    // ======================= 业务工具 =======================
+    implementation project(':eagle-starter:eagle-oss-minio-starter')
+    implementation project(':eagle-starter:eagle-notification-starter')
+    implementation project(':eagle-starter:eagle-scheduler-starter')
+    implementation project(':eagle-starter:eagle-tenant-starter')
+    implementation project(':eagle-starter:eagle-excel-starter')
+    implementation project(':eagle-starter:eagle-resilience-starter')
+    implementation project(':eagle-starter:eagle-encrypt-starter')
+    implementation project(':eagle-starter:eagle-audit-log-starter')
+    implementation project(':eagle-starter:eagle-payment-starter')
+
+    // ======================= Spring Boot 基础 =======================
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    // Nacos
+    implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery'
+
+    // 本地开发：自动加载 .env
+    runtimeOnly 'me.paulschwarz:spring-dotenv:4.0.0'
+
+    // 测试
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
+    testImplementation 'com.h2database:h2'
+}

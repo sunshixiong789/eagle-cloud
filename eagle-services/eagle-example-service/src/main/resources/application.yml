@@ -1,0 +1,300 @@
+# ===========================================
+# Eagle Example Service · 基线配置
+# 集成除 AI 外所有 starter 的验证模块
+# ===========================================
+
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+  servlet:
+    session:
+      tracking-modes: cookie
+
+spring:
+  application:
+    name: example
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:}
+        ip: ${NACOS_REGISTER_IP:}
+        metadata:
+          spring-doc: example
+          spring-doc-name: Example Service
+
+  # ---- 数据源 ----
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:eagle_example}?useSSL=false&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+    hikari:
+      pool-name: ExampleHikariPool
+      connection-timeout: 30000
+      maximum-pool-size: ${DB_POOL_MAX:20}
+      minimum-idle: ${DB_POOL_MIN:5}
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      auto-commit: true
+      connection-test-query: SELECT 1
+
+  # ---- JPA ----
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    show-sql: false
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          batch_size: 100
+          fetch_size: 100
+        order_inserts: true
+        order_updates: true
+        default_batch_fetch_size: 16
+
+  # ---- 缓存 ----
+  cache:
+    type: redis
+    redis:
+      time-to-live: 30m
+      key-prefix: "eagle:"
+      cache-null-values: true
+      use-key-prefix: true
+    caffeine:
+      spec: "maximumSize=2000,expireAfterWrite=600s"
+
+  # ---- Redis ----
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      connect-timeout: 3000ms
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: ${REDIS_POOL_MAX_ACTIVE:64}
+          max-idle: ${REDIS_POOL_MAX_IDLE:16}
+          min-idle: ${REDIS_POOL_MIN_IDLE:4}
+          max-wait: ${REDIS_POOL_MAX_WAIT:2000ms}
+        shutdown-timeout: 1000ms
+
+  # ---- 邮件 ----
+  mail:
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+
+# ===========================================
+# Eagle Starter 业务配置
+# ===========================================
+eagle:
+  jwt:
+    keystore-location: classpath:jwt-keystore.p12
+    keystore-password: ${EAGLE_JWT_KEYSTORE_PASSWORD:}
+    key-alias: eagle-jwt
+
+  # ---- Redis 缓存扩展 ----
+  redis:
+    default-ttl: 30m
+    cache-null-values: true
+    key-prefix: "eagle:example:"
+    transaction-aware: true
+
+  # ---- RocketMQ ----
+  rocketmq:
+    endpoints: ${ROCKETMQ_ENDPOINTS:localhost:8081}
+    consumer-group: example_consumer
+    topic-env-prefix: ${ROCKETMQ_TOPIC_ENV_PREFIX:dev_}
+
+  # ---- 文件存储 ----
+  storage:
+    type: ${EAGLE_STORAGE_TYPE:local}
+    local:
+      base-path: ${EAGLE_STORAGE_BASE_PATH:./data/eagle/storage}
+      url-prefix: ${EAGLE_STORAGE_URL_PREFIX:http://localhost:8080/storage}
+    minio:
+      endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+      access-key: ${MINIO_ACCESS_KEY:}
+      secret-key: ${MINIO_SECRET_KEY:}
+
+  file:
+    bucket: ${EAGLE_FILE_BUCKET:eagle-example-files}
+    max-size-mb: ${EAGLE_FILE_MAX_SIZE_MB:50}
+    default-tenant-id: default
+    allowed-extensions:
+      - jpg
+      - jpeg
+      - png
+      - gif
+      - pdf
+      - docx
+      - xlsx
+      - txt
+
+  # ---- WebSocket ----
+  websocket:
+    endpoint: /ws-stomp
+    app-prefix: /message
+    topic-prefix: /topic
+    user-prefix: /user
+
+  # ---- 消息通知 ----
+  message:
+    enabled: true
+    sms:
+      provider: ${SMS_PROVIDER:}
+      access-key-id: ${SMS_ACCESS_KEY_ID:}
+      access-key-secret: ${SMS_ACCESS_KEY_SECRET:}
+      sign-name: ${SMS_SIGN_NAME:}
+      template-id: ${SMS_TEMPLATE_ID:}
+
+  # ---- 多租户 ----
+  tenant:
+    enabled: true
+    mode: COLUMN
+    header-name: X-Tenant-Id
+    default-tenant-id: "0"
+
+  # ---- XXL-JOB ----
+  xxl:
+    job:
+      admin:
+        addresses: ${XXL_JOB_ADMIN_ADDRESSES:http://127.0.0.1:8080/xxl-job-admin}
+      access-token: ${XXL_JOB_ACCESS_TOKEN:}
+      executor:
+        app-name: ${XXL_JOB_EXECUTOR_APPNAME:example-service}
+        ip: ${XXL_JOB_EXECUTOR_IP:}
+        port: ${XXL_JOB_EXECUTOR_PORT:9999}
+        log-path: ${XXL_JOB_EXECUTOR_LOGPATH:./data/applogs/xxl-job}
+        log-retention-days: 30
+
+  # ---- 行级数据权限 ----
+  data-permission:
+    enabled: true
+
+  # ---- 审计日志 ----
+  audit-log:
+    enabled: true
+    async: true
+
+  # ---- 幂等性 ----
+  idempotency:
+    enabled: true
+    ttl-minutes: 10
+
+  # ---- ID 生成器 ----
+  id-generator:
+    type: snowflake
+    snowflake:
+      worker-id: ${SNOWFLAKE_WORKER_ID:0}
+      datacenter-id: ${SNOWFLAKE_DATACENTER_ID:0}
+
+  # ---- 分库分表 ----
+  sharding:
+    enabled: false
+
+  # ---- 字段加密 ----
+  encrypt:
+    enabled: true
+    aes-key: ${EAGLE_ENCRYPT_AES_KEY:}
+
+  # ---- 弹性容错 ----
+  resilience:
+    enabled: true
+
+  # ---- 链路追踪 ----
+  tracing:
+    enabled: true
+
+  # ---- Sentinel ----
+  sentinel:
+    enabled: true
+
+  # ---- Seata ----
+  seata:
+    enabled: true
+    application-id: ${spring.application.name}
+    tx-service-group: example_tx_group
+
+  # ---- Elasticsearch ----
+  elasticsearch:
+    enabled: false
+    uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+    username: ${ELASTICSEARCH_USERNAME:}
+    password: ${ELASTICSEARCH_PASSWORD:}
+
+  # ---- 支付 ----
+  payment:
+    enabled: false
+    wechat:
+      app-id: ${WECHAT_PAY_APP_ID:}
+      mch-id: ${WECHAT_PAY_MCH_ID:}
+      api-v3-key: ${WECHAT_PAY_API_V3_KEY:}
+    alipay:
+      app-id: ${ALIPAY_APP_ID:}
+      private-key: ${ALIPAY_PRIVATE_KEY:}
+      public-key: ${ALIPAY_PUBLIC_KEY:}
+
+  # ---- Excel ----
+  excel:
+    enabled: true
+
+# ===========================================
+# Actuator
+# ===========================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
+      probes:
+        enabled: true
+  health:
+    db:
+      enabled: true
+    redis:
+      enabled: true
+
+# ===========================================
+# Springdoc / Swagger
+# ===========================================
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  show-oauth2-endpoints: false
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    doc-expansion: none
+    persist-authorization: true
+
+# ===========================================
+# 日志
+# ===========================================
+logging:
+  level:
+    root: INFO
+    com.eagle: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: WARN
