@@ -24,7 +24,7 @@ Choose the web stack in the application module:
 implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 
 // Reactive / WebFlux application
-implementation project(':eagle-starter:eagle-webflux-starter')
+implementation 'org.springframework.boot:spring-boot-starter-webflux'
 ```
 
 OpenAPI UI is also web-stack specific. Use `eagle-openapi-starter` for shared

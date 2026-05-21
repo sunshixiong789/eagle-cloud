@@ -1,10 +1,13 @@
 package com.eagle.common.config;
 
 import com.eagle.common.handler.GlobalExceptionHandler;
+import com.eagle.common.handler.ReactiveGlobalExceptionHandler;
 import com.eagle.common.i18n.MessageSourceUtil;
 import com.eagle.common.metrics.BusinessMetrics;
 import com.eagle.common.observability.RequestIdMdcFilter;
+import com.eagle.common.observability.RequestIdWebFilter;
 import com.eagle.common.pressuretest.PressureTestFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.InitializingBean;
@@ -18,6 +21,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.Ordered;
+import org.springframework.web.reactive.DispatcherHandler;
+import org.springframework.web.server.WebFilter;
 
 /**
  * Eagle 通用基础设施自动配置。
@@ -81,6 +86,37 @@ public class EagleCommonAutoConfiguration implements InitializingBean {
             bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
             bean.addUrlPatterns("/*");
             return bean;
+        }
+    }
+
+    /**
+     * Reactive（WebFlux）环境专用配置。
+     *
+     * <p>只在应用选择 WebFlux 时注册响应式 RequestId WebFilter 与统一异常处理器。
+     */
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
+    @ConditionalOnClass(DispatcherHandler.class)
+    static class WebFluxConfiguration {
+
+        /**
+         * Request ID 解析 + 响应头回写过滤器。
+         */
+        @Bean
+        @ConditionalOnMissingBean(RequestIdWebFilter.class)
+        public WebFilter requestIdWebFilter() {
+            return new RequestIdWebFilter();
+        }
+
+        /**
+         * WebFlux JSON 异常处理器。
+         */
+        @Bean
+        @ConditionalOnMissingBean(ReactiveGlobalExceptionHandler.class)
+        public ReactiveGlobalExceptionHandler reactiveGlobalExceptionHandler(
+                ObjectMapper objectMapper,
+                MessageSource messageSource) {
+            return new ReactiveGlobalExceptionHandler(objectMapper, messageSource);
         }
     }
 

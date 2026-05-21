@@ -9,13 +9,14 @@
 - 异常体系：`AppException` + `ErrorCode` 接口（4 个工厂方法）
 - 通用错误码枚举：
   `CommonErrorCode / DataErrorCode / FileErrorCode / OperationErrorCode / ExternalErrorCode / LockErrorCode`
-- 全局异常处理器：`GlobalExceptionHandler`
+- 全局异常处理器：Servlet 环境加载 `GlobalExceptionHandler`，WebFlux 环境加载 `ReactiveGlobalExceptionHandler`
 - 异步线程池：`@Bean("taskExecutor")`，启用 `@EnableAsync` + `@EnableScheduling`
 - i18n 静态工具：`MessageSourceUtil`
 - 业务指标：`BusinessMetrics`（Micrometer 封装）
 - 分布式锁抽象：`DistributedLock`（实现由 redis / rocketmq starter 提供）
 - 通用 DTO：`Result<T>`、`ErrorResult`、`EagleUser`
 - 全链路压测上下文：`PressureTestContext` / `PressureTestFilter`
+- Request ID 透传：Servlet 环境加载 `RequestIdMdcFilter`，WebFlux 环境加载 `RequestIdWebFilter`
 
 ## 依赖与启用
 
@@ -24,6 +25,18 @@ implementation project(':eagle-starter:eagle-common-starter')
 ```
 
 无需额外配置即生效。
+
+Web 栈由应用自己选择，`eagle-common-starter` 根据实际 Web 类型装配对应配置：
+
+```gradle
+// Servlet / Spring MVC
+implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+
+// Reactive / WebFlux
+implementation 'org.springframework.boot:spring-boot-starter-webflux'
+```
+
+不要同时引入 `spring-boot-starter-webmvc` 和 `spring-boot-starter-webflux`。
 
 ## 核心 API
 

@@ -623,7 +623,7 @@ dependencies {
     implementation project(':eagle-starter:eagle-resource-server-starter')
 
     // Web 模块：Reactive / WebFlux
-    implementation project(':eagle-starter:eagle-webflux-starter')
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
     // API 文档：通用 OpenAPI 配置 + WebFlux 版 SpringDoc UI
     implementation project(':eagle-starter:eagle-openapi-starter')

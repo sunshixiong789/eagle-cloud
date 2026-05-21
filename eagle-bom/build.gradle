@@ -186,7 +186,6 @@ dependencies {
         add('api', "com.eagle:eagle-elasticsearch-starter:${project.version}")
         add('api', "com.eagle:eagle-mybatis-starter:${project.version}")
         add('api', "com.eagle:eagle-payment-starter:${project.version}")
-        add('api', "com.eagle:eagle-webflux-starter:${project.version}")
         add('api', "com.eagle:eagle-websocket-starter:${project.version}")
         add('api', "com.eagle:eagle-ai-starter:${project.version}")
         add('api', "com.eagle:eagle-zhetaoke-starter:${project.version}")

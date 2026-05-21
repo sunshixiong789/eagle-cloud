@@ -1,6 +1,7 @@
-package com.eagle.webflux.filter;
+package com.eagle.common.observability;
 
 import com.eagle.common.dto.ErrorResult;
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.server.ServerWebExchange;
@@ -11,7 +12,9 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 /**
- * Propagates {@code X-Request-Id} in WebFlux applications.
+ * Request ID propagation filter for WebFlux applications.
+ *
+ * @author 孙士雄
  */
 public class RequestIdWebFilter implements WebFilter, Ordered {
 
@@ -23,7 +26,7 @@ public class RequestIdWebFilter implements WebFilter, Ordered {
     private static final String REQUEST_ID_HEADER = "X-Request-Id";
 
     @Override
-    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+    public Mono<Void> filter(@NonNull ServerWebExchange exchange, WebFilterChain chain) {
         String requestId = resolveRequestId(exchange);
         exchange.getAttributes().put(REQUEST_ID_ATTRIBUTE, requestId);
         exchange.getResponse().getHeaders().set(REQUEST_ID_HEADER, requestId);

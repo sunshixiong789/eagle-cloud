@@ -31,7 +31,7 @@ dependencies {
 ```gradle
 dependencies {
     implementation project(':eagle-starter:eagle-openapi-starter')
-    implementation project(':eagle-starter:eagle-webflux-starter')
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui'
 }
 ```

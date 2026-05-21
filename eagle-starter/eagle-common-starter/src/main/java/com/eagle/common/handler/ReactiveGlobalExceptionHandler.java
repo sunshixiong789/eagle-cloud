@@ -1,4 +1,4 @@
-package com.eagle.webflux.handler;
+package com.eagle.common.handler;
 
 import com.eagle.common.dto.ErrorResult;
 import com.eagle.common.exception.AppException;
@@ -6,7 +6,7 @@ import com.eagle.common.exception.ConflictException;
 import com.eagle.common.exception.DomainException;
 import com.eagle.common.exception.NotFoundException;
 import com.eagle.common.exception.ServiceException;
-import com.eagle.webflux.filter.RequestIdWebFilter;
+import com.eagle.common.observability.RequestIdWebFilter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +27,8 @@ import java.util.stream.Collectors;
 
 /**
  * Unified JSON exception handler for WebFlux applications.
+ *
+ * @author 孙士雄
  */
 @Slf4j
 @RequiredArgsConstructor

@@ -4,6 +4,7 @@ dependencies {
 
     compileOnly 'org.springframework.security:spring-security-core'
     compileOnly 'org.springframework:spring-webmvc'
+    compileOnly 'org.springframework:spring-webflux'
     compileOnly 'org.springframework.data:spring-data-commons'
     compileOnly 'org.springframework.data:spring-data-jpa'
     compileOnly 'jakarta.persistence:jakarta.persistence-api'
@@ -14,6 +15,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-core'
     testImplementation 'org.springframework:spring-webmvc'
+    testImplementation 'org.springframework:spring-webflux'
     testImplementation 'org.springframework.data:spring-data-jpa'
     testImplementation 'jakarta.persistence:jakarta.persistence-api'
     testImplementation 'com.fasterxml.jackson.core:jackson-databind'
