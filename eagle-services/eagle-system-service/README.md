@@ -8,7 +8,6 @@ Eagle 平台**系统服务**，承载认证授权、OAuth2 授权服务器与用
 - **OAuth2 授权服务器**（基于 Spring Authorization Server）
 - **RBAC 权限管理**：用户、角色、权限、部门、菜单、岗位、字典
 - **多种登录方式**：用户名密码 / 微信小程序 / PC 扫码 / H5 / 短信验证码 / 手机号一键登录
-- **行级数据权限**（基于 `eagle-row-security-starter` 切面注入）
 - **WebSocket 实时推送**（STOMP 端点）
 - 注册到 Nacos 作为微服务节点（默认监听 `:80`）
 
@@ -31,7 +30,6 @@ Eagle 平台**系统服务**，承载认证授权、OAuth2 授权服务器与用
 ```
 eagle-data-jpa-starter         # JPA + Hibernate 审计
 eagle-resource-server-starter  # OAuth2 资源服务器 JWT 验证
-eagle-row-security-starter     # 行级数据权限
 eagle-websocket-starter        # WebSocket / STOMP
 
 spring-boot-starter-thymeleaf
