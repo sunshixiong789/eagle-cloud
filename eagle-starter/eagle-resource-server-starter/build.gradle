@@ -1,18 +1,19 @@
 dependencies {
     api project(':eagle-starter:eagle-common-starter')
     api project(':eagle-starter:eagle-redis-starter')
-    api project(':eagle-starter:eagle-openapi-starter')
     api 'org.springframework.boot:spring-boot-starter-actuator'
     api 'org.springframework.boot:spring-boot-starter-validation'
-    api 'org.springframework.boot:spring-boot-starter-webmvc'
     api 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 
     // CacheConfig 用 ObjectMapper 配置缓存序列化
     compileOnly 'com.fasterxml.jackson.core:jackson-databind'
+    compileOnly 'org.springdoc:springdoc-openapi-starter-common'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webflux-test'
+    testImplementation 'org.springdoc:springdoc-openapi-starter-common'
 }

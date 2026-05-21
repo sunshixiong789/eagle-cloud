@@ -17,6 +17,19 @@
 implementation project(':eagle-starter:eagle-resource-server-starter')
 ```
 
+Choose the web stack in the application module:
+
+```gradle
+// Servlet / Spring MVC application
+implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+
+// Reactive / WebFlux application
+implementation project(':eagle-starter:eagle-webflux-starter')
+```
+
+OpenAPI UI is also web-stack specific. MVC apps can use `eagle-openapi-starter`;
+WebFlux apps should use `org.springdoc:springdoc-openapi-starter-webflux-ui`.
+
 > ⚠️ **必填**:挂上 `@EnableEagleResourceServer` 后,`spring.security.oauth2.resourceserver.jwt.issuer-uri`
 > 或 `jwk-set-uri` 必须配其一,否则 Spring 找不到 `JwtDecoder`,启动失败。
 > `issuer-uri` 启动时立即拉 `/.well-known/openid-configuration`(auth-server 必须可达);

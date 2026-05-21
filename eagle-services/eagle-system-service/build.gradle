@@ -20,6 +20,8 @@ dependencies {
     implementation project(':eagle-starter:eagle-websocket-starter')
     implementation project(':eagle-starter:eagle-rocketmq-starter')
     implementation project(':eagle-starter:eagle-oss-minio-starter')
+    implementation project(':eagle-starter:eagle-openapi-starter')
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
     implementation 'org.springframework.boot:spring-boot-starter-flyway'

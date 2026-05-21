@@ -1,0 +1,11 @@
+dependencies {
+    api project(':eagle-starter:eagle-common-starter')
+    api 'org.springframework.boot:spring-boot-starter-actuator'
+    api 'org.springframework.boot:spring-boot-starter-validation'
+    api 'org.springframework.boot:spring-boot-starter-webflux'
+    api 'com.fasterxml.jackson.core:jackson-databind'
+
+    compileOnly 'org.springframework.boot:spring-boot-starter-security'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-webflux-test'
+}

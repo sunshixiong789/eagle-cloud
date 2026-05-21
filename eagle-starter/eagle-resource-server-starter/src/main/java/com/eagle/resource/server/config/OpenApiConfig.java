@@ -13,6 +13,8 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.customizers.OperationCustomizer;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -38,6 +40,7 @@ import java.util.regex.Pattern;
  * @author 孙士雄
  */
 @Configuration
+@ConditionalOnClass({OpenAPI.class, OperationCustomizer.class})
 @RequiredArgsConstructor
 public class OpenApiConfig {
 
@@ -48,6 +51,7 @@ public class OpenApiConfig {
     private final ResourceServerProperties properties;
 
     @Bean
+    @ConditionalOnMissingBean
     public OpenAPI customOpenApi() {
         ResourceServerProperties.Api api = properties.getApi();
         String description = api.getDescription().isBlank() ? defaultApiDescription() : api.getDescription();
@@ -70,6 +74,7 @@ public class OpenApiConfig {
      * 自动解析 {@code @PreAuthorize} 注解，将角色要求写入文档描述，公开端点去掉锁图标。
      */
     @Bean
+    @ConditionalOnMissingBean
     public OperationCustomizer preAuthorizeOperationCustomizer() {
         return (operation, handlerMethod) -> {
             PreAuthorize preAuthorize = handlerMethod.getMethodAnnotation(PreAuthorize.class);

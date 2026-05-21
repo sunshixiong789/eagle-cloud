@@ -10,6 +10,8 @@ dependencies {
     // 避免 application.yml 提示 "无法解析配置属性 eagle.websocket.* 等"。
     // 启动类同样需要 @EntityScan / @EnableJpaRepositories 显式声明跨包扫描。
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation project(':eagle-starter:eagle-openapi-starter')
     implementation project(':eagle-starter:eagle-websocket-starter')
     implementation project(':eagle-starter:eagle-resource-server-starter')
     implementation project(':eagle-starter:eagle-row-security-starter')
