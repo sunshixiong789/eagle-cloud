@@ -581,6 +581,87 @@ gradle nativeCompile
 
 详细配置与运维场景见 `eagle-services/eagle-gateway-service/README.md`。
 
+## 资源服务器依赖选择
+
+`eagle-resource-server-starter` 只提供 OAuth2 JWT 资源服务器能力，不再替业务应用选择
+Servlet/WebMVC 或 WebFlux。每个资源服务器必须在自己的 `build.gradle` 中显式选择 Web
+栈、接口文档栈和数据访问栈。
+
+### Servlet / Spring MVC 资源服务器
+
+适用于传统阻塞式 Controller、JPA/Hibernate、Thymeleaf、Servlet Filter 等场景。
+
+```gradle
+dependencies {
+    implementation project(':eagle-starter:eagle-resource-server-starter')
+
+    // Web 模块：Servlet / Spring MVC
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+
+    // API 文档：WebMVC 版 SpringDoc
+    implementation project(':eagle-starter:eagle-openapi-starter')
+
+    // 数据库：阻塞式 JPA / JDBC
+    implementation project(':eagle-starter:eagle-data-jpa-starter')
+
+    // 可选：缓存、数据权限、租户、链路追踪等平台能力
+    implementation project(':eagle-starter:eagle-redis-starter')
+    implementation project(':eagle-starter:eagle-row-security-starter')
+    implementation project(':eagle-starter:eagle-tenant-starter')
+    implementation project(':eagle-starter:eagle-tracing-starter')
+}
+```
+
+### Reactive / WebFlux 资源服务器
+
+适用于响应式 Controller、`Mono` / `Flux`、R2DBC、非阻塞 HTTP 调用等场景。不要同时引入
+`spring-boot-starter-webmvc` 和 `spring-boot-starter-webflux`。
+
+```gradle
+dependencies {
+    implementation project(':eagle-starter:eagle-resource-server-starter')
+
+    // Web 模块：Reactive / WebFlux
+    implementation project(':eagle-starter:eagle-webflux-starter')
+
+    // API 文档：WebFlux 版 SpringDoc
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui'
+
+    // 数据库：响应式 PostgreSQL / R2DBC
+    implementation project(':eagle-starter:eagle-data-r2dbc-starter')
+
+    // 可选：缓存、租户、链路追踪等平台能力
+    implementation project(':eagle-starter:eagle-redis-starter')
+    implementation project(':eagle-starter:eagle-tenant-starter')
+    implementation project(':eagle-starter:eagle-tracing-starter')
+}
+```
+
+WebFlux + R2DBC PostgreSQL 的基础配置：
+
+```yaml
+spring:
+  r2dbc:
+    url: r2dbc:pool:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:eagle}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_SERVER_JWK_SET_URI:http://localhost/oauth2/jwks}
+
+eagle:
+  resource-server:
+    permit-paths:
+      - /public/**
+      - /actuator/health
+      - /actuator/info
+```
+
+如果应用只需要鉴权但不暴露 HTTP 接口，不要引入 WebMVC/WebFlux starter；仅引入
+`eagle-resource-server-starter` 和实际需要的基础设施 starter。
+
 ## 开发指南
 
 ### 新增业务模块
