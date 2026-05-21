@@ -54,6 +54,20 @@ public class BlacklistChecker {
     }
 
     /**
+     * 账号 ID 黑名单校验。
+     *
+     * <p>密码登录与所有自定义 grant 在签发 token 前都会经 {@code UserDetailsService} 加载账号，
+     * 在该路径统一校验 {@link BlacklistType#ACCOUNT_ID}，
+     * 即可覆盖"账号被加黑后不允许再次登录"的场景。
+     */
+    public void checkAccount(Long accountId) {
+        if (accountId != null
+                && blacklist.isBlacklisted(BlacklistType.ACCOUNT_ID, String.valueOf(accountId))) {
+            throw AuthErrorCode.IDENTITY_BLACKLISTED.toServiceException();
+        }
+    }
+
+    /**
      * 微信登录前置校验
      */
     public void checkWechat(String openid, String ip) {

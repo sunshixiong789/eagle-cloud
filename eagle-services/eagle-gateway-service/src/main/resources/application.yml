@@ -65,7 +65,17 @@ spring:
             group-id: SENTINEL_GROUP
             data-id: ${spring.application.name}-flow-rules
             data-type: json
-            rule-type: flow
+            rule-type: gw-flow
+        ds-api-group:
+          nacos:
+            server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+            namespace: ${NACOS_NAMESPACE:}
+            username: ${NACOS_USERNAME:nacos}
+            password: ${NACOS_PASSWORD:}
+            group-id: SENTINEL_GROUP
+            data-id: ${spring.application.name}-api-groups
+            data-type: json
+            rule-type: gw-api-group
         ds-degrade:
           nacos:
             server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
@@ -194,3 +204,24 @@ eagle:
       allowed-headers: "*"
       allow-credentials: true
       max-age: 3600
+    sentinel:
+      enabled: ${EAGLE_GATEWAY_SENTINEL_ENABLED:true}
+      rules:
+        # 单机 8G 默认高并发基线：保护 system 服务，同时给短时突发留余量。
+        - resource: global-api
+          resource-mode: api
+          path-prefixes: /
+          qps: ${EAGLE_SENTINEL_GLOBAL_QPS:1800}
+          burst: ${EAGLE_SENTINEL_GLOBAL_BURST:300}
+        # OAuth2 / 登录相关接口较重，单独收紧，避免拖垮授权链路。
+        - resource: auth-sensitive-api
+          resource-mode: api
+          path-prefixes: /oauth2/,/.well-known/,/userinfo,/logout,/connect/,/login
+          qps: ${EAGLE_SENTINEL_AUTH_QPS:600}
+          burst: ${EAGLE_SENTINEL_AUTH_BURST:100}
+        # 短信 / 注册 / 重置密码牵涉 Redis、DB 和外部短信商，不能跟普通查询同阈值。
+        - resource: sms-api
+          resource-mode: api
+          path-prefixes: /sms/,/accounts/register,/accounts/password/reset
+          qps: ${EAGLE_SENTINEL_SMS_QPS:80}
+          burst: ${EAGLE_SENTINEL_SMS_BURST:20}

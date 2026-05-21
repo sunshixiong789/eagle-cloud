@@ -58,8 +58,8 @@ spring:
     hikari:
       pool-name: EagleHikariPool
       connection-timeout: 30000
-      maximum-pool-size: 20
-      minimum-idle: 5
+      maximum-pool-size: ${DB_POOL_MAX:20}
+      minimum-idle: ${DB_POOL_MIN:5}
       idle-timeout: 300000
       max-lifetime: 1200000
       auto-commit: true
@@ -104,10 +104,10 @@ spring:
       timeout: 3000ms
       lettuce:
         pool:
-          max-active: 16
-          max-idle: 8
-          min-idle: 2
-          max-wait: 2000ms
+          max-active: ${REDIS_POOL_MAX_ACTIVE:64}
+          max-idle: ${REDIS_POOL_MAX_IDLE:16}
+          min-idle: ${REDIS_POOL_MIN_IDLE:4}
+          max-wait: ${REDIS_POOL_MAX_WAIT:2000ms}
         shutdown-timeout: 1000ms
 
 # ===========================================

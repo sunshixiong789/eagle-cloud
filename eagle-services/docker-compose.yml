@@ -205,9 +205,9 @@ services:
       - "8080:8080"
     networks:
       - eagle-network
-    # 开发环境内存上限：堆 512m + 元空间 192m + 直接内存 + 线程栈 → 容器留 768m 余量
-    mem_limit: 768m
-    mem_reservation: 384m
+    # 单机 8G 部署基线：堆 768m + 元空间 256m + 直接内存/线程栈
+    mem_limit: 1280m
+    mem_reservation: 512m
     # environment 显式枚举所有关键变量，统一 ${VAR:-default} 插值
     # 默认值已包含容器网络约束（nacos:8848 / system:8082 / sentinel-dashboard:8858），.env 可整体覆盖
     environment:
@@ -222,9 +222,16 @@ services:
       - NACOS_REGISTER_IP=${NACOS_REGISTER_IP:-}
       - AUTH_SERVER_URL=${AUTH_SERVER_URL:-http://system:8082}
       - SENTINEL_DASHBOARD=${SENTINEL_DASHBOARD:-sentinel-dashboard:8858}
+      - EAGLE_GATEWAY_SENTINEL_ENABLED=${EAGLE_GATEWAY_SENTINEL_ENABLED:-true}
+      - EAGLE_SENTINEL_GLOBAL_QPS=${EAGLE_SENTINEL_GLOBAL_QPS:-1800}
+      - EAGLE_SENTINEL_GLOBAL_BURST=${EAGLE_SENTINEL_GLOBAL_BURST:-300}
+      - EAGLE_SENTINEL_AUTH_QPS=${EAGLE_SENTINEL_AUTH_QPS:-600}
+      - EAGLE_SENTINEL_AUTH_BURST=${EAGLE_SENTINEL_AUTH_BURST:-100}
+      - EAGLE_SENTINEL_SMS_QPS=${EAGLE_SENTINEL_SMS_QPS:-80}
+      - EAGLE_SENTINEL_SMS_BURST=${EAGLE_SENTINEL_SMS_BURST:-20}
       - ROCKETMQ_NAME_SERVER=${ROCKETMQ_NAME_SERVER:-rocketmq-namesrv:9876}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-}
-      - JAVA_OPTS=${GATEWAY_JAVA_OPTS:--server -XX:+UseG1GC -Xms256m -Xmx512m -XX:MaxMetaspaceSize=192m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
+      - JAVA_OPTS=${GATEWAY_JAVA_OPTS:--server -XX:+UseG1GC -Xms512m -Xmx768m -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health" ]
       interval: 30s
@@ -248,10 +255,9 @@ services:
       - "8082:8082"
     networks:
       - eagle-network
-    # 开发环境内存上限：system 跑 OAuth2/JPA/Hibernate，堆需 768m
-    # 容器总量 1.5g = 堆 768m + 元空间 256m + 直接内存 + 线程栈 + 余量
-    mem_limit: 1536m
-    mem_reservation: 768m
+    # 单机 8G 部署基线：system 承载 OAuth2/JPA/Hibernate，堆提升到 2g
+    mem_limit: 3072m
+    mem_reservation: 1536m
     # environment 显式枚举所有关键变量，统一 ${VAR:-default} 插值
     # 默认值已包含容器网络约束（mysql:3306 / redis:6379 / nacos:8848 / SERVER_PORT=8082），.env 可整体覆盖
     # 注意：.env 文件中的变量仅用于 compose.yml 的 ${VAR} 插值，必须在此 environment 段显式声明才会注入容器
@@ -273,13 +279,17 @@ services:
       - DB_NAME=${DB_NAME:-eagle}
       - DB_USERNAME=${DB_USERNAME:-root}
       - DB_PASSWORD=${DB_PASSWORD:-root123456}
-      - DB_POOL_MAX=${DB_POOL_MAX:-50}
-      - DB_POOL_MIN=${DB_POOL_MIN:-10}
+      - DB_POOL_MAX=${DB_POOL_MAX:-80}
+      - DB_POOL_MIN=${DB_POOL_MIN:-20}
       # Redis（application.yml 占位符：${REDIS_HOST}/${REDIS_PORT}/${REDIS_PASSWORD}/${REDIS_DATABASE}）
       - REDIS_HOST=${REDIS_HOST:-redis}
       - REDIS_PORT=${REDIS_PORT:-6379}
       - REDIS_PASSWORD=${REDIS_PASSWORD:-redis123456}
       - REDIS_DATABASE=${REDIS_DATABASE:-0}
+      - REDIS_POOL_MAX_ACTIVE=${REDIS_POOL_MAX_ACTIVE:-96}
+      - REDIS_POOL_MAX_IDLE=${REDIS_POOL_MAX_IDLE:-32}
+      - REDIS_POOL_MIN_IDLE=${REDIS_POOL_MIN_IDLE:-8}
+      - REDIS_POOL_MAX_WAIT=${REDIS_POOL_MAX_WAIT:-2000ms}
       # RocketMQ（消息组件）
       - ROCKETMQ_NAME_SERVER=${ROCKETMQ_NAME_SERVER:-rocketmq-namesrv:9876}
       # 初始管理员（application.yml 中 EAGLE_ADMIN_PASSWORD 无默认值，缺失即 fail-fast）
@@ -316,7 +326,7 @@ services:
       - HNSLS_SMS_CONTENT_TEMPLATE=${HNSLS_SMS_CONTENT_TEMPLATE:-您的验证码是{code}，5分钟内有效。}
       - HNSLS_SMS_SEND_URL=${HNSLS_SMS_SEND_URL:-https://xapi.hnsls.com.cn/eums/sms/utf8/send.do}
       - HNSLS_SMS_CHARSET=${HNSLS_SMS_CHARSET:-UTF-8}
-      - JAVA_OPTS=${SYSTEM_JAVA_OPTS:--server -XX:+UseG1GC -Xms384m -Xmx768m -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
+      - JAVA_OPTS=${SYSTEM_JAVA_OPTS:--server -XX:+UseG1GC -Xms1g -Xmx2g -XX:MaxMetaspaceSize=384m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8082/actuator/health" ]
       interval: 30s

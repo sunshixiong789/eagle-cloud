@@ -51,4 +51,16 @@ class BlacklistCheckerTest {
     void shouldPassWhenNotBlacklisted() {
         assertDoesNotThrow(() -> checker.checkLogin("alice", "13800138000", "1.1.1.1", 1L));
     }
+
+    @Test
+    void checkAccountShouldThrowWhenAccountIdBlacklisted() {
+        when(blacklist.isBlacklisted(BlacklistType.ACCOUNT_ID, "456")).thenReturn(true);
+        AppException ex = assertThrows(AppException.class, () -> checker.checkAccount(456L));
+        assertEquals(AuthErrorCode.IDENTITY_BLACKLISTED.getCode(), ex.getErrorCode().getCode());
+    }
+
+    @Test
+    void checkAccountShouldNoopWhenNullId() {
+        assertDoesNotThrow(() -> checker.checkAccount(null));
+    }
 }

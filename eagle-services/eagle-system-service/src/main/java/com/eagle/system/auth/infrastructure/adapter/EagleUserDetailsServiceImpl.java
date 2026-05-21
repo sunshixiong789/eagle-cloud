@@ -8,6 +8,7 @@ import com.eagle.system.auth.domain.model.enums.AccountStatus;
 import com.eagle.system.auth.domain.port.AuthorizationInfo;
 import com.eagle.system.auth.domain.port.AuthorizationPort;
 import com.eagle.system.auth.domain.repository.AccountRepository;
+import com.eagle.system.auth.infrastructure.security.BlacklistChecker;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.GrantedAuthority;
@@ -23,9 +24,10 @@ import java.util.stream.Collectors;
 /**
  * Spring Security UserDetailsService 实现。
  *
- * <p>仅负责"加载用户"——从 {@link AccountRepository} 取认证凭据，从 {@link AuthorizationPort}
- * 取授权信息。黑名单 / 限流等横切关注点由入口处的 Filter / 各 grant Provider 完成，
- * 避免每个 grant token 生成时在此处重复 5 次 Redis 查询。
+ * <p>从 {@link AccountRepository} 取认证凭据，从 {@link AuthorizationPort} 取授权信息。
+ * 各 grant Provider 在自动注册前已校验 IP / PHONE / OPENID 黑名单（早拒绝、省 DB）；
+ * 本服务额外做一次 {@code ACCOUNT_ID} 黑名单校验——这是密码登录与所有自定义 grant
+ * 签发 token 前共同的必经路径，在此一处即可拦截"账号被加黑后再次登录"。
  *
  * <p>依赖方向：auth 内部调用，无跨模块依赖（六边形架构 Driven Port）。
  *
@@ -37,6 +39,7 @@ public class EagleUserDetailsServiceImpl implements UserDetailsService {
 
     private final AccountRepository accountRepository;
     private final AuthorizationPort authorizationPort;
+    private final BlacklistChecker blacklistChecker;
 
     @Override
     @Transactional(readOnly = true)
@@ -44,6 +47,8 @@ public class EagleUserDetailsServiceImpl implements UserDetailsService {
             throws UsernameNotFoundException {
         Account account = accountRepository.findByUsername(username)
                 .orElseThrow(AuthErrorCode.ACCOUNT_NOT_FOUND::toNotFoundException);
+
+        blacklistChecker.checkAccount(account.getId());
 
         AuthorizationInfo authInfo = authorizationPort
                 .findAuthorizationInfo(account.getId())

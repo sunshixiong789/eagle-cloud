@@ -161,89 +161,77 @@ PR 应包含简明摘要、受影响模块、关联 issue 或背景说明，以�
 <claude-mem-context>
 # Memory Context
 
-# [eagle-cloud] recent context, 2026-05-15 3:40pm GMT+8
+# [eagle-cloud] recent context, 2026-05-21 6:45pm GMT+8
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (17,883t read) | 503,507t work | 96% savings
+Stats: 50 obs (14,438t read) | 546,296t work | 97% savings
 
-### May 15, 2026
+### May 18, 2026
+1479 11:48a 🟣 Created GatewayCorsProperties.java: @ConfigurationProperties for eagle.gateway.cors.*
+1481 11:50a 🟣 GatewayCorsConfig.java Creation Cleared: Only GatewayCorsProperties Javadoc References CorsWebFilter
+1482 " 🔴 Created GatewayCorsConfig.java: Single CorsWebFilter @Bean Fixes Duplicate CORS Header Bug
+1483 " 🔵 grep @Bean.*CorsWebFilter Returns Empty Despite GatewayCorsConfig Existing — Pattern Requires Same-Line Match
+1499 " ⚖️ 禁用开发环境 Flyway，改用 JPA ddl-auto=update
+S453 修复 eagle-system-service 测试 Flyway 校验失败问题，30 个测试全部通过 (May 18 at 2:03 PM)
+1500 2:04p 🔵 eagle-system-service Flyway 配置现状：基线和 dev profile 均已关闭
+1501 2:05p 🔵 System Service 测试配置根因：@ActiveProfiles("local") + 测试 resources/application.yml 激活 local profile
+1502 " 🔵 eagle-system-service build.gradle：flyway-mysql 单独声明 + spring-modulith-starter-test 在测试依赖中
+1503 " 🔵 Flyway 报错根因确认：应用基线 application.yml 已修复为 enabled=false，仅 prod profile 显式启用
+1504 " 🔴 测试环境 Flyway 双重防御：test/resources/application.yml 加 enabled=false + autoconfigure.exclude
+1505 2:06p 🔵 dev profile 仅在 application.yml 基线注释中出现，无外部强制激活源
+1506 2:07p 🔴 application-dev.yml 同步添加 FlywayAutoConfiguration 双重防御
+1507 2:08p 🔴 eagle-system-service 测试全部通过，Flyway 报错彻底消除
+S454 修复 eagle-system-service Flyway 测试报错 + 开始处理 hnsls SMS .env 配置同步 (May 18 at 2:08 PM)
+1508 " ✅ SMS 提供商 hnsls 未在 .env 中配置，需同步代码侧改动到环境变量文件
+S455 同步 hnsls SMS .env 配置：修复 SMS_SIGN_NAME 键名不匹配导致短信未发送问题 (May 18 at 2:09 PM)
+1509 2:15p 🔵 eagle-services/.env 已包含 hnsls SMS 完整凭证，但 .env.example 缺少 SIGN_NAME 字段
+1511 " 🔵 hnsls SMS 配置全貌：application.yml 与 docker-compose.yml 对齐但 .env 键名不匹配
+1512 " 🔵 .env 加载链：spring-dotenv 从 eagle-services/.env 注入环境变量到 Spring Boot
+1510 2:16p 🔵 SMS 配置根因：.env 使用 HNSLS_SMS_SIGN_NAME 但 application.yml 绑定 ${SMS_SIGN_NAME:}，键名不匹配
+1517 2:25p 🔴 eagle-services/.env SMS 配置重构：添加 SMS_SIGN_NAME=省心，移除冗余提供商特有键名
+S456 同步 hnsls SMS .env 配置完成；.env.example 已与 .env 键名对齐 (May 18 at 2:26 PM)
+S463 Configure EAGLE_OAUTH_REDIRECT_URIS in docker-compose and .env, plus .env.example SMS section cleanup (May 18 at 2:26 PM)
+1523 2:28p ✅ eagle-services/.env.example SMS 段更新：添加 Tencent 特有字段 + 改进注释
+1559 2:29p ✅ OAuth2 Redirect URIs Configuration for Docker Compose and .env
+S464 Configure EAGLE_OAUTH_REDIRECT_URIS with localhost:8080 and 139.155.104.132:3000 callback URLs in docker-compose.yml and .env (May 18 at 3:54 PM)
+1560 3:54p 🔵 EAGLE_OAUTH_REDIRECT_URIS Binding and Separator Convention
+1561 " 🔵 OAuth Redirect URI Insertion Anchor Points in .env, .env.example, and docker-compose.yml
+1562 3:55p 🔵 .env.example Missing EAGLE_OAUTH_ISSUER in Required Section
+1563 " 🔵 Exact Insertion Points for EAGLE_OAUTH_REDIRECT_URIS in .env and docker-compose.yml
+1564 " ✅ EAGLE_OAUTH_REDIRECT_URIS Added to eagle-services/.env
+1565 " ✅ EAGLE_OAUTH_REDIRECT_URIS Added to docker-compose.yml system Service
+S467 Two issues: (1) Configure EAGLE_OAUTH_REDIRECT_URIS in .env and docker-compose.yml; (2) Fix local test failures (H2 SQL syntax error + Redis connection refused) after local profile config was deleted (May 18 at 3:56 PM)
+1571 3:56p 🔵 Test Failures: H2 SQL Syntax Error and Redis Connection Required in Local Tests
+S468 Fix local test failures: H2 SQL syntax error on COMMENT ON COLUMN and Redis/Redisson connection refused after application-local.yml was deleted (May 18 at 5:25 PM)
+1572 5:25p 🔵 H2 SQL Error Root Cause: JPA @Column(comment=) with Single Quotes in Value
+1573 5:26p 🔵 Single-Quote Comment Issue Isolated to One Field in Entire Codebase
+1574 " 🔴 FileMetadata.java tenant_id @Column Comment Contains Embedded Single Quotes Causing H2 Failure
+1575 " 🔴 Fixed H2 SQL Syntax Error by Removing Single Quotes from FileMetadata @Column Comment
+1576 5:27p 🔵 application-local.yml Fully Absent — No Residual Local Profile Config
+1577 5:28p 🟣 application-local.yml Recreated with Full Zero-Dependency Local Dev Config
+1578 " 🔴 All 33 eagle-system-service Tests Pass After H2 Comment Fix and application-local.yml Restoration
+1579 " 🔵 application-local.yml Write Appears Not Persisted Despite Success Response
+1580 " ⚖️ Test Philosophy Decision: No Infrastructure Dependencies in Unit/Integration Tests
+S469 User objected to H2 usage in tests — "tests should not depend on database, Redis, or any infrastructure" (May 18 at 5:30 PM)
+1581 5:35p 🔵 Test Suite Split: Two @SpringBootTest Classes vs 10+ Pure Mockito Unit Tests
+1582 5:36p 🔵 EagleSystemApplicationTests Uses @ActiveProfiles("local") — Depends on application-local.yml
+1583 5:37p ✅ EagleSystemApplicationTests Disabled by Default — Infrastructure Smoke Test Now Manual Only
+1584 5:38p 🔵 test/resources/application.yml Still Activates Local Profile — Redisson Not Excluded in Test Context
+1585 5:39p ✅ test/resources/application.yml Now Self-Sufficient — Removed Local Profile, Added Redisson Exclusion
+1586 " 🔵 SchemaExportTest Still Uses @SpringBootTest — Second Infrastructure-Dependent Test Needs @Disabled
+1587 " 🔴 Test Suite Fully Infrastructure-Free: 33 Tests Pass in 11s Without H2/Redis/Nacos
+S470 Refactor tests to be infrastructure-free — no H2, no Redis, no external dependencies in unit tests (May 18 at 5:40 PM)
+### May 20, 2026
+1588 9:43a 🔵 Resource Server JWT 503 on JWK Endpoint Fetch
+1589 " ⚖️ Resource Server Configured with Direct jwk-set-uri to Bypass OpenID Discovery
+1592 2:10p 🔴 Admin 权限 Bug 已修复并通过本地测试验证
+1596 3:48p 🔵 生产环境启动失败：BlacklistAwareJwtDecoder 缺少无参构造函数
+1597 4:20p 🔵 其他资源服务器启动失败：IdGeneratorAutoConfiguration 存在多个 IdGenerator Bean 歧义
+### May 21, 2026
+1600 2:53p 🔵 RocketMQ Shaded Logback SAX Parser Incompatibility on Startup
 
-1294 11:38a 🔵 pkce.ts: Full PKCE Implementation with Pure-JS SHA-256 Fallback and Dual-Storage Cross-Tab Resilience
-1295 11:39a 🔵 Both OAuth2 Clients (default-client and app-client) Are Public Clients with PKCE Now Disabled
-S414 OAuth2 PKCE error persists after revert (same error, new state param) — error is still occurring at
-139.155.104.132:3000 with code_challenge_method invalid_request (May 15 at 11:42 AM)
-1296 11:42a 🔴 Reverted commit 641f52f: require-proof-key Restored to true in eagle-system-service application.yml
-1297 " 🔴 Committed Revert e8725a8: require-proof-key Restored to true, 641f52f Workaround Undone
-1298 " 🔵 OAuthClientInitializer Confirmed: YAML-to-DB Sync on Startup, No Custom PKCE Validators Anywhere
-S415 OAuth2 PKCE error still occurring after revert — investigating OAuthClientInitializer sync mechanism and confirming
-no custom validators (May 15 at 11:42 AM)
-S413 Debug and fix OAuth2 PKCE error (invalid_request: code_challenge_method) — root cause traced, wrong fix reverted,
-correct state restored (May 15 at 11:42 AM)
-S416 OAuth2 PKCE error root cause fully identified: production server running stale bundle where code_challenge_method
-is a function reference, not the string 'S256' (May 15 at 11:42 AM)
-1299 11:53a 🔵 Frontend Bundle Already Contains code_challenge_method — Stale Bundle Hypothesis Eliminated
-1300 " 🔵 Deployed Bundle (index-EO3NgK0Z.js) Differs from Local Build (index-BmutAtl6.js) — Stale Bundle IS the Root
-Cause
-1301 11:54a 🔵 Deployed Bundle Has code_challenge_method as Variable (r) Not Hardcoded 'S256' — Critical Difference from
-Local Build
-1302 " 🔵 Deployed Bundle Uses Direct Config URL (SX.oauth2.authorizeUrl) Not OIDC Discovery — Confirms Older Code
-Version
-S417 Fix OAuth2 PKCE callback error (invalid_request: code_challenge_method) in ease-mind-web frontend deployed
-at http://139.155.104.132:3000 (May 15 at 11:55 AM)
-1303 11:59a 🔵 PKCE Error Persists After Frontend Redeployment — Same State Parameter Reused Suggests Browser Cache Not
-Cleared
-1304 " 🔵 Redeployment Failed: Server Still Serving Old Bundle index-EO3NgK0Z.js
-1305 " 🔵 Local dist Bundle is Stale: Built May 1, pkce.ts Modified Today May 15 — yarn build Required Before Deployment
-1306 " 🔵 Second Frontend Project Discovered: ease-mind-web at /Users/sunshixiong/my-work/ease-mind-web
-1307 12:01p 🔵 Root Cause Found: ease-mind-web Falls Back to PKCE "plain" Method on HTTP — Spring AS Rejects It
-1308 12:02p 🔵 ease-mind-web pkce.ts Has Two Consumers: auth-provider (login) and oauth2-callback Page
-1309 " 🔴 ease-mind-web pkce.ts Fixed: Pure-JS SHA-256 Fallback Added, "plain" Method Eliminated
-S418 Add Swagger annotations to ChatController and audit all controllers in eagle-system-service for missing
-annotations (May 15 at 12:02 PM)
-S419 Add Swagger annotations to ChatController and audit all controllers in eagle-system-service for missing
-annotations (May 15 at 12:03 PM)
-1323 12:03p 🔵 Swagger Annotation Audit — 3 Controllers Missing @Tag/@Operation in eagle-system-service
-S421 New task: Expose SMS_PROVIDER config in docker-compose; keep only HNSL-related SMS config and remove Alibaba Cloud
-and Tencent Cloud configs (May 15 at 12:03 PM)
-1324 1:59p 🔵 LoginController and WechatWebLoginController Are MVC Template Controllers, Not REST APIs
-1325 " ✅ Added @Operation Swagger Annotation to ChatController broadcast-message STOMP Endpoint
-1326 " ✅ ChatController @Operation Annotations Complete — Both STOMP Endpoints Annotated
-1327 " ✅ ChatController Swagger Annotation Complete — @Tag Added with Javadoc Note Pointing to AsyncAPI Docs
-1328 " 🔵 ChatMessage and PrivateMessage DTOs Are Only Used by ChatController
-1329 2:01p ✅ ChatMessage and PrivateMessage DTOs Annotated with @Schema for WebSocket Documentation
-1330 " ✅ LoginController @Tag Annotation Added
-1331 " ✅ LoginController @Operation Annotations Added to Three Endpoints
-1332 " ✅ LoginController @Operation Annotation Complete — All 4 Endpoints Annotated
-1333 2:02p ✅ LoginController Swagger Imports Added; WechatWebLoginController @Tag Started
-1334 " ✅ WechatWebLoginController @Operation Annotations Complete — All 4 Endpoints Annotated
-1335 " ✅ WechatWebLoginController Swagger Annotation Complete — All 3 Missing Controllers Now Fully Annotated
-1336 2:03p ✅ Swagger Annotation Audit Complete — All 12 Controllers Have Full Coverage; Compile Check Skipped
-1337 " 🔵 Gradle Wrapper Not Found at eagle-cloud Project Root in Claude Code Shell
-1338 " 🔵 eagle-cloud Project Has No Gradle Wrapper — Build Tool Unclear
-1339 " 🔵 eagle-cloud Uses System Gradle at /opt/homebrew/bin/gradle (No Wrapper)
-S420 Add Swagger annotations to ChatController and audit/fix all controllers missing annotations in
-eagle-system-service (May 15 at 2:03 PM)
-1340 2:46p 🔵 eagle-cloud SMS/Notification Service Architecture Discovered
-1341 " 🔵 手拉手 SMS Provider API Protocol Fully Extracted
-1342 2:47p 🔵 SMS Provider Extension Pattern and Existing Code Structure Fully Mapped
-1343 " 🔵 SMS Provider Configuration Structure in application.yml and .env.example Mapped
-1345 " 🟣 HnslsSmsServiceImplTest Created as TDD Red-Light Test
-1344 2:48p ⚖️ Implementation Plan Established for ShoulaShou SMS Provider Integration
-1346 " 🔵 TDD Red-Light Confirmed: HnslsSmsServiceImpl and HnslsSmsProperties Don't Exist Yet
-1347 " 🟣 HnslsSmsProperties @ConfigurationProperties Class Created
-1348 2:49p 🔴 HnslsSmsServiceImpl 构造函数自动装配歧义修复
-1351 3:08p 🔵 手拉手短信发送失败 — 待调试
-1349 3:20p 🔵 Docker Compose and .env Files Located in eagle-services/ Subdirectory
-1350 3:21p 🔵 SMS Configuration Gap: docker-compose.yml Missing SMS_PROVIDER; Only Aliyun Vars Exposed (Not HNSL)
-S422 SMS配置修复：将SMS_PROVIDER暴露到docker-compose，只保留HNSLS短信配置，去掉阿里云和腾讯云 (May 15 at 3:22 PM)
-1352 3:30p 🟣 手拉手 SMS 实际发送测试请求 — 环境变量已配置
-1354 " 🔵 手拉手三个网关地址全部无法连通 — 网络层封锁而非配置问题
-1353 3:39p 🔵 手拉手 SMS 发送失败根因：.env 中 SEND_URL 配置为无法连通的 IP 地址
-1355 3:40p 🟣 HnslsSmsServiceImplTest 全部通过，DEBUG 日志格式验证正确
-1356 " 🔴 修复 doSend() 双重 ERROR 日志 — ServiceException 被外层 catch 重复捕获
-
-Access 504k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 546k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
