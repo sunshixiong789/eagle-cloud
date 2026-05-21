@@ -6,8 +6,8 @@ import com.eagle.idempotency.annotation.Idempotent;
 import com.eagle.idempotency.exception.IdempotencyErrorCode;
 import com.eagle.idempotency.extractor.IdempotencyKeyExtractor;
 import com.eagle.idempotency.properties.IdempotencyProperties;
+import com.eagle.idempotency.support.IdempotencyTokenResolver;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -53,7 +53,7 @@ public class IdempotencyAspect {
     private static final String RESULT_TYPE_SUFFIX = ":type";
     private final RedissonClient redissonClient;
     private final IdempotencyProperties properties;
-    private final HttpServletRequest request;
+    private final IdempotencyTokenResolver tokenResolver;
     private final ObjectMapper objectMapper;
     private final ApplicationContext applicationContext;
 
@@ -62,19 +62,19 @@ public class IdempotencyAspect {
      *
      * @param redissonClient     Redisson 客户端
      * @param properties         幂等性配置属性
-     * @param request            当前 HTTP 请求（用于 TOKEN / RESULT_CACHE 模式读取 Header）
+     * @param tokenResolver      当前 HTTP 请求 Token 解析器
      * @param objectMapper       Jackson ObjectMapper，用于 RESULT_CACHE 模式序列化/反序列化响应
      * @param applicationContext Spring 容器，用于按名称获取 {@link IdempotencyKeyExtractor} Bean
      */
     public IdempotencyAspect(
             RedissonClient redissonClient,
             IdempotencyProperties properties,
-            HttpServletRequest request,
+            IdempotencyTokenResolver tokenResolver,
             ObjectMapper objectMapper,
             ApplicationContext applicationContext) {
         this.redissonClient = redissonClient;
         this.properties = properties;
-        this.request = request;
+        this.tokenResolver = tokenResolver;
         this.objectMapper = objectMapper;
         this.applicationContext = applicationContext;
     }
@@ -109,7 +109,7 @@ public class IdempotencyAspect {
      */
     private Object handleTokenModeAndProceed(ProceedingJoinPoint joinPoint, Idempotent idempotent)
             throws Throwable {
-        String token = request.getHeader(idempotent.tokenHeader());
+        String token = tokenResolver.resolveToken(idempotent.tokenHeader());
         if (!StringUtils.hasText(token)) {
             log.warn("Idempotency token missing, header: {}", idempotent.tokenHeader());
             throw IdempotencyErrorCode.IDEMPOTENCY_TOKEN_MISSING.toDomainException();
@@ -145,7 +145,7 @@ public class IdempotencyAspect {
      */
     private Object handleResultCacheMode(ProceedingJoinPoint joinPoint, Idempotent idempotent)
             throws Throwable {
-        String token = request.getHeader(idempotent.tokenHeader());
+        String token = tokenResolver.resolveToken(idempotent.tokenHeader());
         if (!StringUtils.hasText(token)) {
             log.warn("RESULT_CACHE: idempotency token missing, header: {}", idempotent.tokenHeader());
             throw IdempotencyErrorCode.IDEMPOTENCY_TOKEN_MISSING.toDomainException();

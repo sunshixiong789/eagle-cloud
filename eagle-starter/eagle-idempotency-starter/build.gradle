@@ -1,11 +1,13 @@
 dependencies {
     api project(':eagle-starter:eagle-common-starter')
     api project(':eagle-starter:eagle-redis-starter')
-    api 'org.springframework.boot:spring-boot-starter-web'
     api 'org.springframework.boot:spring-boot-starter-aspectj'
 
     // IdempotencyAspect / IdempotencyAutoConfiguration 用 ObjectMapper 序列化幂等键
     compileOnly 'com.fasterxml.jackson.core:jackson-databind'
+    compileOnly 'org.springframework:spring-webmvc'
+    compileOnly 'org.springframework:spring-webflux'
+    compileOnly 'jakarta.servlet:jakarta.servlet-api'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
@@ -13,4 +15,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.mockito:mockito-core'
     testImplementation 'com.fasterxml.jackson.core:jackson-databind'
+    testImplementation 'org.springframework:spring-webmvc'
+    testImplementation 'org.springframework:spring-webflux'
+    testImplementation 'jakarta.servlet:jakarta.servlet-api'
 }
