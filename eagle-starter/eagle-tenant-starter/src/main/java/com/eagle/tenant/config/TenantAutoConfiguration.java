@@ -2,6 +2,7 @@ package com.eagle.tenant.config;
 
 import com.eagle.tenant.aspect.TenantDatabaseRoutingAspect;
 import com.eagle.tenant.aspect.TenantFilterAspect;
+import com.eagle.tenant.filter.ReactiveTenantIdWebFilter;
 import com.eagle.tenant.filter.TenantIdFilter;
 import com.eagle.tenant.properties.TenantProperties;
 import jakarta.persistence.EntityManager;
@@ -16,6 +17,8 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
+import org.springframework.web.reactive.DispatcherHandler;
+import org.springframework.web.server.WebFilter;
 
 /**
  * 多租户自动配置。
@@ -24,7 +27,6 @@ import org.springframework.core.Ordered;
  */
 @Slf4j
 @AutoConfiguration
-@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @EnableConfigurationProperties(TenantProperties.class)
 @ConditionalOnProperty(prefix = "eagle.tenant", name = "enabled", havingValue = "true")
 public class TenantAutoConfiguration {
@@ -34,6 +36,7 @@ public class TenantAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(TenantIdFilter.class)
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
     public FilterRegistrationBean<TenantIdFilter> tenantIdFilterRegistration(TenantProperties properties) {
         log.info("Tenant filter registered, headerName={}, defaultTenantId={}",
                 properties.getHeaderName(), properties.getDefaultTenantId());
@@ -45,10 +48,24 @@ public class TenantAutoConfiguration {
     }
 
     /**
+     * Reactive tenant ID resolver for WebFlux applications.
+     */
+    @Bean
+    @ConditionalOnMissingBean(ReactiveTenantIdWebFilter.class)
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
+    @ConditionalOnClass(DispatcherHandler.class)
+    public WebFilter reactiveTenantIdWebFilter(TenantProperties properties) {
+        log.info("Reactive tenant filter registered, headerName={}, defaultTenantId={}",
+                properties.getHeaderName(), properties.getDefaultTenantId());
+        return new ReactiveTenantIdWebFilter(properties);
+    }
+
+    /**
      * COLUMN 模式：通过 Hibernate Filter 实现共享库行级隔离。
      */
     @Bean
     @ConditionalOnMissingBean
+    @ConditionalOnClass(EntityManager.class)
     @ConditionalOnProperty(prefix = "eagle.tenant", name = "mode", havingValue = "column")
     public TenantFilterAspect tenantFilterAspect(EntityManager entityManager) {
         log.info("Tenant COLUMN mode enabled");
