@@ -12,7 +12,6 @@ import com.eagle.redis.util.RedissonTopicUtil;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -31,6 +30,13 @@ import org.springframework.data.redis.core.StringRedisTemplate;
  * <p>同时按 {@code eagle.lock.type=redis}（默认）注册 {@link RedisDistributedLock}
  * 作为 {@link DistributedLock} 默认实现。
  *
+ * <p><b>条件说明：</b>util Bean 全部使用 {@code @ConditionalOnClass(RedissonClient.class)}
+ * 而非 {@code @ConditionalOnBean(RedissonClient.class)}，原因是 Redisson 自身的
+ * {@code RedissonAutoConfigurationV4} 与本类的加载顺序不确定，
+ * {@code @ConditionalOnBean} 在条件评估阶段可能因 RedissonClient bean definition
+ * 尚未声明而失败，导致 bean 被静默跳过。改用 {@code @ConditionalOnClass} 后，
+ * 若运行时 RedissonClient 真不存在，Spring 装配 @Bean 入参时会报清晰的根因错误。
+ *
  * @author 孙士雄
  */
 @AutoConfiguration(after = RedisCacheConfig.class)
@@ -38,7 +44,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 public class RedisAutoConfiguration {
 
     @Bean
-    @ConditionalOnBean(RedissonClient.class)
+    @ConditionalOnClass(RedissonClient.class)
     @ConditionalOnMissingBean(DistributedLock.class)
     @ConditionalOnProperty(name = "eagle.lock.type", havingValue = "redis", matchIfMissing = true)
     public DistributedLock redisDistributedLock(RedissonClient redissonClient) {
@@ -46,42 +52,42 @@ public class RedisAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnBean(RedissonClient.class)
+    @ConditionalOnClass(RedissonClient.class)
     @ConditionalOnMissingBean
     public RedissonTopicUtil redissonTopicUtil(RedissonClient redissonClient) {
         return new RedissonTopicUtil(redissonClient);
     }
 
     @Bean
-    @ConditionalOnBean(RedissonClient.class)
+    @ConditionalOnClass(RedissonClient.class)
     @ConditionalOnMissingBean
     public RedissonBloomFilterUtil redissonBloomFilterUtil(RedissonClient redissonClient) {
         return new RedissonBloomFilterUtil(redissonClient);
     }
 
     @Bean
-    @ConditionalOnBean(RedissonClient.class)
+    @ConditionalOnClass(RedissonClient.class)
     @ConditionalOnMissingBean
     public RedissonAtomicUtil redissonAtomicUtil(RedissonClient redissonClient) {
         return new RedissonAtomicUtil(redissonClient);
     }
 
     @Bean
-    @ConditionalOnBean(RedissonClient.class)
+    @ConditionalOnClass(RedissonClient.class)
     @ConditionalOnMissingBean
     public RedissonRateLimiterUtil redissonRateLimiterUtil(RedissonClient redissonClient) {
         return new RedissonRateLimiterUtil(redissonClient);
     }
 
     @Bean
-    @ConditionalOnBean(RedissonClient.class)
+    @ConditionalOnClass(RedissonClient.class)
     @ConditionalOnMissingBean
     public RedissonDelayedQueueUtil redissonDelayedQueueUtil(RedissonClient redissonClient) {
         return new RedissonDelayedQueueUtil(redissonClient);
     }
 
     @Bean
-    @ConditionalOnBean(RedissonClient.class)
+    @ConditionalOnClass(RedissonClient.class)
     @ConditionalOnMissingBean
     public CacheProtectionUtil cacheProtectionUtil(
             RedissonClient redissonClient,
@@ -90,7 +96,7 @@ public class RedisAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnBean(StringRedisTemplate.class)
+    @ConditionalOnClass(StringRedisTemplate.class)
     @ConditionalOnMissingBean
     public RedisRateLimiter redisRateLimiter(StringRedisTemplate stringRedisTemplate) {
         return new RedisRateLimiter(stringRedisTemplate);
