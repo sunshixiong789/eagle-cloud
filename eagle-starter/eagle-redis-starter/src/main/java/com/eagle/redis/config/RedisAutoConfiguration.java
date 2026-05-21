@@ -2,7 +2,15 @@ package com.eagle.redis.config;
 
 import com.eagle.common.lock.DistributedLock;
 import com.eagle.redis.lock.RedisDistributedLock;
+import com.eagle.redis.util.CacheProtectionUtil;
+import com.eagle.redis.util.RedisRateLimiter;
+import com.eagle.redis.util.RedissonAtomicUtil;
+import com.eagle.redis.util.RedissonBloomFilterUtil;
+import com.eagle.redis.util.RedissonDelayedQueueUtil;
+import com.eagle.redis.util.RedissonRateLimiterUtil;
+import com.eagle.redis.util.RedissonTopicUtil;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -10,6 +18,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.RedisOperations;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
  * Redis 自动配置类。
@@ -33,5 +43,56 @@ public class RedisAutoConfiguration {
     @ConditionalOnProperty(name = "eagle.lock.type", havingValue = "redis", matchIfMissing = true)
     public DistributedLock redisDistributedLock(RedissonClient redissonClient) {
         return new RedisDistributedLock(redissonClient);
+    }
+
+    @Bean
+    @ConditionalOnBean(RedissonClient.class)
+    @ConditionalOnMissingBean
+    public RedissonTopicUtil redissonTopicUtil(RedissonClient redissonClient) {
+        return new RedissonTopicUtil(redissonClient);
+    }
+
+    @Bean
+    @ConditionalOnBean(RedissonClient.class)
+    @ConditionalOnMissingBean
+    public RedissonBloomFilterUtil redissonBloomFilterUtil(RedissonClient redissonClient) {
+        return new RedissonBloomFilterUtil(redissonClient);
+    }
+
+    @Bean
+    @ConditionalOnBean(RedissonClient.class)
+    @ConditionalOnMissingBean
+    public RedissonAtomicUtil redissonAtomicUtil(RedissonClient redissonClient) {
+        return new RedissonAtomicUtil(redissonClient);
+    }
+
+    @Bean
+    @ConditionalOnBean(RedissonClient.class)
+    @ConditionalOnMissingBean
+    public RedissonRateLimiterUtil redissonRateLimiterUtil(RedissonClient redissonClient) {
+        return new RedissonRateLimiterUtil(redissonClient);
+    }
+
+    @Bean
+    @ConditionalOnBean(RedissonClient.class)
+    @ConditionalOnMissingBean
+    public RedissonDelayedQueueUtil redissonDelayedQueueUtil(RedissonClient redissonClient) {
+        return new RedissonDelayedQueueUtil(redissonClient);
+    }
+
+    @Bean
+    @ConditionalOnBean(RedissonClient.class)
+    @ConditionalOnMissingBean
+    public CacheProtectionUtil cacheProtectionUtil(
+            RedissonClient redissonClient,
+            @Qualifier("redisTemplate") RedisTemplate<String, Object> redisTemplate) {
+        return new CacheProtectionUtil(redissonClient, redisTemplate);
+    }
+
+    @Bean
+    @ConditionalOnBean(StringRedisTemplate.class)
+    @ConditionalOnMissingBean
+    public RedisRateLimiter redisRateLimiter(StringRedisTemplate stringRedisTemplate) {
+        return new RedisRateLimiter(stringRedisTemplate);
     }
 }

@@ -3,7 +3,6 @@ package com.eagle.redis.util;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RAtomicLong;
 import org.redisson.api.RedissonClient;
-import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
@@ -85,7 +84,6 @@ import java.time.Duration;
  *
  * @author 孙士雄
  */
-@Component
 @RequiredArgsConstructor
 public class RedissonAtomicUtil {
 

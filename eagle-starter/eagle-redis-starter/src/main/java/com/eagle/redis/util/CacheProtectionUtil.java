@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.Random;
@@ -43,7 +42,6 @@ import java.util.function.Supplier;
  * @author 孙士雄
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class CacheProtectionUtil {
 

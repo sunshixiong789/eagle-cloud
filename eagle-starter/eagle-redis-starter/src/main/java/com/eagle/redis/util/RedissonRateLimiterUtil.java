@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RRateLimiter;
 import org.redisson.api.RateType;
 import org.redisson.api.RedissonClient;
-import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
@@ -25,7 +24,6 @@ import java.time.Duration;
  * @author 孙士雄
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class RedissonRateLimiterUtil {
 

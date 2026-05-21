@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RTopic;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.listener.MessageListener;
-import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -29,7 +28,6 @@ import java.util.concurrent.ConcurrentMap;
  * @author 孙士雄
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class RedissonTopicUtil {
 

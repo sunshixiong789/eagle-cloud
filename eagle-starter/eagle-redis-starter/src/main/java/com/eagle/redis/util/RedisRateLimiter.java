@@ -3,7 +3,6 @@ package com.eagle.redis.util;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
-import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -16,7 +15,6 @@ import java.util.UUID;
  *
  * @author 孙士雄
  */
-@Component
 @RequiredArgsConstructor
 public class RedisRateLimiter {
 
