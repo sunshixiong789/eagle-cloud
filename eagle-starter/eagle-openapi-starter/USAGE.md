@@ -12,8 +12,28 @@
 
 ## 依赖与启用
 
+`eagle-openapi-starter` 只提供通用 OpenAPI Bean、JWT Security Scheme 和
+`@PreAuthorize` 文档增强，不替业务服务选择 Servlet/WebMVC 或 WebFlux。业务服务必须按自己的 Web
+栈显式选择 SpringDoc UI 适配包。
+
+### Servlet / Spring MVC
+
 ```gradle
-implementation project(':eagle-starter:eagle-openapi-starter')
+dependencies {
+    implementation project(':eagle-starter:eagle-openapi-starter')
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
+}
+```
+
+### Reactive / WebFlux
+
+```gradle
+dependencies {
+    implementation project(':eagle-starter:eagle-openapi-starter')
+    implementation project(':eagle-starter:eagle-webflux-starter')
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui'
+}
 ```
 
 ```yaml

@@ -1,8 +1,12 @@
 dependencies {
     api project(':eagle-starter:eagle-common-starter')
-    api 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
-    api 'org.springframework.boot:spring-boot-starter-security'
+    api 'org.springdoc:springdoc-openapi-starter-common'
+    api 'org.springframework:spring-web'
+    api 'org.springframework.security:spring-security-core'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
+    testImplementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
+    testImplementation 'org.springdoc:springdoc-openapi-starter-webflux-ui'
 }

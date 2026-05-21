@@ -598,8 +598,9 @@ dependencies {
     // Web 模块：Servlet / Spring MVC
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 
-    // API 文档：WebMVC 版 SpringDoc
+    // API 文档：通用 OpenAPI 配置 + WebMVC 版 SpringDoc UI
     implementation project(':eagle-starter:eagle-openapi-starter')
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
 
     // 数据库：阻塞式 JPA / JDBC
     implementation project(':eagle-starter:eagle-data-jpa-starter')
@@ -624,7 +625,8 @@ dependencies {
     // Web 模块：Reactive / WebFlux
     implementation project(':eagle-starter:eagle-webflux-starter')
 
-    // API 文档：WebFlux 版 SpringDoc
+    // API 文档：通用 OpenAPI 配置 + WebFlux 版 SpringDoc UI
+    implementation project(':eagle-starter:eagle-openapi-starter')
     implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui'
 
     // 数据库：响应式 PostgreSQL / R2DBC
