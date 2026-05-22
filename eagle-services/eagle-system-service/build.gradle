@@ -33,7 +33,7 @@ dependencies {
     // 微信/第三方 SDK
     implementation "com.github.binarywang:weixin-java-miniapp"
     // 阿里云号码认证 / 一键登录（短信 SDK 与本依赖无关，单独管理）
-    implementation "com.aliyun:dypnsapi20170525"
+   // implementation "com.aliyun:dypnsapi20170525"
 
     // 短信 SDK：当前仅使用手拉手（HTTP 协议，无需额外 SDK）。
     // 若 eagle.message.sms.provider 切换为 aliyun / tencent，需取消下列对应行的注释，
