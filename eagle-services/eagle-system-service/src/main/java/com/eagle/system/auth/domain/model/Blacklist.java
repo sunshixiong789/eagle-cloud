@@ -1,6 +1,6 @@
 package com.eagle.system.auth.domain.model;
 
-import com.eagle.common.base.BaseAggregateRoot;
+import com.eagle.datajpa.base.BaseAggregateRoot;
 import com.eagle.system.auth.domain.event.BlacklistAddedEvent;
 import com.eagle.system.auth.domain.event.BlacklistRemovedEvent;
 import com.eagle.system.auth.domain.model.enums.BlacklistType;

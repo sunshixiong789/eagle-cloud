@@ -1,6 +1,6 @@
 package com.eagle.system.base.domain.model;
 
-import com.eagle.common.base.BaseAggregateRoot;
+import com.eagle.datajpa.base.BaseAggregateRoot;
 import com.eagle.common.exception.DomainException;
 import com.eagle.system.base.domain.event.UserCreatedEvent;
 import com.eagle.system.base.domain.event.UserUpdatedEvent;

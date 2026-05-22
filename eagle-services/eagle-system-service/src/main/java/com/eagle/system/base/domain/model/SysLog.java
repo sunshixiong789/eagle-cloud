@@ -1,7 +1,7 @@
 package com.eagle.system.base.domain.model;
 
 
-import com.eagle.common.base.BaseEntity;
+import com.eagle.datajpa.base.BaseEntity;
 import com.eagle.system.base.domain.model.enums.LogStatus;
 import com.eagle.system.base.domain.model.enums.LogType;
 import jakarta.persistence.Column;

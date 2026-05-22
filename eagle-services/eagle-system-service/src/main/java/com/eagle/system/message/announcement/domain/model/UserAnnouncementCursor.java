@@ -1,6 +1,6 @@
 package com.eagle.system.message.announcement.domain.model;
 
-import com.eagle.common.base.BaseAggregateRoot;
+import com.eagle.datajpa.base.BaseAggregateRoot;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;

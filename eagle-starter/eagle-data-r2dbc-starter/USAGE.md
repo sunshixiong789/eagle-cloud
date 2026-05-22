@@ -26,25 +26,57 @@ eagle:
     enabled: true   # 默认 true，可省略
 ```
 
+## 基类选型
+
+| 基类                              | 适用                              | 关键能力                       |
+|---------------------------------|---------------------------------|----------------------------|
+| `BaseR2dbcAggregateRoot<T>`     | **聚合根**（有独立 Repository、可被其他聚合引用） | 审计 + 乐观锁 + **领域事件注册/自动发布** |
+| `BaseR2dbcEntity`               | 聚合内子实体（无独立 Repository）          | 审计 + 乐观锁，无事件能力             |
+
+字段语义与 JPA 端 `BaseAggregateRoot` / `BaseEntity` 对齐，便于在两种持久化技术之间迁移。
+
 ## 审计字段
 
-实体直接继承 `BaseR2dbcEntity` 即可，无需额外配置：
+聚合根：
 
 ```java
 @Table("t_order")
-@Getter @Setter @NoArgsConstructor
-public class Order extends BaseR2dbcEntity {
+@Getter @NoArgsConstructor
+public class Order extends BaseR2dbcAggregateRoot<Order> {
 
     private String orderNo;
-
-    @Column("status")
     private OrderStatus status;
-
     private BigDecimal totalAmount;
+
+    public static Order create(String orderNo, BigDecimal amount) {
+        Order order = new Order();
+        order.orderNo = orderNo;
+        order.status = OrderStatus.CREATED;
+        order.totalAmount = amount;
+        order.registerEvent(new OrderCreatedEvent(orderNo, amount));
+        return order;
+    }
+
+    public void pay() {
+        this.status = OrderStatus.PAID;
+        registerEvent(new OrderPaidEvent(getId(), orderNo));
+    }
 }
 ```
 
-`BaseR2dbcEntity` 自带：
+子实体（无领域事件）：
+
+```java
+@Table("t_order_item")
+@Getter @Setter @NoArgsConstructor
+public class OrderItem extends BaseR2dbcEntity {
+    private Long orderId;
+    private Long productId;
+    private Integer quantity;
+}
+```
+
+两个基类自带：
 
 | 字段           | 类型            | 注解                                          |
 |--------------|---------------|---------------------------------------------|
@@ -75,9 +107,26 @@ public ReactiveAuditorAware<Long> reactiveAuditorAware() {
 
 ## 与 JPA 共存
 
-`BaseR2dbcEntity` 与 `eagle-common-starter` 中的 `BaseEntity`（JPA）字段语义对齐，
+`BaseR2dbcAggregateRoot` / `BaseR2dbcEntity` 与 `eagle-common-starter` 中的
+`BaseAggregateRoot` / `BaseEntity`（JPA 版）字段语义完全对齐，
 但因 R2DBC 不依赖 JPA 注解，二者独立维护。同一服务同时使用 JPA + R2DBC 是合法的，
 分别继承各自的基类即可。
+
+## 领域事件发布机制
+
+`BaseR2dbcAggregateRoot` 继承自 Spring Data `AbstractAggregateRoot`。
+当 `R2dbcRepository.save(...)` 被调用后，
+`EventPublishingRepositoryProxyPostProcessor` 会通过 `ApplicationEventPublisher`
+自动发布 `registerEvent(...)` 注册的事件，并随即清空待发布列表，行为与 JPA 端完全一致。
+事件处理器应使用：
+
+```java
+@Async
+@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+public void onOrderPaid(OrderPaidEvent event) {
+    // ...
+}
+```
 
 ## 自动配置一览
 

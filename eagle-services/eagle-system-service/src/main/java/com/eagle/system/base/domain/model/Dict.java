@@ -1,6 +1,6 @@
 package com.eagle.system.base.domain.model;
 
-import com.eagle.common.base.BaseAggregateRoot;
+import com.eagle.datajpa.base.BaseAggregateRoot;
 import com.eagle.system.base.domain.model.entity.DictItemEntity;
 import com.eagle.system.base.domain.model.enums.DictStatus;
 import com.eagle.system.base.domain.model.enums.DictType;

@@ -1,6 +1,6 @@
 package com.eagle.system.message.domain.model;
 
-import com.eagle.common.base.BaseAggregateRoot;
+import com.eagle.datajpa.base.BaseAggregateRoot;
 import com.eagle.system.message.interfaces.exception.MessageErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

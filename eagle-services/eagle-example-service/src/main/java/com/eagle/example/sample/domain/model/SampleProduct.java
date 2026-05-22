@@ -1,6 +1,6 @@
 package com.eagle.example.sample.domain.model;
 
-import com.eagle.common.base.BaseAggregateRoot;
+import com.eagle.datajpa.base.BaseAggregateRoot;
 import com.eagle.example.sample.domain.event.ProductCreatedEvent;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;

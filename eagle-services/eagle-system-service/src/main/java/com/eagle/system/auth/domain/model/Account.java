@@ -1,6 +1,6 @@
 package com.eagle.system.auth.domain.model;
 
-import com.eagle.common.base.BaseAggregateRoot;
+import com.eagle.datajpa.base.BaseAggregateRoot;
 import com.eagle.system.auth.domain.AuthErrorCode;
 import com.eagle.system.auth.domain.event.AccountDeletedEvent;
 import com.eagle.system.auth.domain.event.AccountFrozenEvent;
