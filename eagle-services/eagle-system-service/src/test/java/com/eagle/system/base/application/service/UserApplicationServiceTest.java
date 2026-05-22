@@ -16,10 +16,10 @@ import com.eagle.system.base.domain.repository.UserRepository;
 import com.eagle.system.base.domain.service.RoleValidationService;
 import com.eagle.system.base.interfaces.dto.request.UpdateUserRequest;
 import com.eagle.system.base.interfaces.dto.response.AssignedRoleResponse;
+import com.eagle.system.base.infrastructure.remote.AuthAccountBlacklistClient;
+import com.eagle.system.base.infrastructure.remote.AuthOnlineUserClient;
+import com.eagle.system.base.infrastructure.remote.dto.AccountBlacklistSnapshot;
 import com.eagle.system.base.interfaces.dto.response.UserResponse;
-import com.eagle.system.auth.domain.port.AccountBlacklistInfo;
-import com.eagle.system.auth.domain.port.AccountBlacklistPort;
-import com.eagle.system.auth.domain.port.OnlineUserPort;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -31,6 +31,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -61,9 +62,9 @@ class UserApplicationServiceTest {
     @Mock
     LogRepository logRepository;
     @Mock
-    OnlineUserPort onlineUserPort;
+    AuthOnlineUserClient authOnlineUserClient;
     @Mock
-    AccountBlacklistPort accountBlacklistPort;
+    AuthAccountBlacklistClient authAccountBlacklistClient;
     @InjectMocks
     UserApplicationService service;
 
@@ -139,9 +140,9 @@ class UserApplicationServiceTest {
             when(roleRepository.findAllById(user.getRoleIds())).thenReturn(List.of(admin));
             when(logRepository.findLatestCreateTimeByUsernameAndLogTypeAndStatus(
                     "alice", LogType.LOGIN, LogStatus.SUCCESS)).thenReturn(Optional.of(lastLoginAt));
-            when(onlineUserPort.listJtisByAccount(ACCOUNT_ID)).thenReturn(List.of("jti-1"));
-            when(accountBlacklistPort.findAccountBlacklist(ACCOUNT_ID))
-                    .thenReturn(Optional.of(new AccountBlacklistInfo(300L, ACCOUNT_ID.toString())));
+            when(authOnlineUserClient.listJtisByAccount(ACCOUNT_ID)).thenReturn(List.of("jti-1"));
+            when(authAccountBlacklistClient.findByAccountId(ACCOUNT_ID))
+                    .thenReturn(ResponseEntity.ok(new AccountBlacklistSnapshot(300L, ACCOUNT_ID.toString())));
 
             Page<UserResponse> page = service.queryUsers(PageRequest.of(0, 10));
 

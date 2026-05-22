@@ -1,9 +1,7 @@
-// 排除 xpp3 / xmlpull / mxparser / pull-parser（旧式 SAX 解析器，dom4j / xstream / weixin-java-miniapp 传递引入）。
-// 它们通过 ServiceLoader 注册为默认 SAXParserFactory（org.gjt.xpp.jaxp11.SAXParserFactoryImpl），
-// 会导致 Nacos / Logback（含 RocketMQ shaded logback）加载 XML 配置时报
+// 排除 xpp3 / xmlpull / mxparser / pull-parser(旧式 SAX 解析器,dom4j / xstream 传递引入)。
+// 它们通过 ServiceLoader 注册为默认 SAXParserFactory(org.gjt.xpp.jaxp11.SAXParserFactoryImpl),
+// 会导致 Nacos / Logback(含 RocketMQ shaded logback)加载 XML 配置时报
 // SAXNotRecognizedException: external-general-entities。
-// mxparser 是 xpp3 的现代分支，pull-parser:pull-parser:2 是 dom4j 2.1.3 的传递依赖，
-// 三者都使用 org.gjt.xpp.* 包名，需一并排除。
 configurations.configureEach {
     exclude group: 'xpp3', module: 'xpp3'
     exclude group: 'xpp3', module: 'xpp3_min'
@@ -20,40 +18,29 @@ dependencies {
     implementation project(':eagle-starter:eagle-rocketmq-starter')
     implementation project(':eagle-starter:eagle-oss-minio-starter')
     implementation project(':eagle-starter:eagle-openapi-starter')
+    // 跨服务同步调用:通过 lb://eagle-auth-service 访问 auth-service 内部 API
+    implementation project(':eagle-starter:eagle-restclient-starter')
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
+    // 切 PostgreSQL 时调整为 flyway-database-postgresql + org.postgresql:postgresql
     implementation 'org.springframework.boot:spring-boot-starter-flyway'
     implementation 'org.flywaydb:flyway-mysql'
 
     // Nacos 服务注册与发现
     implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery'
 
-    // 微信/第三方 SDK
-    implementation "com.github.binarywang:weixin-java-miniapp"
-    // 阿里云号码认证 / 一键登录
-    // Phase 3 删除 com.eagle.system.auth 树后，此依赖随 PhoneOneClickServiceImpl 一同移除
-    implementation "com.aliyun:dypnsapi20170525"
-
-    // 短信 SDK：当前仅使用手拉手（HTTP 协议，无需额外 SDK）。
-    // 若 eagle.message.sms.provider 切换为 aliyun / tencent，需取消下列对应行的注释，
-    // 让 starter 的 @ConditionalOnClass 探测到 Client 类后装配对应 Provider。
-    // implementation "com.aliyun:dysmsapi20170525"            // SMS_PROVIDER=aliyun 时启用
-    // implementation "com.tencentcloudapi:tencentcloud-sdk-java-sms" // SMS_PROVIDER=tencent 时启用
-
     implementation "com.github.ben-manes.caffeine:caffeine"
     implementation "org.apache.poi:poi-ooxml"
 
-    // 业务侧 LoginRateLimitFilter / TokenTrackingHandler / OnlineUserAdapter 直接用 fastjson2
+    // message 模块的 AnnouncementCache / TargetFilter 直接用 fastjson2 做 JSON 序列化
     implementation "com.alibaba.fastjson2:fastjson2"
 
-    // 本地开发：自动加载项目根目录的 .env 文件到 Spring Environment
+    // 本地开发:自动加载项目根目录的 .env 文件到 Spring Environment
     runtimeOnly 'me.paulschwarz:spring-dotenv:4.0.0'
 
 
     // Spring Modulith
-    // compileOnly：仅编译期可见，@Modulithic/@ApplicationModule/@NamedInterface 注解使用
+    // compileOnly:仅编译期可见,@Modulithic/@ApplicationModule/@NamedInterface 注解使用
     compileOnly 'org.springframework.modulith:spring-modulith-core'
     // spring-modulith-starter-test 提供 ApplicationModules、Documenter 等测试工具
     testImplementation 'org.springframework.modulith:spring-modulith-starter-test'

@@ -16,10 +16,12 @@ import com.eagle.system.base.domain.service.RoleValidationService;
 import com.eagle.system.base.interfaces.dto.request.UpdateUserRequest;
 import com.eagle.system.base.interfaces.dto.request.UserQueryRequest;
 import com.eagle.system.base.interfaces.dto.response.AssignedRoleResponse;
+import com.eagle.system.base.infrastructure.remote.AuthAccountBlacklistClient;
+import com.eagle.system.base.infrastructure.remote.AuthOnlineUserClient;
+import com.eagle.system.base.infrastructure.remote.dto.AccountBlacklistSnapshot;
 import com.eagle.system.base.interfaces.dto.response.UserResponse;
-import com.eagle.system.auth.domain.port.AccountBlacklistPort;
-import com.eagle.system.auth.domain.port.OnlineUserPort;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -50,8 +52,8 @@ public class UserApplicationService {
     private final RoleValidationService roleValidationService;
     private final RoleRepository roleRepository;
     private final LogRepository logRepository;
-    private final OnlineUserPort onlineUserPort;
-    private final AccountBlacklistPort accountBlacklistPort;
+    private final AuthOnlineUserClient authOnlineUserClient;
+    private final AuthAccountBlacklistClient authAccountBlacklistClient;
 
     /**
      * 更新用户档案信息
@@ -145,7 +147,7 @@ public class UserApplicationService {
                 .orElse(null));
 
         boolean online = user.getAccountId() != null
-                && !onlineUserPort.listJtisByAccount(user.getAccountId()).isEmpty();
+                && !authOnlineUserClient.listJtisByAccount(user.getAccountId()).isEmpty();
         response.setOnline(online);
         response.setLoginStatus(online ? "ONLINE" : "OFFLINE");
         enrichBlacklistStatus(user, response);
@@ -158,10 +160,13 @@ public class UserApplicationService {
         if (user.getAccountId() == null) {
             return;
         }
-        accountBlacklistPort.findAccountBlacklist(user.getAccountId()).ifPresent(info -> {
+        ResponseEntity<AccountBlacklistSnapshot> resp =
+                authAccountBlacklistClient.findByAccountId(user.getAccountId());
+        AccountBlacklistSnapshot info = resp.getBody();
+        if (resp.getStatusCode().is2xxSuccessful() && info != null) {
             response.setBlacklisted(true);
             response.setBlacklistId(info.id());
-        });
+        }
     }
 
     private List<AssignedRoleResponse> getAssignedRoles(User user) {

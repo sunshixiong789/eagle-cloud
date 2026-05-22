@@ -1,9 +1,9 @@
 package com.eagle.system.base.application.service;
 
 import com.eagle.common.exception.codes.OperationErrorCode;
-import com.eagle.system.auth.domain.port.OnlineUserInfo;
-import com.eagle.system.auth.domain.port.OnlineUserPort;
 import com.eagle.system.base.domain.model.enums.LogStatus;
+import com.eagle.system.base.infrastructure.remote.AuthOnlineUserClient;
+import com.eagle.system.base.infrastructure.remote.dto.OnlineUserSnapshot;
 import com.eagle.system.base.domain.model.enums.LogType;
 import com.eagle.system.base.domain.repository.LogRepository;
 import com.eagle.system.base.interfaces.dto.request.LogQueryRequest;
@@ -43,7 +43,7 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class MonitorApplicationService {
 
-    private final OnlineUserPort onlineUserPort;
+    private final AuthOnlineUserClient authOnlineUserClient;
     private final LogApplicationService logApplicationService;
     private final LogRepository logRepository;
     private final DiscoveryClient discoveryClient;
@@ -68,7 +68,7 @@ public class MonitorApplicationService {
     }
 
     public OnlineUserListResponse listOnlineUsers() {
-        List<OnlineUserInfo> infos = onlineUserPort.listOnlineUsers();
+        List<OnlineUserSnapshot> infos = authOnlineUserClient.listOnlineUsers();
         List<OnlineUserResponse> responses = infos.stream()
                 .map(info -> OnlineUserResponse.builder()
                         .tokenId(info.tokenId())
@@ -94,7 +94,7 @@ public class MonitorApplicationService {
         if (currentJti != null && currentJti.equals(tokenId)) {
             throw OperationErrorCode.OPERATION_NOT_ALLOWED.toDomainException();
         }
-        onlineUserPort.forceLogout(tokenId);
+        authOnlineUserClient.forceLogout(tokenId);
     }
 
     // -------------------------------------------------------------------------

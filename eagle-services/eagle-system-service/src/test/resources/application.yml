@@ -19,9 +19,3 @@ spring:
     exclude:
       - org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration
       - org.redisson.spring.starter.RedissonAutoConfigurationV4
-
-eagle:
-  jwt:
-    keystore-location: classpath:jwt-keystore.p12
-    keystore-password: eagle-jwt-dev-2026
-    key-alias: eagle-jwt
