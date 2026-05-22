@@ -8,7 +8,7 @@ import com.eagle.example.sample.application.service.SampleProductApplicationServ
 import com.eagle.example.sample.domain.model.SampleProduct;
 import com.eagle.example.sample.domain.repository.SampleProductRepository;
 import com.eagle.excel.writer.ExcelWriter;
-import com.eagle.http.client.support.EagleHttpServiceClientFactory;
+import com.eagle.http.client.support.EagleRestServiceClientFactory;
 import com.eagle.idgenerator.util.IdGeneratorFacade;
 import com.eagle.message.service.NotificationService;
 import com.eagle.oss.service.StorageService;
@@ -79,7 +79,7 @@ class ExampleStarterIntegrationTest {
     private ExcelWriter excelWriter;
 
     @Autowired
-    private EagleHttpServiceClientFactory httpClientFactory;
+    private EagleRestServiceClientFactory httpClientFactory;
 
     // ==================== 上下文加载 ====================
 

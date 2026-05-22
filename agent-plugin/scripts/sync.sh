@@ -91,7 +91,7 @@ add_skill "eagle-rocketmq"            "eagle-rocketmq-starter" \
 add_skill "eagle-resource-server"     "eagle-resource-server-starter" \
     "Use when implementing OAuth2 resource server (JWT-protected service) in eagle-cloud projects — @EnableEagleResourceServer, EagleAuthentication, SecurityUtils (getCurrentUser/getCurrentUserId/hasRole/hasAnyRole), @PreAuthorize, EagleUser principal"
 
-add_skill "eagle-feign-client"        "http-client-starter" \
+add_skill "eagle-feign-client"        "eagle-restclient-starter" \
     "Use when implementing service-to-service HTTP clients in eagle-cloud projects — Spring RestClient / HTTP Service Interface, automatic JWT/tenant-id/Seata-XID propagation, EagleResponseErrorHandler converting downstream HTTP errors to AppException hierarchy"
 
 add_skill "eagle-tracing"             "eagle-tracing-starter" \

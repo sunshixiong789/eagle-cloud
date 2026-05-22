@@ -23,7 +23,8 @@
 | **多租户**              | [eagle-tenant-starter](../eagle-starter/eagle-tenant-starter/USAGE.md)                         | 租户上下文、`@TenantFilter`、数据源路由                          |
 | **行级数据权限**           | [eagle-row-security-starter](../eagle-starter/eagle-row-security-starter/USAGE.md)             | `@DataPermission`、部门 / 本人 / 自定义范围                    |
 | **OAuth2 资源服务器**     | [eagle-resource-server-starter](../eagle-starter/eagle-resource-server-starter/USAGE.md)       | JWT 鉴权、`SecurityUtils`、`@PreAuthorize`               |
-| **服务间 RPC**          | [http-client-starter](../eagle-starter/http-client-starter/USAGE.md)                           | RestClient / HTTP Service、Token / 租户 / XID 自动透传、错误转换 |
+| **服务间 RPC（同步）**    | [eagle-restclient-starter](../eagle-starter/eagle-restclient-starter/USAGE.md)                 | 同步 RestClient + `@HttpExchange`、Token / 租户 / XID 自动透传、错误转换 |
+| **服务间 RPC（反应式）**  | [eagle-webclient-starter](../eagle-starter/eagle-webclient-starter/USAGE.md)                   | 反应式 WebClient + `@HttpExchange`、同套透传 + 统一错误处理（WebFlux 用）   |
 | **链路追踪**             | [eagle-tracing-starter](../eagle-starter/eagle-tracing-starter/USAGE.md)                       | Brave / B3 / Zipkin、MDC 注入                           |
 | **OpenAPI 文档**       | [eagle-openapi-starter](../eagle-starter/eagle-openapi-starter/USAGE.md)                       | SpringDoc 3.0、分组、JWT Security Scheme                 |
 | **对象存储**             | [eagle-oss-minio-starter](../eagle-starter/eagle-oss-minio-starter/USAGE.md)                   | MinIO + 本地降级、签名 URL、上传校验                             |
@@ -47,7 +48,8 @@ implementation project(':eagle-starter:eagle-redis-starter')           // 缓存
 implementation project(':eagle-starter:eagle-resource-server-starter') // 鉴权
 implementation project(':eagle-starter:eagle-openapi-starter')         // 文档
 implementation project(':eagle-starter:eagle-tracing-starter')         // 追踪
-implementation project(':eagle-starter:http-client-starter')           // RPC
+implementation project(':eagle-starter:eagle-restclient-starter')      // 同步 RPC（servlet 服务）
+// 或反应式服务：implementation project(':eagle-starter:eagle-webclient-starter')
 runtimeOnly 'mysql:mysql-connector-j'
 ```
 
@@ -105,7 +107,7 @@ implementation project(':eagle-starter:eagle-resource-server-starter')
 - `eagle-common-starter` 是**基础**，所有其他 starter 都依赖
 - `eagle-redis-starter` 提供 `DistributedLock` 默认实现（Redisson）
 - `eagle-rocketmq-starter` 也可作为 `DistributedLock` 备选实现
-- `eagle-tracing-starter` 与 `http-client-starter` / `eagle-rocketmq-starter` 自动协作（traceId 透传）
+- `eagle-tracing-starter` 与 `eagle-restclient-starter` / `eagle-webclient-starter` / `eagle-rocketmq-starter` 自动协作（traceId 透传）
 - `eagle-tenant-starter` 与 `eagle-row-security-starter` 互补（租户 + 行级权限）
 - `eagle-idempotency-starter` 依赖 `eagle-redis-starter`（Token 存储）
 - `eagle-websocket-starter` 集群部署依赖 `eagle-redis-starter`（跨实例广播 + 离线消息）
@@ -118,7 +120,7 @@ implementation project(':eagle-starter:eagle-resource-server-starter')
 |------------------------------------------------------|-------------------------------------------------------|
 | `.claude/rules/03-architecture.md`、`07-exception.md` | `eagle-common-starter`                                |
 | `.claude/rules/06-database.md`                       | `eagle-data-jpa-starter` / `eagle-mybatis-starter`    |
-| `.claude/rules/11-feign.md`                          | `http-client-starter`                                 |
+| `.claude/rules/11-feign.md`                          | `eagle-restclient-starter` / `eagle-webclient-starter` |
 | `.claude/rules/12-security.md`                       | `eagle-resource-server-starter`                       |
 | `.claude/rules/14-cache.md`                          | `eagle-redis-starter`                                 |
 | `.claude/rules/15-messaging.md`                      | `eagle-rocketmq-starter`                              |

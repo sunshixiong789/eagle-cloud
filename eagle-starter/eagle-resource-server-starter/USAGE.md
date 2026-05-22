@@ -178,7 +178,7 @@ JWT 解码走 `spring.security.oauth2.resourceserver.jwt.issuer-uri` 或 `jwk-se
 - ❌ Controller 漏 `@PreAuthorize` → ✅ 必须显式声明
 - ❌ 自己 `request.getHeader("Authorization")` 解析 → ✅ `SecurityUtils.getCurrentUser()`
 - ❌ Token 放 URL → ✅ 仅 `Authorization: Bearer xxx`
-- ❌ Feign 调用 Token 不透传 → ✅ 引入 `http-client-starter`
+- ❌ Feign 调用 Token 不透传 → ✅ 引入 `eagle-restclient-starter`
 - ❌ 配置写 `eagle.security.oauth2.resource-server.*` → ✅ 真实是 **`eagle.resource-server.*`**
 - ❌ 配置写 `public-paths` → ✅ 真实是 **`permit-paths`**
 - ❌ 配置写 `enable-swagger` → ✅ 没有此字段，Swagger 默认放行

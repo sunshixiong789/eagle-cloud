@@ -91,7 +91,7 @@ public void payOrder(Long orderId) {
 
 ## XID 透传
 
-`http-client-starter` 已注册 `SeataXidClientHttpRequestInterceptor`：
+`eagle-restclient-starter` 已注册 `SeataXidClientHttpRequestInterceptor`：
 
 - HTTP 请求自动加上 `TX_XID` 头
 - 远程方收到后自动加入到当前 XID 上下文
