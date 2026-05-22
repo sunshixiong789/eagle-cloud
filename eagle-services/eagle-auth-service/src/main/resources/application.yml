@@ -1,0 +1,232 @@
+# ===========================================
+# Eagle Auth Service · 基线配置（Servlet + JPA + PostgreSQL）
+# 设计原则：
+#   - application.yml 承载完整配置；profile 文件仅声明"开发/线上不一样"的差异
+#   - 环境变量仅暴露外部接入字段：数据源/Redis/Nacos 连接信息、凭证、白名单
+#   - 默认值取"生产安全"基线（validate / show-sql=false / details=never / WARN 日志）
+# ===========================================
+
+server:
+  port: ${SERVER_PORT:8081}
+  shutdown: graceful
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      tracking-modes: cookie
+
+spring:
+  application:
+    name: eagle-auth-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:}
+        ip: ${NACOS_REGISTER_IP:}
+        metadata:
+          spring-doc: auth
+          spring-doc-name: Auth Service
+
+  # ---- 数据源：PostgreSQL（环境变量驱动连接信息）----
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:eagle_auth}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:}
+    hikari:
+      pool-name: EagleAuthHikariPool
+      connection-timeout: 30000
+      maximum-pool-size: ${DB_POOL_MAX:20}
+      minimum-idle: ${DB_POOL_MIN:5}
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      auto-commit: true
+      connection-test-query: SELECT 1
+
+  # ---- JPA：Flyway 引入前由 Hibernate 自动同步 schema（update）；上线前切回 validate ----
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          batch_size: 100
+          fetch_size: 100
+        order_inserts: true
+        order_updates: true
+        default_batch_fetch_size: 16
+
+  # ---- 缓存：默认 Redis ----
+  cache:
+    type: redis
+    redis:
+      time-to-live: 30m
+      key-prefix: "eagle:auth:"
+      cache-null-values: true
+      use-key-prefix: true
+    caffeine:
+      spec: "maximumSize=2000,expireAfterWrite=600s"
+
+  # ---- Redis 连接 ----
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      connect-timeout: 3000ms
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: ${REDIS_POOL_MAX_ACTIVE:64}
+          max-idle: ${REDIS_POOL_MAX_IDLE:16}
+          min-idle: ${REDIS_POOL_MIN_IDLE:4}
+          max-wait: ${REDIS_POOL_MAX_WAIT:2000ms}
+        shutdown-timeout: 1000ms
+
+# ===========================================
+# Eagle 业务配置（仅 auth 域相关）
+# ===========================================
+eagle:
+  jwt:
+    keystore-location: classpath:jwt-keystore.p12
+    keystore-password: ${EAGLE_JWT_KEYSTORE_PASSWORD}
+    key-alias: eagle-jwt
+  rocketmq:
+    endpoints: ${ROCKETMQ_ENDPOINTS:localhost:8081}
+    consumer-group: auth_consumer
+    topic-env-prefix: ${ROCKETMQ_TOPIC_ENV_PREFIX:dev_}
+  websocket:
+    endpoint: /ws-stomp
+    app-prefix: /message
+    topic-prefix: /topic
+    user-prefix: /user
+  oauth:
+    issuer: ${EAGLE_OAUTH_ISSUER}
+    default-client:
+      enabled: true
+      client-id: eagleWeb
+      client-name: Eagle Web 前端应用
+      client-authentication-methods: none
+      authorization-grant-types: authorization_code,refresh_token,wechat_mini_program,sms_code
+      redirect-uris: ${EAGLE_OAUTH_REDIRECT_URIS:http://localhost:8080/auth/oauth2/callback}
+      scopes: openid,profile,email,address,phone
+      require-proof-key: true
+      require-authorization-consent: false
+      access-token-ttl-seconds: 3600
+      refresh-token-ttl-seconds: 2592000
+    app-client:
+      enabled: true
+      client-id: eagleApp
+      client-name: Eagle App 移动端
+      client-authentication-methods: none
+      authorization-grant-types: refresh_token,sms_code,wechat_app,wechat_mini_program,phone_one_click
+      redirect-uris: ""
+      scopes: openid,profile,email,address,phone
+      require-proof-key: false
+      require-authorization-consent: false
+      access-token-ttl-seconds: 3600
+      refresh-token-ttl-seconds: 2592000
+  wechat:
+    app:
+      app-id: ${WECHAT_APP_APP_ID:}
+      app-secret: ${WECHAT_APP_APP_SECRET:}
+    mini-program:
+      app-id: ${WECHAT_MINI_APP_ID:}
+      app-secret: ${WECHAT_MINI_APP_SECRET:}
+    web:
+      pc:
+        app-id: ${WECHAT_WEB_APP_ID:}
+        app-secret: ${WECHAT_WEB_APP_SECRET:}
+        redirect-uri: ${WECHAT_WEB_REDIRECT_URI:http://localhost/login/wechat/pc/callback}
+      h5:
+        app-id: ${WECHAT_MP_APP_ID:}
+        app-secret: ${WECHAT_MP_APP_SECRET:}
+        redirect-uri: ${WECHAT_MP_REDIRECT_URI:http://localhost/login/wechat/h5/callback}
+  message:
+    sms:
+      provider: ${SMS_PROVIDER:hnsls}
+      access-key-id: ${SMS_ACCESS_KEY_ID:}
+      access-key-secret: ${SMS_ACCESS_KEY_SECRET:}
+      sign-name: ${SMS_SIGN_NAME:}
+      template-id: ${SMS_TEMPLATE_ID:}
+      sdk-app-id: ${TENCENT_SMS_SDK_APP_ID:}
+      region: ${TENCENT_SMS_REGION:ap-guangzhou}
+      username: ${HNSLS_SMS_USERNAME:}
+      password: ${HNSLS_SMS_PASSWORD:}
+      content-template: ${HNSLS_SMS_CONTENT_TEMPLATE:您的验证码是{code}，5分钟内有效。}
+      send-url: ${HNSLS_SMS_SEND_URL:https://xapi.hnsls.com.cn/eums/sms/utf8/send.do}
+      charset: ${HNSLS_SMS_CHARSET:UTF-8}
+      connect-timeout-ms: ${HNSLS_SMS_CONNECT_TIMEOUT_MS:5000}
+      read-timeout-ms: ${HNSLS_SMS_READ_TIMEOUT_MS:10000}
+
+# ===========================================
+# Actuator
+# ===========================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
+      probes:
+        enabled: true
+    metrics:
+      enabled: true
+  health:
+    db:
+      enabled: true
+    redis:
+      enabled: true
+  info:
+    env:
+      enabled: false
+
+# ===========================================
+# Springdoc / Swagger
+# ===========================================
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  show-oauth2-endpoints: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    oauth:
+      app-name: Eagle Auth
+      client-id: eagleWeb
+      use-pkce-with-authorization-code-grant: true
+      scopes:
+        - "openid"
+        - "profile"
+    csrf:
+      enabled: true
+    doc-expansion: none
+    persist-authorization: true
+
+# ===========================================
+# 日志
+# ===========================================
+logging:
+  level:
+    root: INFO
+    com.eagle: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: WARN

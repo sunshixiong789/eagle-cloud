@@ -5,6 +5,10 @@ import com.eagle.http.client.interceptor.PropagatingHeadersClientHttpRequestInte
 import com.eagle.http.client.interceptor.SeataXidClientHttpRequestInterceptor;
 import com.eagle.http.client.interceptor.TenantClientHttpRequestInterceptor;
 import com.eagle.http.client.properties.HttpClientProperties;
+import com.eagle.http.client.reactive.EagleWebClientCustomizer;
+import com.eagle.http.client.reactive.filter.PropagatingHeadersExchangeFilterFunction;
+import com.eagle.http.client.reactive.filter.SeataXidExchangeFilterFunction;
+import com.eagle.http.client.reactive.filter.TenantExchangeFilterFunction;
 import com.eagle.http.client.support.EagleHttpServiceClientFactory;
 import com.eagle.http.client.support.EagleRestClientCustomizer;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +26,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.support.RestClientAdapter;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 import java.util.List;
@@ -138,6 +143,68 @@ public class EagleHttpClientAutoConfiguration {
         public TenantClientHttpRequestInterceptor tenantClientHttpRequestInterceptor() {
             log.info("RestClient tenant ID propagation enabled");
             return new TenantClientHttpRequestInterceptor();
+        }
+    }
+
+    /**
+     * 响应式 {@link WebClient} 装配：业务侧通过 {@code eagleWebClientBuilder} 取定制好的
+     * Builder，再 {@code .baseUrl(...).build()} 构造自己的客户端。
+     *
+     * <p>仅在引入 {@code spring-boot-starter-webflux} 后生效。
+     */
+    @Slf4j
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnClass(WebClient.class)
+    static class WebClientConfiguration {
+
+        @Bean
+        @ConditionalOnMissingBean
+        public PropagatingHeadersExchangeFilterFunction propagatingHeadersExchangeFilterFunction(
+                HttpClientProperties properties) {
+            return new PropagatingHeadersExchangeFilterFunction(properties);
+        }
+
+        @Bean
+        @ConditionalOnMissingBean
+        public EagleWebClientCustomizer eagleWebClientCustomizer(
+                PropagatingHeadersExchangeFilterFunction baseFilter,
+                ObjectProvider<TenantExchangeFilterFunction> tenantFilter,
+                ObjectProvider<SeataXidExchangeFilterFunction> seataFilter) {
+            return new EagleWebClientCustomizer(
+                    List.of(baseFilter),
+                    tenantFilter.stream().toList(),
+                    seataFilter.stream().toList());
+        }
+
+        @Bean("eagleWebClientBuilder")
+        @ConditionalOnMissingBean(name = "eagleWebClientBuilder")
+        public WebClient.Builder eagleWebClientBuilder(EagleWebClientCustomizer customizer) {
+            WebClient.Builder builder = WebClient.builder();
+            customizer.customize(builder);
+            log.info("Eagle WebClient.Builder enabled");
+            return builder;
+        }
+
+        @Configuration(proxyBeanMethods = false)
+        @ConditionalOnClass(name = "com.eagle.tenant.TenantContextHolder")
+        static class ReactiveTenantConfiguration {
+
+            @Bean
+            @ConditionalOnMissingBean
+            public TenantExchangeFilterFunction tenantExchangeFilterFunction() {
+                return new TenantExchangeFilterFunction();
+            }
+        }
+
+        @Configuration(proxyBeanMethods = false)
+        @ConditionalOnClass(name = "org.apache.seata.core.context.RootContext")
+        static class ReactiveSeataConfiguration {
+
+            @Bean
+            @ConditionalOnMissingBean
+            public SeataXidExchangeFilterFunction seataXidExchangeFilterFunction() {
+                return new SeataXidExchangeFilterFunction();
+            }
         }
     }
 }

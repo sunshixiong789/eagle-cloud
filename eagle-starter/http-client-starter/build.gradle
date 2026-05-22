@@ -7,11 +7,18 @@ dependencies {
     // EagleResponseErrorHandler 用 ObjectMapper 解析下游错误响应
     compileOnly 'com.fasterxml.jackson.core:jackson-databind'
 
+    // 可选：WebClient 响应式客户端（引入 spring-boot-starter-webflux 时生效）
+    compileOnly 'org.springframework.boot:spring-boot-webclient'
+    compileOnly 'org.springframework:spring-webflux'
+
     // 可选：租户 ID 透传（eagle-tenant-starter 引入时生效）
     compileOnly project(':eagle-starter:eagle-tenant-starter')
     // 可选：Seata 分布式事务 XID 透传（seata-spring-boot-starter 引入时生效）
     compileOnly 'org.apache.seata:seata-spring-boot-starter'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webflux'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webclient'
     testImplementation 'com.fasterxml.jackson.core:jackson-databind'
+    testImplementation 'io.projectreactor:reactor-test'
 }

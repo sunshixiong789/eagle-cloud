@@ -1,0 +1,45 @@
+// 排除旧式 SAX 解析器（与 system-service 一致，避免 weixin-java-miniapp / dom4j / xstream 传递引入）。
+configurations.configureEach {
+    exclude group: 'xpp3', module: 'xpp3'
+    exclude group: 'xpp3', module: 'xpp3_min'
+    exclude group: 'xmlpull', module: 'xmlpull'
+    exclude group: 'io.github.x-stream', module: 'mxparser'
+    exclude group: 'pull-parser', module: 'pull-parser'
+}
+
+dependencies {
+    implementation project(':eagle-starter:eagle-data-jpa-starter')
+    implementation project(':eagle-starter:eagle-resource-server-starter')
+    implementation project(':eagle-starter:eagle-notification-starter')
+    implementation project(':eagle-starter:eagle-websocket-starter')
+    implementation project(':eagle-starter:eagle-rocketmq-starter')
+    implementation project(':eagle-starter:eagle-openapi-starter')
+    implementation project(':eagle-starter:http-client-starter')
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
+
+    // PostgreSQL JDBC 驱动（Flyway 暂未引入，DDL 由 JPA 自动管理；上线前补 Flyway 脚本）
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // Nacos 服务注册与发现
+    implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery'
+
+    // 微信 SDK（auth 内的 WeChat 登录适配器使用）
+    implementation "com.github.binarywang:weixin-java-miniapp"
+
+    // 阿里云号码认证 / 一键登录（PhoneOneClickServiceImpl 直接使用 Client 类，必须编译期可见）
+    implementation "com.aliyun:dypnsapi20170525"
+
+    implementation "com.github.ben-manes.caffeine:caffeine"
+    // auth 内的 LoginRateLimitFilter / TokenTrackingHandler / OnlineUserAdapter 直接用 fastjson2
+    implementation "com.alibaba.fastjson2:fastjson2"
+
+    // 本地开发：自动加载 .env 到 Spring Environment
+    runtimeOnly 'me.paulschwarz:spring-dotenv:4.0.0'
+
+    // Spring Modulith：@ApplicationModule / @Modulithic 注解（编译期可见即可）
+    compileOnly 'org.springframework.modulith:spring-modulith-core'
+    testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
+}

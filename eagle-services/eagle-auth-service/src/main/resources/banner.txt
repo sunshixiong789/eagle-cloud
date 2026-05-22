@@ -1,0 +1,13 @@
+
+${AnsiColor.BRIGHT_CYAN}
+      ███████╗ █████╗  ██████╗ ██╗     ███████╗
+      ██╔════╝██╔══██╗██╔════╝ ██║     ██╔════╝
+      █████╗  ███████║██║  ███╗██║     █████╗
+      ██╔══╝  ██╔══██║██║   ██║██║     ██╔══╝
+      ███████╗██║  ██║╚██████╔╝███████╗███████╗
+      ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝
+${AnsiColor.DEFAULT}
+${AnsiColor.BRIGHT_GREEN}::  Eagle Enterprise Platform  ::  ${AnsiColor.BRIGHT_BLACK}(v1.0.0)${AnsiColor.DEFAULT}
+${AnsiColor.BRIGHT_GREEN}::  Spring Boot               ::  ${AnsiColor.BRIGHT_BLACK}(${spring-boot.version})${AnsiColor.DEFAULT}
+${AnsiColor.BRIGHT_GREEN}::  Java                      ::  ${AnsiColor.BRIGHT_BLACK}(${java.version})${AnsiColor.DEFAULT}
+
