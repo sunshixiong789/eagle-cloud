@@ -9,6 +9,9 @@ import org.springframework.data.domain.ReactiveAuditorAware;
 import org.springframework.data.r2dbc.config.EnableR2dbcAuditing;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
+
+import java.util.Objects;
 
 /**
  * R2DBC 审计字段自动填充。
@@ -38,10 +41,10 @@ public class EagleR2dbcAuditingAutoConfiguration {
     @ConditionalOnMissingBean
     public ReactiveAuditorAware<Long> reactiveAuditorAware() {
         return () -> ReactiveSecurityContextHolder.getContext()
-                .mapNotNull(ctx -> ctx.getAuthentication())
+                .mapNotNull(SecurityContext::getAuthentication)
                 .filter(Authentication::isAuthenticated)
                 .filter(auth -> auth.getPrincipal() instanceof EagleUser)
-                .map(auth -> ((EagleUser) auth.getPrincipal()).getId())
+                .map(auth -> ((EagleUser) Objects.requireNonNull(auth.getPrincipal())).getId())
                 .defaultIfEmpty(0L)
                 .onErrorReturn(0L);
     }
