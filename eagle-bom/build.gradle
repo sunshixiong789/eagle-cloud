@@ -73,6 +73,9 @@ ext {
     // 序列化
     fastjson2Version = '2.0.61'
 
+    // Reactor / Micrometer Context Propagation
+    contextPropagationVersion = '1.2.1'
+
     // 服务发现 / 配置中心（与 docker-compose 中 nacos-server:v3.2.1 严格对齐）
     nacosClientVersion = '3.2.1'
 
@@ -124,6 +127,9 @@ dependencies {
 
         // 序列化
         add('api', "com.alibaba.fastjson2:fastjson2:${fastjson2Version}")
+
+        // Reactor / Micrometer Context Propagation（WebFlux 自动透传 MDC/ThreadLocal）
+        add('api', "io.micrometer:context-propagation:${contextPropagationVersion}")
 
         // Nacos 客户端（严格锁定到 server 同版本，覆盖 Spring Cloud Alibaba BOM 默认）
         add('api', "com.alibaba.nacos:nacos-client") { version { strictly nacosClientVersion } }

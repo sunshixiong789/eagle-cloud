@@ -2,6 +2,16 @@ dependencies {
     api project(':eagle-starter:eagle-common-starter')
     api 'org.springframework.boot:spring-boot-starter-data-r2dbc'
 
+    // 审计字段从响应式 SecurityContext 提取当前用户 → 仅编译期可见，由消费方按需引入
+    compileOnly 'org.springframework.security:spring-security-core'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
     runtimeOnly 'io.r2dbc:r2dbc-pool'
     runtimeOnly 'org.postgresql:r2dbc-postgresql'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-core'
+    testImplementation 'io.projectreactor:reactor-test'
 }

@@ -7,6 +7,7 @@ import com.eagle.idempotency.annotation.Idempotent;
 import com.eagle.idempotency.aspect.IdempotencyAspect;
 import com.eagle.idempotency.properties.IdempotencyProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.eagle.idempotency.support.ServletIdempotencyTokenResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -80,7 +81,8 @@ class IdempotencyAspectTest {
         properties.setTokenExpireSeconds(300);
         properties.setResultCacheSeconds(86400);
         objectMapper = new ObjectMapper();
-        aspect = new IdempotencyAspect(redissonClient, properties, request, objectMapper, applicationContext);
+        aspect = new IdempotencyAspect(redissonClient, properties,
+                new ServletIdempotencyTokenResolver(request), objectMapper, applicationContext);
     }
 
     // ==================== TOKEN 模式 ====================

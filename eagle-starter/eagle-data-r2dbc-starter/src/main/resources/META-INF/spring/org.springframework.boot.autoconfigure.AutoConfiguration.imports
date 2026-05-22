@@ -1,1 +1,2 @@
 com.eagle.r2dbc.config.EagleR2dbcAutoConfiguration
+com.eagle.r2dbc.config.EagleR2dbcAuditingAutoConfiguration

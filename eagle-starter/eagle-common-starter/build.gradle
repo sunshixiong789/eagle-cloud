@@ -2,6 +2,10 @@ dependencies {
     api 'org.springframework.boot:spring-boot-autoconfigure'
     api 'com.github.f4b6a3:uuid-creator'
 
+    // Context Propagation — 自动桥接 ThreadLocal/MDC 与 Reactor Context
+    // 通过 api 暴露给消费方 starter（tenant / idempotency 等）按需注册自己的 ThreadLocalAccessor
+    api 'io.micrometer:context-propagation'
+
     compileOnly 'org.springframework.security:spring-security-core'
     compileOnly 'org.springframework:spring-webmvc'
     compileOnly 'org.springframework:spring-webflux'

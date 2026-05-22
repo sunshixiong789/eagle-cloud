@@ -14,6 +14,18 @@ import reactor.core.publisher.Mono;
 /**
  * Reactive tenant ID resolver for WebFlux applications.
  *
+ * <p>把 tenantId 同时写入：
+ * <ul>
+ *   <li>{@link ServerWebExchange#getAttributes()}</li>
+ *   <li>{@link TenantContextHolder}（ThreadLocal，配合 Reactor Context 自动传播在响应式链上跨线程可见）</li>
+ *   <li>Reactor Context（业务侧也可直接 deferContextual 读）</li>
+ * </ul>
+ *
+ * <p>ThreadLocal 的跨线程透传依赖
+ * {@link com.eagle.tenant.config.TenantContextPropagationRegistrar}
+ * 注册的 {@code ThreadLocalAccessor}，以及 common-starter 在 WebFlux 启动时调用的
+ * {@code Hooks.enableAutomaticContextPropagation()}。
+ *
  * @author 孙士雄
  */
 @Slf4j
@@ -31,9 +43,15 @@ public class ReactiveTenantIdWebFilter implements WebFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String tenantId = resolveTenantId(exchange.getRequest().getHeaders());
         exchange.getAttributes().put(TENANT_ID_CONTEXT_KEY, tenantId);
+        TenantContextHolder.setTenantId(tenantId);
         log.debug("Tenant resolved: {}", tenantId);
-        return chain.filter(exchange)
-                .contextWrite(context -> context.put(TENANT_ID_CONTEXT_KEY, tenantId));
+        try {
+            return chain.filter(exchange)
+                    .contextWrite(context -> context.put(TENANT_ID_CONTEXT_KEY, tenantId));
+        } finally {
+            // 过滤器线程的 ThreadLocal 立即清理，下游线程依赖 ContextRegistry 自动传播。
+            TenantContextHolder.clear();
+        }
     }
 
     @Override

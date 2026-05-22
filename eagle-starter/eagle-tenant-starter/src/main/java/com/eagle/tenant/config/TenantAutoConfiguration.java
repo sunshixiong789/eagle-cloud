@@ -61,6 +61,17 @@ public class TenantAutoConfiguration {
     }
 
     /**
+     * 注册 Tenant ThreadLocal 与 Reactor Context 的桥接，仅 WebFlux 环境激活。
+     */
+    @Bean
+    @ConditionalOnMissingBean(TenantContextPropagationRegistrar.class)
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
+    @ConditionalOnClass(name = "io.micrometer.context.ContextRegistry")
+    public TenantContextPropagationRegistrar tenantContextPropagationRegistrar() {
+        return new TenantContextPropagationRegistrar();
+    }
+
+    /**
      * COLUMN 模式：通过 Hibernate Filter 实现共享库行级隔离。
      */
     @Bean

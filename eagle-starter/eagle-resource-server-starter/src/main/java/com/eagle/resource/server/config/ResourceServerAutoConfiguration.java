@@ -16,22 +16,24 @@ import org.springframework.security.oauth2.jwt.Jwt;
  * <p>注册以下配置：
  * <ul>
  *   <li>{@link EagleJwtAuthenticationConverter} — JWT → {@link com.eagle.common.dto.EagleUser} 认证转换</li>
- *   <li>{@link ResourceServerSecurityConfig} — 无状态 OAuth2 JWT 安全过滤链，支持可配置放行路径</li>
+ *   <li>{@link ResourceServerSecurityConfig} — Servlet 无状态 OAuth2 JWT 安全过滤链</li>
+ *   <li>{@link ReactiveResourceServerSecurityConfig} — WebFlux 无状态 OAuth2 JWT 安全过滤链</li>
  *   <li>{@link CacheConfig} — 缓存启用及 Redis 缓存 JSON 序列化配置</li>
- *   <li>{@link OpenApiConfig} — Swagger UI + OAuth2 / Bearer Token 认证集成</li>
  * </ul>
+ *
+ * <p>OpenAPI / Swagger UI 集成统一由 {@code eagle-openapi-starter} 提供，
+ * 不再在本 starter 内部装配。
  *
  * @author 孙士雄
  */
-@AutoConfiguration(beforeName = "com.eagle.openapi.config.EagleOpenApiAutoConfiguration")
+@AutoConfiguration
 @ConditionalOnClass(Jwt.class)
 @EnableConfigurationProperties(ResourceServerProperties.class)
 @Import({
         EagleJwtAuthenticationConverter.class,
         ResourceServerSecurityConfig.class,
         ReactiveResourceServerSecurityConfig.class,
-        CacheConfig.class,
-        OpenApiConfig.class
+        CacheConfig.class
 })
 public class ResourceServerAutoConfiguration {
 }

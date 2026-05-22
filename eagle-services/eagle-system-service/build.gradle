@@ -4,7 +4,7 @@
 // SAXNotRecognizedException: external-general-entities。
 // mxparser 是 xpp3 的现代分支，pull-parser:pull-parser:2 是 dom4j 2.1.3 的传递依赖，
 // 三者都使用 org.gjt.xpp.* 包名，需一并排除。
-configurations.all {
+configurations.configureEach {
     exclude group: 'xpp3', module: 'xpp3'
     exclude group: 'xpp3', module: 'xpp3_min'
     exclude group: 'xmlpull', module: 'xmlpull'

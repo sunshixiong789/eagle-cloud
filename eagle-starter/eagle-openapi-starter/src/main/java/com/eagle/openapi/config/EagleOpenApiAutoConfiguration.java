@@ -121,13 +121,22 @@ public class EagleOpenApiAutoConfiguration {
     }
 
     private SecurityScheme oauth2Scheme() {
+        // 直连调试时需要绝对 URL；通过网关聚合 Swagger 时相对路径即可。
+        String base = properties.getAuthServerUrl() == null ? "" : properties.getAuthServerUrl();
+        String authorizationUrl = base.isBlank()
+                ? SecurityConstants.AUTH_AUTHORIZE
+                : base + SecurityConstants.AUTH_AUTHORIZE;
+        String tokenUrl = base.isBlank()
+                ? SecurityConstants.AUTH_TOKEN
+                : base + SecurityConstants.AUTH_TOKEN;
+
         return new SecurityScheme()
                 .type(SecurityScheme.Type.OAUTH2)
                 .description("OAuth2 授权码流程（PKCE），适用于用户名密码登录")
                 .flows(new OAuthFlows()
                         .authorizationCode(new OAuthFlow()
-                                .authorizationUrl(SecurityConstants.AUTH_AUTHORIZE)
-                                .tokenUrl(SecurityConstants.AUTH_TOKEN)
+                                .authorizationUrl(authorizationUrl)
+                                .tokenUrl(tokenUrl)
                                 .scopes(new Scopes()
                                         .addString("openid", "OpenID 身份标识")
                                         .addString("profile", "用户基本信息"))));

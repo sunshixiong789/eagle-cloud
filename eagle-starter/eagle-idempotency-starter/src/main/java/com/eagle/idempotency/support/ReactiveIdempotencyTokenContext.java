@@ -4,7 +4,14 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Temporary request header context used during WebFlux handler invocation.
+ * WebFlux 环境下的幂等 Token 请求头容器。
+ *
+ * <p>由 {@link com.eagle.idempotency.filter.ReactiveIdempotencyTokenWebFilter} 在请求入口写入，
+ * 由 {@link com.eagle.idempotency.support.ReactiveIdempotencyTokenResolver} 在 AOP 切面同步读取。
+ *
+ * <p>ThreadLocal 在 Reactor 链上跨线程的可见性由 {@code IdempotencyContextPropagationRegistrar}
+ * 注册到 {@code io.micrometer.context.ContextRegistry} 的 {@code ThreadLocalAccessor} +
+ * {@code Hooks.enableAutomaticContextPropagation()} 共同保证。
  *
  * @author 孙士雄
  */
@@ -29,6 +36,21 @@ public final class ReactiveIdempotencyTokenContext {
     public static String get(String headerName) {
         String value = CURRENT_HEADERS.get().get(headerName);
         return value != null ? value : CURRENT_HEADERS.get().get(headerName.toLowerCase());
+    }
+
+    /**
+     * 内部接口：供 ThreadLocalAccessor 读出 / 写入完整 header map（实现快照与恢复）。
+     */
+    public static Map<String, String> snapshot() {
+        return CURRENT_HEADERS.get();
+    }
+
+    public static void restore(Map<String, String> headers) {
+        if (headers == null || headers.isEmpty()) {
+            clear();
+            return;
+        }
+        CURRENT_HEADERS.set(new ConcurrentHashMap<>(headers));
     }
 
     public static void clear() {

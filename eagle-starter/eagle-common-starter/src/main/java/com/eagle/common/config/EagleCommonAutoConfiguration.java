@@ -4,9 +4,11 @@ import com.eagle.common.handler.GlobalExceptionHandler;
 import com.eagle.common.handler.ReactiveGlobalExceptionHandler;
 import com.eagle.common.i18n.MessageSourceUtil;
 import com.eagle.common.metrics.BusinessMetrics;
+import com.eagle.common.observability.ContextPropagationConfig;
 import com.eagle.common.observability.RequestIdMdcFilter;
 import com.eagle.common.observability.RequestIdWebFilter;
 import com.eagle.common.pressuretest.PressureTestFilter;
+import com.eagle.common.pressuretest.ReactivePressureTestWebFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
@@ -92,11 +94,12 @@ public class EagleCommonAutoConfiguration implements InitializingBean {
     /**
      * Reactive（WebFlux）环境专用配置。
      *
-     * <p>只在应用选择 WebFlux 时注册响应式 RequestId WebFilter 与统一异常处理器。
+     * <p>注册响应式 RequestId / 压测 WebFilter、统一异常处理器，以及 Reactor Context 自动传播。
      */
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
     @ConditionalOnClass(DispatcherHandler.class)
+    @Import(ContextPropagationConfig.class)
     static class WebFluxConfiguration {
 
         /**
@@ -106,6 +109,16 @@ public class EagleCommonAutoConfiguration implements InitializingBean {
         @ConditionalOnMissingBean(RequestIdWebFilter.class)
         public WebFilter requestIdWebFilter() {
             return new RequestIdWebFilter();
+        }
+
+        /**
+         * 全链路压测流量识别过滤器（WebFlux）。
+         * 与 servlet 端 {@link PressureTestFilter} 行为对齐，保证压测标记跨 WebFlux 节点不断。
+         */
+        @Bean
+        @ConditionalOnMissingBean(ReactivePressureTestWebFilter.class)
+        public WebFilter reactivePressureTestWebFilter() {
+            return new ReactivePressureTestWebFilter();
         }
 
         /**

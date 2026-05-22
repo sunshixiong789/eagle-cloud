@@ -28,7 +28,10 @@ public class OpenApiProperties {
     private String description;
 
     /**
-     * OAuth2 授权服务器地址（用于文档中的 authorizeUrl/tokenUrl）
+     * OAuth2 授权服务器地址，用于 Swagger UI OAuth2 授权码流程显示绝对 URL。
+     *
+     * <p>留空时使用相对路径（适合通过网关聚合 Swagger 的场景）；
+     * 直连调试场景下建议填写具体地址，如 {@code http://localhost:8080}。
      */
-    private String authServerUrl = "http://localhost:80";
+    private String authServerUrl = "";
 }

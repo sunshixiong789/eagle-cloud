@@ -5,6 +5,7 @@ dependencies {
     compileOnly 'org.springframework:spring-webmvc'
     compileOnly 'org.springframework:spring-webflux'
     compileOnly 'org.springframework.data:spring-data-jpa'
+    compileOnly 'org.hibernate.orm:hibernate-core'
     compileOnly 'jakarta.persistence:jakarta.persistence-api'
     compileOnly 'jakarta.servlet:jakarta.servlet-api'
 
