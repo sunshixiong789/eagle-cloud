@@ -108,6 +108,14 @@ spring:
 # Eagle 业务配置
 # ===========================================
 eagle:
+  # ----- Resource Server -----
+  # /internal/** 是跨服务内部 API(目前仅 /internal/authorization/{accountId} 供 auth-service
+  # 在 OAuth2 登录流程中调用,此时尚无用户 JWT 可透传),必须放行。
+  # 【生产强约束】网关层必须用 IP 白名单 / mTLS / 客户端凭证(client-credentials scope)二次
+  # 保护 /internal/**,本服务侧仅 permitAll 不足以构成访问控制。
+  resource-server:
+    permit-paths:
+      - /internal/**
   # ----- RocketMQ -----
   # 既消费站内消息,也消费 auth-service 的集成事件(eagle.auth.events)
   # 默认 enabled;dev profile 可显式关闭以跳过 Consumer 注册(本地无 broker 时)

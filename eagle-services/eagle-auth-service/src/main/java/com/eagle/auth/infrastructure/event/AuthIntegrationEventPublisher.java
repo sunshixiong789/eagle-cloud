@@ -32,6 +32,11 @@ import org.springframework.transaction.event.TransactionalEventListener;
  *
  * <p>所有发布在 {@code AFTER_COMMIT} 阶段触发并 {@code @Async}，主事务无任何同步阻塞。
  *
+ * <p><strong>Topic 命名约定</strong>:本 topic 故意<em>不</em>拼 {@code eagle.rocketmq.topic-env-prefix},
+ * 走字面 {@code eagle.auth.events}(语义版本已通过命名空间区分,跨环境通过 Nacos namespace 隔离)。
+ * 消费侧 {@code AccountRegisteredConsumer} / {@code AccountDeletedConsumer} 必须严格一致,
+ * 不要在 {@code getTopic()} 里拼 prefix。
+ *
  * @author sunshixiong
  */
 @Slf4j

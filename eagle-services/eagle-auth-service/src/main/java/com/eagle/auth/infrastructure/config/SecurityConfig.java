@@ -114,6 +114,16 @@ public class SecurityConfig {
             "/swagger-resources/**", "/webjars/**",
             "/actuator/health"
     };
+    /**
+     * 跨服务内部 API 路径(/internal/online-users、/internal/account-blacklist 等),
+     * 供 system-service 通过服务发现直接调用,调用方无用户 JWT 可透传。
+     *
+     * <p>【生产强约束】本服务侧仅 permitAll 不足以构成访问控制,网关层必须用
+     * IP 白名单 / mTLS / 客户端凭证(client-credentials scope)二次保护 /internal/**。
+     */
+    private static final String[] INTERNAL_PATHS = {
+            "/internal/**"
+    };
     private final LoginRateLimitFilter loginRateLimitFilter;
     private final JwtKeyProperties jwtKeyProperties;
 
@@ -252,6 +262,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(FORM_LOGIN_PATHS).permitAll()
                         .requestMatchers(BUSINESS_PUBLIC_PATHS).permitAll()
+                        .requestMatchers(INTERNAL_PATHS).permitAll()
                         // SockJS 探针 (/ws-stomp/info) 是普通 HTTP GET，浏览器 XHR 无法注入自定义 header，
                         // 必须放行 HTTP 层鉴权；连接鉴权由 STOMP CONNECT 帧的 ChannelInterceptor 负责。
                         .requestMatchers("/ws-stomp/**").permitAll()

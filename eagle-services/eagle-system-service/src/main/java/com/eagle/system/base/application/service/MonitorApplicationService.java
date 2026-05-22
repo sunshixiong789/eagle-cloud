@@ -68,7 +68,13 @@ public class MonitorApplicationService {
     }
 
     public OnlineUserListResponse listOnlineUsers() {
-        List<OnlineUserSnapshot> infos = authOnlineUserClient.listOnlineUsers();
+        List<OnlineUserSnapshot> infos;
+        try {
+            infos = authOnlineUserClient.listOnlineUsers();
+        } catch (RuntimeException ex) {
+            log.warn("查询在线用户列表失败,降级为空列表: reason={}", ex.getMessage());
+            return new OnlineUserListResponse(0, List.of());
+        }
         List<OnlineUserResponse> responses = infos.stream()
                 .map(info -> OnlineUserResponse.builder()
                         .tokenId(info.tokenId())

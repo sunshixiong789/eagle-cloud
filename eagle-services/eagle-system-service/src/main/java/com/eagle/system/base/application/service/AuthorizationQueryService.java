@@ -17,10 +17,9 @@ import java.util.stream.Collectors;
 /**
  * 授权信息查询服务:为 auth-service 远程调用提供用户姓名与角色码。
  * <p>
- * 拆分前由 base/infrastructure/adapter/AuthorizationAdapter 直接实现
- * {@code com.eagle.system.auth.domain.port.AuthorizationPort}(进程内 bean);
- * 拆分后由 {@code AuthorizationInternalController} 暴露为 HTTP 端点,
- * auth-service 通过 RestClient 调用。
+ * 由 {@code AuthorizationInternalController} 暴露为 HTTP 端点
+ * {@code GET /internal/authorization/{accountId}},auth-service 在 OAuth2 登录流程中
+ * 通过 RestClient 调用,把姓名 + 角色码注入到 JWT claims。
  */
 @Service
 @RequiredArgsConstructor

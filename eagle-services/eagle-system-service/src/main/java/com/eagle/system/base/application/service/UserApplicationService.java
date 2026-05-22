@@ -21,6 +21,7 @@ import com.eagle.system.base.infrastructure.remote.AuthOnlineUserClient;
 import com.eagle.system.base.infrastructure.remote.dto.AccountBlacklistSnapshot;
 import com.eagle.system.base.interfaces.dto.response.UserResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,6 +44,7 @@ import java.util.Set;
  *
  * @author sunshixiong
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserApplicationService {
@@ -146,12 +148,29 @@ public class UserApplicationService {
                         user.getUsername(), LogType.LOGIN, LogStatus.SUCCESS)
                 .orElse(null));
 
-        boolean online = user.getAccountId() != null
-                && !authOnlineUserClient.listJtisByAccount(user.getAccountId()).isEmpty();
+        boolean online = isOnline(user.getAccountId());
         response.setOnline(online);
         response.setLoginStatus(online ? "ONLINE" : "OFFLINE");
         enrichBlacklistStatus(user, response);
         return response;
+    }
+
+    /**
+     * 查询账号在线状态。
+     * <p>跨服务调用失败(auth-service 不可达 / 超时 / 5xx)时降级为 OFFLINE,
+     * 不阻塞用户列表查询主流程。
+     */
+    private boolean isOnline(Long accountId) {
+        if (accountId == null) {
+            return false;
+        }
+        try {
+            return !authOnlineUserClient.listJtisByAccount(accountId).isEmpty();
+        } catch (RuntimeException ex) {
+            log.warn("查询在线状态失败,降级为 OFFLINE: accountId={}, reason={}",
+                    accountId, ex.getMessage());
+            return false;
+        }
     }
 
     private void enrichBlacklistStatus(User user, UserResponse response) {
@@ -160,8 +179,14 @@ public class UserApplicationService {
         if (user.getAccountId() == null) {
             return;
         }
-        ResponseEntity<AccountBlacklistSnapshot> resp =
-                authAccountBlacklistClient.findByAccountId(user.getAccountId());
+        ResponseEntity<AccountBlacklistSnapshot> resp;
+        try {
+            resp = authAccountBlacklistClient.findByAccountId(user.getAccountId());
+        } catch (RuntimeException ex) {
+            log.warn("查询黑名单状态失败,降级为非黑名单: accountId={}, reason={}",
+                    user.getAccountId(), ex.getMessage());
+            return;
+        }
         AccountBlacklistSnapshot info = resp.getBody();
         if (resp.getStatusCode().is2xxSuccessful() && info != null) {
             response.setBlacklisted(true);

@@ -13,18 +13,23 @@ import org.springframework.modulith.Modulithic;
 import java.util.Optional;
 
 /**
- * Eagle 应用主入口
+ * Eagle System Service 主入口。
  * <p>
- * 模块划分（Spring Modulith 有界上下文）：
+ * 模块划分(Spring Modulith 有界上下文):
  * <ul>
- *   <li>{@code auth}   — 认证授权域，负责用户登录、OAuth2、微信/短信认证</li>
- *   <li>{@code system} — 系统管理域，负责用户、角色、权限、部门、菜单管理</li>
- *   <li>{@code config} — 全局配置，跨域基础设施（Security、Cache、i18n 等）</li>
- *   <li>{@code common} — 共享内核（Shared Kernel），所有模块可无限制访问</li>
+ *   <li>{@code base}    — 系统管理域,用户、角色、权限、部门、菜单、岗位、字典、系统日志</li>
+ *   <li>{@code message} — 站内消息中心(平台级横切,不依赖业务模块)</li>
+ *   <li>{@code file}    — 文件管理(元数据 + OSS 集成)</li>
  * </ul>
  * <p>
- * 模块约束声明见各模块的 {@code package-info.java}（使用 {@code @ApplicationModule}）。
- * <pre>gradle test --tests "com.eagle.ModulithArchitectureTest"</pre>
+ * 与 auth-service 通过两种方式集成:
+ * <ul>
+ *   <li>RocketMQ topic {@code eagle.auth.events} 异步消费集成事件</li>
+ *   <li>RestClient 同步调用 {@code /internal/**} 内部 API</li>
+ * </ul>
+ * <p>
+ * 模块约束声明见各模块的 {@code package-info.java}({@code @ApplicationModule})。
+ * <pre>gradle :eagle-services:eagle-system-service:test --tests "*.ModulithArchitectureTest"</pre>
  *
  * @author sunshixiong
  */

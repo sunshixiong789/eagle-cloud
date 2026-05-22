@@ -13,6 +13,9 @@ import org.springframework.stereotype.Component;
  * <p>
  * topic {@code eagle.auth.events},tag {@code account.deleted}。
  * 幂等:{@code UserRepository.findByAccountId(...)} 找不到即跳过。
+ * <p>
+ * <strong>Topic 命名约定</strong>:与 auth-service 端 {@code AuthIntegrationEventPublisher.TOPIC}
+ * 严格一致,故意<em>不</em>拼 {@code eagle.rocketmq.topic-env-prefix}。
  */
 @Slf4j
 @Component
