@@ -69,7 +69,8 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 | `eagle-data-jpa-starter`           | JPA/Hibernate 配置、审计、MySQL/PostgreSQL/H2 支持                                                     |
 | `eagle-redis-starter`              | Redisson + Caffeine 多级缓存 + CacheProtectionUtil（穿透/击穿防护）                                        |
 | `eagle-resource-server-starter`    | OAuth2 资源服务器 JWT 验证                                                                            |
-| `http-client-starter`              | RestClient / HTTP Service 客户端配置（含 Seata XID 透传）                                                |
+| `eagle-restclient-starter`         | 同步阻塞 RestClient + `@HttpExchange`（servlet 服务用，含 JWT / 租户 / Seata XID 透传）                       |
+| `eagle-webclient-starter`          | 反应式 WebClient + `@HttpExchange`（WebFlux 服务用，同套透传 + 统一错误处理）                                  |
 | `eagle-tracing-starter`            | 分布式链路追踪（Brave/Zipkin）                                                                          |
 | `eagle-rocketmq-starter`           | RocketMQ v5 消息队列（事务消息、DLQ、AbstractRocketMqListener）                                            |
 | `eagle-row-security-starter`       | 行级数据权限控制（@DataPermission，AspectJ + JPA Specification）                                          |

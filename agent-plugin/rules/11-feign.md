@@ -23,7 +23,7 @@ public interface InventoryClient {
 class RemoteClientConfiguration {
 
     @Bean
-    InventoryClient inventoryClient(EagleHttpServiceClientFactory factory) {
+    InventoryClient inventoryClient(EagleRestServiceClientFactory factory) {
         return factory.createLoadBalancedClient(InventoryClient.class, "eagle-inventory-service");
     }
 }
@@ -31,7 +31,7 @@ class RemoteClientConfiguration {
 
 ## 错误处理
 
-`http-client-starter` 内置 `EagleResponseErrorHandler`，自动将下游 HTTP 错误转换为项目异常体系：
+`eagle-restclient-starter` 内置 `EagleResponseErrorHandler`，自动将下游 HTTP 错误转换为项目异常体系：
 
 | 下游状态码                | 转换结果                |
 |----------------------|---------------------|
@@ -44,7 +44,7 @@ class RemoteClientConfiguration {
 
 ## 透传机制
 
-`http-client-starter` 自动为 `RestClient.Builder` 注册以下拦截器：
+`eagle-restclient-starter` 自动为 `RestClient.Builder` 注册以下拦截器：
 
 - `PropagatingHeadersClientHttpRequestInterceptor`：透传 `Authorization`、`Accept-Language`、请求 ID、压测标记。
 - `TenantClientHttpRequestInterceptor`：透传 `X-Tenant-Id`，仅在 `eagle-tenant-starter` 存在时生效。

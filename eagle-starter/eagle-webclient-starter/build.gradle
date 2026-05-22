@@ -1,0 +1,21 @@
+dependencies {
+    api project(':eagle-starter:eagle-common-starter')
+    // WebClient 客户端能力：spring-webflux 提供 WebClient API、ServerWebExchange、
+    // ExchangeFilterFunction、ServerWebExchangeContextFilter
+    api 'org.springframework:spring-webflux'
+    api 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
+
+    // 反应式 HTTP 通信默认 connector；消费方可替换为其他 reactive HttpClient
+    api 'io.projectreactor.netty:reactor-netty-http'
+
+    // EagleWebClientErrorFilter 解析下游错误响应
+    compileOnly 'com.fasterxml.jackson.core:jackson-databind'
+
+    // 可选：租户 ID 透传（eagle-tenant-starter 引入时生效）
+    compileOnly project(':eagle-starter:eagle-tenant-starter')
+    // 可选：Seata 分布式事务 XID 透传（seata-spring-boot-starter 引入时生效）
+    compileOnly 'org.apache.seata:seata-spring-boot-starter'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind'
+}

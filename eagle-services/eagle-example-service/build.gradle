@@ -27,7 +27,8 @@ dependencies {
     // ======================= 消息与通信 =======================
     implementation project(':eagle-starter:eagle-rocketmq-starter')
     implementation project(':eagle-starter:eagle-websocket-starter')
-    implementation project(':eagle-starter:http-client-starter')
+    implementation project(':eagle-starter:eagle-restclient-starter')
+    implementation project(':eagle-starter:eagle-webclient-starter')
 
     // ======================= 分布式能力 =======================
     implementation project(':eagle-starter:eagle-seata-starter')

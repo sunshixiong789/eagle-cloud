@@ -1,6 +1,6 @@
 package com.eagle.example.integration.httpclient;
 
-import com.eagle.http.client.support.EagleHttpServiceClientFactory;
+import com.eagle.http.client.support.EagleRestServiceClientFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,9 +13,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class HttpClientVerificationService {
 
-    private final EagleHttpServiceClientFactory clientFactory;
+    private final EagleRestServiceClientFactory clientFactory;
 
-    public EagleHttpServiceClientFactory getFactory() {
+    public EagleRestServiceClientFactory getFactory() {
         log.info("[HttpClient] Factory type: {}", clientFactory.getClass().getName());
         return clientFactory;
     }
