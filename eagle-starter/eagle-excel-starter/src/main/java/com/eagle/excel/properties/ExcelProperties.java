@@ -23,11 +23,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ExcelProperties {
 
     /**
-     * 是否启用 Excel 功能。
-     */
-    private boolean enabled = true;
-
-    /**
      * 单次导入最大行数（不含表头），超过此值抛出异常防止内存溢出。
      */
     private int maxRows = 100_000;

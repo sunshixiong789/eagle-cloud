@@ -61,11 +61,6 @@ import java.util.List;
 public class AiProperties {
 
     /**
-     * 是否启用 Eagle AI 自动配置（默认开启）。
-     */
-    private boolean enabled = true;
-
-    /**
      * 对话（Chat）配置。
      */
     @Valid

@@ -13,7 +13,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <pre>
  * eagle:
  *   sharding:
- *     enabled: true
  *     config-file: classpath:sharding.yaml
  * </pre>
  *
@@ -64,12 +63,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Data
 @ConfigurationProperties(prefix = "eagle.sharding")
 public class ShardingProperties {
-
-    /**
-     * 是否启用分库分表。
-     * 默认 false，需显式配置 {@code eagle.sharding.enabled=true} 才会替换默认 DataSource。
-     */
-    private boolean enabled = false;
 
     /**
      * ShardingSphere YAML 配置文件路径。

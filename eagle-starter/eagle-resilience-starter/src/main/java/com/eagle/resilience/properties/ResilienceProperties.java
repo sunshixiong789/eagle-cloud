@@ -42,10 +42,6 @@ public class ResilienceProperties {
     private final CircuitBreakerConfig circuitBreaker = new CircuitBreakerConfig();
     private final RetryConfig retry = new RetryConfig();
     private final TimeLimiterConfig timeLimiter = new TimeLimiterConfig();
-    /**
-     * 是否启用容错配置。
-     */
-    private boolean enabled = true;
 
     @Data
     public static class CircuitBreakerConfig {

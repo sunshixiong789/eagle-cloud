@@ -20,11 +20,6 @@ import java.util.List;
 public class DynamicDataSourceProperties {
 
     /**
-     * 是否启用动态数据源。
-     */
-    private boolean enabled = false;
-
-    /**
      * 主库（写库）配置。
      */
     private SingleDataSource master = new SingleDataSource();

@@ -13,11 +13,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class DataPermissionProperties {
 
     /**
-     * 是否启用数据权限。
-     */
-    private boolean enabled = true;
-
-    /**
      * 默认部门字段名。
      */
     private String defaultDeptField = "deptId";

@@ -20,8 +20,6 @@ class AiPropertiesTest {
     void shouldHaveSensibleDefaults() {
         AiProperties props = new AiProperties();
 
-        assertTrue(props.isEnabled());
-
         AiProperties.Chat chat = props.getChat();
         assertEquals(10, chat.getMemoryWindowSize());
         assertNull(chat.getSystemPrompt());

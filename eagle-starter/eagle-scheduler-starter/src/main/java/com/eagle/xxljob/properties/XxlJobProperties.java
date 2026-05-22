@@ -13,11 +13,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class XxlJobProperties {
 
     /**
-     * 是否启用 XXL-Job 执行器。
-     */
-    private boolean enabled = true;
-
-    /**
      * 调度中心地址，多个用逗号分隔。
      */
     private String adminAddresses = "http://localhost:8080/xxl-job-admin";

@@ -15,8 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  * private String mobile;
  * </pre>
  *
- * <p>未启用加密（{@code eagle.encrypt.enabled=false}）时，
- * {@link EncryptionService} 不注册，此转换器原样返回字符串（透明模式）。
+ * <p>未配置 {@code eagle.encrypt.secret-key} 时，{@link EncryptionService} 不注册，
+ * 此转换器原样返回字符串（透明模式）。
  *
  * @author eagle
  */

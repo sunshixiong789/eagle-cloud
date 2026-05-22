@@ -27,8 +27,8 @@ import java.util.stream.Collectors;
 /**
  * 动态数据源自动配置。
  *
- * <p>当 {@code eagle.datasource.enabled=true} 时生效，注册主从路由数据源、只读切面、
- * 以及 Async 上下文传播装饰器。
+ * <p>当配置了 {@code eagle.datasource.master.url} 时生效，注册主从路由数据源、只读切面、
+ * 以及 Async 上下文传播装饰器；未配 master URL 时本配置类不装配，避免与单数据源场景冲突。
  *
  * @author 孙士雄
  */
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 @AutoConfiguration(beforeName = "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration")
 @ConditionalOnClass(AbstractRoutingDataSource.class)
 @EnableConfigurationProperties(DynamicDataSourceProperties.class)
-@ConditionalOnProperty(name = "eagle.datasource.enabled", havingValue = "true")
+@ConditionalOnProperty(name = "eagle.datasource.master.url")
 @RequiredArgsConstructor
 public class DynamicDataSourceConfig {
 

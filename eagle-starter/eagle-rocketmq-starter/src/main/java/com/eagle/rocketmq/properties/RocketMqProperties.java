@@ -13,11 +13,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class RocketMqProperties {
 
     /**
-     * 是否启用 RocketMQ。
-     */
-    private boolean enabled = true;
-
-    /**
      * 接入点地址，如 {@code localhost:8081}。
      */
     private String endpoints = "localhost:8081";

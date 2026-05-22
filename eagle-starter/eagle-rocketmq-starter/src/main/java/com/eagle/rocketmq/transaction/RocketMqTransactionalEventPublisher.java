@@ -54,10 +54,6 @@ public class RocketMqTransactionalEventPublisher implements TransactionalEventPu
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        if (!properties.isEnabled()) {
-            log.info("RocketMQ is disabled, transaction producer will not be initialized");
-            return;
-        }
         try {
             provider = ClientServiceProvider.loadService();
             ClientConfiguration configuration = ClientConfiguration.newBuilder()
@@ -94,7 +90,7 @@ public class RocketMqTransactionalEventPublisher implements TransactionalEventPu
 
     @Override
     public <T extends BaseEvent> void publishInTransaction(String topic, T event, TransactionCallback callback) {
-        if (!properties.isEnabled() || transactionProducer == null) {
+        if (transactionProducer == null) {
             log.warn("RocketMQ transaction producer is not ready, event dropped: topic={}", topic);
             return;
         }

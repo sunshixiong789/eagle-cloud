@@ -36,10 +36,6 @@ public class RocketMqDomainEventPublisher implements DomainEventPublisher, Initi
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        if (!properties.isEnabled()) {
-            log.info("RocketMQ is disabled, producer will not be initialized");
-            return;
-        }
         try {
             provider = ClientServiceProvider.loadService();
             ClientConfiguration configuration = ClientConfiguration.newBuilder()
@@ -159,7 +155,7 @@ public class RocketMqDomainEventPublisher implements DomainEventPublisher, Initi
     }
 
     private boolean isReady() {
-        return properties.isEnabled() && producer != null;
+        return producer != null;
     }
 
     /**

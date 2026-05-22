@@ -20,7 +20,7 @@ import java.util.Map;
  * <ul>
  *   <li>{@code eagle.seata.application-id} → {@code seata.application-id}</li>
  *   <li>{@code eagle.seata.tx-service-group} → {@code seata.tx-service-group}</li>
- *   <li>{@code eagle.seata.enabled} → {@code seata.enabled}</li>
+ *   <li>{@code seata.enabled} 默认置为 {@code true}（starter 引入即启用）</li>
  * </ul>
  *
  * <p>同步属性优先级低于用户直接配置的 {@code seata.*}（使用 {@code addLast} 插入），
@@ -49,7 +49,6 @@ public class SeataEnvironmentPostProcessor implements ApplicationListener<Applic
 
         String appId = environment.getProperty("eagle.seata.application-id");
         String txGroup = environment.getProperty("eagle.seata.tx-service-group", "eagle_tx_group");
-        String enabled = environment.getProperty("eagle.seata.enabled", "true");
 
         MutablePropertySources sources = environment.getPropertySources();
 
@@ -63,7 +62,8 @@ public class SeataEnvironmentPostProcessor implements ApplicationListener<Applic
             props.put("seata.application-id", appId);
         }
         props.put("seata.tx-service-group", txGroup);
-        props.put("seata.enabled", enabled);
+        // starter 引入即启用，使用方需关闭可显式覆盖 seata.enabled=false
+        props.put("seata.enabled", "true");
 
         // addLast 保证优先级低于用户直接配置的 seata.* 属性
         sources.addLast(new MapPropertySource(PROPERTY_SOURCE_NAME, props));

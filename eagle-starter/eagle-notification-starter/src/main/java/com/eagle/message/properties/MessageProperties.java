@@ -16,11 +16,6 @@ import java.util.Map;
 public class MessageProperties {
 
     /**
-     * 是否启用消息通知。
-     */
-    private boolean enabled = true;
-
-    /**
      * 短信配置。
      */
     private Sms sms = new Sms();

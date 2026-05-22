@@ -28,7 +28,6 @@ import org.springframework.web.server.WebFilter;
 @Slf4j
 @AutoConfiguration
 @EnableConfigurationProperties(TenantProperties.class)
-@ConditionalOnProperty(prefix = "eagle.tenant", name = "enabled", havingValue = "true")
 public class TenantAutoConfiguration {
 
     /**

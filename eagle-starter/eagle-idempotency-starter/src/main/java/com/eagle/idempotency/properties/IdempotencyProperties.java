@@ -23,11 +23,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class IdempotencyProperties {
 
     /**
-     * 是否启用幂等性组件，默认启用。
-     */
-    private boolean enabled = true;
-
-    /**
      * 幂等 Token 有效期（秒），默认 300 秒（5 分钟）。
      * <p>TOKEN 模式下，客户端预先申请 token 后须在此时间内使用，过期则 token 失效。
      */

@@ -4,7 +4,7 @@ import com.eagle.xxljob.properties.XxlJobProperties;
 import com.xxl.job.core.executor.impl.XxlJobSpringExecutor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
@@ -15,8 +15,8 @@ import org.springframework.context.annotation.Bean;
  */
 @Slf4j
 @AutoConfiguration
+@ConditionalOnClass(XxlJobSpringExecutor.class)
 @EnableConfigurationProperties(XxlJobProperties.class)
-@ConditionalOnProperty(prefix = "eagle.xxl-job", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class XxlJobAutoConfiguration {
 
     @Bean

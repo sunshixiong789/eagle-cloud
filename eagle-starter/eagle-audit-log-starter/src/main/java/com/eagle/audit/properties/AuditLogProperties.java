@@ -10,7 +10,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <pre>
  * eagle:
  *   audit-log:
- *     enabled: true
  *     max-args-length: 2000
  *     max-result-length: 2000
  * </pre>
@@ -20,11 +19,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Data
 @ConfigurationProperties(prefix = "eagle.audit-log")
 public class AuditLogProperties {
-
-    /**
-     * 是否启用审计日志。
-     */
-    private boolean enabled = true;
 
     /**
      * 请求参数序列化后的最大字符数，超出截断。

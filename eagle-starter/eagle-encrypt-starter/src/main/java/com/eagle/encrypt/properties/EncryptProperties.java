@@ -16,7 +16,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <pre>
  * eagle:
  *   encrypt:
- *     enabled: true
  *     secret-key: ${EAGLE_ENCRYPT_SECRET_KEY}
  * </pre>
  *
@@ -27,16 +26,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * private String mobile;
  * </pre>
  *
+ * <p>未配置 {@code secret-key} 时转换器以透明模式（不加密）运行。
+ *
  * @author eagle
  */
 @Data
 @ConfigurationProperties(prefix = "eagle.encrypt")
 public class EncryptProperties {
-
-    /**
-     * 是否启用字段级加密。默认 false，需显式启用。
-     */
-    private boolean enabled = false;
 
     /**
      * AES-256 加密密钥，通过 SHA-256 哈希后得到 32 字节密钥。

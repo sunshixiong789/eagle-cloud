@@ -5,7 +5,7 @@ import org.apache.shardingsphere.driver.api.yaml.YamlShardingSphereDataSourceFac
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnResource;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -26,7 +26,8 @@ import java.sql.SQLException;
  * <p>生效条件：
  * <ol>
  *   <li>{@code shardingsphere-jdbc} 在类路径中</li>
- *   <li>显式配置 {@code eagle.sharding.enabled=true}</li>
+ *   <li>对应 YAML 配置文件存在（默认 {@code classpath:sharding.yaml}，
+ *       通过 {@code eagle.sharding.config-file} 自定义）</li>
  *   <li>未存在用户自定义 {@link DataSource} Bean（允许覆盖）</li>
  * </ol>
  *
@@ -37,7 +38,7 @@ import java.sql.SQLException;
  */
 @AutoConfiguration
 @ConditionalOnClass(YamlShardingSphereDataSourceFactory.class)
-@ConditionalOnProperty(name = "eagle.sharding.enabled", havingValue = "true")
+@ConditionalOnResource(resources = "${eagle.sharding.config-file:classpath:sharding.yaml}")
 @EnableConfigurationProperties(ShardingProperties.class)
 public class EagleShardingAutoConfiguration {
 

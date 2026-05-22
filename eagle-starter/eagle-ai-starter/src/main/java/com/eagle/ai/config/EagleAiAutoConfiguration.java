@@ -81,7 +81,6 @@ import org.springframework.util.StringUtils;
 @AutoConfiguration
 @ConditionalOnClass({ChatModel.class, ChatClient.class})
 @EnableConfigurationProperties(AiProperties.class)
-@ConditionalOnProperty(name = "eagle.ai.enabled", havingValue = "true", matchIfMissing = true)
 public class EagleAiAutoConfiguration {
 
     /**

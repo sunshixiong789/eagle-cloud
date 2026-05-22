@@ -27,11 +27,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SeataProperties {
 
     /**
-     * 是否启用 Seata 分布式事务。
-     */
-    private boolean enabled = true;
-
-    /**
      * 应用名称，通常与 {@code spring.application.name} 保持一致。
      * 用于在 Seata Server 中标识当前服务。
      */

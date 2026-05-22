@@ -39,7 +39,6 @@ import zipkin2.reporter.okhttp3.OkHttpSender;
 )
 @ConditionalOnClass(Tracer.class)
 @EnableConfigurationProperties(TracingProperties.class)
-@ConditionalOnProperty(name = "eagle.tracing.enabled", havingValue = "true", matchIfMissing = true)
 public class TracingAutoConfiguration {
 
     /**

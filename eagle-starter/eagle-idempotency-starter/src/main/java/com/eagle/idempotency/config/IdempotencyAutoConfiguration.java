@@ -13,7 +13,6 @@ import org.redisson.api.RedissonClient;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
@@ -25,8 +24,7 @@ import org.springframework.web.server.WebFilter;
 /**
  * 幂等性组件自动配置。
  *
- * <p>依赖 {@link RedissonClient} 在类路径存在时激活，可通过 {@code eagle.idempotency.enabled=false} 关闭。
- * 注册以下 Bean：
+ * <p>依赖 {@link RedissonClient} 在类路径存在时激活。注册以下 Bean：
  * <ul>
  *   <li>{@link IdempotencyAspect} — AOP 切面，拦截 {@code @Idempotent} 方法</li>
  *   <li>{@link IdempotencyTokenController} — REST 接口，提供 Token 生成能力</li>
@@ -38,7 +36,6 @@ import org.springframework.web.server.WebFilter;
 @AutoConfiguration
 @ConditionalOnClass(RedissonClient.class)
 @EnableConfigurationProperties(IdempotencyProperties.class)
-@ConditionalOnProperty(name = "eagle.idempotency.enabled", havingValue = "true", matchIfMissing = true)
 public class IdempotencyAutoConfiguration {
 
     /**

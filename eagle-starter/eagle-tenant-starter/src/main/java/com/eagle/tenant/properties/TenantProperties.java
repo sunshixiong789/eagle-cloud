@@ -13,11 +13,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class TenantProperties {
 
     /**
-     * 是否启用多租户。
-     */
-    private boolean enabled = false;
-
-    /**
      * 隔离模式：column（共享库分字段）/ database（独立数据库）。
      */
     private TenantMode mode = TenantMode.COLUMN;

@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 而非 {@code set("master")}，防止线程池 ThreadLocal 泄漏）。
  *
  * <p>此 Bean 由 {@link com.eagle.datasource.config.DynamicDataSourceConfig} 显式注册，
- * 仅在 {@code eagle.datasource.enabled=true} 时生效，不会污染单数据源场景。
+ * 仅在配置了 {@code eagle.datasource.master.url} 时生效，不会污染单数据源场景。
  *
  * <p><b>注意</b>：{@code @Transactional(readOnly = true)} 的类级注解不会被 {@code @annotation}
  * 切点匹配到，此类场景需在方法上显式添加 {@link ReadOnly}。

@@ -30,14 +30,12 @@ import org.springframework.context.annotation.Primary;
  *   <li>{@link OrderNoGenerator} / {@link IdGeneratorFacade} — 业务门面（可关闭）</li>
  * </ul>
  *
- * <p>可通过 {@code eagle.id-generator.enabled=false} 整体关闭，
- * 或通过 {@code eagle.id-generator.type=snowflake|uuid|tsid} 切换默认实现。
+ * <p>通过 {@code eagle.id-generator.type=snowflake|uuid|tsid} 切换默认实现。
  *
  * @author sunshixiong
  */
 @AutoConfiguration
 @EnableConfigurationProperties(IdGeneratorProperties.class)
-@ConditionalOnProperty(name = "eagle.id-generator.enabled", havingValue = "true", matchIfMissing = true)
 public class IdGeneratorAutoConfiguration {
 
     /**

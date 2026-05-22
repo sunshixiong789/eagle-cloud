@@ -17,7 +17,6 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -49,7 +48,6 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @ConditionalOnClass(WebSocketMessageBrokerConfigurer.class)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @EnableConfigurationProperties(WebSocketProperties.class)
-@ConditionalOnProperty(name = "eagle.websocket.enabled", havingValue = "true", matchIfMissing = true)
 @Import(EagleWebSocketConfig.class)
 public class WebSocketAutoConfiguration {
 

@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -25,7 +24,6 @@ import org.springframework.context.annotation.Bean;
  */
 @AutoConfiguration
 @ConditionalOnClass(name = "org.aspectj.lang.annotation.Aspect")
-@ConditionalOnProperty(name = "eagle.audit-log.enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(AuditLogProperties.class)
 public class EagleAuditLogAutoConfiguration {
 

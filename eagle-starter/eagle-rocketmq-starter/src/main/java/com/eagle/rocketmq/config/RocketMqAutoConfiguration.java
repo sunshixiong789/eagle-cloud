@@ -37,7 +37,6 @@ import java.util.List;
 @AutoConfiguration
 @ConditionalOnClass(name = "org.apache.rocketmq.client.apis.ClientServiceProvider")
 @EnableConfigurationProperties(RocketMqProperties.class)
-@ConditionalOnProperty(name = "eagle.rocketmq.enabled", havingValue = "true", matchIfMissing = true)
 public class RocketMqAutoConfiguration {
 
     @Bean

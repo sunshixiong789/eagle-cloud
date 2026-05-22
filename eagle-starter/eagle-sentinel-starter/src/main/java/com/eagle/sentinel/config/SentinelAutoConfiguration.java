@@ -27,15 +27,12 @@ import org.springframework.context.annotation.Bean;
  *   <li>{@link SentinelRuleManager} — 程序化规则管理器，简化动态规则配置 API</li>
  * </ul>
  *
- * <p>可通过 {@code eagle.sentinel.enabled=false} 完全禁用。
- *
  * @author 孙士雄
  */
 @Slf4j
 @AutoConfiguration
 @ConditionalOnClass(name = "com.alibaba.csp.sentinel.SphU")
 @EnableConfigurationProperties(SentinelProperties.class)
-@ConditionalOnProperty(name = "eagle.sentinel.enabled", havingValue = "true", matchIfMissing = true)
 public class SentinelAutoConfiguration {
 
     /**

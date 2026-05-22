@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @AutoConfiguration
 @EnableConfigurationProperties(MessageProperties.class)
-@ConditionalOnProperty(prefix = "eagle.message", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class MessageAutoConfiguration {
 
     /**

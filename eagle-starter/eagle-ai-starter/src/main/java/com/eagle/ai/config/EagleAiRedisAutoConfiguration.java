@@ -29,7 +29,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 @ConditionalOnClass(StringRedisTemplate.class)
 @ConditionalOnBean(StringRedisTemplate.class)
 @EnableConfigurationProperties(AiProperties.class)
-@ConditionalOnProperty(name = "eagle.ai.enabled", havingValue = "true", matchIfMissing = true)
 public class EagleAiRedisAutoConfiguration {
 
     /**

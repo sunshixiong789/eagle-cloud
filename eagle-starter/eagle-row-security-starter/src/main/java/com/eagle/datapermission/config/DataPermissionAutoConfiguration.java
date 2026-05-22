@@ -7,18 +7,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
 /**
  * 数据权限自动配置。
  *
- * <p>生效条件：
- * <ul>
- *   <li>{@code eagle.data-permission.enabled=true}（默认生效）</li>
- *   <li>容器中存在 {@link DataPermissionProvider} Bean（需业务方实现并注册）</li>
- * </ul>
+ * <p>生效条件：容器中存在 {@link DataPermissionProvider} Bean（需业务方实现并注册）。
  *
  * <p>若需替换默认切面，声明自定义 {@link DataPermissionAspect} Bean 即可覆盖。
  *
@@ -27,7 +22,6 @@ import org.springframework.context.annotation.Bean;
 @Slf4j
 @AutoConfiguration
 @EnableConfigurationProperties(DataPermissionProperties.class)
-@ConditionalOnProperty(name = "eagle.data-permission.enabled", havingValue = "true", matchIfMissing = true)
 public class DataPermissionAutoConfiguration {
 
     @Bean

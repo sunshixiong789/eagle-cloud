@@ -36,10 +36,6 @@ public class IdGeneratorProperties {
      */
     private final NanoId nanoId = new NanoId();
     /**
-     * 是否启用 ID 生成器，默认启用
-     */
-    private boolean enabled = true;
-    /**
      * 默认 {@code IdGenerator} Bean 选用的实现。
      * <ul>
      *   <li>{@link Type#SNOWFLAKE}（默认）— Hutool Snowflake，long 主键</li>
