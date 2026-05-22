@@ -42,21 +42,15 @@ spring:
           spring-doc: system
           spring-doc-name: System Server
 
-  # ---- Flyway：基线默认关闭，dev/prod profile 显式打开 ----
-  flyway:
-    enabled: false
-    baseline-on-migrate: true
-    validate-on-migrate: true
-    out-of-order: false
-
-  # ---- 数据源：默认 MySQL（环境变量驱动连接信息）；local profile 覆盖为 H2 ----
+  # ---- 数据源:PostgreSQL(环境变量驱动连接信息) ----
+  # 注:Schema 当前由 Hibernate ddl-auto=update 同步;Flyway 后期统一引入。
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:eagle}?useSSL=false&useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: ${DB_USERNAME:root}
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:eagle_system}
+    username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:}
     hikari:
-      pool-name: EagleHikariPool
+      pool-name: EagleSystemHikariPool
       connection-timeout: 30000
       maximum-pool-size: ${DB_POOL_MAX:20}
       minimum-idle: ${DB_POOL_MIN:5}
@@ -65,9 +59,9 @@ spring:
       auto-commit: true
       connection-test-query: SELECT 1
 
-  # ---- JPA：生产安全默认（validate / 不打印 SQL）；dev/local profile 覆盖 ----
+  # ---- JPA:生产 ddl-auto=validate(prod profile 覆盖);dev/local profile 用 update ----
   jpa:
-    database-platform: org.hibernate.dialect.MySQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
     open-in-view: false
     hibernate:

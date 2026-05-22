@@ -22,9 +22,8 @@ dependencies {
     implementation project(':eagle-starter:eagle-restclient-starter')
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
-    // 切 PostgreSQL 时调整为 flyway-database-postgresql + org.postgresql:postgresql
-    implementation 'org.springframework.boot:spring-boot-starter-flyway'
-    implementation 'org.flywaydb:flyway-mysql'
+    // PostgreSQL JDBC 驱动由 eagle-data-jpa-starter 通过 runtimeOnly 传递引入。
+    // Schema 暂由 Hibernate ddl-auto=update 同步;Flyway 后期统一引入。
 
     // Nacos 服务注册与发现
     implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery'

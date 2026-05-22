@@ -1,10 +1,9 @@
 # ===========================================
-# 开发/测试差异（system-service）
-# 与基线相比的覆盖：
-#   - Flyway 启用 + baseline-on-migrate=true（兼容已有库）
-#   - ddl-auto=update + show-sql 便于排查
+# 开发/测试差异(system-service)
+# 与基线相比的覆盖:
+#   - ddl-auto=update,由 Hibernate 自动同步 schema(无 Flyway 期间)
 #   - Actuator 暴露调试端点 + details=always
-#   - 日志 com.eagle=DEBUG，SQL=DEBUG，参数绑定=TRACE
+#   - 日志 com.eagle=DEBUG,SQL=DEBUG,参数绑定=TRACE
 # 数据源 / Redis 连接信息使用基线 + 环境变量注入。
 # ===========================================
 
@@ -23,16 +22,6 @@ spring:
     nacos:
       discovery:
         namespace: ${NACOS_NAMESPACE:public}
-
-  # 开发环境彻底排除 Flyway：暂时仅用 JPA ddl-auto=update。
-  # 双重防御 = enabled:false（属性开关）+ autoconfigure.exclude（自动配置剔除），
-  # 防止任何环境变量 / IDE / 残留构建强行装配 FlywayAutoConfiguration。
-  flyway:
-    enabled: false
-    baseline-on-migrate: false
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration
 
   jpa:
     show-sql: false

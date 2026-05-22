@@ -1,29 +1,21 @@
 # ===========================================
-# 生产差异（system-service）
-# 与基线相比的强制锁定：
+# 生产差异(system-service)
+# 与基线相比的强制锁定:
 #   - HikariCP 快速失败 5s + 60s 泄漏检测
-#   - Swagger 强制关闭（防止 schema 泄漏）
-#   - 日志 root=WARN，com.eagle=INFO
+#   - Swagger 强制关闭(防止 schema 泄漏)
+#   - 日志 root=WARN,com.eagle=INFO
 #
-# 【schema 策略】严格遵循 28-migration.md:
+# 【schema 策略】当前阶段:
 #   - ddl-auto=validate:启动期校验实体与表结构匹配,禁止运行时自动改表
-#   - 所有业务实体表必须由 Flyway 脚本预先建立(V{yyyyMMddHHmm}__*.sql)
-#
-# 【Flyway 覆盖范围】
-#   - sys_* 业务实体表(用户、角色、权限、部门、菜单、岗位、字典、系统日志、文件)
-#   - message 模块表(站内消息、公告)
-#   后续业务表变更通过新增 V{yyyyMMddHHmm}__*.sql 文件;如需重新生成 baseline,
-#   开启 SchemaExportTest 上的 @Disabled 跑一次即可(详见该测试类 Javadoc)。
+#   - Flyway 尚未引入,生产部署前需先由运维手动跑 DDL 建表
+#     (可借 SchemaExportTest 生成 schema-postgres.sql 后审核应用)
+#   - 后续统一引入 Flyway 后,迁移脚本接管全部 DDL 变更
 # ===========================================
 
 spring:
-  flyway:
-    enabled: false
-    baseline-on-migrate: false
-
   jpa:
     hibernate:
-      ddl-auto: validate                        # 生产严格 validate；运行时禁止改表，所有 DDL 通过 Flyway 管控
+      ddl-auto: validate                        # 生产严格 validate;运行时禁止改表
 
   datasource:
     hikari:
