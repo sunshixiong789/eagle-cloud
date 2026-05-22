@@ -8,7 +8,6 @@ include 'eagle-services:eagle-gateway-service'
 include 'eagle-services:eagle-system-service'
 include 'eagle-services:eagle-auth-service'
 include 'eagle-services:eagle-monolith-service'
-include 'eagle-services:eagle-example-service'
 
 // Starter 模块
 include 'eagle-starter:eagle-ai-starter'
