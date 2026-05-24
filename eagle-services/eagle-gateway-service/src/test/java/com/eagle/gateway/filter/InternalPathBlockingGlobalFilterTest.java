@@ -77,6 +77,33 @@ class InternalPathBlockingGlobalFilterTest {
 
             assertEquals(HttpStatus.FORBIDDEN, exchange.getResponse().getStatusCode());
         }
+
+        @Test
+        @DisplayName("URL 编码绕过 %2Finternal%2F 应被拦截 (raw path 解码二次校验)")
+        void blocksUrlEncodedBypass() {
+            // 用 URI.create 构造能保留 %2F 编码的 URI (UriComponentsBuilder 会按 path 段语义处理)
+            java.net.URI raw = java.net.URI.create(
+                    "http://localhost/eagle-auth-service%2Finternal%2Fonline-users");
+            MockServerHttpRequest request = MockServerHttpRequest
+                    .method(org.springframework.http.HttpMethod.GET, raw)
+                    .build();
+            MockServerWebExchange exchange = MockServerWebExchange.from(request);
+            GatewayFilterChain chain = mock(GatewayFilterChain.class);
+            // 防御性 stub: 若 filter 未命中拦截会调用 chain,避免 NPE 掩盖真正断言
+            when(chain.filter(exchange)).thenReturn(Mono.empty());
+
+            filter.filter(exchange, chain).block();
+
+            assertEquals(HttpStatus.FORBIDDEN, exchange.getResponse().getStatusCode(),
+                    "编码绕过应被拦截; path=" + request.getURI().getPath()
+                            + ", rawPath=" + request.getURI().getRawPath());
+            verify(chain, never()).filter(exchange);
+        }
+
+        // 注: 畸形 URL 编码(如 %ZZ) 由 Spring UriComponentsBuilder.fromUriString 在更早阶段
+        // (MockServerHttpRequest.get 内部) 直接抛 InvalidUrlException,不会到达本 filter。
+        // safeUrlDecode 内的 try/catch IllegalArgumentException 是防御性兜底,
+        // 真实运行链路里(Reactor Netty 解析失败会返回 400)同样不会到达 filter。
     }
 
     @Nested

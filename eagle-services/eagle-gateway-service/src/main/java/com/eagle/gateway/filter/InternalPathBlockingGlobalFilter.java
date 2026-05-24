@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -57,13 +58,16 @@ public class InternalPathBlockingGlobalFilter implements GlobalFilter, Ordered {
     @Override
     public @NonNull Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
+        // 同时拿 decoded path 与 raw path:外部攻击可能用 %2Finternal%2F 形式编码,
+        // 部分反代/Tomcat 配置不会自动 decode 到 path,需对原始字符串再做一次 URL 解码后比对。
         String path = request.getURI().getPath();
+        String rawPath = request.getURI().getRawPath();
 
-        if (containsInternalSegment(path)) {
+        if (containsInternalSegment(path) || containsInternalSegment(safeUrlDecode(rawPath))) {
             String clientIp = (String) exchange.getAttributes()
                     .getOrDefault(RequestEnrichmentGlobalFilter.CLIENT_IP_ATTRIBUTE, "unknown");
-            log.warn("blocked external access to internal API: path={}, clientIp={}, method={}",
-                    path, clientIp, request.getMethod());
+            log.warn("blocked external access to internal API: path={}, rawPath={}, clientIp={}, method={}",
+                    path, rawPath, clientIp, request.getMethod());
 
             ServerHttpResponse response = exchange.getResponse();
             response.setStatusCode(HttpStatus.FORBIDDEN);
@@ -85,6 +89,22 @@ public class InternalPathBlockingGlobalFilter implements GlobalFilter, Ordered {
         return lower.startsWith("/internal/")
                 || lower.contains(INTERNAL_SEGMENT)
                 || lower.endsWith("/internal");
+    }
+
+    /**
+     * 对 raw path 做一次 URL 解码;失败(畸形输入)时返回原值,留给后续匹配链处理。
+     * 不抛异常以避免攻击者通过畸形输入触发 500。
+     */
+    private String safeUrlDecode(String rawPath) {
+        if (rawPath == null || rawPath.isEmpty()) {
+            return rawPath;
+        }
+        try {
+            return URLDecoder.decode(rawPath, StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException ex) {
+            // 非法编码序列 — 拒绝即可(下方 containsInternalSegment 对原值 false 时不影响 chain)
+            return rawPath;
+        }
     }
 
     @Override

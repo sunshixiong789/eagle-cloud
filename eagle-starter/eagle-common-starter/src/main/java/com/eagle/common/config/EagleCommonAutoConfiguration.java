@@ -1,5 +1,7 @@
 package com.eagle.common.config;
 
+import com.eagle.common.alert.AlertService;
+import com.eagle.common.alert.LoggingAlertService;
 import com.eagle.common.handler.GlobalExceptionHandler;
 import com.eagle.common.handler.ReactiveGlobalExceptionHandler;
 import com.eagle.common.i18n.MessageSourceUtil;
@@ -46,6 +48,18 @@ public class EagleCommonAutoConfiguration implements InitializingBean {
     @Override
     public void afterPropertiesSet() {
         MessageSourceUtil.init(messageSource);
+    }
+
+    /**
+     * 默认告警实现:结构化 ERROR 日志 + MDC 标签,运维侧 Logback WebhookAppender 接管投递。
+     *
+     * <p>消费方若有自家 IM/邮件/Webhook 推送实现,可在自己的服务模块声明 {@code @Bean AlertService},
+     * 通过 {@code @ConditionalOnMissingBean} 覆盖此默认实现。
+     */
+    @Bean
+    @ConditionalOnMissingBean(AlertService.class)
+    public AlertService alertService() {
+        return new LoggingAlertService();
     }
 
     /**

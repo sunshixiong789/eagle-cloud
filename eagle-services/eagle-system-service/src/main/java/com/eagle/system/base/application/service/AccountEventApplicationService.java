@@ -1,5 +1,6 @@
 package com.eagle.system.base.application.service;
 
+import com.eagle.rocketmq.idempotency.IdempotencyChecker;
 import com.eagle.system.base.domain.model.User;
 import com.eagle.system.base.domain.model.valueobject.UserProfile;
 import com.eagle.system.base.domain.repository.RoleRepository;
@@ -19,6 +20,10 @@ import java.util.Set;
  * <p>
  * 拆服务前为 base/infrastructure/event/UserEventHandler 里的两个
  * {@code @TransactionalEventListener},拆分后改由 RocketMQ Consumer 触发。
+ * <p>
+ * <strong>幂等策略</strong>:首层 {@link IdempotencyChecker} 用 {@code event.eventId} 做 Redis SETNX,
+ * RocketMQ 至少一次投递的重投递在 24h 内只会处理一次;二层 {@code existsByAccountId} / 找不到即跳过
+ * 是业务兜底,应对幂等键过期 + 真实重复(如运维手工补单)的极端场景。
  */
 @Slf4j
 @Service
@@ -34,9 +39,15 @@ public class AccountEventApplicationService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final CacheManager cacheManager;
+    private final IdempotencyChecker idempotencyChecker;
 
     @Transactional(rollbackFor = Exception.class)
     public void onAccountRegistered(AccountRegisteredMessage event) {
+        if (idempotencyChecker.isDuplicate(event.getEventId())) {
+            log.debug("duplicate AccountRegistered event, eventId={}, accountId={}, skip",
+                    event.getEventId(), event.getAccountId());
+            return;
+        }
         if (userRepository.existsByAccountId(event.getAccountId())) {
             log.debug("User already exists for accountId: {}", event.getAccountId());
             return;
@@ -62,6 +73,11 @@ public class AccountEventApplicationService {
 
     @Transactional(rollbackFor = Exception.class)
     public void onAccountDeleted(AccountDeletedMessage event) {
+        if (idempotencyChecker.isDuplicate(event.getEventId())) {
+            log.debug("duplicate AccountDeleted event, eventId={}, accountId={}, skip",
+                    event.getEventId(), event.getAccountId());
+            return;
+        }
         userRepository.findByAccountId(event.getAccountId()).ifPresent(user -> {
             userRepository.delete(user);
             var cache = cacheManager.getCache("USER_NAME");

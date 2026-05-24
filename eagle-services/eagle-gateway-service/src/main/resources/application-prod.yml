@@ -29,6 +29,15 @@ springdoc:
   swagger-ui:
     enabled: false
 
+# Actuator 生产收窄:不暴露 /actuator/gateway(否则外部可探测路由表与下游服务名),
+# 也不暴露 env / configprops / mappings 等可能泄漏内部信息的端点。
+# 基线 application.yml 的 include 含 gateway 仅用于 dev/local 排障。
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
 logging:
   level:
     root: WARN

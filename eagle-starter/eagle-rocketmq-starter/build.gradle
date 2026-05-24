@@ -5,6 +5,14 @@ dependencies {
     // RocketMqDomainEventPublisher / AbstractRocketMqListener 使用 fastjson2 序列化事件 body
     api 'com.alibaba.fastjson2:fastjson2'
 
+    // 消费侧幂等去重默认实现走 Redis SETNX;消费方需自行引入 eagle-redis-starter
+    // 才会激活 IdempotencyAutoConfiguration(条件: ConditionalOnClass(StringRedisTemplate))。
+    compileOnly 'org.springframework.boot:spring-boot-starter-data-redis'
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    testImplementation 'org.mockito:mockito-core'
 }

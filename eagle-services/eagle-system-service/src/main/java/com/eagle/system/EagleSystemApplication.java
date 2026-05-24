@@ -57,20 +57,20 @@ public class EagleSystemApplication {
         String contextPath = Optional.ofNullable(env.getProperty("server.servlet.context-path")).orElse("");
         String baseUrl = "http://localhost:" + port + contextPath;
 
+        // OAuth2 Authorization Server 已在 24f3f21 拆出到 eagle-auth-service,
+        // 此处不再打印 /oauth2/token URL,避免误导调用方仍向 system 发授权请求。
         log.info(
                 """
-                        
+
                         ╔══════════════════════════════════════════════════════════════╗
                         ║  🚀 Eagle Application Started Successfully!                  ║
                         ╠══════════════════════════════════════════════════════════════╣
                         ║  📚 Swagger UI:      {}║
                         ║  📖 API Docs:        {}║
-                        ║  🔐 OAuth2 Token:    {}║
                         ╚══════════════════════════════════════════════════════════════╝
                         """,
                 padRight(baseUrl + "/swagger-ui.html", 38),
-                padRight(baseUrl + "/v3/api-docs", 38),
-                padRight(baseUrl + "/oauth2/token", 38));
+                padRight(baseUrl + "/v3/api-docs", 38));
     }
 
     private String padRight(String s, int n) {

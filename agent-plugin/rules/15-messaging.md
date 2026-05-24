@@ -62,14 +62,25 @@ save(order)   // 本地事务回调
 
 ## 领域事件 → MQ 转换
 
-跨服务事件遵循"内部事件 + 外部集成事件"两层模型：
+跨服务事件遵循"内部事件 + 外部集成事件"两层模型，**两侧各自在自己模块内独立声明，不共享 Java 类**：
 
 ```java
-// 内部领域事件（聚合根注册，不出域）
+// === 生产方模块: order/infrastructure/messaging/ ===
+
+// 1) 内部领域事件（聚合根注册，不出域）
 public record OrderCreatedEvent(Long orderId, ...) {
 }
 
-// 处理器转换为外部集成事件并发到 MQ
+// 2) 生产方的 RocketMQ 发布载荷（紧贴 Producer，infra 级，后缀 IntegrationEvent）
+@Getter @NoArgsConstructor @AllArgsConstructor
+public class OrderCreatedIntegrationEvent extends BaseEvent {
+    private Long orderId;
+    private String orderNo;
+    private BigDecimal amount;
+    // ...
+}
+
+// 3) 处理器转换并发布
 @Async
 @TransactionalEventListener(phase = AFTER_COMMIT)
 public void onOrderCreated(OrderCreatedEvent e) {
@@ -78,7 +89,26 @@ public void onOrderCreated(OrderCreatedEvent e) {
 }
 ```
 
-**集成事件 schema 必须稳定**——它是跨服务契约。新增字段必须可向后兼容（默认值 / Optional）。
+```java
+// === 消费方模块: stock/infrastructure/messaging/ ===
+// 独立声明本地反序列化 DTO，可仅取需要的字段子集
+
+@Getter @NoArgsConstructor
+public class OrderCreatedMessage extends BaseEvent {
+    private Long orderId;
+    private String orderNo;
+    // amount 等本模块用不到的字段可以不声明
+}
+```
+
+**核心原则:**
+
+- **不**把集成事件类放在跨模块的"共享 messaging 包"里，**不**让消费方 `import` 生产方的类。
+- 两侧的耦合面 = **JSON 字段名 + 类型**（消费方对未知字段宽容，缺失非必需字段宽容）。
+- 同一事件被 N 个消费方订阅 → 各消费方各写一份 `XxxMessage`，按各自需要裁剪字段。
+- 字段演进无需"跨服务联动改类"：生产方加字段，旧消费方继续工作；消费方加字段，等生产方真的发了再读。
+
+**新增字段**必须可向后兼容（默认值 / Optional）。**禁止**删除或重命名已发布字段——靠新字段 + 灰度迁移。
 
 ## 消费者（继承 AbstractRocketMqListener）
 
@@ -86,10 +116,10 @@ public void onOrderCreated(OrderCreatedEvent e) {
 `@RocketMQMessageListener` 注解，而是继承 `AbstractRocketMqListener<T>` 实现 3 个抽象方法：
 
 ```java
-// ✅ 标准消费者：构造器须把 RocketMqProperties 透传给 super
+// ✅ 标准消费者：泛型指向**本模块**声明的 OrderCreatedMessage（不是生产方的 IntegrationEvent）
 @Component
 public class OrderCreatedConsumer
-        extends AbstractRocketMqListener<OrderCreatedIntegrationEvent> {
+        extends AbstractRocketMqListener<OrderCreatedMessage> {
 
     private final StockApplicationService stockService;
     private final IdempotencyChecker idempotency;
@@ -108,12 +138,12 @@ public class OrderCreatedConsumer
     }
 
     @Override
-    protected Class<OrderCreatedIntegrationEvent> getEventClass() {
-        return OrderCreatedIntegrationEvent.class;
+    protected Class<OrderCreatedMessage> getEventClass() {
+        return OrderCreatedMessage.class;
     }
 
     @Override
-    protected void handle(OrderCreatedIntegrationEvent event) {
+    protected void handle(OrderCreatedMessage event) {
         // 必须幂等！用 event.getEventId() 去重
         if (!idempotency.firstTime(event.getEventId())) return;
         stockService.lockStock(event.getOrderId(), event.getItems());
@@ -166,7 +196,7 @@ RocketMQ 默认重试 16 次后进入 `%DLQ%{ConsumerGroup}` 队列。继承 `Ab
 
 @Component
 public class OrderCreatedDlqListener
-        extends AbstractDlqListener<OrderCreatedIntegrationEvent> {
+        extends AbstractDlqListener<OrderCreatedMessage> {
 
     private final AlarmService alarmService;
     private final DeadLetterRepository deadLetterRepository;
@@ -185,12 +215,12 @@ public class OrderCreatedDlqListener
     }
 
     @Override
-    protected Class<OrderCreatedIntegrationEvent> getEventClass() {
-        return OrderCreatedIntegrationEvent.class;
+    protected Class<OrderCreatedMessage> getEventClass() {
+        return OrderCreatedMessage.class;
     }
 
     @Override
-    protected void handleDeadLetter(OrderCreatedIntegrationEvent event, int totalAttempts) {
+    protected void handleDeadLetter(OrderCreatedMessage event, int totalAttempts) {
         log.error("DLQ event arrived, eventId={}, attempts={}", event.getEventId(), totalAttempts);
         deadLetterRepository.save(DeadLetterRecord.of(event, totalAttempts));
         alarmService.notifyOps("order_created_dlq", event);

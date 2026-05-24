@@ -118,8 +118,21 @@ public class SecurityConfig {
      * 跨服务内部 API 路径(/internal/online-users、/internal/account-blacklist 等),
      * 供 system-service 通过服务发现直接调用,调用方无用户 JWT 可透传。
      *
-     * <p>【生产强约束】本服务侧仅 permitAll 不足以构成访问控制,网关层必须用
-     * IP 白名单 / mTLS / 客户端凭证(client-credentials scope)二次保护 /internal/**。
+     * <p><strong>【生产强约束】本服务侧仅 permitAll 不足以构成访问控制</strong>,
+     * 必须叠加以下三层防御才能在 prod 环境暴露:
+     * <ol>
+     *   <li><strong>网关字面 + 编码绕过双重过滤</strong>(已实装):
+     *       {@code InternalPathBlockingGlobalFilter} 对外部入口的 {@code /internal/**} 一律返回 403,
+     *       同时对 raw path 做 URL decode 二次校验防止 {@code %2Finternal%2F} 绕过。</li>
+     *   <li><strong>部署期网络隔离</strong>(运维侧): K8s NetworkPolicy / 安全组只允许同 VPC / 同集群
+     *       的 service-to-service 调用直连下游 8081 端口,外部流量必须经网关。</li>
+     *   <li><strong>(可选, 推荐) 服务网格 mTLS / 客户端凭证</strong>: 接入 Istio 等服务网格后,
+     *       /internal/** 端点要求 mTLS 双向证书; 或改为 hasAuthority("SCOPE_internal") 配合
+     *       OAuth2 client-credentials grant 在内部 OAuth2 client 上下发 scope=internal。</li>
+     * </ol>
+     *
+     * <p>若部署环境无法满足第 1 + 2 层最低要求(例如直接暴露下游端口到公网),
+     * 必须在 PR 描述里挂出风险并由安全负责人豁免后再合入。
      */
     private static final String[] INTERNAL_PATHS = {
             "/internal/**"

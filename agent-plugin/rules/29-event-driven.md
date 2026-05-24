@@ -5,11 +5,12 @@
 
 ## 事件分类
 
-| 类型              | 作用域              | 传输载体                      | 包位置                      |
-|-----------------|------------------|---------------------------|--------------------------|
-| **领域事件**        | 单域内（聚合根 → 同域处理器） | Spring `ApplicationEvent` | `{module}/domain/event/` |
-| **集成事件**        | 跨域 / 跨服务         | Spring Event（单体）→ MQ（微服务） | `{module}/domain/event/` |
-| **命令（Command）** | 外部意图输入           | HTTP / MQ                 | `{module}/application/`  |
+| 类型              | 作用域              | 传输载体                      | 包位置                                                                                              |
+|-----------------|------------------|---------------------------|--------------------------------------------------------------------------------------------------|
+| **领域事件**        | 单域内（聚合根 → 同域处理器） | Spring `ApplicationEvent` | `{module}/domain/event/`                                                                         |
+| **集成事件（生产方）**   | 跨域 / 跨服务         | MQ（JSON）                  | `{producer-module}/infrastructure/messaging/XxxIntegrationEvent.java`                            |
+| **集成事件（消费方）**   | 跨域 / 跨服务         | MQ（JSON）                  | `{consumer-module}/infrastructure/messaging/XxxMessage.java` — 每个消费方各自独立声明，**不**复用生产方类 |
+| **命令（Command）** | 外部意图输入           | HTTP / MQ                 | `{module}/application/`                                                                          |
 
 **禁止**跨域直接消费对方内部领域事件——必须发布为集成事件。
 
@@ -93,29 +94,37 @@ public void onOrderPaid(OrderPaidEvent event) {
 
 ## 集成事件契约
 
-集成事件是**跨服务的接口契约**，修改必须向后兼容：
+集成事件是**跨服务的 JSON 接口契约**——契约面是**字段名 + 类型**，不是 Java 类。生产方与每个消费方**各自在自己模块内独立声明**，靠 JSON 反序列化兼容性解耦：
 
 ```java
-// ✅ 集成事件：稳定字段 + 版本字段
-public record OrderPaidIntegrationEvent(
-        String eventId,
-        String eventVersion,    // "1.0"，破坏性变更升版本
-        LocalDateTime occurredOn,
-        Long orderId,
-        String orderNo,
-        BigDecimal amount,
-        String paymentChannel
-) { }
+// ✅ 生产方（order/infrastructure/messaging/）：稳定字段 + 版本字段
+public class OrderPaidIntegrationEvent extends BaseEvent {
+    private String eventVersion;    // "1.0"，破坏性变更升版本
+    private Long orderId;
+    private String orderNo;
+    private BigDecimal amount;
+    private String paymentChannel;
+    // BaseEvent 已含 eventId / occurredOn
+}
 
-// ✅ 新增字段必须有默认值（向后兼容）
-// ❌ 禁止删除或重命名已发布的集成事件字段
+// ✅ 消费方（accounting/infrastructure/messaging/）：独立声明，按需取字段子集
+public class OrderPaidMessage extends BaseEvent {
+    private Long orderId;
+    private BigDecimal amount;
+    // paymentChannel / orderNo 等本模块用不到的字段可以不声明
+}
+
+// ❌ 禁止：消费方 import 生产方的 OrderPaidIntegrationEvent
+// ❌ 禁止：抽出"shared-events.jar"或"common/integration/"共享类
+// ❌ 禁止：删除或重命名已发布的字段（破坏 JSON 契约）
 ```
 
 **版本管理：**
 
-- 新增字段（Optional / 有默认值）→ 保持版本，消费方按需读取
-- 字段类型变更 / 删除 → 升版本（`eventVersion: "2.0"`），旧版本消费方继续消费 v1
-- 版本过渡期：同时发布两个版本，至少维护 3 个月再下线旧版本
+- 新增字段 → 生产方加上即可，旧消费方因为不读所以不受影响；新消费方按需在自己的 `XxxMessage` 中声明。
+- 字段类型变更 / 字段删除 → 升版本（`eventVersion: "2.0"`），旧版本消费方继续消费 v1。
+- 版本过渡期：同时发布两个版本，至少维护 3 个月再下线旧版本。
+- 字段名是**唯一契约**：跨服务任何字段重命名都必须走灰度（先双发，再切换，再下线旧名）。
 
 ## Saga / 编排式事件流
 
@@ -173,11 +182,11 @@ public class AccountLedger {
 事件处理器**必须幂等**（MQ 保证至少一次投递）：
 
 ```java
-// ✅ 用 eventId 去重（唯一约束 or Redis SETNX）
+// ✅ 用 eventId 去重（唯一约束 or Redis SETNX）— 注意泛型是本模块的 XxxMessage，不是生产方的 IntegrationEvent
 @Async
 @TransactionalEventListener(phase = AFTER_COMMIT)
 @Transactional(propagation = REQUIRES_NEW)
-public void onOrderPaid(OrderPaidIntegrationEvent event) {
+public void onOrderPaid(OrderPaidMessage event) {
     if (idempotencyChecker.isDuplicate(event.getEventId())) return;
     // 处理...
 }
@@ -219,7 +228,9 @@ public void compensate() {
 - 禁止跨域直接消费内部领域事件（必须通过集成事件）
 - 禁止集成事件持有完整聚合根对象
 - 禁止事件处理器内再次触发同一事件（无限循环）
-- 禁止删除或修改已发布的集成事件字段（向后兼容）
+- 禁止删除或修改已发布的集成事件字段（向后兼容）— 字段名是跨服务唯一契约
+- 禁止把集成事件类放在跨模块"共享 messaging 包"或抽出 starter / common 模块——生产方与每个消费方在各自模块独立声明
+- 禁止消费方 `import` 生产方的 `XxxIntegrationEvent` 类；消费方必须自己声明 `XxxMessage`，靠 JSON 字段名兼容
 - 禁止用链式 `@EventListener` 实现多步骤 Saga（用编排器替代）
 - 禁止事件处理器非幂等（MQ 至少一次投递必须幂等）
 - 禁止在 `@Transactional` 中使用 `ApplicationEventPublisher.publishEvent()`（应用 `registerEvent()`，让 Spring Data 在
