@@ -358,14 +358,14 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    # system-service 已在 9550fdb 切到 PostgreSQL,不再依赖 mysql 健康检查
+    # (mysql 容器仍保留供未切 PG 的 monolith-service 使用)
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
       nacos:
-        condition: service_healthy
-      postgres:
         condition: service_healthy
       rocketmq-broker:
         condition: service_started

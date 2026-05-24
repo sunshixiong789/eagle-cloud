@@ -154,4 +154,30 @@ class InternalPathBlockingGlobalFilterTest {
     void orderIsEarly() {
         assertTrue(filter.getOrder() < 0, "实际 order=" + filter.getOrder());
     }
+
+    @Nested
+    @DisplayName("safeUrlDecode 深度防御")
+    class SafeUrlDecode {
+
+        @Test
+        @DisplayName("正常路径解码: %2F → /")
+        void decodesValidPath() {
+            assertEquals("/eagle-auth-service/internal/x",
+                    filter.safeUrlDecode("/eagle-auth-service%2Finternal%2Fx"));
+        }
+
+        @Test
+        @DisplayName("畸形编码 (%ZZ) 返回原值,不抛异常")
+        void malformedReturnsOriginal() {
+            String malformed = "/api/users%ZZ";
+            assertEquals(malformed, filter.safeUrlDecode(malformed));
+        }
+
+        @Test
+        @DisplayName("null / 空串透传")
+        void nullAndEmptyPassthrough() {
+            assertNull(filter.safeUrlDecode(null));
+            assertEquals("", filter.safeUrlDecode(""));
+        }
+    }
 }

@@ -2,9 +2,8 @@ package com.eagle.system.base.application.service;
 
 import com.eagle.common.exception.codes.OperationErrorCode;
 import com.eagle.system.base.domain.model.enums.LogStatus;
-import com.eagle.system.base.infrastructure.remote.AuthOnlineUserClient;
+import com.eagle.system.base.infrastructure.remote.AuthClientFacade;
 import com.eagle.system.base.infrastructure.remote.dto.OnlineUserSnapshot;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import com.eagle.system.base.domain.model.enums.LogType;
 import com.eagle.system.base.domain.repository.LogRepository;
 import com.eagle.system.base.interfaces.dto.request.LogQueryRequest;
@@ -28,7 +27,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -45,7 +43,7 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class MonitorApplicationService {
 
-    private final AuthOnlineUserClient authOnlineUserClient;
+    private final AuthClientFacade authClientFacade;
     private final LogApplicationService logApplicationService;
     private final LogRepository logRepository;
     private final DiscoveryClient discoveryClient;
@@ -70,20 +68,11 @@ public class MonitorApplicationService {
     }
 
     /**
-     * 在线用户列表,带熔断器保护。
-     * <p>设计:
-     * <ul>
-     *   <li>不在方法体里 try-catch — 让异常上抛由 {@link CircuitBreaker} 接住,
-     *       触发熔断计数与 fallback;否则 try-catch 吞掉异常导致熔断器永远不开路</li>
-     *   <li>持续失败时熔断器开路,后续请求直接走 {@link #listOnlineUsersFallback}
-     *       快速失败,不再逐请求等下游超时</li>
-     *   <li>{@link RestClientException} 之外的运行时异常(NPE / IllegalState 等)同样会触发 fallback,
-     *       但会在 fallback 中按异常类型重新判定:编程错误继续上抛,网络/远程错误降级</li>
-     * </ul>
+     * 在线用户列表。降级 / 熔断 / 异常处理下沉到 {@link AuthClientFacade},
+     * 本方法只关心 DTO 映射。
      */
-    @CircuitBreaker(name = "eagle-default", fallbackMethod = "listOnlineUsersFallback")
     public OnlineUserListResponse listOnlineUsers() {
-        List<OnlineUserSnapshot> infos = authOnlineUserClient.listOnlineUsers();
+        List<OnlineUserSnapshot> infos = authClientFacade.listOnlineUsers();
         List<OnlineUserResponse> responses = infos.stream()
                 .map(info -> OnlineUserResponse.builder()
                         .tokenId(info.tokenId())
@@ -99,24 +88,6 @@ public class MonitorApplicationService {
         return new OnlineUserListResponse(responses.size(), responses);
     }
 
-    /**
-     * {@link #listOnlineUsers()} 的 fallback。
-     * <p>熔断器开路 / 调用抛异常时由 Resilience4J AOP 自动调用。
-     * 编程错误(NPE / IllegalState 等)在此处继续上抛,网络/远程错误降级为空列表。
-     */
-    @SuppressWarnings("unused")
-    private OnlineUserListResponse listOnlineUsersFallback(Throwable ex) {
-        if (!(ex instanceof RestClientException || ex instanceof io.github.resilience4j.circuitbreaker.CallNotPermittedException)) {
-            // 编程错误不应被熔断器静默掩盖
-            if (ex instanceof RuntimeException re) {
-                throw re;
-            }
-            throw new IllegalStateException(ex);
-        }
-        log.warn("查询在线用户列表失败/熔断器开路,降级为空列表", ex);
-        return new OnlineUserListResponse(0, List.of());
-    }
-
     // -------------------------------------------------------------------------
     // 登录日志
     // -------------------------------------------------------------------------
@@ -127,7 +98,7 @@ public class MonitorApplicationService {
         if (currentJti != null && currentJti.equals(tokenId)) {
             throw OperationErrorCode.OPERATION_NOT_ALLOWED.toDomainException();
         }
-        authOnlineUserClient.forceLogout(tokenId);
+        authClientFacade.forceLogout(tokenId);
     }
 
     // -------------------------------------------------------------------------

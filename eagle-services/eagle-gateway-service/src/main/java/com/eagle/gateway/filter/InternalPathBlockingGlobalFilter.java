@@ -94,8 +94,12 @@ public class InternalPathBlockingGlobalFilter implements GlobalFilter, Ordered {
     /**
      * 对 raw path 做一次 URL 解码;失败(畸形输入)时返回原值,留给后续匹配链处理。
      * 不抛异常以避免攻击者通过畸形输入触发 500。
+     *
+     * <p>包级可见以便单测直接覆盖畸形输入分支
+     * (Spring 上层 URI 解析会先拒绝畸形请求,本方法的 catch 通常是死代码,
+     * 保留作为深度防御; 测试用 {@code safeUrlDecodeHandlesMalformedInput} 显式锁定行为)。
      */
-    private String safeUrlDecode(String rawPath) {
+    String safeUrlDecode(String rawPath) {
         if (rawPath == null || rawPath.isEmpty()) {
             return rawPath;
         }

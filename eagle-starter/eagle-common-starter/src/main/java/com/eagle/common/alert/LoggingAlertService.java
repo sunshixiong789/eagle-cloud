@@ -3,6 +3,8 @@ package com.eagle.common.alert;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,6 +24,8 @@ import java.util.Map;
  * <p>实现保证不抛异常:任何异常都会被捕获并降级为 WARN 日志,
  * 避免告警链路失败影响主业务调用者。
  *
+ * <p>MDC 用 {@link MDC#putCloseable} + try-with-resources 管理,保证 close 顺序与异常路径都能清理。
+ *
  * @author sunshixiong
  */
 @Slf4j
@@ -35,18 +39,15 @@ public class LoggingAlertService implements AlertService {
         if (event == null) {
             return;
         }
-        String severityKey = MDC_PREFIX + "severity";
-        String sourceKey = MDC_PREFIX + "source";
-        String categoryKey = MDC_PREFIX + "category";
+        List<MDC.MDCCloseable> handles = new ArrayList<>(3);
         try {
-            MDC.put(severityKey, String.valueOf(event.severity()));
+            handles.add(MDC.putCloseable(MDC_PREFIX + "severity", String.valueOf(event.severity())));
             if (event.source() != null) {
-                MDC.put(sourceKey, event.source());
+                handles.add(MDC.putCloseable(MDC_PREFIX + "source", event.source()));
             }
             if (event.category() != null) {
-                MDC.put(categoryKey, event.category());
+                handles.add(MDC.putCloseable(MDC_PREFIX + "category", event.category()));
             }
-            // 上下文键值对 → 单行 KV,便于 ELK / Grafana 解析
             String contextStr = formatContext(event.contexts());
             if (event.cause() != null) {
                 log.error("ALERT [{}][{}] {} | {} | ctx={}",
@@ -62,9 +63,10 @@ public class LoggingAlertService implements AlertService {
             log.warn("send alert failed, category={}, title={}",
                     event.category(), event.title(), ex);
         } finally {
-            MDC.remove(severityKey);
-            MDC.remove(sourceKey);
-            MDC.remove(categoryKey);
+            // 反向 close 保证恢复 MDC 原值(若有嵌套)
+            for (int i = handles.size() - 1; i >= 0; i--) {
+                handles.get(i).close();
+            }
         }
     }
 

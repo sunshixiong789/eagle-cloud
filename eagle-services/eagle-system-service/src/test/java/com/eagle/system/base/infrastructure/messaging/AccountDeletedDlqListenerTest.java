@@ -4,6 +4,8 @@ import com.eagle.common.alert.AlertEvent;
 import com.eagle.common.alert.AlertService;
 import com.eagle.common.alert.AlertSeverity;
 import com.eagle.rocketmq.properties.RocketMqProperties;
+import com.eagle.system.base.domain.model.DeadLetterRecord;
+import com.eagle.system.base.domain.repository.DeadLetterRecordRepository;
 import com.eagle.system.base.infrastructure.messaging.event.AccountDeletedMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,12 +24,15 @@ class AccountDeletedDlqListenerTest {
 
     @Mock
     private AlertService alertService;
+    @Mock
+    private DeadLetterRecordRepository deadLetterRepository;
 
     private AccountDeletedDlqListener listener;
 
     @BeforeEach
     void setUp() {
-        listener = new AccountDeletedDlqListener(new RocketMqProperties(), alertService);
+        listener = new AccountDeletedDlqListener(
+                new RocketMqProperties(), alertService, deadLetterRepository);
     }
 
     @Test
@@ -57,5 +62,25 @@ class AccountDeletedDlqListenerTest {
                 .containsEntry("accountId", "200")
                 .containsEntry("totalAttempts", "16")
                 .containsKey("eventId");
+    }
+
+    @Test
+    @DisplayName("handleDeadLetter 同时持久化 DeadLetterRecord(payload 含 accountId)")
+    void persistsDeadLetterRecord() {
+        AccountDeletedMessage event = new AccountDeletedMessage();
+        event.setAccountId(200L);
+
+        listener.handleDeadLetter(event, 16);
+
+        ArgumentCaptor<DeadLetterRecord> captor = ArgumentCaptor.forClass(DeadLetterRecord.class);
+        verify(deadLetterRepository).save(captor.capture());
+        DeadLetterRecord saved = captor.getValue();
+
+        assertThat(saved.getTopic()).isEqualTo("eagle.auth.events");
+        assertThat(saved.getTag()).isEqualTo("account.deleted");
+        assertThat(saved.getConsumerGroup()).isEqualTo("system_account_deleted");
+        assertThat(saved.getTotalAttempts()).isEqualTo(16);
+        assertThat(saved.getStatus()).isEqualTo("PENDING");
+        assertThat(saved.getPayload()).contains("\"accountId\":200");
     }
 }

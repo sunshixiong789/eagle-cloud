@@ -16,8 +16,7 @@ import com.eagle.system.base.domain.service.RoleValidationService;
 import com.eagle.system.base.interfaces.dto.request.UpdateUserRequest;
 import com.eagle.system.base.interfaces.dto.request.UserQueryRequest;
 import com.eagle.system.base.interfaces.dto.response.AssignedRoleResponse;
-import com.eagle.system.base.infrastructure.remote.AuthAccountBlacklistClient;
-import com.eagle.system.base.infrastructure.remote.AuthOnlineUserClient;
+import com.eagle.system.base.infrastructure.remote.AuthClientFacade;
 import com.eagle.system.base.infrastructure.remote.dto.AccountBlacklistSnapshot;
 import com.eagle.system.base.interfaces.dto.response.UserResponse;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +27,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestClientException;
 
 import java.util.List;
 import java.util.Set;
@@ -55,8 +53,7 @@ public class UserApplicationService {
     private final RoleValidationService roleValidationService;
     private final RoleRepository roleRepository;
     private final LogRepository logRepository;
-    private final AuthOnlineUserClient authOnlineUserClient;
-    private final AuthAccountBlacklistClient authAccountBlacklistClient;
+    private final AuthClientFacade authClientFacade;
 
     /**
      * 更新用户档案信息
@@ -157,23 +154,14 @@ public class UserApplicationService {
     }
 
     /**
-     * 查询账号在线状态。
-     * <p>跨服务调用失败(auth-service 不可达 / 超时 / 5xx)时降级为 OFFLINE,
-     * 不阻塞用户列表查询主流程。
-     * <p><strong>异常收窄</strong>: 仅捕获 {@link RestClientException}(含其子类 ResourceAccessException /
-     * HttpServerErrorException / HttpClientErrorException 等), 不吞 NPE / IllegalStateException 等
-     * 编程错误 —— 这类异常应继续上抛由全局异常处理器返回 5xx, 而不是被静默降级掩盖。
+     * 查询账号在线状态。降级 / 熔断 / 异常处理全部下沉到 {@link AuthClientFacade},
+     * 本方法只关心业务语义。
      */
     private boolean isOnline(Long accountId) {
         if (accountId == null) {
             return false;
         }
-        try {
-            return !authOnlineUserClient.listJtisByAccount(accountId).isEmpty();
-        } catch (RestClientException ex) {
-            log.warn("查询在线状态失败,降级为 OFFLINE: accountId={}", accountId, ex);
-            return false;
-        }
+        return !authClientFacade.listJtisByAccount(accountId).isEmpty();
     }
 
     private void enrichBlacklistStatus(User user, UserResponse response) {
@@ -182,13 +170,8 @@ public class UserApplicationService {
         if (user.getAccountId() == null) {
             return;
         }
-        ResponseEntity<AccountBlacklistSnapshot> resp;
-        try {
-            resp = authAccountBlacklistClient.findByAccountId(user.getAccountId());
-        } catch (RestClientException ex) {
-            log.warn("查询黑名单状态失败,降级为非黑名单: accountId={}", user.getAccountId(), ex);
-            return;
-        }
+        ResponseEntity<AccountBlacklistSnapshot> resp =
+                authClientFacade.findBlacklistByAccountId(user.getAccountId());
         AccountBlacklistSnapshot info = resp.getBody();
         if (resp.getStatusCode().is2xxSuccessful() && info != null) {
             response.setBlacklisted(true);

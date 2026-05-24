@@ -16,8 +16,7 @@ import com.eagle.system.base.domain.repository.UserRepository;
 import com.eagle.system.base.domain.service.RoleValidationService;
 import com.eagle.system.base.interfaces.dto.request.UpdateUserRequest;
 import com.eagle.system.base.interfaces.dto.response.AssignedRoleResponse;
-import com.eagle.system.base.infrastructure.remote.AuthAccountBlacklistClient;
-import com.eagle.system.base.infrastructure.remote.AuthOnlineUserClient;
+import com.eagle.system.base.infrastructure.remote.AuthClientFacade;
 import com.eagle.system.base.infrastructure.remote.dto.AccountBlacklistSnapshot;
 import com.eagle.system.base.interfaces.dto.response.UserResponse;
 import org.junit.jupiter.api.DisplayName;
@@ -62,9 +61,7 @@ class UserApplicationServiceTest {
     @Mock
     LogRepository logRepository;
     @Mock
-    AuthOnlineUserClient authOnlineUserClient;
-    @Mock
-    AuthAccountBlacklistClient authAccountBlacklistClient;
+    AuthClientFacade authClientFacade;
     @InjectMocks
     UserApplicationService service;
 
@@ -140,8 +137,8 @@ class UserApplicationServiceTest {
             when(roleRepository.findAllById(user.getRoleIds())).thenReturn(List.of(admin));
             when(logRepository.findLatestCreateTimeByUsernameAndLogTypeAndStatus(
                     "alice", LogType.LOGIN, LogStatus.SUCCESS)).thenReturn(Optional.of(lastLoginAt));
-            when(authOnlineUserClient.listJtisByAccount(ACCOUNT_ID)).thenReturn(List.of("jti-1"));
-            when(authAccountBlacklistClient.findByAccountId(ACCOUNT_ID))
+            when(authClientFacade.listJtisByAccount(ACCOUNT_ID)).thenReturn(List.of("jti-1"));
+            when(authClientFacade.findBlacklistByAccountId(ACCOUNT_ID))
                     .thenReturn(ResponseEntity.ok(new AccountBlacklistSnapshot(300L, ACCOUNT_ID.toString())));
 
             Page<UserResponse> page = service.queryUsers(PageRequest.of(0, 10));

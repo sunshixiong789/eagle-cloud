@@ -28,6 +28,14 @@ springdoc:
   swagger-ui:
     enabled: false
 
+# Actuator 生产收窄: 只暴露 health/info/prometheus, 避免 env/configprops/mappings
+# 等端点泄漏内部配置、依赖版本、路由表等信息(供攻击者绘制内部拓扑)。
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
 logging:
   level:
     root: WARN

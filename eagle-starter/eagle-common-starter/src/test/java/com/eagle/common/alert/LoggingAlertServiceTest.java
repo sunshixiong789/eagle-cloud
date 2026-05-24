@@ -113,6 +113,33 @@ class LoggingAlertServiceTest {
     }
 
     @Test
+    @DisplayName("severity 未显式 → builder 给 null,compact ctor 回退为 ERROR")
+    void severityDefaultsToErrorWhenMissing() {
+        AlertEvent event = AlertEvent.builder()
+                .source("svc")
+                .category("test")
+                .title("t")
+                .message("m")
+                .build();
+
+        assertThat(event.severity()).isEqualTo(AlertSeverity.ERROR);
+    }
+
+    @Test
+    @DisplayName("occurredAt 未显式 → compact ctor 填充非 null")
+    void occurredAtDefaultsToNow() {
+        AlertEvent event = AlertEvent.builder()
+                .severity(AlertSeverity.INFO)
+                .source("svc")
+                .category("test")
+                .title("t")
+                .message("m")
+                .build();
+
+        assertThat(event.occurredAt()).isNotNull();
+    }
+
+    @Test
     @DisplayName("空 contexts 渲染为 {}")
     void emptyContextsRendered() {
         AlertEvent event = AlertEvent.builder()

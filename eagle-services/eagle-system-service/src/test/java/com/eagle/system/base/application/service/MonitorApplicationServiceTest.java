@@ -4,7 +4,7 @@ import com.eagle.common.exception.AppException;
 import com.eagle.common.exception.DomainException;
 import com.eagle.common.exception.codes.OperationErrorCode;
 import com.eagle.system.base.domain.repository.LogRepository;
-import com.eagle.system.base.infrastructure.remote.AuthOnlineUserClient;
+import com.eagle.system.base.infrastructure.remote.AuthClientFacade;
 import com.eagle.system.base.infrastructure.remote.dto.OnlineUserSnapshot;
 import com.eagle.system.base.interfaces.dto.response.OnlineUserListResponse;
 import org.junit.jupiter.api.AfterEach;
@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
 class MonitorApplicationServiceTest {
 
     @Mock
-    AuthOnlineUserClient authOnlineUserClient;
+    AuthClientFacade authClientFacade;
     @Mock
     LogApplicationService logApplicationService;
     @Mock
@@ -56,7 +56,7 @@ class MonitorApplicationServiceTest {
                     "jti-1", 100L, "alice", "127.0.0.1",
                     LocalDateTime.now(), LocalDateTime.now(),
                     "Chrome", "macOS", 3600L);
-            when(authOnlineUserClient.listOnlineUsers()).thenReturn(List.of(info));
+            when(authClientFacade.listOnlineUsers()).thenReturn(List.of(info));
 
             OnlineUserListResponse resp = service.listOnlineUsers();
 
@@ -85,7 +85,7 @@ class MonitorApplicationServiceTest {
             AppException ex = assertThrows(DomainException.class,
                     () -> service.forceLogout("self-jti"));
             assertEquals(OperationErrorCode.OPERATION_NOT_ALLOWED, ex.getErrorCode());
-            verify(authOnlineUserClient, never()).forceLogout("self-jti");
+            verify(authClientFacade, never()).forceLogout("self-jti");
         }
 
         @Test
@@ -101,14 +101,14 @@ class MonitorApplicationServiceTest {
             SecurityContextHolder.getContext().setAuthentication(auth);
 
             service.forceLogout("other-jti");
-            verify(authOnlineUserClient).forceLogout("other-jti");
+            verify(authClientFacade).forceLogout("other-jti");
         }
 
         @Test
         @DisplayName("should allow forceLogout when no current auth context")
         void shouldAllowWithoutAuth() {
             service.forceLogout("any");
-            verify(authOnlineUserClient).forceLogout("any");
+            verify(authClientFacade).forceLogout("any");
         }
     }
 }

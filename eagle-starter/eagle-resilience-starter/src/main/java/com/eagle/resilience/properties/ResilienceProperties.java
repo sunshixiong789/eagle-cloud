@@ -80,6 +80,19 @@ public class ResilienceProperties {
          * 半开状态下允许通过的试探调用次数。
          */
         private int permittedNumberOfCallsInHalfOpenState = 10;
+
+        /**
+         * 不计入熔断统计的异常类型(精确类型匹配,不含子类)。
+         *
+         * <p>编程错误(NPE / IllegalState / IllegalArgument) 与 4xx 业务异常被熔断器记 failure 没有意义 ——
+         * 它们不是"下游不可用"的信号,反而会污染熔断率把正常调用拖入开路状态。
+         * 默认排除编程错误三件套;4xx 业务异常按业务方需要在使用处显式配置 ignoreExceptions。
+         */
+        private java.util.List<Class<? extends Throwable>> ignoreExceptions = java.util.List.of(
+                NullPointerException.class,
+                IllegalStateException.class,
+                IllegalArgumentException.class
+        );
     }
 
     @Data

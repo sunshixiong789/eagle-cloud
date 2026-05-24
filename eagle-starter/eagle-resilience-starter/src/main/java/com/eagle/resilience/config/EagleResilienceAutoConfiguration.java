@@ -37,17 +37,21 @@ public class EagleResilienceAutoConfiguration {
     public CircuitBreakerRegistry circuitBreakerRegistry(ResilienceProperties properties) {
         ResilienceProperties.CircuitBreakerConfig cfg = properties.getCircuitBreaker();
 
-        CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+        CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom()
                 .failureRateThreshold(cfg.getFailureRateThreshold())
                 .slowCallRateThreshold(cfg.getSlowCallRateThreshold())
                 .slowCallDurationThreshold(cfg.getSlowCallDurationThreshold())
                 .waitDurationInOpenState(cfg.getWaitDurationInOpenState())
                 .slidingWindowSize(cfg.getSlidingWindowSize())
                 .minimumNumberOfCalls(cfg.getMinimumNumberOfCalls())
-                .permittedNumberOfCallsInHalfOpenState(cfg.getPermittedNumberOfCallsInHalfOpenState())
-                .build();
+                .permittedNumberOfCallsInHalfOpenState(cfg.getPermittedNumberOfCallsInHalfOpenState());
+        if (cfg.getIgnoreExceptions() != null && !cfg.getIgnoreExceptions().isEmpty()) {
+            @SuppressWarnings("unchecked")
+            Class<? extends Throwable>[] ignored = cfg.getIgnoreExceptions().toArray(new Class[0]);
+            builder.ignoreExceptions(ignored);
+        }
 
-        return CircuitBreakerRegistry.of(config);
+        return CircuitBreakerRegistry.of(builder.build());
     }
 
     @Bean

@@ -1,10 +1,13 @@
 package com.eagle.system.base.infrastructure.messaging;
 
+import com.alibaba.fastjson2.JSON;
 import com.eagle.common.alert.AlertEvent;
 import com.eagle.common.alert.AlertService;
 import com.eagle.common.alert.AlertSeverity;
 import com.eagle.rocketmq.listener.AbstractDlqListener;
 import com.eagle.rocketmq.properties.RocketMqProperties;
+import com.eagle.system.base.domain.model.DeadLetterRecord;
+import com.eagle.system.base.domain.repository.DeadLetterRecordRepository;
 import com.eagle.system.base.infrastructure.messaging.event.AccountRegisteredMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -29,10 +32,14 @@ public class AccountRegisteredDlqListener extends AbstractDlqListener<AccountReg
     private static final String ALERT_CATEGORY = "mq-dlq";
 
     private final AlertService alertService;
+    private final DeadLetterRecordRepository deadLetterRepository;
 
-    public AccountRegisteredDlqListener(RocketMqProperties props, AlertService alertService) {
+    public AccountRegisteredDlqListener(RocketMqProperties props,
+                                        AlertService alertService,
+                                        DeadLetterRecordRepository deadLetterRepository) {
         super(props);
         this.alertService = alertService;
+        this.deadLetterRepository = deadLetterRepository;
     }
 
     @Override
@@ -49,6 +56,9 @@ public class AccountRegisteredDlqListener extends AbstractDlqListener<AccountReg
     protected void handleDeadLetter(AccountRegisteredMessage event, int totalAttempts) {
         log.error("[DLQ ALERT] account-registered dead-letter: eventId={}, accountId={}, username={}, attempts={}",
                 event.getEventId(), event.getAccountId(), event.getUsername(), totalAttempts);
+        // 1) 落库 — 即使告警链路失败也留下原始证据
+        persistDeadLetter(event, totalAttempts);
+        // 2) 告警 — webhook 异常不影响落库
         alertService.send(AlertEvent.builder()
                 .severity(AlertSeverity.ERROR)
                 .source(ALERT_SOURCE)
@@ -60,6 +70,22 @@ public class AccountRegisteredDlqListener extends AbstractDlqListener<AccountReg
                 .context("username", String.valueOf(event.getUsername()))
                 .context("totalAttempts", String.valueOf(totalAttempts))
                 .build());
-        // TODO 持久化到 t_dead_letter 表供人工补录(独立 PR)
+    }
+
+    private void persistDeadLetter(AccountRegisteredMessage event, int totalAttempts) {
+        try {
+            String payload = JSON.toJSONString(event);
+            deadLetterRepository.save(DeadLetterRecord.capture(
+                    event.getEventId(),
+                    AccountRegisteredConsumer.TOPIC,
+                    AccountRegisteredConsumer.TAG,
+                    AccountRegisteredConsumer.CONSUMER_GROUP,
+                    totalAttempts,
+                    payload,
+                    "base 域 User 创建失败 - 详见 MDC traceId 关联的业务异常"));
+        } catch (RuntimeException ex) {
+            // 落库失败不能阻塞 RocketMQ ack —— 至少 ERROR 日志 + 告警还在
+            log.error("persist dead letter failed, eventId={}", event.getEventId(), ex);
+        }
     }
 }

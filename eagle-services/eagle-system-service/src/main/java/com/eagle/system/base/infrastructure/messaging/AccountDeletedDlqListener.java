@@ -1,10 +1,13 @@
 package com.eagle.system.base.infrastructure.messaging;
 
+import com.alibaba.fastjson2.JSON;
 import com.eagle.common.alert.AlertEvent;
 import com.eagle.common.alert.AlertService;
 import com.eagle.common.alert.AlertSeverity;
 import com.eagle.rocketmq.listener.AbstractDlqListener;
 import com.eagle.rocketmq.properties.RocketMqProperties;
+import com.eagle.system.base.domain.model.DeadLetterRecord;
+import com.eagle.system.base.domain.repository.DeadLetterRecordRepository;
 import com.eagle.system.base.infrastructure.messaging.event.AccountDeletedMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -28,10 +31,14 @@ public class AccountDeletedDlqListener extends AbstractDlqListener<AccountDelete
     private static final String ALERT_CATEGORY = "mq-dlq";
 
     private final AlertService alertService;
+    private final DeadLetterRecordRepository deadLetterRepository;
 
-    public AccountDeletedDlqListener(RocketMqProperties props, AlertService alertService) {
+    public AccountDeletedDlqListener(RocketMqProperties props,
+                                     AlertService alertService,
+                                     DeadLetterRecordRepository deadLetterRepository) {
         super(props);
         this.alertService = alertService;
+        this.deadLetterRepository = deadLetterRepository;
     }
 
     @Override
@@ -48,6 +55,7 @@ public class AccountDeletedDlqListener extends AbstractDlqListener<AccountDelete
     protected void handleDeadLetter(AccountDeletedMessage event, int totalAttempts) {
         log.error("[DLQ ALERT] account-deleted dead-letter: eventId={}, accountId={}, attempts={}",
                 event.getEventId(), event.getAccountId(), totalAttempts);
+        persistDeadLetter(event, totalAttempts);
         alertService.send(AlertEvent.builder()
                 .severity(AlertSeverity.ERROR)
                 .source(ALERT_SOURCE)
@@ -58,6 +66,21 @@ public class AccountDeletedDlqListener extends AbstractDlqListener<AccountDelete
                 .context("accountId", String.valueOf(event.getAccountId()))
                 .context("totalAttempts", String.valueOf(totalAttempts))
                 .build());
-        // TODO 持久化到 t_dead_letter 表供人工清理孤儿 User(独立 PR)
+    }
+
+    private void persistDeadLetter(AccountDeletedMessage event, int totalAttempts) {
+        try {
+            String payload = JSON.toJSONString(event);
+            deadLetterRepository.save(DeadLetterRecord.capture(
+                    event.getEventId(),
+                    AccountDeletedConsumer.TOPIC,
+                    AccountDeletedConsumer.TAG,
+                    AccountDeletedConsumer.CONSUMER_GROUP,
+                    totalAttempts,
+                    payload,
+                    "base 域 User 级联删除失败 - 详见 MDC traceId 关联的业务异常"));
+        } catch (RuntimeException ex) {
+            log.error("persist dead letter failed, eventId={}", event.getEventId(), ex);
+        }
     }
 }
