@@ -81,7 +81,7 @@ public void onOrderPaid(OrderPaidEvent event) {
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public void onOrderPaid(OrderPaidEvent event) {
     // 领域事件 → 集成事件 → MQ
-    publisher.publish("eagle.order.order.events", "paid",
+    publisher.publish("order.order.events", "paid",
             new OrderPaidIntegrationEvent(event.orderId(), event.amount(), event.channel()));
 }
 ```
