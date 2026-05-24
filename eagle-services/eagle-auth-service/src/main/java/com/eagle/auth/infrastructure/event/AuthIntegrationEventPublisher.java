@@ -1,17 +1,9 @@
 package com.eagle.auth.infrastructure.event;
 
 import com.eagle.auth.domain.event.AccountDeletedEvent;
-import com.eagle.auth.domain.event.AccountFrozenEvent;
 import com.eagle.auth.domain.event.AccountRegisteredEvent;
-import com.eagle.auth.domain.event.AccountUnfrozenEvent;
-import com.eagle.auth.domain.event.BlacklistAddedEvent;
-import com.eagle.auth.domain.event.BlacklistRemovedEvent;
 import com.eagle.auth.infrastructure.event.integration.AccountDeletedIntegrationEvent;
-import com.eagle.auth.infrastructure.event.integration.AccountFrozenIntegrationEvent;
 import com.eagle.auth.infrastructure.event.integration.AccountRegisteredIntegrationEvent;
-import com.eagle.auth.infrastructure.event.integration.AccountUnfrozenIntegrationEvent;
-import com.eagle.auth.infrastructure.event.integration.BlacklistAddedIntegrationEvent;
-import com.eagle.auth.infrastructure.event.integration.BlacklistRemovedIntegrationEvent;
 import com.eagle.rocketmq.publisher.DomainEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,13 +19,26 @@ import org.springframework.transaction.event.TransactionalEventListener;
  * RocketMQ topic {@code eagle.auth.events}（tag 按事件类型区分），供 system-service /
  * 其他下游服务消费。
  *
- * <p>领域事件内部 handler（如 {@link AccountSecurityEventHandler}）继续处理 auth 自己
- * 的副作用（强制下线 / 审计日志等），与本桥接器并行不冲突。
+ * <p>当前发布的跨服务集成事件:
+ * <ul>
+ *   <li>{@code account.registered} — system-service 据此创建 User 镜像</li>
+ *   <li>{@code account.deleted}    — system-service 据此清理 User 镜像</li>
+ * </ul>
+ *
+ * <p>其余 auth 内部领域事件（{@link com.eagle.auth.domain.event.AccountFrozenEvent}、
+ * {@link com.eagle.auth.domain.event.AccountUnfrozenEvent}、
+ * {@link com.eagle.auth.domain.event.BlacklistAddedEvent}、
+ * {@link com.eagle.auth.domain.event.BlacklistRemovedEvent}）<strong>不</strong>出域,
+ * 由 {@link AccountSecurityEventHandler} / {@link BlacklistCacheSyncHandler} 处理强制下线、
+ * 缓存同步等本地副作用。若未来确有下游服务需要订阅,再在本类追加 publish 方法。
+ *
+ * <p>领域事件内部 handler 与本桥接器并行不冲突。
  *
  * <p>所有发布在 {@code AFTER_COMMIT} 阶段触发并 {@code @Async}，主事务无任何同步阻塞。
  *
  * <p><strong>Topic 命名约定</strong>:本 topic 故意<em>不</em>拼 {@code eagle.rocketmq.topic-env-prefix},
- * 走字面 {@code eagle.auth.events}(语义版本已通过命名空间区分,跨环境通过 Nacos namespace 隔离)。
+ * 走字面 {@code eagle.auth.events}(环境通过独立 RocketMQ 集群 / Nacos namespace 隔离,
+ * topic 名本身不带 env 前缀,见 rules/15-messaging.md)。
  * 消费侧 {@code AccountRegisteredConsumer} / {@code AccountDeletedConsumer} 必须严格一致,
  * 不要在 {@code getTopic()} 里拼 prefix。
  *
@@ -64,45 +69,5 @@ public class AuthIntegrationEventPublisher {
         publisher.publish(TOPIC, "account.deleted",
                 new AccountDeletedIntegrationEvent(event.accountId()));
         log.debug("published account.deleted, accountId={}", event.accountId());
-    }
-
-    @Async("taskExecutor")
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void onAccountFrozen(AccountFrozenEvent event) {
-        AccountFrozenIntegrationEvent integration = new AccountFrozenIntegrationEvent(
-                event.accountId(), event.username(),
-                event.reason() != null ? event.reason().name() : null,
-                event.freezeUntil(), event.operatorId());
-        publisher.publish(TOPIC, "account.frozen", integration);
-    }
-
-    @Async("taskExecutor")
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void onAccountUnfrozen(AccountUnfrozenEvent event) {
-        AccountUnfrozenIntegrationEvent integration = new AccountUnfrozenIntegrationEvent(
-                event.accountId(), event.username(),
-                event.source() != null ? event.source().name() : null,
-                event.operatorId());
-        publisher.publish(TOPIC, "account.unfrozen", integration);
-    }
-
-    @Async("taskExecutor")
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void onBlacklistAdded(BlacklistAddedEvent event) {
-        BlacklistAddedIntegrationEvent integration = new BlacklistAddedIntegrationEvent(
-                event.id(),
-                event.type() != null ? event.type().name() : null,
-                event.value(), event.expiresAt());
-        publisher.publish(TOPIC, "blacklist.added", integration);
-    }
-
-    @Async("taskExecutor")
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void onBlacklistRemoved(BlacklistRemovedEvent event) {
-        BlacklistRemovedIntegrationEvent integration = new BlacklistRemovedIntegrationEvent(
-                event.id(),
-                event.type() != null ? event.type().name() : null,
-                event.value());
-        publisher.publish(TOPIC, "blacklist.removed", integration);
     }
 }

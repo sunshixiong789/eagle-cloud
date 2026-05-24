@@ -133,7 +133,8 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        // cost=12：约 250ms / 次（M1 实测），满足 NIST 800-63B 抵御 GPU 暴力破解的要求。
+        return new BCryptPasswordEncoder(12);
     }
 
     /**

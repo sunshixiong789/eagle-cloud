@@ -119,6 +119,7 @@ dependencies {
         add('api', "com.aliyun:dysmsapi20170525:${aliyunSmsVersion}")
         add('api', "com.aliyun:dypnsapi20170525:${aliyunDypnsapiVersion}")
         add('api', "com.tencentcloudapi:tencentcloud-sdk-java-sms:${tencentCloudSmsVersion}")
+        add('api', "com.tencentcloudapi:tencentcloud-sdk-java-common:${tencentCloudSmsVersion}")
 
         // API 文档
         add('api', "org.springdoc:springdoc-openapi-starter-common:${springdocVersion}")

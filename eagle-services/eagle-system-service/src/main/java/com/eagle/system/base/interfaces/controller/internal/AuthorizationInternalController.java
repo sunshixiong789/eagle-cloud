@@ -26,12 +26,16 @@ public class AuthorizationInternalController {
     /**
      * 按 accountId 查询授权信息。
      *
-     * @return 用户存在返回 200 + AuthorizationView;不存在返回 204 No Content
+     * @return 用户存在返回 200 + AuthorizationView;不存在返回 404 Not Found
+     *
+     * <p>使用 404 而非 204:204 语义为"已处理但无内容"(常见于 DELETE),用于查询接口
+     * 会导致客户端写 {@code is2xxSuccessful && body != null} 双重判定,且无法区分
+     * "用户不存在" vs "网络/服务异常导致 body 为空"。改用 404 后客户端直接判 status。
      */
     @GetMapping("/{accountId}")
     public ResponseEntity<AuthorizationView> findByAccountId(@PathVariable Long accountId) {
         return authorizationQueryService.findByAccountId(accountId)
                 .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.noContent().build());
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

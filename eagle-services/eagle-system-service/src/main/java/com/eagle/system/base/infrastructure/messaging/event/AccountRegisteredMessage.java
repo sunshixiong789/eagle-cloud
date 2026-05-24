@@ -18,6 +18,8 @@ import lombok.Setter;
 @NoArgsConstructor
 public class AccountRegisteredMessage extends BaseEvent {
 
+    /** 事件协议版本(生产方 {@code AccountRegisteredIntegrationEvent.EVENT_VERSION})。 */
+    private String eventVersion;
     private Long accountId;
     private String username;
     private String phone;

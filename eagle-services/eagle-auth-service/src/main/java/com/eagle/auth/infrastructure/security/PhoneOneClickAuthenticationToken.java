@@ -5,6 +5,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationGrantAuthenticationToken;
 
+import java.io.Serial;
 import java.util.Map;
 
 /**
@@ -21,6 +22,7 @@ public class PhoneOneClickAuthenticationToken extends OAuth2AuthorizationGrantAu
 
     public static final AuthorizationGrantType PHONE_ONE_CLICK =
             new AuthorizationGrantType("phone_one_click");
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

@@ -77,7 +77,7 @@ public UploadResponse upload(MultipartFile file) {
 
 ```java
 // 上传后异步触发
-publisher.publish("prod_oss_uploaded",new FileUploadedEvent(bucket, key));
+publisher.publish("eagle.oss.file.events", "uploaded", new FileUploadedEvent(bucket, key));
 
 // 扫描消费者
 @Override

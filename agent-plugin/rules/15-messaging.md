@@ -15,21 +15,39 @@
 
 ## Topic / Tag 命名
 
-格式：`{env}_{domain}_{event}`，全小写，下划线分隔：
+**环境隔离靠不同 MQ 集群（或同集群不同 namespace）**，topic 名本身**不**带 env 前缀——
+dev / test / staging / prod 各自连接独立的 RocketMQ 实例，部署期通过 Nacos 配置切换。
+这样能避免"测试消息漏到生产" / "topic 改名要全环境联动"等问题。
+
+格式：`eagle.{service}.{domain}.events`（点号分隔，全小写）：
 
 ```
-prod_order_created
-prod_order_paid
-prod_account_registered
-test_user_updated
+eagle.auth.account.events       # auth-service 账号生命周期事件
+eagle.order.order.events        # order-service 订单生命周期事件
+eagle.payment.payment.events    # payment-service 支付事件
+eagle.system.user.events        # system-service 用户域事件
 ```
 
-- `env`：`dev / test / staging / prod`
-- `domain`：业务域（`order / account / user / payment`）
-- `event`：事件名（过去时动词，如 `created / paid / cancelled`）
-- Tag 用于子分类：`prod_order_status:paid` / `prod_order_status:cancelled`
+- `eagle` — 平台前缀，与其他系统区分
+- `service` — 发布方服务名（**必须**带，避免不同服务相同 domain 撞名）
+- `domain` — 业务域（`account / order / payment / user`）
+- `events` — 固定后缀，标识这是事件 topic
 
-**禁止**多个不相关事件复用同一 Topic（无法独立监控/限流/扩缩容）。
+**Tag** 用过去时动词区分子事件类型：
+
+```
+topic: eagle.auth.account.events
+  tag: registered      # AccountRegisteredIntegrationEvent
+  tag: deleted         # AccountDeletedIntegrationEvent
+```
+
+一个聚合根的全部生命周期事件应**复用同一 topic + 不同 tag**——便于消费方按需订阅
+（`tagsExpression = "registered || deleted"`）、统一监控同一聚合的吞吐与堆积。
+
+**禁止**：
+- topic 名带 `{env}_` 前缀（环境隔离应在基础设施层）
+- topic 名不带 `service` 段（不同服务的 `order` 域必然撞名）
+- 多个**不相关聚合**的事件复用同一 topic（独立扩缩容受限）
 
 ## 消息发布
 
@@ -40,7 +58,7 @@ public class NotificationApplicationService {
     private final DomainEventPublisher publisher;
 
     public void notifyAdmin(AdminAlert event) {
-        publisher.publish("prod_admin_alert", event);
+        publisher.publish("eagle.notification.admin.events", "alert", event);
     }
 }
 
@@ -48,7 +66,8 @@ public class NotificationApplicationService {
 publisher.
 
 publishInTransaction(
-    "prod_order_created",
+    "eagle.order.order.events",
+    "created",
     event,
     () ->orderRepository.
 
@@ -80,11 +99,11 @@ public class OrderCreatedIntegrationEvent extends BaseEvent {
     // ...
 }
 
-// 3) 处理器转换并发布
+// 3) 处理器转换并发布（topic + tag）
 @Async
 @TransactionalEventListener(phase = AFTER_COMMIT)
 public void onOrderCreated(OrderCreatedEvent e) {
-    publisher.publish("prod_order_created",
+    publisher.publish("eagle.order.order.events", "created",
             new OrderCreatedIntegrationEvent(e.orderId(), e.orderNo(), ...));
 }
 ```
@@ -134,7 +153,13 @@ public class OrderCreatedConsumer
 
     @Override
     protected String getTopic() {
-        return "prod_order_created";
+        return "eagle.order.order.events";
+    }
+
+    /** 仅订阅 created tag（同 topic 其他 tag 的事件由别的 consumer 处理）。 */
+    @Override
+    protected String getTagExpression() {
+        return "created";
     }
 
     @Override
@@ -161,32 +186,73 @@ public class OrderCreatedConsumer
 
 ## 幂等（必须）
 
-消费者**必须**实现幂等，防止重复消费：
+消费者**必须**实现幂等，防止重复消费。**推荐做法是把幂等埋进业务表本身**，避免引入独立 inbox 表 —— 同一份"是否处理过"的真相只存一处(业务表)，且自动复用业务事务边界。
+
+### 主调：业务表自带幂等（推荐）
+
+**Mode A — 创建型(入账、消息、关系映射)**
 
 ```java
-// ✅ 方案一：唯一约束（推荐，DB 强一致）
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = "event_id"))
+@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "source_type", "source_ref_id"}))
 
-try{
-        inboxRepository.
+// ApplicationService:
+try {
+    repo.save(Entity.create(userId, sourceType, sourceRefId, ...));
+} catch (DataIntegrityViolationException e) {
+    log.info("idempotent skip");
+    return;
+}
+// 其它必要写入(同事务)...
+```
 
-save(new InboxRecord(event.eventId()));
+**Mode B — 状态机推进**
 
-process(event);
-}catch(
-DataIntegrityViolationException ignore){
-        // 重复消息直接跳过
-        }
+```java
+int updated = repo.updateStatusIfCurrentlyEquals(id, OLD, NEW);
+if (updated == 0) return;   // 已转换过
+```
 
-// ✅ 方案二：Redis SETNX（高吞吐场景）
+**Mode C — 累加型(计数器、累计金额、会员天数)**
+
+直接 `counter += 1` 无法幂等。新建独立**事实表**挂幂等键 + 同事务更新累加器：
+
+```java
+// 1) FactLog 实体：(user_id, source, source_ref_id) UNIQUE
+// 2) ApplicationService:
+try {
+    factLogRepo.save(FactLog.create(userId, source, sourceRefId, ...));
+} catch (DataIntegrityViolationException e) {
+    return;
+}
+// 同事务内更新累加器
+aggregate.accumulate(...);
+aggregateRepo.save(aggregate);
+```
+
+**Consumer 编码约定:** 幂等下沉到 ApplicationService 后，Consumer/DlqListener **不再**写 `idempotency.firstTime(...)`：
+
+```java
+@Override
+protected void handle(SomeMessage event) {
+    appService.doSomething(event.getUserId(), event.getSourceRefId(), ...);
+}
+```
+
+### 罕见兜底：Redis SETNX
+
+仅在事件**真的没有自然业务键**(纯事实通知)时使用。
+
+```java
 Boolean first = redisTemplate.opsForValue()
-        .setIfAbsent("eagle:mq:idempotent:" + event.eventId(), "1", Duration.ofDays(1));
-if(Boolean.FALSE.
-
-equals(first))return;
+        .setIfAbsent("eagle:mq:idempotent:" + event.getEventId(), "1", Duration.ofDays(1));
+if (Boolean.FALSE.equals(first)) return;
 ```
 
 幂等 Key **必须**用消息自带的 `eventId`（`BaseEvent.eventId`），**不**用 MQ 自动生成的 `MsgId`（重投递会变）。
+
+### 反模式：独立 inbox 表
+
+旧做法是建一张 `xxx_mq_inbox(event_id, consumer_group)` 表挡重复。**不推荐** —— 两份真相(inbox + 业务表)、跨表事务复杂、Consumer 多一层 boilerplate。仅在业务表方案不可行时考虑(几乎不会发生)。
 
 ## 死信处理（DLQ）
 

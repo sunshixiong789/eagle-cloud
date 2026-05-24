@@ -72,7 +72,8 @@ public void payOrder(Long orderId) {
     orderRepository.save(order);
 
     publisher.publishInTransaction(
-            "prod_order_paid",
+            "eagle.order.order.events",
+            "paid",
             new OrderPaidIntegrationEvent(orderId, ...),
     () -> {
     } // 事务消息回调（在本地事务内）

@@ -10,6 +10,7 @@ configurations.configureEach {
 dependencies {
     implementation project(':eagle-starter:eagle-data-jpa-starter')
     implementation project(':eagle-starter:eagle-resource-server-starter')
+    implementation project(':eagle-starter:eagle-resilience-starter')
     implementation project(':eagle-starter:eagle-notification-starter')
     implementation project(':eagle-starter:eagle-websocket-starter')
     implementation project(':eagle-starter:eagle-rocketmq-starter')
@@ -30,8 +31,11 @@ dependencies {
     // 微信 SDK（auth 内的 WeChat 登录适配器使用）
     implementation "com.github.binarywang:weixin-java-miniapp"
 
-    // 阿里云号码认证 / 一键登录（PhoneOneClickServiceImpl 直接使用 Client 类，必须编译期可见）
+    // 阿里云号码认证 / 一键登录（AliyunPhoneOneClickProvider 直接使用 Client 类，必须编译期可见）
     implementation "com.aliyun:dypnsapi20170525"
+
+    // 腾讯云号码认证 / 一键登录（TencentPhoneOneClickProvider 通过 CommonClient 调用）
+    implementation "com.tencentcloudapi:tencentcloud-sdk-java-common"
 
     implementation "com.github.ben-manes.caffeine:caffeine"
     // auth 内的 LoginRateLimitFilter / TokenTrackingHandler / OnlineUserAdapter 直接用 fastjson2

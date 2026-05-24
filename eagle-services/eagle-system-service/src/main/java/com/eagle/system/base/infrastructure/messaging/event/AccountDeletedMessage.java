@@ -18,5 +18,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class AccountDeletedMessage extends BaseEvent {
 
+    /** 事件协议版本(生产方 {@code AccountDeletedIntegrationEvent.EVENT_VERSION})。 */
+    private String eventVersion;
     private Long accountId;
 }
