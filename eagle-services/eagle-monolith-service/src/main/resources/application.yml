@@ -42,6 +42,7 @@ eagle:
     email: admin@eagle.com
   # OAuth2 默认客户端
   oauth:
+    issuer: ${EAGLE_OAUTH_ISSUER:${EAGLE_SERVER_URL:http://localhost:80}}
     default-client:
       enabled: true
       client-id: eagleWeb
@@ -85,6 +86,8 @@ eagle:
       access-key-secret: ${SMS_ACCESS_KEY_SECRET:}
       sign-name: ${SMS_SIGN_NAME:}
       template-id: ${SMS_TEMPLATE_ID:}
+  rocketmq:
+    enabled: false
 
 # ===========================================
 # Actuator

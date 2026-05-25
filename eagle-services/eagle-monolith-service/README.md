@@ -1,12 +1,12 @@
 # eagle-monolith-service
 
-Eagle 平台**单体启动模块**。复用 `eagle-system-service` 全部业务代码（认证 / 用户 / 角色 / 菜单 / 权限 / OAuth2
-等），剥离 Nacos / 注册中心 / Gateway / Sentinel 等微服务专属基础设施，下游用户拿到即可作为单体应用一键启动。
+Eagle 平台**单体启动模块**。复用 `eagle-auth-service` 与 `eagle-system-service` 的业务代码（账号 / OAuth2 / JWT /
+用户 / 角色 / 菜单 / 权限等），剥离 Nacos / 注册中心 / Gateway / Sentinel 等微服务专属基础设施，下游用户拿到即可作为单体应用一键启动。
 
 ## 定位
 
 - **零基础设施**：无需 Nacos / Gateway / 网关代理，独立 JAR 启动即可
-- **代码零拷贝**：通过 Gradle `implementation project(...)` 直接复用 `eagle-system-service` 业务代码
+- **代码零拷贝**：通过 Gradle `implementation project(...)` 直接复用 `eagle-auth-service` 与 `eagle-system-service` 业务代码
 - **单实例可用**：内置 H2（local） + Caffeine（本地缓存），开箱即用
 - **生产就绪**：切到 `prod` profile 即可使用 MySQL + Redis 真实依赖
 - **二次扩展**：在 `com.eagle.monolith` 包下新增 Bean / Configuration 覆盖系统服务默认行为
@@ -15,16 +15,16 @@ Eagle 平台**单体启动模块**。复用 `eagle-system-service` 全部业务�
 
 ```
 @SpringBootApplication
-@ConfigurationPropertiesScan(basePackages = {"com.eagle.system", "com.eagle.monolith"})
+@ConfigurationPropertiesScan(basePackages = {"com.eagle.auth", "com.eagle.system", "com.eagle.monolith"})
 @EnableCaching
 @ComponentScan(
-    basePackages = {"com.eagle.system", "com.eagle.monolith"},
+    basePackages = {"com.eagle.auth", "com.eagle.system", "com.eagle.monolith"},
     excludeFilters = @ComponentScan.Filter(
         type = FilterType.ASSIGNABLE_TYPE,
         classes = EagleSystemApplication.class)
 )
-@EntityScan(basePackages = {"com.eagle.system", "com.eagle.monolith"})
-@EnableJpaRepositories(basePackages = {"com.eagle.system", "com.eagle.monolith"})
+@EntityScan(basePackages = {"com.eagle.auth", "com.eagle.system", "com.eagle.monolith"})
+@EnableJpaRepositories(basePackages = {"com.eagle.auth", "com.eagle.system", "com.eagle.monolith"})
 public class EagleMonolithApplication { ... }
 ```
 
@@ -33,7 +33,7 @@ public class EagleMonolithApplication { ... }
 - **必须排除 `EagleSystemApplication`**：该类带 `@SpringBootApplication`（=
   `@SpringBootConfiguration` + `@EnableAutoConfiguration` + `@ComponentScan`），若被组件扫描会触发二次 auto-configuration
   加载，导致 `AsyncConfig` 等单例 bean 重复注册（典型表现："Only one AsyncConfigurer may exist"）
-- **显式 `@EntityScan` / `@EnableJpaRepositories`**：因 `eagle-system-service` 以 `implementation` 范围引入 JPA
+- **显式 `@EntityScan` / `@EnableJpaRepositories`**：因服务模块以 `implementation` 范围引入 JPA
   starter，传递依赖在本模块编译期不可见，不能依赖默认包扫描
 - **`@ComponentScan` 限定到业务包**：避免误扫 starter 内部 `@Component`（starter 应通过自身 `@AutoConfiguration` +
   条件装配生效）
@@ -41,11 +41,16 @@ public class EagleMonolithApplication { ... }
 ## 依赖（build.gradle）
 
 ```groovy
+implementation(project(':eagle-services:eagle-auth-service')) {
+    exclude group: 'com.alibaba.cloud',
+            module: 'spring-cloud-starter-alibaba-nacos-discovery'
+}
 implementation(project(':eagle-services:eagle-system-service')) {
     exclude group: 'com.alibaba.cloud',
             module: 'spring-cloud-starter-alibaba-nacos-discovery'   // 单体不需要注册中心
 }
 implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
 ```
 
 排除 Nacos 后，单体直接使用本地配置 + 本地数据源，**无需 Nacos 即可启动**。
@@ -106,7 +111,7 @@ SPRING_DATASOURCE_URL=jdbc:mysql://... \
 | 启动复杂度   | 极低                   | 中等                        |
 | 适用规模    | 小型 SaaS / PoC / 私有部署 | 中大型团队 / 多业务域 / 高可用要求      |
 
-业务代码完全相同 — 当规模增长时，可平滑切换到 `eagle-system-service` + `eagle-gateway-service` 部署模式，无需改业务代码。
+业务代码完全相同 — 当规模增长时，可平滑切换到 `eagle-auth-service` + `eagle-system-service` + `eagle-gateway-service` 部署模式，无需改业务代码。
 
 ## 二次扩展
 

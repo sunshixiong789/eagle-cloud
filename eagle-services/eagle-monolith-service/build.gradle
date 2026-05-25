@@ -1,19 +1,26 @@
-// 单体启动模块：复用 eagle-system-service 全部业务代码（认证 / 用户 / 角色 / 菜单 / 权限 等），
+// 单体启动模块：复用 eagle-auth-service + eagle-system-service 业务代码（账号 / 认证 / 用户 / 角色 / 菜单 / 权限等），
 // 排除 Nacos / 微服务专属传递依赖，下游用户拿到即可作为单体应用启动。
 dependencies {
+    implementation(project(':eagle-services:eagle-auth-service')) {
+        // Nacos 服务发现：单体内部直接调用本地 Bean，不需要注册中心。
+        exclude group: 'com.alibaba.cloud', module: 'spring-cloud-starter-alibaba-nacos-discovery'
+    }
     implementation(project(':eagle-services:eagle-system-service')) {
         // Nacos 服务发现：单体不需要注册中心
         exclude group: 'com.alibaba.cloud', module: 'spring-cloud-starter-alibaba-nacos-discovery'
     }
-    // system-service 以 implementation 范围引入下列依赖，传递依赖在 monolith 编译期不可见，
+    // 服务模块以 implementation 范围引入下列依赖，传递依赖在 monolith 编译期不可见，
     // 这里显式重新声明，使 IDE 能加载 spring-configuration-metadata.json，
     // 避免 application.yml 提示 "无法解析配置属性 eagle.websocket.* 等"。
     // 启动类同样需要 @EntityScan / @EnableJpaRepositories 显式声明跨包扫描。
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
     implementation project(':eagle-starter:eagle-openapi-starter')
     implementation project(':eagle-starter:eagle-websocket-starter')
     implementation project(':eagle-starter:eagle-resource-server-starter')
     implementation project(':eagle-starter:eagle-row-security-starter')
+    implementation project(':eagle-starter:eagle-rocketmq-starter')
 }

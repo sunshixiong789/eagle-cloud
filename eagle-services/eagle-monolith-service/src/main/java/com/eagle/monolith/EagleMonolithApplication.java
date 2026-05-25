@@ -21,7 +21,8 @@ import java.util.Optional;
  * 扫描根明确限定到业务包，避免误扫 starter 内部 {@code @Component}（starter 内部 Bean 应通过
  * 各自的 {@code @AutoConfiguration} + 条件装配，不依赖应用层组件扫描）：
  * <ul>
- *   <li>{@code com.eagle.system.*} — 来自 eagle-system-service 的认证 / 用户 / 角色 / 菜单 / OAuth2 业务代码</li>
+ *   <li>{@code com.eagle.auth.*} — 来自 eagle-auth-service 的账号 / OAuth2 / JWT 业务代码</li>
+ *   <li>{@code com.eagle.system.*} — 来自 eagle-system-service 的用户 / 角色 / 菜单 / 权限业务代码</li>
  *   <li>{@code com.eagle.monolith.*} — 单体专属的扩展配置 / Bean 覆盖</li>
  * </ul>
  * <p>
@@ -34,11 +35,15 @@ import java.util.Optional;
  * 不引入任何 Nacos / 注册中心 / Gateway / Sentinel 等微服务基础设施。
  */
 @SpringBootApplication
-@ConfigurationPropertiesScan(basePackages = {"com.eagle.system", "com.eagle.monolith"})
+@ConfigurationPropertiesScan(basePackages = {"com.eagle.auth", "com.eagle.system", "com.eagle.monolith"})
 @EnableCaching
-@ComponentScan(basePackages = {"com.eagle.system", "com.eagle.monolith"}, excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = EagleSystemApplication.class))
-@EntityScan(basePackages = {"com.eagle.system", "com.eagle.monolith"})
-@EnableJpaRepositories(basePackages = {"com.eagle.system", "com.eagle.monolith"})
+@ComponentScan(
+        basePackages = {"com.eagle.auth", "com.eagle.system", "com.eagle.monolith"},
+        excludeFilters = @ComponentScan.Filter(
+                type = FilterType.ASSIGNABLE_TYPE,
+                classes = EagleSystemApplication.class))
+@EntityScan(basePackages = {"com.eagle.auth", "com.eagle.system", "com.eagle.monolith"})
+@EnableJpaRepositories(basePackages = {"com.eagle.auth", "com.eagle.system", "com.eagle.monolith"})
 public class EagleMonolithApplication {
 
     private final Environment env;
