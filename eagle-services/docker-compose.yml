@@ -194,26 +194,29 @@ services:
       - rocketmq-broker-logs:/home/rocketmq/logs
       - rocketmq-broker-store:/home/rocketmq/store
 
-  # 网关服务
-  gateway:
+  # 认证服务（OAuth2 Authorization Server + 微信/短信登录）
+  # 独立库 eagle_auth（由 postgres-init/01-create-auth-db.sh 首次启动时创建）
+  auth:
     build:
-      context: ./eagle-gateway-service
+      context: ./eagle-auth-service
       dockerfile: Dockerfile
-    image: eagle-gateway:1.0.0
+    image: eagle-auth:1.0.0
     pull_policy: build           # 本地构建镜像，禁止 docker compose up 时去 registry 拉
-    container_name: eagle-gateway
+    container_name: eagle-auth
     restart: always
     ports:
-      - "8080:8080"
+      - "8081:8081"
     networks:
       - eagle-network
-    # 单机 8G 部署基线：堆 768m + 元空间 256m + 直接内存/线程栈
-    mem_limit: 1280m
-    mem_reservation: 512m
+    # 单机 8G 部署基线：auth 承载 OAuth2/JPA/Hibernate，与 system 同档
+    mem_limit: 2048m
+    mem_reservation: 1024m
     # environment 显式枚举所有关键变量，统一 ${VAR:-default} 插值
-    # 默认值已包含容器网络约束（nacos:8848 / system:8082 / sentinel-dashboard:8858），.env 可整体覆盖
+    # 注意：DB_NAME 单独走 AUTH_DB_NAME 变量（默认 eagle_auth），与 system 的 DB_NAME 区分
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - SERVER_PORT=${AUTH_SERVER_PORT:-8081}
+      # Nacos 注册中心
       - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
       - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
       - NACOS_GROUP=${NACOS_GROUP:-DEFAULT_GROUP}
@@ -222,27 +225,75 @@ services:
       - NACOS_PASSWORD=${NACOS_PASSWORD:-}
       # 多机部署时改为宿主机/公网 IP；单机留空，客户端自动取容器 IP
       - NACOS_REGISTER_IP=${NACOS_REGISTER_IP:-}
-      - AUTH_SERVER_URL=${AUTH_SERVER_URL:-http://system:8082}
-      - SENTINEL_DASHBOARD=${SENTINEL_DASHBOARD:-sentinel-dashboard:8858}
-      - EAGLE_GATEWAY_SENTINEL_ENABLED=${EAGLE_GATEWAY_SENTINEL_ENABLED:-true}
-      - EAGLE_SENTINEL_GLOBAL_QPS=${EAGLE_SENTINEL_GLOBAL_QPS:-1800}
-      - EAGLE_SENTINEL_GLOBAL_BURST=${EAGLE_SENTINEL_GLOBAL_BURST:-300}
-      - EAGLE_SENTINEL_AUTH_QPS=${EAGLE_SENTINEL_AUTH_QPS:-600}
-      - EAGLE_SENTINEL_AUTH_BURST=${EAGLE_SENTINEL_AUTH_BURST:-100}
-      - EAGLE_SENTINEL_SMS_QPS=${EAGLE_SENTINEL_SMS_QPS:-80}
-      - EAGLE_SENTINEL_SMS_BURST=${EAGLE_SENTINEL_SMS_BURST:-20}
-      - ROCKETMQ_NAME_SERVER=${ROCKETMQ_NAME_SERVER:-rocketmq-namesrv:9876}
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-}
-      - JAVA_OPTS=${GATEWAY_JAVA_OPTS:--server -XX:+UseG1GC -Xms512m -Xmx768m -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
+      # PostgreSQL 数据源（auth 用独立的 eagle_auth 库）
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${AUTH_DB_NAME:-eagle_auth}
+      - DB_USERNAME=${DB_USERNAME:-eagle}
+      - DB_PASSWORD=${DB_PASSWORD:-eagle123456}
+      - DB_POOL_MAX=${DB_POOL_MAX:-80}
+      - DB_POOL_MIN=${DB_POOL_MIN:-20}
+      # Redis
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis123456}
+      - REDIS_DATABASE=${REDIS_DATABASE:-0}
+      - REDIS_POOL_MAX_ACTIVE=${REDIS_POOL_MAX_ACTIVE:-96}
+      - REDIS_POOL_MAX_IDLE=${REDIS_POOL_MAX_IDLE:-32}
+      - REDIS_POOL_MIN_IDLE=${REDIS_POOL_MIN_IDLE:-8}
+      - REDIS_POOL_MAX_WAIT=${REDIS_POOL_MAX_WAIT:-2000ms}
+      # RocketMQ（auth-service 使用 eagle.rocketmq.endpoints，对应 namesrv:9876）
+      - ROCKETMQ_ENDPOINTS=${ROCKETMQ_ENDPOINTS:-rocketmq-namesrv:9876}
+      - ROCKETMQ_TOPIC_ENV_PREFIX=${ROCKETMQ_TOPIC_ENV_PREFIX:-}
+      # JWT keystore
+      - EAGLE_JWT_KEYSTORE_LOCATION=${EAGLE_JWT_KEYSTORE_LOCATION:-classpath:jwt-keystore.p12}
+      - EAGLE_JWT_KEYSTORE_PASSWORD=${EAGLE_JWT_KEYSTORE_PASSWORD:-eagle-jwt-dev-2026}
+      # OAuth2 issuer: JWT iss claim 与资源服务器校验保持一致；集群部署必填稳定对外 URL
+      - EAGLE_OAUTH_ISSUER=${EAGLE_OAUTH_ISSUER:-http://localhost:8080}
+      # OAuth2 回调白名单: 逗号分隔，前端联调 / 多环境部署时在 .env 覆盖
+      - EAGLE_OAUTH_REDIRECT_URIS=${EAGLE_OAUTH_REDIRECT_URIS:-http://localhost:8080/auth/oauth2/callback}
+      # 第三方登录（按需启用，留空 = 禁用）
+      - WECHAT_APP_APP_ID=${WECHAT_APP_APP_ID:-}
+      - WECHAT_APP_APP_SECRET=${WECHAT_APP_APP_SECRET:-}
+      - WECHAT_MINI_APP_ID=${WECHAT_MINI_APP_ID:-}
+      - WECHAT_MINI_APP_SECRET=${WECHAT_MINI_APP_SECRET:-}
+      - WECHAT_WEB_APP_ID=${WECHAT_WEB_APP_ID:-}
+      - WECHAT_WEB_APP_SECRET=${WECHAT_WEB_APP_SECRET:-}
+      - WECHAT_WEB_REDIRECT_URI=${WECHAT_WEB_REDIRECT_URI:-}
+      - WECHAT_MP_APP_ID=${WECHAT_MP_APP_ID:-}
+      - WECHAT_MP_APP_SECRET=${WECHAT_MP_APP_SECRET:-}
+      - WECHAT_MP_REDIRECT_URI=${WECHAT_MP_REDIRECT_URI:-}
+      # 短信服务商切换（由 eagle-notification-starter 统一处理）
+      - SMS_PROVIDER=${SMS_PROVIDER:-hnsls}
+      - SMS_ACCESS_KEY_ID=${SMS_ACCESS_KEY_ID:-}
+      - SMS_ACCESS_KEY_SECRET=${SMS_ACCESS_KEY_SECRET:-}
+      - SMS_SIGN_NAME=${SMS_SIGN_NAME:-}
+      - SMS_TEMPLATE_ID=${SMS_TEMPLATE_ID:-}
+      # 腾讯云短信
+      - TENCENT_SMS_SDK_APP_ID=${TENCENT_SMS_SDK_APP_ID:-}
+      - TENCENT_SMS_REGION=${TENCENT_SMS_REGION:-ap-guangzhou}
+      # 手拉手短信
+      - HNSLS_SMS_USERNAME=${HNSLS_SMS_USERNAME:-}
+      - HNSLS_SMS_PASSWORD=${HNSLS_SMS_PASSWORD:-}
+      - HNSLS_SMS_CONTENT_TEMPLATE=${HNSLS_SMS_CONTENT_TEMPLATE:-您的验证码是{code}，5分钟内有效。}
+      - HNSLS_SMS_SEND_URL=${HNSLS_SMS_SEND_URL:-https://xapi.hnsls.com.cn/eums/sms/utf8/send.do}
+      - HNSLS_SMS_CHARSET=${HNSLS_SMS_CHARSET:-UTF-8}
+      - JAVA_OPTS=${AUTH_JAVA_OPTS:--server -XX:+UseG1GC -Xms768m -Xmx1536m -XX:MaxMetaspaceSize=320m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
     healthcheck:
-      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health" ]
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8081/actuator/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
     depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
       nacos:
         condition: service_healthy
+      rocketmq-broker:
+        condition: service_started
 
   # 系统服务
   system:
@@ -346,3 +397,58 @@ services:
         condition: service_healthy
       rocketmq-broker:
         condition: service_started
+
+  # 网关服务（放在最后：依赖 auth + system 注册到 Nacos 后才能完成路由 lb）
+  gateway:
+    build:
+      context: ./eagle-gateway-service
+      dockerfile: Dockerfile
+    image: eagle-gateway:1.0.0
+    pull_policy: build           # 本地构建镜像，禁止 docker compose up 时去 registry 拉
+    container_name: eagle-gateway
+    restart: always
+    ports:
+      - "8080:8080"
+    networks:
+      - eagle-network
+    # 单机 8G 部署基线：堆 768m + 元空间 256m + 直接内存/线程栈
+    mem_limit: 1280m
+    mem_reservation: 512m
+    # environment 显式枚举所有关键变量，统一 ${VAR:-default} 插值
+    # 默认值已包含容器网络约束（nacos:8848 / auth:8081 / system:8082 / sentinel-dashboard:8858），.env 可整体覆盖
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
+      - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
+      - NACOS_GROUP=${NACOS_GROUP:-DEFAULT_GROUP}
+      # Nacos 3.0+ 默认开启鉴权，客户端必须传账号密码
+      - NACOS_USERNAME=${NACOS_USERNAME:-nacos}
+      - NACOS_PASSWORD=${NACOS_PASSWORD:-}
+      # 多机部署时改为宿主机/公网 IP；单机留空，客户端自动取容器 IP
+      - NACOS_REGISTER_IP=${NACOS_REGISTER_IP:-}
+      # AUTH_SERVER_URL: gateway 走 Nacos lb://eagle-auth-service，此处仅为兼容历史显式直连
+      - AUTH_SERVER_URL=${AUTH_SERVER_URL:-http://auth:8081}
+      - SENTINEL_DASHBOARD=${SENTINEL_DASHBOARD:-sentinel-dashboard:8858}
+      - EAGLE_GATEWAY_SENTINEL_ENABLED=${EAGLE_GATEWAY_SENTINEL_ENABLED:-true}
+      - EAGLE_SENTINEL_GLOBAL_QPS=${EAGLE_SENTINEL_GLOBAL_QPS:-1800}
+      - EAGLE_SENTINEL_GLOBAL_BURST=${EAGLE_SENTINEL_GLOBAL_BURST:-300}
+      - EAGLE_SENTINEL_AUTH_QPS=${EAGLE_SENTINEL_AUTH_QPS:-600}
+      - EAGLE_SENTINEL_AUTH_BURST=${EAGLE_SENTINEL_AUTH_BURST:-100}
+      - EAGLE_SENTINEL_SMS_QPS=${EAGLE_SENTINEL_SMS_QPS:-80}
+      - EAGLE_SENTINEL_SMS_BURST=${EAGLE_SENTINEL_SMS_BURST:-20}
+      - ROCKETMQ_NAME_SERVER=${ROCKETMQ_NAME_SERVER:-rocketmq-namesrv:9876}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-}
+      - JAVA_OPTS=${GATEWAY_JAVA_OPTS:--server -XX:+UseG1GC -Xms512m -Xmx768m -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      nacos:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+      system:
+        condition: service_healthy
