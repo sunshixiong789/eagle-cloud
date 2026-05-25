@@ -38,7 +38,7 @@ public interface IEagleService<T> extends IService<T> {
     /**
      * 分页查询，返回统一分页响应结果。
      *
-     * <p>自动处理 {@link EaglePageQuery#getOrderBy()} 和 {@link EaglePageQuery#getOrderDirection()}
+     * <p>自动处理 {@code EaglePageQuery.getOrderBy()} 和 {@code EaglePageQuery.getOrderDirection()}
      * 排序参数，无需在业务层手动构建排序条件。
      *
      * <p>使用示例：

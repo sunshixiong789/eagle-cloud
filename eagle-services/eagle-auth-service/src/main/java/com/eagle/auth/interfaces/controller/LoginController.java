@@ -149,7 +149,7 @@ public class LoginController {
     }
 
     /**
-     * Form-login 的失败重定向器：短信登录路径的业务异常统一回到 /login?error&sms。
+     * Form-login 的失败重定向器：短信登录路径的业务异常统一回到 {@code /login?error&sms}。
      * <p>对应规范 05-api.md "Controller 禁止 try-catch"——@ExceptionHandler 是声明式处理，
      * 不属于 try-catch。其他端点的异常仍由全局 GlobalExceptionHandler 接管。</p>
      */

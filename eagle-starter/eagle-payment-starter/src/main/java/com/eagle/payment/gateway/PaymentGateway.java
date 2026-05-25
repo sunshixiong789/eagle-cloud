@@ -27,7 +27,7 @@ public interface PaymentGateway {
     /**
      * 发起支付。
      *
-     * <p>返回的 {@link PayResult#getPayInfo()} 因支付方式而异：
+     * <p>返回的 {@code PayResult.getPayInfo()} 因支付方式而异：
      * APP 支付返回订单字符串，PC 扫码返回二维码链接，小程序支付返回 prepayId。
      *
      * @param request 支付请求

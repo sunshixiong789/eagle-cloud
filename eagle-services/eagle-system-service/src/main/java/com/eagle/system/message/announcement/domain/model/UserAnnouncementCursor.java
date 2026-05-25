@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
  *
  * <p>对比"关系表 {@code (announcement_id, user_id, read_at)}"模型：
  * 1 千万用户 × 100 条公告 = 10 亿行，本方案永远 1 亿行（每用户 1 行），
- * 写入 {@code O(1)}，未读判断 {@code O(N)} 内存比较（N = 当前有效公告数，通常 < 100）。
+ * 写入 {@code O(1)}，未读判断 {@code O(N)} 内存比较（N = 当前有效公告数，通常 &lt; 100）。
  *
  * @author sunshixiong
  */

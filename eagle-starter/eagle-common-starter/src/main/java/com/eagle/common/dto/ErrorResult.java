@@ -13,7 +13,7 @@ import java.time.Instant;
  * <ul>
  *   <li>Servlet 环境:由 {@code RequestIdMdcFilter} 自动从 {@code X-Request-Id} 请求头读取并写入 MDC,
  *       工厂方法内自动注入,调用方零改动</li>
- *   <li>WebFlux 环境(网关):MDC 不可靠,需显式 {@link #setRequestId(String)} 写入</li>
+ *   <li>WebFlux 环境(网关):MDC 不可靠,需显式 {@code setRequestId(String)} 写入</li>
  * </ul>
  *
  * @author 孙士雄（sunshix@seeyon.com）

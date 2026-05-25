@@ -25,7 +25,7 @@ import java.util.List;
  * </ul>
  *
  * <p>读取策略：先 Redis；miss 时回库重建（DB 有 publish_time/expire_time 索引，
- * 即使所有缓存同时失效也不会击穿——单次回库 < 5ms）。
+ * 即使所有缓存同时失效也不会击穿——单次回库 &lt; 5ms）。
  *
  * <p>失效策略：发布/撤回时主动调 {@link #invalidateActiveCache()}，下次读 miss 重建。
  * 不直接修改缓存数据是因为：
