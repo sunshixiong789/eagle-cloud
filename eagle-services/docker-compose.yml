@@ -245,6 +245,11 @@ services:
       # RocketMQ（auth-service 使用 eagle.rocketmq.endpoints，对应 namesrv:9876）
       - ROCKETMQ_ENDPOINTS=${ROCKETMQ_ENDPOINTS:-rocketmq-namesrv:9876}
       - ROCKETMQ_TOPIC_ENV_PREFIX=${ROCKETMQ_TOPIC_ENV_PREFIX:-}
+      # 初始管理员（AdminProperties.password 无默认值，缺失即 fail-fast；AdminInitializer 启动时创建管理员账号）
+      - EAGLE_ADMIN_USERNAME=${EAGLE_ADMIN_USERNAME:-admin}
+      - EAGLE_ADMIN_PASSWORD=${EAGLE_ADMIN_PASSWORD}
+      - EAGLE_ADMIN_NAME=${EAGLE_ADMIN_NAME:-系统管理员}
+      - EAGLE_ADMIN_EMAIL=${EAGLE_ADMIN_EMAIL:-admin@eagle.com}
       # JWT keystore
       - EAGLE_JWT_KEYSTORE_LOCATION=${EAGLE_JWT_KEYSTORE_LOCATION:-classpath:jwt-keystore.p12}
       - EAGLE_JWT_KEYSTORE_PASSWORD=${EAGLE_JWT_KEYSTORE_PASSWORD:-eagle-jwt-dev-2026}
@@ -359,6 +364,9 @@ services:
       # OAuth2 回调白名单: 逗号分隔,与 application.yml 默认值保持一致;
       # 前端联调 / 多环境部署时在 .env 覆盖,补上额外的回调地址
       - EAGLE_OAUTH_REDIRECT_URIS=${EAGLE_OAUTH_REDIRECT_URIS:-http://localhost:8080/auth/oauth2/callback}
+      # OAuth2 资源服务器 JWKS endpoint: 直连 auth-service(service name=auth, 端口 8081),
+      # 不走 OIDC discovery 以规避 auth 容器未就绪时的 503 + 重启风暴(memory 1588/1589)
+      - EAGLE_OAUTH_JWK_SET_URI=${EAGLE_OAUTH_JWK_SET_URI:-http://auth:8081/oauth2/jwks}
       # 第三方登录（按需启用，留空 = 禁用）
       - WECHAT_MINI_APP_ID=${WECHAT_MINI_APP_ID:-}
       - WECHAT_MINI_APP_SECRET=${WECHAT_MINI_APP_SECRET:-}
