@@ -18,7 +18,7 @@ import java.util.Map;
  * @param severity 严重程度,见 {@link AlertSeverity}
  * @param source   告警源(服务名 / 模块名),通常用 {@code spring.application.name}
  * @param category 业务分类,例如 {@code mq-dlq}、{@code rpc-circuit-open}、{@code idempotency-violation}
- * @param title    简短标题(< 80 字符),用于 webhook 卡片主体
+ * @param title    简短标题({@code < 80} 字符),用于 webhook 卡片主体
  * @param message  详细描述,可换行
  * @param cause    异常(可选)
  * @author sunshixiong
