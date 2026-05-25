@@ -16,7 +16,7 @@ server:
 
 spring:
   application:
-    name: eagle-auth-service
+    name: auth
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
   lifecycle:

@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 class RemoteClientConfiguration {
 
-    private static final String SYSTEM_SERVICE_ID = "eagle-system-service";
+    private static final String SYSTEM_SERVICE_ID = "system";
 
     @Bean
     SystemAuthorizationClient systemAuthorizationClient(EagleRestServiceClientFactory factory) {
