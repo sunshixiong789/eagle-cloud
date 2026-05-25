@@ -194,6 +194,25 @@ services:
       - rocketmq-broker-logs:/home/rocketmq/logs
       - rocketmq-broker-store:/home/rocketmq/store
 
+  # RocketMQ Dashboard（开发环境可视化控制台，浏览器访问 http://localhost:8180）
+  # 通过容器名 rocketmq-namesrv:9876 连 NameServer；关闭 VIP channel 避免与 broker 端口冲突
+  rocketmq-dashboard:
+    image: apacherocketmq/rocketmq-dashboard:1.0.0
+    container_name: eagle-rocketmq-dashboard
+    restart: always
+    ports:
+      - "8180:8080"
+    networks:
+      - eagle-network
+    depends_on:
+      - rocketmq-namesrv
+      - rocketmq-broker
+    environment:
+      - JAVA_OPTS=${ROCKETMQ_DASHBOARD_JAVA_OPTS:--server -Xms256m -Xmx512m -Drocketmq.namesrv.addr=rocketmq-namesrv:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false}
+      - TZ=${TZ:-Asia/Shanghai}
+    mem_limit: 768m
+    mem_reservation: 256m
+
   # 认证服务（OAuth2 Authorization Server + 微信/短信登录）
   # 独立库 eagle_auth（由 postgres-init/01-create-auth-db.sh 首次启动时创建）
   auth:
