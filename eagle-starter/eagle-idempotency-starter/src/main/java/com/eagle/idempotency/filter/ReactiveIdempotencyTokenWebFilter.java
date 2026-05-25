@@ -17,7 +17,7 @@ import java.util.Map;
  * 跨线程的可见性由 {@link com.eagle.idempotency.config.IdempotencyContextPropagationRegistrar}
  * 注册的 {@code ThreadLocalAccessor} 与 {@code Hooks.enableAutomaticContextPropagation()} 共同保证。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public class ReactiveIdempotencyTokenWebFilter implements WebFilter, Ordered {
 

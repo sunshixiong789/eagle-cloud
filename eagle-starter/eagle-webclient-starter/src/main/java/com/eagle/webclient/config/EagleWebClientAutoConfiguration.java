@@ -34,7 +34,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  *
  * <p>同步阻塞场景请使用 {@code eagle-restclient-starter}。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @AutoConfiguration

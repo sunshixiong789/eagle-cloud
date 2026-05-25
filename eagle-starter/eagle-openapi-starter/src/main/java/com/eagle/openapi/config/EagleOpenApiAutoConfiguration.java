@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
  *   <li>公开端点自动去掉锁图标</li>
  * </ul>
  *
- * @author 孙士雄
+ * @author eagle
  */
 @AutoConfiguration
 @ConditionalOnClass(io.swagger.v3.oas.models.OpenAPI.class)

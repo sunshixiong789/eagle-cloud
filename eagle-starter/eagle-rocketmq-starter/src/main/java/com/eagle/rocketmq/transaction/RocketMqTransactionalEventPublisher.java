@@ -31,7 +31,7 @@ import java.util.List;
  *   <li>若未收到确认，Broker 触发 {@link TransactionChecker} 回查</li>
  * </ol>
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public class RocketMqTransactionalEventPublisher implements TransactionalEventPublisher,

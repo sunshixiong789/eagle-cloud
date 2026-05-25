@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 多从库时按轮询策略依次使用 {@code "slave-0"}、{@code "slave-1"} 等，
  * 对应 key 在 {@link com.eagle.datasource.config.DynamicDataSourceConfig} 中注册。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public class DynamicDataSource extends AbstractRoutingDataSource {
 

@@ -29,7 +29,7 @@ import java.util.Map;
  * <p>注册方式：{@code META-INF/spring.factories}
  * {@code org.springframework.context.ApplicationListener=com.eagle.seata.config.SeataEnvironmentPostProcessor}
  *
- * @author 孙士雄
+ * @author eagle
  */
 public class SeataEnvironmentPostProcessor implements ApplicationListener<ApplicationEnvironmentPreparedEvent> {
 

@@ -17,7 +17,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * RestClient 错误处理器：将下游服务 HTTP 错误转换为类型化业务异常。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @RequiredArgsConstructor

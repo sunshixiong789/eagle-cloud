@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * RestClient 请求拦截器：透传入站请求 Header 与压测标记。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public class PropagatingHeadersClientHttpRequestInterceptor implements ClientHttpRequestInterceptor {

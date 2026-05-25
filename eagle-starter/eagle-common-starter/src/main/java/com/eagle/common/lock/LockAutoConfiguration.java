@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
  * <p>仅启用 {@link LockProperties}，{@link DistributedLock} 实例由各 starter（redis / rocketmq）
  * 按 {@code eagle.lock.type} 选择性注入。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @AutoConfiguration
 @EnableConfigurationProperties(LockProperties.class)

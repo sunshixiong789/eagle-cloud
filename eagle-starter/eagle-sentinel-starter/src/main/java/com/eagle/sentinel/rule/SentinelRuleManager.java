@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
  *
  * <p>所有方法均采用追加（merge）策略，不会清除已有资源的规则。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @Component

@@ -25,7 +25,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * }
  * }</pre>
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public class SseEmitterManager {

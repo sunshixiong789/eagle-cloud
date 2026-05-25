@@ -5,7 +5,7 @@ import com.eagle.common.exception.ErrorCode;
 /**
  * 消息模块错误码（17001–17004）。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public enum MessageErrorCode implements ErrorCode {
 

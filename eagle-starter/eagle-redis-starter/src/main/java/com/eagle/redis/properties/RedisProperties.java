@@ -23,7 +23,7 @@ import java.util.Map;
  *       PERMISSION_CACHE: 60m
  * </pre>
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Data
 @ConfigurationProperties(prefix = "eagle.redis")

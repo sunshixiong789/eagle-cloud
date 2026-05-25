@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * Eagle 全局 RestClient 定制器。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @RequiredArgsConstructor
 public class EagleRestClientCustomizer implements RestClientCustomizer {

@@ -36,7 +36,7 @@ import java.lang.reflect.Method;
  *   <li>编程式：{@code DataPermissionContext.ignorePermission(() -> ...)}</li>
  * </ul>
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @Aspect

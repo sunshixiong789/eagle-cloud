@@ -21,7 +21,7 @@ import java.util.Objects;
  * <p>反应式（WebFlux）路径请使用 {@code eagle-webclient-starter} 提供的
  * {@code EagleReactiveServiceClientFactory}。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @NoArgsConstructor
 public class EagleRestServiceClientFactory {

@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono;
  * 注册的 {@code ThreadLocalAccessor}，以及 common-starter 在 WebFlux 启动时调用的
  * {@code Hooks.enableAutomaticContextPropagation()}。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @RequiredArgsConstructor

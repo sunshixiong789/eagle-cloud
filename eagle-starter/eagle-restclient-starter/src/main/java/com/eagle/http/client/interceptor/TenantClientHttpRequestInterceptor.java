@@ -12,7 +12,7 @@ import java.io.IOException;
 /**
  * RestClient 请求拦截器：透传当前租户 ID。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public class TenantClientHttpRequestInterceptor implements ClientHttpRequestInterceptor {

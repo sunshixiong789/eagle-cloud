@@ -19,7 +19,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <p>{@link SeataEnvironmentPostProcessor} 会自动将本类属性同步到
  * Seata 原生配置前缀（{@code seata.*}），无需重复配置。
  *
- * @author 孙士雄
+ * @author eagle
  * @see com.eagle.seata.config.SeataEnvironmentPostProcessor
  */
 @Data

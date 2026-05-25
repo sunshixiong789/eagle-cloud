@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  * <p>当配置了 {@code eagle.datasource.master.url} 时生效，注册主从路由数据源、只读切面、
  * 以及 Async 上下文传播装饰器；未配 master URL 时本配置类不装配，避免与单数据源场景冲突。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 // beforeName 避免编译期依赖 spring-boot-autoconfigure 的具体模块

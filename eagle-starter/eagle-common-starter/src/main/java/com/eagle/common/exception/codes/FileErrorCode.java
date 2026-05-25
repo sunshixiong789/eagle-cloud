@@ -5,7 +5,7 @@ import com.eagle.common.exception.ErrorCode;
 /**
  * 文件操作错误码（14001–14005）
  *
- * @author 孙士雄
+ * @author eagle
  */
 public enum FileErrorCode implements ErrorCode {
 

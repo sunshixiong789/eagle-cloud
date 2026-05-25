@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * {@link EagleRestClientAutoConfiguration} 自动配置测试。
  *
- * @author 孙士雄
+ * @author eagle
  */
 class EagleRestClientAutoConfigurationTest {
 

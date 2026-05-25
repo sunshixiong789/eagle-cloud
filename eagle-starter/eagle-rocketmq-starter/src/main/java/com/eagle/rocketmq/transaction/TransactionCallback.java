@@ -14,7 +14,7 @@ package com.eagle.rocketmq.transaction;
  * });
  * }</pre>
  *
- * @author 孙士雄
+ * @author eagle
  */
 @FunctionalInterface
 public interface TransactionCallback {

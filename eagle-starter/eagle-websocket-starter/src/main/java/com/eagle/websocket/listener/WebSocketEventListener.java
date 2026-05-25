@@ -19,7 +19,7 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
  *
  * <p>由 {@code eagle-websocket-starter} 自动注册，消费方无需手动声明。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public class WebSocketEventListener {

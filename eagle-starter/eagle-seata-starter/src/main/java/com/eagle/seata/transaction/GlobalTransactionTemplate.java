@@ -36,7 +36,7 @@ import org.apache.seata.tm.api.GlobalTransactionContext;
  * <p><strong>异常处理</strong>：回调中抛出的任意异常都会触发全局事务回滚，
  * 并以 {@link RuntimeException} 包装后重新抛出。调用方可按需 catch 处理。
  *
- * @author 孙士雄
+ * @author eagle
  * @see TransactionCallback
  * @see GlobalTransactionContext
  */

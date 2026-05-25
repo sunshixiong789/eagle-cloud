@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * 多租户配置属性。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Data
 @ConfigurationProperties(prefix = "eagle.tenant")

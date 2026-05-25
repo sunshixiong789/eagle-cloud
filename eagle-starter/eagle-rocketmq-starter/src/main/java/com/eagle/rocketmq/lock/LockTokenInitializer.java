@@ -25,7 +25,7 @@ import java.time.Duration;
  * 信号量。生产环境应将 {@code eagle.lock.auto-init-token} 设为 {@code false}，由运维通过
  * 一次性脚本初始化（仅在主节点或单独的 init job 中执行）。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @RequiredArgsConstructor

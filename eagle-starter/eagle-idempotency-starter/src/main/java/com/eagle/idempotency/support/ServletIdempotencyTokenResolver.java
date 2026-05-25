@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 /**
  * Servlet request based idempotency token resolver.
  *
- * @author 孙士雄
+ * @author eagle
  */
 @RequiredArgsConstructor
 public class ServletIdempotencyTokenResolver implements IdempotencyTokenResolver {

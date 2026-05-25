@@ -16,7 +16,7 @@ import java.util.function.Supplier;
  * <p>是 {@code eagle.lock.type=redis}（默认）时容器中注册的 Bean，性能最优，
  * 支持 Redisson 看门狗机制自动续期。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @RequiredArgsConstructor

@@ -27,7 +27,7 @@ import java.util.Objects;
  * <p>同步阻塞场景请使用 {@code eagle-restclient-starter} 提供的
  * {@code EagleRestServiceClientFactory}。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @NoArgsConstructor
 public class EagleReactiveServiceClientFactory {

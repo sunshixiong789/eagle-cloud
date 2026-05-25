@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * 用户响应对象
  *
- * @author 孙士雄
+ * @author eagle
  * @since 1.0.0
  */
 @Data

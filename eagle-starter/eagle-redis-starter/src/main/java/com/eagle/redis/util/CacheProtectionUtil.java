@@ -39,7 +39,7 @@ import java.util.function.Supplier;
  * redisTemplate.opsForValue().set(key, value, ttl);
  * }</pre>
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @RequiredArgsConstructor

@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * XXL-Job 执行器配置属性。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Data
 @ConfigurationProperties(prefix = "eagle.xxl-job")

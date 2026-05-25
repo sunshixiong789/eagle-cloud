@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  * <p>标记在 Service 或 Repository 方法上，触发 Hibernate Filter 自动注入当前租户 ID。
  * 要求对应实体已定义 {@code @FilterDef(name = "tenantFilter")} 和 {@code @Filter(name = "tenantFilter")}。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)

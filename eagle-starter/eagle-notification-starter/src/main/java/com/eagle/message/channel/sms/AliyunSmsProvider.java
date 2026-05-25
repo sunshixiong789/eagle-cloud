@@ -15,7 +15,7 @@ import java.util.Map;
  * <p>阿里云在服务端完成模板渲染，应用层只需传递参数 JSON；
  * 模板 ID 形如 {@code SMS_123456789}。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public class AliyunSmsProvider implements SmsProvider {

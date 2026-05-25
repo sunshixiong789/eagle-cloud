@@ -24,7 +24,7 @@ import java.util.UUID;
  * <p>注册顺序 HIGHEST_PRECEDENCE：必须先于业务过滤器执行,确保后续过滤器 / Servlet 内部都能从 MDC
  * 取到 requestId(详见 EagleCommonAutoConfiguration.WebMvcConfiguration)。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public class RequestIdMdcFilter extends OncePerRequestFilter {

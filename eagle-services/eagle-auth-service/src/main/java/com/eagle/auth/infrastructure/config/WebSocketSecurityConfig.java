@@ -31,7 +31,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
  *
  * <p>未带 token 或 token 无效一律抛 {@link AccessDeniedException}，STOMP 客户端收到 ERROR 帧后断开。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @Configuration

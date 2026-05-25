@@ -9,7 +9,7 @@ import java.util.Set;
  *
  * <p>各业务服务需实现此接口，提供当前登录用户的数据权限信息。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public interface DataPermissionProvider {
 

@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Bean;
  *
  * <p>若需替换默认切面，声明自定义 {@link DataPermissionAspect} Bean 即可覆盖。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @AutoConfiguration

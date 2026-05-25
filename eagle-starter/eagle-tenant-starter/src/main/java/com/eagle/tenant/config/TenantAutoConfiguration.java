@@ -23,7 +23,7 @@ import org.springframework.web.server.WebFilter;
 /**
  * 多租户自动配置。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @AutoConfiguration

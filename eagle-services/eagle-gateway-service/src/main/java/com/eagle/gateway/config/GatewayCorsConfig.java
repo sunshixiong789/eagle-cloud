@@ -29,7 +29,7 @@ import java.util.List;
  * 这是 OWASP 与 12-security.md 的红线(允许任意源 + 携带凭证 = CSRF + 数据泄漏)。
  * 违规直接抛 {@link IllegalStateException} 启动失败,而不是上线后悄悄破防。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @Configuration(proxyBeanMethods = false)

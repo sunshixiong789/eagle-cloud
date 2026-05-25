@@ -8,7 +8,7 @@ import com.eagle.common.exception.ErrorCode;
  * <p>从 redis-starter 提取至 common-starter，供所有 {@code DistributedLock}
  * 实现（Redis / RocketMQ / 其他）共用。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public enum LockErrorCode implements ErrorCode {
 

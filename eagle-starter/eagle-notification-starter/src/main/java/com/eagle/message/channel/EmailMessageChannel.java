@@ -16,7 +16,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
  * <p>使用 {@link MessageTemplateEngine} 渲染邮件正文和主题，
  * 主题中的 {@code ${key}} 占位符同样会被替换。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @RequiredArgsConstructor

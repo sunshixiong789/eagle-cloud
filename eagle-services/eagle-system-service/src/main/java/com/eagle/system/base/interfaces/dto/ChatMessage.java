@@ -6,7 +6,7 @@ import lombok.Data;
 /**
  * 广播消息
  *
- * @author 孙士雄（sunshix@seeyon.com）
+ * @author eagle（sunshix@seeyon.com）
  * 2025/12/29-18:03
  */
 @Data

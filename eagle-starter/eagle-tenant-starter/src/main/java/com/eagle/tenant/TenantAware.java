@@ -9,7 +9,7 @@ package com.eagle.tenant;
  * &#64;Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
  * </pre>
  *
- * @author 孙士雄
+ * @author eagle
  */
 public interface TenantAware {
 

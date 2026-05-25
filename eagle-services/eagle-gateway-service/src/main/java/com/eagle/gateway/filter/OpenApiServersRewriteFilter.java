@@ -40,7 +40,7 @@ import java.net.URI;
  *
  * <p>{@code order = -1}：先于 {@code NettyWriteResponseFilter} 包装响应，确保 decorator 生效。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @Component

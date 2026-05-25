@@ -27,7 +27,7 @@ import org.springframework.context.annotation.Bean;
  *   <li>{@link SentinelRuleManager} — 程序化规则管理器，简化动态规则配置 API</li>
  * </ul>
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @AutoConfiguration

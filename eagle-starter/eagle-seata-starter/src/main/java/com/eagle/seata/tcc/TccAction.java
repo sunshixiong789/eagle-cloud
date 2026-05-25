@@ -69,7 +69,7 @@ import org.apache.seata.rm.tcc.api.BusinessActionContext;
  * }</pre>
  *
  * @param <T> Try 阶段业务参数类型，需被 {@code @BusinessActionContextParameter} 标注以便 Seata 序列化
- * @author 孙士雄
+ * @author eagle
  * @see TccIdempotencyHelper
  */
 public interface TccAction<T> {

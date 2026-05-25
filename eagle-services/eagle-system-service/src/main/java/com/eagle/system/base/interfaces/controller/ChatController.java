@@ -26,7 +26,7 @@ import java.security.Principal;
  * <p>注:STOMP/@MessageMapping 端点不会出现在 Swagger UI 中,完整 WebSocket 接口契约
  * 见 {@code docs/websocket-api.md} 与 {@code docs/websocket-api.yaml}(AsyncAPI 3.0)。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @Tag(name = "WebSocket 消息", description = "基于 STOMP over WebSocket 的实时消息;Swagger 不渲染 @MessageMapping,详见 docs/websocket-api.md")

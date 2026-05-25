@@ -21,7 +21,7 @@ import java.util.Map;
  * <p>注意：手机号必须为 E.164 格式，国内号需带 {@code +86} 前缀。
  * 本实现会自动为以 {@code 1} 开头的 11 位号码补上 {@code +86}，其它情况按原样传递。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public class TencentSmsProvider implements SmsProvider {

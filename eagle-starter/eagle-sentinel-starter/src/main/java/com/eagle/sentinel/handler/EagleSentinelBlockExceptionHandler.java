@@ -27,7 +27,7 @@ import java.util.Map;
  *   <li>{@link SystemBlockException} → 503，系统负载过高</li>
  * </ul>
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public class EagleSentinelBlockExceptionHandler implements BlockExceptionHandler {

@@ -5,7 +5,7 @@ import com.eagle.common.exception.ErrorCode;
 /**
  * RocketMQ 错误码（16001–16004）。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public enum RocketMqErrorCode implements ErrorCode {
 

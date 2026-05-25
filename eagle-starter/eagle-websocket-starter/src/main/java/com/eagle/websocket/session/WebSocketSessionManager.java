@@ -26,7 +26,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
  * sessionManager.broadcast("/topic/announcement", announcementDto);
  * }</pre>
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public class WebSocketSessionManager {

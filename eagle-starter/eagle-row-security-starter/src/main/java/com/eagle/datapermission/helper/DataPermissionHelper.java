@@ -19,7 +19,7 @@ import java.util.Set;
  * <p>权限范围判定优先级：{@link DataPermissionContext}（ThreadLocal 覆盖）
  * &gt; {@link DataPermissionProvider#getCurrentUserDataScope()}（Security Context）。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public class DataPermissionHelper {

@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  * <p>消费者推荐在 {@code @Async} 方法或独立线程中循环调用 {@link #take} 处理任务，
  * 服务重启后延迟任务仍保留在 Redis 中不会丢失。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @RequiredArgsConstructor

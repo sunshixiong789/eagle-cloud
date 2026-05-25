@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * 网关 Sentinel 默认规则配置项（{@code eagle.gateway.sentinel.*}）。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Data
 @ConfigurationProperties(prefix = "eagle.gateway.sentinel")

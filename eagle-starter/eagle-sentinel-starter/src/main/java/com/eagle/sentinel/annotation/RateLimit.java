@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  * public void sendSms(String phone) { ... }
  * }</pre>
  *
- * @author 孙士雄
+ * @author eagle
  * @see com.eagle.sentinel.aspect.RateLimitAspect
  * @see FlowControlBehavior
  */

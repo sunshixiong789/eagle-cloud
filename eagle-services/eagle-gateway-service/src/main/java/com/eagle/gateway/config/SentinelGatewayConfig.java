@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
  * <p>Sentinel Gateway Filter 由 {@code SentinelSCGAutoConfiguration} 自动注册，
  * 本配置仅自定义限流后的响应处理器。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @Configuration(proxyBeanMethods = false)

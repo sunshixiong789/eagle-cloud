@@ -20,7 +20,7 @@ import org.jspecify.annotations.Nullable;
  * <p><strong>schema 稳定性</strong>：本类是跨服务 ABI，新增字段必须有默认值；
  * 删除/重命名字段属破坏性变更，需协调所有发布方/消费方同步发布。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Getter
 @NoArgsConstructor

@@ -16,7 +16,7 @@ import java.util.List;
  *
  * <p>配置前缀：{@code eagle.http-client.*}
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Data
 @ConfigurationProperties(prefix = "eagle.http-client")

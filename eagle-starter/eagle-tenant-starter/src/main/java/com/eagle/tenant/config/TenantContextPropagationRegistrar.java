@@ -15,7 +15,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
  * <p>仅在 WebFlux 环境激活；Servlet 环境下 ThreadLocal 由
  * {@link com.eagle.tenant.filter.TenantIdFilter} 同步管理，无需额外桥接。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @ConditionalOnClass({ContextRegistry.class, ThreadLocalAccessor.class})

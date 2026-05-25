@@ -8,7 +8,7 @@ import java.util.Map;
  * <p>不同服务商（阿里云、腾讯云等）在 SDK 调用、模板 ID 形态、错误码上差异较大，
  * 通过该接口屏蔽差异，由 {@code SmsMessageChannel} 统一委派。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public interface SmsProvider {
 

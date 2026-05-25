@@ -28,6 +28,7 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * Replaces cross-service HTTP/MQ integration with in-process calls for the monolith runtime.
+ * @author eagle
  */
 @Configuration(proxyBeanMethods = false)
 public class MonolithLocalIntegrationConfiguration {

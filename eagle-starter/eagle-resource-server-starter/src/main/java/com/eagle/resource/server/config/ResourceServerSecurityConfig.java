@@ -33,7 +33,7 @@ import java.util.List;
  *
  * <p>可通过 {@code eagle.resource-server.permit-paths} 追加额外放行路径。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Configuration(proxyBeanMethods = false)
 @EnableWebSecurity

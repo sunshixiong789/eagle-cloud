@@ -8,7 +8,7 @@ import lombok.Data;
 /**
  * 更新用户请求
  *
- * @author 孙士雄
+ * @author eagle
  * @since 1.0.0
  */
 @Data

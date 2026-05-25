@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentMap;
  *   <li>仅需实时广播、允许消息丢失（如缓存刷新）→ 使用本工具</li>
  * </ul>
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @RequiredArgsConstructor

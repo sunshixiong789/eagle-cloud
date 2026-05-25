@@ -46,7 +46,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * }
  * }</pre>
  *
- * @author 孙士雄
+ * @author eagle
  * @see TccAction
  */
 @RequiredArgsConstructor

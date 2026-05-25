@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
  * public class MyServiceApplication { ... }
  * }</pre>
  *
- * @author 孙士雄
+ * @author eagle
  * @see ResourceServerAutoConfiguration
  */
 @Target(ElementType.TYPE)

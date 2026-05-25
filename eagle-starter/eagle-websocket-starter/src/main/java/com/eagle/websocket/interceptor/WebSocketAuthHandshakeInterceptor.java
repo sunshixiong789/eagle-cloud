@@ -19,7 +19,7 @@ import java.util.Map;
  * <p>未携带 Token 时允许匿名连接（返回 {@code true}），
  * 业务方可在消息处理层做鉴权。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {

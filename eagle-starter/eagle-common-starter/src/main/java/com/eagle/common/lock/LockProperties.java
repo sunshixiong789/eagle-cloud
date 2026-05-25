@@ -11,7 +11,7 @@ import java.util.List;
  *
  * <p>统一控制 {@link DistributedLock} 的实现选型、锁粒度与 MQ 模式下的拓扑参数。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Data
 @ConfigurationProperties(prefix = "eagle.lock")

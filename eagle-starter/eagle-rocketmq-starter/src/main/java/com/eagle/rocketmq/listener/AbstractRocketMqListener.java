@@ -59,7 +59,7 @@ import java.util.Collections;
  * </ol>
  *
  * @param <T> 事件类型，必须继承 {@link BaseEvent}
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public abstract class AbstractRocketMqListener<T extends BaseEvent> implements InitializingBean, DisposableBean {

@@ -15,7 +15,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
  * <p>注册 STOMP 端点、配置消息代理前缀和心跳间隔。
  * 由 {@link WebSocketAutoConfiguration} 导入，属性来自 {@link WebSocketProperties}。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Configuration
 @EnableWebSocketMessageBroker

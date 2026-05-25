@@ -22,7 +22,7 @@ import java.util.List;
  * @PreAuthorize("#userId == authentication.principal.id")
  * }</pre>
  *
- * @author 孙士雄
+ * @author eagle
  */
 public class EagleJwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 

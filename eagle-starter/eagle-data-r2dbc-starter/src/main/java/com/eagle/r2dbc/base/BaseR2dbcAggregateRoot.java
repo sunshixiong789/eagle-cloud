@@ -58,7 +58,7 @@ import java.time.LocalDateTime;
  * }</pre>
  *
  * @param <T> 聚合根自身类型
- * @author 孙士雄
+ * @author eagle
  */
 @Getter
 @NoArgsConstructor

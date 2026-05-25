@@ -19,7 +19,7 @@ import java.util.Collection;
  * @PreAuthorize("#userId == authentication.principal.id")
  * }</pre>
  *
- * @author 孙士雄
+ * @author eagle
  * @see EagleJwtAuthenticationConverter
  */
 public final class EagleAuthentication extends AbstractAuthenticationToken {

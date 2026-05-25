@@ -37,7 +37,7 @@ import java.util.function.Supplier;
  * }
  * }</pre>
  *
- * @author 孙士雄
+ * @author eagle
  */
 public final class DataPermissionContext {
 

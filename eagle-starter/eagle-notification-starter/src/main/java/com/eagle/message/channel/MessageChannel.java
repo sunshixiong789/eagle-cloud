@@ -6,7 +6,7 @@ import com.eagle.message.enums.MessageChannelType;
 /**
  * 消息发送渠道抽象。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public interface MessageChannel {
 

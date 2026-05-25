@@ -82,7 +82,7 @@ import java.time.Duration;
  * <p>此方案无需加锁，适合高并发低竞争场景（如大库存商品）。
  * 若库存极少且并发极高（抢购场景），建议配合 {@link com.eagle.common.lock.DistributedLock} 使用悲观锁避免过多自旋。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @RequiredArgsConstructor
 public class RedissonAtomicUtil {

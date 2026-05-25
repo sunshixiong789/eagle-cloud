@@ -3,7 +3,7 @@ package com.eagle.system.base.domain.model.enums;
 /**
  * 日志状态
  *
- * @author 孙士雄（sunshix@seeyon.com）
+ * @author eagle（sunshix@seeyon.com）
  * 2025/12/9-09:51
  */
 public enum LogStatus {

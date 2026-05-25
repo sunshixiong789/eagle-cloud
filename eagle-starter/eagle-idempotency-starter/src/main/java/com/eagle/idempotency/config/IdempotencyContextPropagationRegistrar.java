@@ -14,7 +14,7 @@ import java.util.Map;
  * 把 {@link ReactiveIdempotencyTokenContext} 的 ThreadLocal 注册到 {@link ContextRegistry}，
  * 让幂等 Token header 在 Reactor 链上跨线程透传到 AOP 切面。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @ConditionalOnClass({ContextRegistry.class, ThreadLocalAccessor.class})

@@ -22,7 +22,7 @@ import java.util.Map;
  *   <li>根据 {@link JpaProperties} 配置 Hibernate 批量写入、慢 SQL 阈值等参数</li>
  * </ul>
  *
- * @author 孙士雄
+ * @author eagle
  */
 @AutoConfiguration
 @EnableJpaAuditing

@@ -18,7 +18,7 @@ import org.springframework.util.StringUtils;
  * }
  * </pre>
  *
- * @author 孙士雄
+ * @author eagle
  */
 public final class SeataUtil {
 

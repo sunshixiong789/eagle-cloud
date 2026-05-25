@@ -13,7 +13,7 @@ import java.util.UUID;
  *
  * <p>两种算法均通过 Lua 脚本保证原子性，避免并发竞争。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @RequiredArgsConstructor
 public class RedisRateLimiter {

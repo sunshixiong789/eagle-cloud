@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 资源名规则：{@link RateLimit#resource()} 非空则使用指定值，
  * 否则自动生成 {@code 简单类名.方法名}。
  *
- * @author 孙士雄
+ * @author eagle
  * @see RateLimit
  * @see FlowRuleManager
  */

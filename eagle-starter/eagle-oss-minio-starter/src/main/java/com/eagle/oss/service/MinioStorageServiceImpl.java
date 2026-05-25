@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * MinIO 存储服务实现。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @RequiredArgsConstructor

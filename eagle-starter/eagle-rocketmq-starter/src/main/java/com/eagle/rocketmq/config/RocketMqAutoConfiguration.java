@@ -31,7 +31,7 @@ import java.util.List;
  *   <li>{@link TransactionalEventPublisher} — 事务消息（Outbox Pattern），需要容器内有 {@link AbstractRocketMqTransactionChecker} Bean</li>
  * </ul>
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @AutoConfiguration

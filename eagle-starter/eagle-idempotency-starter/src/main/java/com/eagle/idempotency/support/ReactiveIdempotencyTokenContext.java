@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 注册到 {@code io.micrometer.context.ContextRegistry} 的 {@code ThreadLocalAccessor} +
  * {@code Hooks.enableAutomaticContextPropagation()} 共同保证。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public final class ReactiveIdempotencyTokenContext {
 

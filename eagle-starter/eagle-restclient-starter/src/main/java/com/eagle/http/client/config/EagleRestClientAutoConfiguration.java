@@ -40,7 +40,7 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
  *
  * <p>反应式（WebFlux）场景请使用 {@code eagle-webclient-starter}。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @AutoConfiguration(after = RestClientAutoConfiguration.class)

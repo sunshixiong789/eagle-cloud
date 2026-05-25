@@ -10,7 +10,7 @@ import lombok.Data;
 /**
  * 创建用户请求
  *
- * @author 孙士雄
+ * @author eagle
  * @since 1.0.0
  */
 @Data

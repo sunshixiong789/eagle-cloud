@@ -19,7 +19,7 @@ import org.hibernate.Session;
  * <p>若实体未定义 {@code @FilterDef(name = "tenantFilter")}，Hibernate 将抛出异常并快速失败，
  * 避免在无租户隔离的情况下静默执行查询。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @Aspect

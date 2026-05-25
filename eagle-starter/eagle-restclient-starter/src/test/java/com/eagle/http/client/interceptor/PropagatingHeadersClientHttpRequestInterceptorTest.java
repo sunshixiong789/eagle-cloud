@@ -18,7 +18,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 /**
  * {@link PropagatingHeadersClientHttpRequestInterceptor} 单元测试。
  *
- * @author 孙士雄
+ * @author eagle
  */
 class PropagatingHeadersClientHttpRequestInterceptorTest {
 

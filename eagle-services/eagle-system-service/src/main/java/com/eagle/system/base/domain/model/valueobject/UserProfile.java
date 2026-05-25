@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
  *   <li>可替换：整体替换而非修改属性</li>
  * </ul>
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Embeddable
 @Getter

@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * WebSocket 配置属性。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Data
 @ConfigurationProperties(prefix = "eagle.websocket")

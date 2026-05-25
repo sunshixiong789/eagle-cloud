@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * <p>验证：RestClient 下游 HTTP 错误 → 正确类型的 AppException，
  * 且 message 从 ErrorResult JSON 提取。
  *
- * @author 孙士雄
+ * @author eagle
  */
 class EagleResponseErrorHandlerTest {
 

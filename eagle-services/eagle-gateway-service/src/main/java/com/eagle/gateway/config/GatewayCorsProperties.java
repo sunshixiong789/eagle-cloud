@@ -17,7 +17,7 @@ import java.util.List;
  * <p>列表字段支持逗号分隔字符串（Spring Boot Relaxed Binder 自动转换）：
  * {@code CORS_ALLOWED_ORIGINS=http://a.com,http://b.com}。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Data
 @ConfigurationProperties(prefix = "eagle.gateway.cors")

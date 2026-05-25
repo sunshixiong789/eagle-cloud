@@ -23,7 +23,7 @@ import java.util.Objects;
  *
  * <p>记录请求方法、路径、状态码、耗时、链路追踪 ID。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @Component

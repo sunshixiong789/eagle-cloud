@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * 消息通知配置属性。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Data
 @ConfigurationProperties(prefix = "eagle.message")

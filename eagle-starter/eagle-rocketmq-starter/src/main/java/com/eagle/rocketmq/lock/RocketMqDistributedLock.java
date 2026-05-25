@@ -41,7 +41,7 @@ import java.util.function.Supplier;
  *   <li>{@link LockProperties.Granularity#SHARED_TOPIC} 模式下所有 lockKey 退化为全局单锁</li>
  * </ul>
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @RequiredArgsConstructor

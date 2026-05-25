@@ -30,7 +30,7 @@ import java.util.List;
  * {@code ContextPropagationConfig} 桥接到 Reactor Context，因此 reactive 链路下
  * 仍可通过 {@code isPressureTest()} 读取压测标志，独立于 ServerWebExchange。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public class PropagatingHeadersExchangeFilterFunction implements ExchangeFilterFunction {

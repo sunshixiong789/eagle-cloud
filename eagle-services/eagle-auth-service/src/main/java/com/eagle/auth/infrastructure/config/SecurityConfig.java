@@ -77,7 +77,7 @@ import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames
 import static com.eagle.common.constant.SecurityConstants.DETAILS_ROLES;
 
 /**
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @Configuration

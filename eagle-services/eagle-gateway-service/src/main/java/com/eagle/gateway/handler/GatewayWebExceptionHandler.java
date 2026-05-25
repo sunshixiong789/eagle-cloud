@@ -29,7 +29,7 @@ import java.util.concurrent.TimeoutException;
  *
  * <p>{@code @Order(-2)} 优先于 Spring Boot 默认的 {@code DefaultErrorWebExceptionHandler(-1)} 执行。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @Order(-2)

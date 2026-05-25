@@ -29,7 +29,7 @@ import com.eagle.common.event.BaseEvent;
  * }
  * }</pre>
  *
- * @author 孙士雄
+ * @author eagle
  */
 public interface TransactionalEventPublisher {
 

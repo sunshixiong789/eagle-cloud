@@ -27,7 +27,7 @@ import java.util.Map;
  *
  * <p>仅当 {@code eagle.message.sms.provider=hnsls} 时装配。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public class HnslsSmsProvider implements SmsProvider {

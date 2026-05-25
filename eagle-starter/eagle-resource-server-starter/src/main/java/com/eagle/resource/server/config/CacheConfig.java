@@ -28,7 +28,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  *   <li>{@code redis}：注册本 Bean 覆盖默认序列化器，TTL 等参数通过 {@code spring.cache.redis.*} 配置</li>
  * </ul>
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Configuration
 @EnableCaching

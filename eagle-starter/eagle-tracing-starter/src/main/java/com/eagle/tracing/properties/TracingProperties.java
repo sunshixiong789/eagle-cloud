@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
 /**
  * 链路追踪配置属性。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Data
 @ConfigurationProperties(prefix = "eagle.tracing")

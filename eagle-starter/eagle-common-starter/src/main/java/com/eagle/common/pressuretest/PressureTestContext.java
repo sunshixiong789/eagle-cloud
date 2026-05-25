@@ -22,7 +22,7 @@ package com.eagle.common.pressuretest;
  *     ? "shadow_" + normalTopic : normalTopic;
  * }</pre>
  *
- * @author 孙士雄
+ * @author eagle
  */
 public final class PressureTestContext {
 

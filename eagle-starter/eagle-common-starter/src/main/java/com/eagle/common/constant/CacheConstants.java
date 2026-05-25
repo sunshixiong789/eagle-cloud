@@ -2,7 +2,7 @@ package com.eagle.common.constant;
 
 /**
  *
- * @author 孙士雄（sunshix@seeyon.com）
+ * @author eagle（sunshix@seeyon.com）
  * 2026/4/2-22:34
  */
 public class CacheConstants {

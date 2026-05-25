@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * 2. 记录了领域中发生的重要业务事实
  * 3. 事件名应该使用过去时态
  *
- * @author 孙士雄
+ * @author eagle
  * @since 1.0.0
  */
 @Getter

@@ -18,7 +18,7 @@ import java.io.IOException;
  *
  * <p>从 HTTP 请求头中解析租户 ID 并写入 {@link TenantContextHolder}，请求结束后自动清理。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @RequiredArgsConstructor

@@ -3,7 +3,7 @@ package com.eagle.datapermission.enums;
 /**
  * 数据权限范围枚举。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public enum DataScope {
 

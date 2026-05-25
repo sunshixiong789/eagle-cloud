@@ -13,7 +13,7 @@ import java.util.List;
  *
  * <p>装配顺序：base（入站 header / 压测标记）→ tenant → seata → 用户业务 filter → 统一错误处理。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @RequiredArgsConstructor
 public class EagleWebClientCustomizer {

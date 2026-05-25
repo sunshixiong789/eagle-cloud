@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 /**
  * Unified JSON exception handler for WebFlux applications.
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @RequiredArgsConstructor

@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
  * <p>
  * 当新用户注册成功时发布此事件
  *
- * @author 孙士雄
+ * @author eagle
  * @since 1.0.0
  */
 @Getter

@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * 消息模板渲染引擎（基于 {@code ${key}} 占位符替换）。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @RequiredArgsConstructor
 public class MessageTemplateEngine {

@@ -3,7 +3,7 @@ package com.eagle.idempotency.support;
 /**
  * Resolves idempotency tokens from the current HTTP request context.
  *
- * @author 孙士雄
+ * @author eagle
  */
 @FunctionalInterface
 public interface IdempotencyTokenResolver {

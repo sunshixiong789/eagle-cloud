@@ -13,7 +13,7 @@ import java.util.List;
  * <p>单从库使用 {@code eagle.datasource.slave.*}；多从库使用 {@code eagle.datasource.slaves[n].*}，
  * 两者同时存在时 {@code slaves} 列表优先。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Data
 @ConfigurationProperties(prefix = "eagle.datasource")

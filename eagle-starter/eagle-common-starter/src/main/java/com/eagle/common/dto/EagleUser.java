@@ -18,7 +18,7 @@ import java.util.HashMap;
  * 扩展 Spring Security 的 User 类，添加业务所需的用户信息。
  * Long 类型 ID 使用 ToStringSerializer 防止前端 JavaScript 精度丢失。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Getter
 public class EagleUser extends User {

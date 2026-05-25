@@ -19,7 +19,7 @@ import java.util.Optional;
  *
  * <p>消费方未引入 {@code spring-security-core} 时整个类不会被加载，避免 {@link NoClassDefFoundError}。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @AutoConfiguration(after = JpaConfig.class)
 @ConditionalOnClass(Authentication.class)

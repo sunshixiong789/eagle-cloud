@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
  * public Page<Order> findOrders(Specification<Order> spec, Pageable pageable) { ... }
  * }</pre>
  *
- * @author 孙士雄
+ * @author eagle
  * @see DataPermissionIgnore
  */
 @Target(ElementType.METHOD)

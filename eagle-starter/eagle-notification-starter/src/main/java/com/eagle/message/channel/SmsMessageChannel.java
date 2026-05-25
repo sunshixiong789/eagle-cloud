@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * {@code eagle.message.templates.<code>.sms-template-id}（阿里云 {@code SMS_xxx}，
  * 腾讯云数字字符串）。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public class SmsMessageChannel implements MessageChannel {

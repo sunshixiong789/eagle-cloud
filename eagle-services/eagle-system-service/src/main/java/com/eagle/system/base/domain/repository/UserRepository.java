@@ -17,7 +17,7 @@ import java.util.Optional;
  * <p>
  * 直接使用 Spring Data JPA Repository，无需额外的领域仓储抽象层
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Repository
 public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {

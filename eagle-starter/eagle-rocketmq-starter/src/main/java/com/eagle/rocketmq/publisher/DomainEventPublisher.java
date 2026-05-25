@@ -10,7 +10,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * <p>将领域事件序列化并发送到 RocketMQ，支持同步、异步、延迟和顺序消息。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public interface DomainEventPublisher {
 

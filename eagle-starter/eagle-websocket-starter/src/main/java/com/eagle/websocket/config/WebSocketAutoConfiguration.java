@@ -41,7 +41,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
  *
  * <p>通过 {@code eagle.websocket.enabled=false} 可整体禁用。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @AutoConfiguration

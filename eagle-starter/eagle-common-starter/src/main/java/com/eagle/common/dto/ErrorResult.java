@@ -16,7 +16,7 @@ import java.time.Instant;
  *   <li>WebFlux 环境(网关):MDC 不可靠,需显式 {@code setRequestId(String)} 写入</li>
  * </ul>
  *
- * @author 孙士雄（sunshix@seeyon.com）
+ * @author eagle（sunshix@seeyon.com）
  * 2025/12/8-11:16
  */
 @Data

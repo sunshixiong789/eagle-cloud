@@ -3,7 +3,7 @@ package com.eagle.message.enums;
 /**
  * 消息发送渠道类型。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public enum MessageChannelType {
     SMS,

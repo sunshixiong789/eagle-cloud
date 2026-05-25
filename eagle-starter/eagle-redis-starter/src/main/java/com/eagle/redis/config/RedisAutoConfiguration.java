@@ -37,7 +37,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
  * 尚未声明而失败，导致 bean 被静默跳过。改用 {@code @ConditionalOnClass} 后，
  * 若运行时 RedissonClient 真不存在，Spring 装配 @Bean 入参时会报清晰的根因错误。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @AutoConfiguration(after = RedisCacheConfig.class)
 @ConditionalOnClass(RedisOperations.class)

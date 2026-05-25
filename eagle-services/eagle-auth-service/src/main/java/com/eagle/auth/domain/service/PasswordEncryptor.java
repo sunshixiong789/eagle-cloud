@@ -12,7 +12,7 @@ package com.eagle.auth.domain.service;
  *   <li>便于单元测试（可以使用 Mock 实现）</li>
  * </ul>
  *
- * @author 孙士雄
+ * @author eagle
  * @since 1.0.0
  */
 public interface PasswordEncryptor {

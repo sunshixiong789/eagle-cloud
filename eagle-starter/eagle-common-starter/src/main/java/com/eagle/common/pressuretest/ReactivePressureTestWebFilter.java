@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
  * <p>order 与 servlet 端 {@link PressureTestFilter} 对齐
  * （{@code HIGHEST_PRECEDENCE + 20}），保证压测标记在租户 / 业务过滤器之前就绪。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public class ReactivePressureTestWebFilter implements WebFilter, Ordered {

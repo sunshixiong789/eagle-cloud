@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * <p>示例：在 Sentinel Dashboard 配置授权规则时，将 {@code X-Application-Name}
  * 设置为 "eagle-gateway" 的请求加入白名单，其他来源直接拒绝。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public class EagleSentinelRequestOriginParser implements RequestOriginParser {
 

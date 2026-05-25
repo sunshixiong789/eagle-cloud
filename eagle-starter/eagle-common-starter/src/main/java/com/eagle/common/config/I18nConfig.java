@@ -17,7 +17,7 @@ import java.util.Locale;
  *
  * <p>支持中文（简体/繁体）和英语，未匹配时默认使用简体中文。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Configuration
 public class I18nConfig {

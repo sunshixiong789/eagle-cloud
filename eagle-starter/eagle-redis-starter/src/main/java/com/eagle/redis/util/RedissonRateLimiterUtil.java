@@ -21,7 +21,7 @@ import java.time.Duration;
  * <p>与 {@link RedisRateLimiter}（Lua 脚本实现）的区别：
  * 本类更适合需要精确控制速率且长期运行的场景；Lua 实现更轻量，适合无状态的短期限流。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @RequiredArgsConstructor

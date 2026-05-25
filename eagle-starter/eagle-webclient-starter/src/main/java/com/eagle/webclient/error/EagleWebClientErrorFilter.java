@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
  *
  * <p>{@code eagle-restclient-starter} 的 {@code EagleResponseErrorHandler} 反应式等价物。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @RequiredArgsConstructor

@@ -43,7 +43,7 @@ import java.util.Set;
  * <p>统一配置 JSON 序列化，key 前缀、TTL、null 值缓存等均通过
  * {@link RedisProperties}（{@code eagle.redis.*}）外部化配置，无需修改代码。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @AutoConfiguration
 @EnableCaching

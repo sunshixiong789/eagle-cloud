@@ -3,7 +3,7 @@ package com.eagle.idempotency.support;
 /**
  * WebFlux idempotency token resolver.
  *
- * @author 孙士雄
+ * @author eagle
  */
 public class ReactiveIdempotencyTokenResolver implements IdempotencyTokenResolver {
 

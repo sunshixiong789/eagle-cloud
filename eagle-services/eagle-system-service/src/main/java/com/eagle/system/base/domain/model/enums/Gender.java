@@ -1,7 +1,7 @@
 package com.eagle.system.base.domain.model.enums;
 
 /**
- * @author 孙士雄 22:37
+ * @author eagle 22:37
  */
 public enum Gender {
     /**

@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * {@link PropagatingHeadersExchangeFilterFunction} 单元测试。
  *
- * @author 孙士雄
+ * @author eagle
  */
 class PropagatingHeadersExchangeFilterFunctionTest {
 

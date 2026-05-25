@@ -8,7 +8,7 @@ import org.jspecify.annotations.Nullable;
  * <p>使用 {@link ThreadLocal} 存储当前线程的数据源 key，保证线程安全。
  * 异步任务需通过 {@code DataSourceContextTaskDecorator} 传播上下文。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public class DataSourceContextHolder {
 

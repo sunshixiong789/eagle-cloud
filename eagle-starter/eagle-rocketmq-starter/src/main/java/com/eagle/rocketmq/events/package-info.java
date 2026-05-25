@@ -14,7 +14,7 @@
  *
  * <p>修改这里的字段 = 跨服务 ABI 变更，必须保持向后兼容。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @NullMarked
 package com.eagle.rocketmq.events;

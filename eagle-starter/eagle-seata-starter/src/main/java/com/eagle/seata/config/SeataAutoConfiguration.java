@@ -27,7 +27,7 @@ import org.springframework.context.annotation.Bean;
  * <p>实际 Seata 核心组件（{@code GlobalTransactionScanner} 等）由
  * {@code seata-spring-boot-starter} 的自动配置负责注册，本模块不重复注册。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @RequiredArgsConstructor

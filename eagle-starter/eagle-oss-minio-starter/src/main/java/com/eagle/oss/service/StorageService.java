@@ -7,7 +7,7 @@ import java.io.InputStream;
  *
  * <p>统一抽象上传、下载、删除、获取访问 URL 能力。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public interface StorageService {
 

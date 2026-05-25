@@ -24,7 +24,7 @@ import java.util.Objects;
  *
  * <p>消费方未引入 {@code spring-security-core} 时整个类不会被加载。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @AutoConfiguration(after = EagleR2dbcAutoConfiguration.class)
 @ConditionalOnClass({Authentication.class, ReactiveAuditorAware.class})

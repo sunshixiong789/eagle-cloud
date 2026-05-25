@@ -9,7 +9,7 @@ import lombok.Data;
 /**
  * 修改密码请求
  *
- * @author 孙士雄
+ * @author eagle
  * @since 1.0.0
  */
 @Data

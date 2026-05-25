@@ -6,7 +6,7 @@ import lombok.Data;
 /**
  * 用户查询请求
  *
- * @author 孙士雄
+ * @author eagle
  * @since 1.0.0
  */
 @Data

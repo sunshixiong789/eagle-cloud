@@ -3,7 +3,7 @@ package com.eagle.common.constant;
 /**
  * 全局常量
  *
- * @author 孙士雄（sunshix@seeyon.com）
+ * @author eagle（sunshix@seeyon.com）
  * 2025/12/29-18:15
  */
 public class CommonConstants {

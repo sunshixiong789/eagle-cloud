@@ -16,7 +16,7 @@ import org.aspectj.lang.annotation.Aspect;
  *
  * <p>使用此模式时，需预先在 {@code DynamicDataSource} 中注册租户 ID 与数据源的映射关系。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @Aspect

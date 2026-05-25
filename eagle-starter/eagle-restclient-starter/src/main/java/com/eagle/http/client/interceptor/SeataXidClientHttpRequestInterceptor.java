@@ -12,7 +12,7 @@ import java.io.IOException;
 /**
  * RestClient 请求拦截器：透传 Seata 分布式事务 XID。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public class SeataXidClientHttpRequestInterceptor implements ClientHttpRequestInterceptor {

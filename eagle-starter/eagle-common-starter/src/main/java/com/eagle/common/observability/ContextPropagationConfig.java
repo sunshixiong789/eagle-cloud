@@ -25,7 +25,7 @@ import reactor.core.publisher.Hooks;
  *       {@link ThreadLocalAccessor}，即可让 {@code ThreadLocal} 在响应式调用链上保持可见</li>
  * </ul>
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @Configuration(proxyBeanMethods = false)

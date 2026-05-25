@@ -21,7 +21,7 @@ import java.util.UUID;
  * <p>requestId 优先级：上游已带 X-Request-Id > 网关生成 UUID。
  * 真实 IP 优先级：上游已带 X-Real-IP > X-Forwarded-For 首段 > remoteAddress。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @Component

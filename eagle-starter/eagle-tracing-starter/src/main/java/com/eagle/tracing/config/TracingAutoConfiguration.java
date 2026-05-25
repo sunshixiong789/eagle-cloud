@@ -28,7 +28,7 @@ import zipkin2.reporter.okhttp3.OkHttpSender;
  *
  * <p>通过 {@code eagle.tracing.enabled=false} 可整体禁用。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @AutoConfiguration(

@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Bean;
 /**
  * XXL-Job 执行器自动配置。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @AutoConfiguration

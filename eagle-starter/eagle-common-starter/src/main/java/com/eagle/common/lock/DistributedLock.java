@@ -11,7 +11,7 @@ import java.util.function.Supplier;
  * <p>统一语义：尝试在 {@code waitTime} 秒内获取名为 {@code lockKey} 的锁，
  * 获取后业务最长可持有 {@code leaseTime} 秒，超时未释放则锁自动失效以防死锁。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public interface DistributedLock {
 

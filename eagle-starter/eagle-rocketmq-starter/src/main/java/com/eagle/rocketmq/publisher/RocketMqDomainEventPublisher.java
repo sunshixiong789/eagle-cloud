@@ -23,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * <p>基于 RocketMQ 5.x 轻量客户端（gRPC），支持同步、异步、延迟和顺序消息。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @RequiredArgsConstructor

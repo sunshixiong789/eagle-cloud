@@ -16,7 +16,7 @@ package com.eagle.seata.transaction;
  * }</pre>
  *
  * @param <T> 业务逻辑返回值类型
- * @author 孙士雄
+ * @author eagle
  * @see GlobalTransactionTemplate
  */
 @FunctionalInterface

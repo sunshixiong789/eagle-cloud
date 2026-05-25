@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 /**
  * WebClient 请求过滤器：透传 Seata 分布式事务 XID。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public class SeataXidExchangeFilterFunction implements ExchangeFilterFunction {

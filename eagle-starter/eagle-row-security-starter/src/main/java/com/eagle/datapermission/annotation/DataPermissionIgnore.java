@@ -22,7 +22,7 @@ import java.lang.annotation.Target;
  * DataPermissionContext.ignorePermission(() -> userRepository.findAll(spec));
  * }</pre>
  *
- * @author 孙士雄
+ * @author eagle
  * @see DataPermission
  * @see com.eagle.datapermission.context.DataPermissionContext
  */

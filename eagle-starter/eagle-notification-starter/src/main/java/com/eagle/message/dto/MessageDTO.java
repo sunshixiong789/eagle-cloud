@@ -8,7 +8,7 @@ import java.util.Set;
 /**
  * 消息发送数据传输对象。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public record MessageDTO(
         Set<String> recipients,

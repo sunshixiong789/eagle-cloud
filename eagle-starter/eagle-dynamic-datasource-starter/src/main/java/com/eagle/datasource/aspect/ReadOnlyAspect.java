@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
  * <p><b>注意</b>：{@code @Transactional(readOnly = true)} 的类级注解不会被 {@code @annotation}
  * 切点匹配到，此类场景需在方法上显式添加 {@link ReadOnly}。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @Aspect

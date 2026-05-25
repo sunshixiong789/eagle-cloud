@@ -10,7 +10,7 @@ package com.eagle.sentinel.annotation;
  *   <li>{@link #RATE_LIMITER} → {@code RuleConstant.CONTROL_BEHAVIOR_RATE_LIMITER}（匀速排队）</li>
  * </ul>
  *
- * @author 孙士雄
+ * @author eagle
  * @see RateLimit
  */
 public enum FlowControlBehavior {

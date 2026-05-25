@@ -12,7 +12,7 @@ import java.util.List;
  * <p>OpenAPI / Swagger UI 相关配置已迁移到 {@code eagle.openapi.*}
  * （由 {@code eagle-openapi-starter} 提供）。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Data
 @ConfigurationProperties(prefix = "eagle.resource-server")

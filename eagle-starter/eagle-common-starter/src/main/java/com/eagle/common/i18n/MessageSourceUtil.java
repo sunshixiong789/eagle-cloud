@@ -17,7 +17,7 @@ import java.util.Locale;
  * {@code messageSource.getMessage(code, args, defaultMessage, locale)}，
  * 只在确实无法注入的场景才使用本工具类。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public final class MessageSourceUtil {

@@ -6,7 +6,7 @@ package com.eagle.rocketmq.events;
  * <p>命名遵循 {@code {env}_{domain}_{event}} 规范——此处常量为 logical 名（去掉 env 前缀），
  * Producer/Consumer 调用时拼接 {@code eagle.rocketmq.topic-env-prefix}（如 {@code dev_}）。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public final class CommonMessageTopics {
 

@@ -24,7 +24,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
  * <p>OpenAPI / Swagger UI 集成统一由 {@code eagle-openapi-starter} 提供，
  * 不再在本 starter 内部装配。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @AutoConfiguration
 @ConditionalOnClass(Jwt.class)

@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
  *
  * <p>从上游请求头中读取 {@code TX_XID} 并透传给下游服务，保证分布式事务上下文在网关层不丢失。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @Component

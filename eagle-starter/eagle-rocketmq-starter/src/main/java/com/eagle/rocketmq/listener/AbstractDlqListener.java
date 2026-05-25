@@ -63,7 +63,7 @@ import org.apache.rocketmq.client.apis.message.MessageView;
  * }</pre>
  *
  * @param <T> 事件类型，与原消费者一致
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public abstract class AbstractDlqListener<T extends BaseEvent> extends AbstractRocketMqListener<T> {

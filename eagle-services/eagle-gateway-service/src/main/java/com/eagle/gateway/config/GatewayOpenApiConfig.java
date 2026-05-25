@@ -35,7 +35,7 @@ import java.util.Set;
  *       {@code SwaggerDocRegister}）</li>
  * </ul>
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @Configuration

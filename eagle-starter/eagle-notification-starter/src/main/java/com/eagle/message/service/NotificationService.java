@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * 统一消息通知服务。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @RequiredArgsConstructor

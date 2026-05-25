@@ -16,7 +16,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     url-cleaner: true
  * </pre>
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Data
 @ConfigurationProperties(prefix = "eagle.sentinel")

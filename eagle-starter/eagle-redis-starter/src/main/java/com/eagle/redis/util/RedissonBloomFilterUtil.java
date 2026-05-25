@@ -21,7 +21,7 @@ import org.redisson.api.RedissonClient;
  * <p><b>注意：</b>布隆过滤器存在一定的误判率（判断"存在"但实际不存在），
  * 但不会漏判（判断"不存在"时一定不存在）。请根据业务容忍度设置误判率。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 @RequiredArgsConstructor

@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
  * {@code ContextPropagationConfig} 与 Reactor Context 双向桥接，因此 reactive 链路下
  * 也能正确读取当前租户 ID。
  *
- * @author 孙士雄
+ * @author eagle
  */
 @Slf4j
 public class TenantExchangeFilterFunction implements ExchangeFilterFunction {

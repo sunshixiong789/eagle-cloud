@@ -25,7 +25,7 @@ import java.util.Objects;
  *
  * <p>所有方法在未认证时返回 {@code null}，调用方需自行判空。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public class SecurityUtils {
 

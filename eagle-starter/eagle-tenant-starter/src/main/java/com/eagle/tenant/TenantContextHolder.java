@@ -5,7 +5,7 @@ package com.eagle.tenant;
  *
  * <p>基于 ThreadLocal 存储当前请求的租户 ID，保证线程安全。
  *
- * @author 孙士雄
+ * @author eagle
  */
 public class TenantContextHolder {
 
