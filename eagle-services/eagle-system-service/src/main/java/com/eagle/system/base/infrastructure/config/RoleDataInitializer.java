@@ -32,9 +32,9 @@ import java.util.Set;
  * </ol>
  * <p>
  * <strong>为什么需要启动期 ensure</strong>:
- * auth-service {@code AdminInitializer} 创建 admin Account 时只 emit
- * {@link com.eagle.auth.domain.event.AccountRegisteredEvent} <em>一次</em>。如果当时 MQ
- * 链路任何一段不通(producer 发不出 / broker 不存 / consumer 未启动 / handle 异常),system-service
+ * auth-service {@code AdminInitializer} 创建 admin Account 时只 emit AccountRegisteredEvent
+ * <em>一次</em>(对应本服务消费的 {@link AccountRegisteredMessage})。如果当时 MQ 链路任何一段不通
+ * (producer 发不出 / broker 不存 / consumer 未启动 / handle 异常),system-service
  * 永远收不到事件 → admin User 永远不会被创建 → admin 登录后 hasRole('admin') 全 401。
  * <p>
  * 故启动期同步用 HTTP 兜底:从 auth-service 拉 admin Account 信息,本地创建对应 User 并赋

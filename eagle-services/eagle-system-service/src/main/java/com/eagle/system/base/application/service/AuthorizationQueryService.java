@@ -35,6 +35,7 @@ public class AuthorizationQueryService {
 
     private AuthorizationView toView(User user) {
         String name = user.getProfile() != null ? user.getProfile().getName() : null;
+        String avatar = user.getProfile() != null ? user.getProfile().getAvatar() : null;
         Set<String> roleCodes = Set.of();
         if (!user.getRoleIds().isEmpty()) {
             List<Role> roles = roleRepository.findAllById(user.getRoleIds());
@@ -42,6 +43,6 @@ public class AuthorizationQueryService {
                     .map(Role::getRoleCode)
                     .collect(Collectors.toSet());
         }
-        return new AuthorizationView(name, roleCodes);
+        return new AuthorizationView(name, avatar, roleCodes);
     }
 }

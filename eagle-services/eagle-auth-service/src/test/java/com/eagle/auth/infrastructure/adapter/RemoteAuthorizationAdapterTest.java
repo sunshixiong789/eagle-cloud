@@ -56,7 +56,7 @@ class RemoteAuthorizationAdapterTest {
         @DisplayName("远程成功时返回授权信息并写入缓存")
         void shouldReturnInfoAndCache() {
             when(redisTemplate.opsForValue()).thenReturn(valueOps);
-            AuthorizationInfoDto dto = new AuthorizationInfoDto("张三", Set.of("ROLE_admin"));
+            AuthorizationInfoDto dto = new AuthorizationInfoDto("张三", "https://cdn.example.com/avatar/zhangsan.jpg", Set.of("ROLE_admin"));
             when(client.findByAccountId(ACCOUNT_ID)).thenReturn(dto);
 
             Optional<AuthorizationInfo> result = adapter.findAuthorizationInfo(ACCOUNT_ID);
@@ -72,7 +72,7 @@ class RemoteAuthorizationAdapterTest {
         void shouldNormalizeNullRoles() {
             when(redisTemplate.opsForValue()).thenReturn(valueOps);
             when(client.findByAccountId(ACCOUNT_ID))
-                    .thenReturn(new AuthorizationInfoDto("Bob", null));
+                    .thenReturn(new AuthorizationInfoDto("Bob", null, null));
 
             Optional<AuthorizationInfo> result = adapter.findAuthorizationInfo(ACCOUNT_ID);
 
@@ -106,7 +106,7 @@ class RemoteAuthorizationAdapterTest {
         @DisplayName("RestClientException + 缓存命中 → 返回缓存快照")
         void shouldServeFromCacheOnRestClientException() throws Exception {
             String json = objectMapper.writeValueAsString(
-                    new AuthorizationInfoDto("缓存的人", Set.of("ROLE_cached")));
+                    new AuthorizationInfoDto("缓存的人", null, Set.of("ROLE_cached")));
             when(redisTemplate.opsForValue()).thenReturn(valueOps);
             when(valueOps.get(CACHE_KEY)).thenReturn(json);
 

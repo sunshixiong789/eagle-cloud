@@ -63,6 +63,7 @@ public class EagleUserDetailsServiceImpl implements UserDetailsService {
                 account.getPassword(),
                 authInfo.name() != null ? authInfo.name() : account.getUsername(),
                 account.getPhone(),
+                authInfo.avatar(),
                 account.getStatus() == AccountStatus.ACTIVE,
                 true,
                 true,

@@ -47,19 +47,27 @@ public class EagleUser extends User {
      */
     private final String phone;
 
-    public EagleUser(Long id, String username, String password, String name, String phone, boolean enabled,
+    /**
+     * 头像 URL
+     */
+    private final String avatar;
+
+    public EagleUser(Long id, String username, String password, String name, String phone, String avatar, boolean enabled,
                      boolean accountNonExpired, boolean credentialsNonExpired, boolean accountNonLocked,
                      Collection<? extends GrantedAuthority> authorities) {
         super(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
         this.id = id;
         this.name = name;
         this.phone = phone;
+        this.avatar = avatar;
     }
 
-    public EagleUser(Long id, String username, String password, String name, String phone, Collection<? extends GrantedAuthority> authorities) {
+    public EagleUser(Long id, String username, String password, String name, String phone, String avatar,
+                     Collection<? extends GrantedAuthority> authorities) {
         super(username, password, true, true, true, true, authorities);
         this.id = id;
         this.name = name;
         this.phone = phone;
+        this.avatar = avatar;
     }
 }

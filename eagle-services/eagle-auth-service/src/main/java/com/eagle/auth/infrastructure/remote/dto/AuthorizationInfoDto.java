@@ -13,6 +13,7 @@ import java.util.Set;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record AuthorizationInfoDto(
         String name,
+        String avatar,
         Set<String> roleCodes
 ) {
 }

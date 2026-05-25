@@ -116,9 +116,10 @@ public class SecurityUtils {
         String username = jwt.getClaim(SecurityConstants.DETAILS_USERNAME);
         String name = jwt.getClaim(SecurityConstants.DETAILS_USER_NAME);
         String phone = jwt.getClaim(SecurityConstants.DETAILS_PHONE);
+        String avatar = jwt.getClaim(SecurityConstants.DETAILS_AVATAR);
 
         Collection<GrantedAuthority> authorities = extractAuthoritiesFromJwt(jwt);
-        return new EagleUser(userId, username, "[PROTECTED]", name, phone, authorities);
+        return new EagleUser(userId, username, "[PROTECTED]", name, phone, avatar, authorities);
     }
 
     private static Collection<GrantedAuthority> extractAuthoritiesFromJwt(Jwt jwt) {

@@ -47,8 +47,9 @@ public class EagleJwtAuthenticationConverter implements Converter<Jwt, AbstractA
         String username = jwt.getClaim(SecurityConstants.DETAILS_USERNAME);
         String name = jwt.getClaim(SecurityConstants.DETAILS_USER_NAME);
         String phone = jwt.getClaim(SecurityConstants.DETAILS_PHONE);
+        String avatar = jwt.getClaim(SecurityConstants.DETAILS_AVATAR);
 
-        EagleUser user = new EagleUser(userId, username, "", name, phone, authorities);
+        EagleUser user = new EagleUser(userId, username, "", name, phone, avatar, authorities);
         return new EagleAuthentication(jwt, user, authorities);
     }
 }

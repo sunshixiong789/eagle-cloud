@@ -26,25 +26,30 @@ public final class SecurityConstants {
      */
     public static final String ROLE_START = "ROLE_";
     /**
-     * JWT Claim：用户 ID
+     * JWT Claim：用户 ID（业务 ID，非 OIDC 标准 — OIDC {@code sub} 已被 Spring 默认填为 username，
+     * 这里另存数据库主键供下游服务使用）
      */
     public static final String DETAILS_USER_ID = "id";
     /**
-     * JWT Claim：角色列表
+     * JWT Claim：角色列表（业界惯例，OIDC Core 无标准 claim；RFC 9068 也仅给"groups"建议名而非强制）
      */
     public static final String DETAILS_ROLES = "roles";
     /**
-     * JWT Claim：登录名
+     * JWT Claim：登录名 — 对应 OIDC Core {@code preferred_username}
      */
-    public static final String DETAILS_USERNAME = "loginName";
+    public static final String DETAILS_USERNAME = "preferred_username";
     /**
-     * JWT Claim：用户姓名
+     * JWT Claim：用户姓名 — 对应 OIDC Core {@code name}
      */
-    public static final String DETAILS_USER_NAME = "userName";
+    public static final String DETAILS_USER_NAME = "name";
     /**
-     * JWT Claim：手机号
+     * JWT Claim：手机号 — 对应 OIDC Core {@code phone_number}
      */
-    public static final String DETAILS_PHONE = "phone";
+    public static final String DETAILS_PHONE = "phone_number";
+    /**
+     * JWT Claim：头像 URL — 对应 OIDC Core {@code picture}
+     */
+    public static final String DETAILS_AVATAR = "picture";
 
     private SecurityConstants() {
     }

@@ -92,7 +92,7 @@ public class RemoteAuthorizationAdapter implements AuthorizationPort {
 
     private static AuthorizationInfo toAuthorizationInfo(AuthorizationInfoDto dto) {
         Set<String> roleCodes = dto.roleCodes() != null ? dto.roleCodes() : Set.of();
-        return new AuthorizationInfo(dto.name(), roleCodes);
+        return new AuthorizationInfo(dto.name(), dto.avatar(), roleCodes);
     }
 
     private void cache(Long accountId, AuthorizationInfoDto dto) {

@@ -72,6 +72,8 @@ import java.security.KeyStore;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
+
 import static com.eagle.common.constant.SecurityConstants.DETAILS_ROLES;
 
 /**
@@ -348,6 +350,14 @@ public class SecurityConfig {
     /**
      * 将用户信息写入 JWT。
      *
+     * <p>同时写 access_token 与 id_token：
+     * <ul>
+     *   <li>access_token：下游资源服务器 {@code EagleJwtAuthenticationConverter} 从 claim 重建 EagleUser</li>
+     *   <li>id_token：OIDC {@code /userinfo} 端点默认从 id_token claim 派生响应——业务字段（avatar/phone/userName/roles）
+     *       不写 id_token 时，userinfo 仅能返回 {@code sub}。这里统一写两边，让前端用 access_token 调 {@code /userinfo}
+     *       即可拿到完整用户信息</li>
+     * </ul>
+     *
      * @param userDetailsService UserDetailsService
      * @return OAuth2TokenCustomizer
      */
@@ -355,7 +365,10 @@ public class SecurityConfig {
     public OAuth2TokenCustomizer<JwtEncodingContext> jwtTokenCustomizer(
             UserDetailsService userDetailsService) {
         return context -> {
-            if (!context.getTokenType().equals(OAuth2TokenType.ACCESS_TOKEN)) {
+            OAuth2TokenType tokenType = context.getTokenType();
+            boolean isAccessToken = OAuth2TokenType.ACCESS_TOKEN.equals(tokenType);
+            boolean isIdToken = OidcParameterNames.ID_TOKEN.equals(tokenType.getValue());
+            if (!isAccessToken && !isIdToken) {
                 return;
             }
             Authentication principal = context.getPrincipal();
@@ -375,7 +388,8 @@ public class SecurityConfig {
                     .claim(SecurityConstants.DETAILS_USER_ID, user.getId())
                     .claim(SecurityConstants.DETAILS_USERNAME, user.getUsername())
                     .claim(SecurityConstants.DETAILS_USER_NAME, Objects.requireNonNullElse(user.getName(), ""))
-                    .claim(SecurityConstants.DETAILS_PHONE, Objects.requireNonNullElse(user.getPhone(), ""));
+                    .claim(SecurityConstants.DETAILS_PHONE, Objects.requireNonNullElse(user.getPhone(), ""))
+                    .claim(SecurityConstants.DETAILS_AVATAR, Objects.requireNonNullElse(user.getAvatar(), ""));
         };
     }
 }

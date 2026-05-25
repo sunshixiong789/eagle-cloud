@@ -90,7 +90,7 @@ class SmsCodeAuthenticationProviderTest {
     // ====================== helpers ======================
 
     private static EagleUser eagleUser() {
-        return new EagleUser(1L, "alice", "$2a$10$xx", "Alice", "13800138000",
+        return new EagleUser(1L, "alice", "$2a$10$xx", "Alice", "13800138000", null,
                 true, true, true, true, Collections.emptyList());
     }
 
