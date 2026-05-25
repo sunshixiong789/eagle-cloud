@@ -41,6 +41,7 @@ public class RocketMqDomainEventPublisher implements DomainEventPublisher, Initi
             ClientConfiguration configuration = ClientConfiguration.newBuilder()
                     .setEndpoints(properties.getEndpoints())
                     .setRequestTimeout(Duration.ofMillis(properties.getRequestTimeoutMillis()))
+                    .enableSsl(properties.isSslEnabled())
                     .build();
             producer = provider.newProducerBuilder()
                     .setClientConfiguration(configuration)

@@ -1,26 +1,44 @@
 package com.eagle.system.base.infrastructure.config;
 
+import com.eagle.common.exception.NotFoundException;
+import com.eagle.system.base.application.service.AccountEventApplicationService;
 import com.eagle.system.base.domain.model.Role;
+import com.eagle.system.base.domain.model.User;
 import com.eagle.system.base.domain.model.enums.DataScope;
 import com.eagle.system.base.domain.repository.RoleRepository;
+import com.eagle.system.base.domain.repository.UserRepository;
+import com.eagle.system.base.infrastructure.messaging.event.AccountRegisteredMessage;
+import com.eagle.system.base.infrastructure.remote.AuthAccountClient;
+import com.eagle.system.base.infrastructure.remote.dto.AccountSnapshot;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * 系统角色种子初始化器。
+ * 系统启动期数据初始化器。
  * <p>
- * 在应用启动完成后预置系统角色 {@code admin}、{@code user}(幂等,已存在则跳过)。
+ * 职责:
+ * <ol>
+ *   <li>{@link #seedSystemRoles()} 幂等预置系统角色 {@code admin} / {@code user}。</li>
+ *   <li>{@link #ensureAdminUser()} <strong>不依赖 MQ</strong> 主动拉取 admin Account 兜底创建/修复 admin User。</li>
+ * </ol>
  * <p>
- * <strong>不再负责 admin User 角色分配</strong>: 该职责已下沉到
- * {@link com.eagle.system.base.application.service.AccountEventApplicationService#onAccountRegistered}
- * ——消费 {@code AccountRegisteredMessage} 时按 {@code eagle.admin.username} 判定身份,
- * 直接分配 admin / user 角色。这样彻底消除"system-service 启动 → 同步等待 auth-service
- * 跨服务事件投递"的时序耦合。
+ * <strong>为什么需要启动期 ensure</strong>:
+ * auth-service {@code AdminInitializer} 创建 admin Account 时只 emit
+ * {@link com.eagle.auth.domain.event.AccountRegisteredEvent} <em>一次</em>。如果当时 MQ
+ * 链路任何一段不通(producer 发不出 / broker 不存 / consumer 未启动 / handle 异常),system-service
+ * 永远收不到事件 → admin User 永远不会被创建 → admin 登录后 hasRole('admin') 全 401。
+ * <p>
+ * 故启动期同步用 HTTP 兜底:从 auth-service 拉 admin Account 信息,本地创建对应 User 并赋
+ * admin + user 角色。MQ 仍是常规同步通道,本兜底仅在 admin User 缺失时介入,业务正常时一次轻量 HTTP。
  *
  * @author sunshixiong
  */
@@ -34,14 +52,28 @@ public class RoleDataInitializer {
     private static final String USER_ROLE_CODE = "user";
 
     private final RoleRepository roleRepository;
+    private final UserRepository userRepository;
+    private final AdminProperties adminProperties;
+    private final AuthAccountClient authAccountClient;
+    private final AccountEventApplicationService accountEventService;
+    private final PlatformTransactionManager transactionManager;
 
     @EventListener(ApplicationReadyEvent.class)
-    @Transactional(rollbackFor = Exception.class)
-    public void seedSystemRoles() {
-        seedRole(ADMIN_ROLE_CODE, "系统管理员",
-                "拥有所有系统管理权限", 1, DataScope.ALL);
-        seedRole(USER_ROLE_CODE, "普通用户",
-                "拥有基础查看权限", 2, DataScope.SELF);
+    public void initialize() {
+        seedSystemRoles();
+        ensureAdminUser();
+    }
+
+    /** 幂等预置系统角色;单独事务,失败不影响下游 ensureAdminUser。 */
+    private void seedSystemRoles() {
+        TransactionTemplate tx = new TransactionTemplate(transactionManager);
+        tx.execute(status -> {
+            seedRole(ADMIN_ROLE_CODE, "系统管理员",
+                    "拥有所有系统管理权限", 1, DataScope.ALL);
+            seedRole(USER_ROLE_CODE, "普通用户",
+                    "拥有基础查看权限", 2, DataScope.SELF);
+            return null;
+        });
     }
 
     private Role seedRole(String roleCode, String roleName, String roleDesc,
@@ -51,6 +83,58 @@ public class RoleDataInitializer {
             Role saved = roleRepository.save(role);
             log.info("系统角色初始化成功, roleCode: {}, roleName: {}", roleCode, roleName);
             return saved;
+        });
+    }
+
+    /**
+     * 兜底确保 admin User 存在且持有 admin 角色。HTTP 失败 / Account 未注册时静默跳过,
+     * MQ 事件后续到达时仍能补救创建——本方法仅做"启动期主动拉取",不取代 MQ 链路。
+     */
+    private void ensureAdminUser() {
+        String username = adminProperties.getUsername();
+        if (userRepository.findByUsername(username).isPresent()) {
+            ensureAdminRoleAssigned(username);
+            return;
+        }
+        AccountSnapshot snapshot;
+        try {
+            snapshot = authAccountClient.findByUsername(username);
+        } catch (NotFoundException ex) {
+            log.info("admin Account 尚未在 auth-service 创建, 跳过 User 兜底, username: {}", username);
+            return;
+        } catch (RuntimeException ex) {
+            log.warn("启动期 HTTP 拉取 admin Account 失败, 将依赖 MQ 事件最终一致, username: {}, reason: {}",
+                    username, ex.toString());
+            return;
+        }
+        AccountRegisteredMessage message = new AccountRegisteredMessage();
+        message.setAccountId(snapshot.accountId());
+        message.setUsername(snapshot.username());
+        message.setPhone(snapshot.phone());
+        accountEventService.onAccountRegistered(message);
+        log.info("启动期兜底创建 admin User 完成, username: {}, accountId: {}",
+                username, snapshot.accountId());
+    }
+
+    /** admin User 已存在但缺 admin 角色时补救(用户被旧版本逻辑创建过、未分配 admin 角色)。 */
+    private void ensureAdminRoleAssigned(String username) {
+        TransactionTemplate tx = new TransactionTemplate(transactionManager);
+        tx.execute(status -> {
+            Long adminRoleId = roleRepository.findByRoleCode(ADMIN_ROLE_CODE)
+                    .map(Role::getId).orElse(null);
+            if (adminRoleId == null) {
+                return null;
+            }
+            User user = userRepository.findByUsername(username).orElse(null);
+            if (user == null || user.getRoleIds().contains(adminRoleId)) {
+                return null;
+            }
+            Set<Long> merged = new HashSet<>(user.getRoleIds());
+            merged.add(adminRoleId);
+            user.assignRoles(merged);
+            userRepository.save(user);
+            log.info("补救为现有 admin User 分配 admin 角色, username: {}", username);
+            return null;
         });
     }
 }

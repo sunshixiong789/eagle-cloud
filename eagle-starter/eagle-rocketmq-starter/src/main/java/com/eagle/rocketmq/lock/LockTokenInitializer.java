@@ -45,6 +45,7 @@ public class LockTokenInitializer implements InitializingBean {
         ClientConfiguration cfg = ClientConfiguration.newBuilder()
                 .setEndpoints(mqProps.getEndpoints())
                 .setRequestTimeout(Duration.ofMillis(mqProps.getRequestTimeoutMillis()))
+                .enableSsl(mqProps.isSslEnabled())
                 .build();
 
         try (Producer producer = provider.newProducerBuilder()

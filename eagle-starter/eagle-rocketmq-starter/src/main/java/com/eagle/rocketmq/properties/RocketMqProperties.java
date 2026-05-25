@@ -45,6 +45,17 @@ public class RocketMqProperties {
     private int maxAttempts = 2;
 
     /**
+     * 是否启用 TLS 连接 broker。
+     *
+     * <p>RocketMQ 5.x {@link org.apache.rocketmq.client.apis.ClientConfigurationBuilder}
+     * 默认 {@code sslEnabled = true},会导致 client 用 TLS + ALPN 协商连接 broker;
+     * 若 broker 是明文部署(标准 docker-compose 部署),客户端启动时会抛
+     * {@code Failed ALPN negotiation: Unable to find compatible protocol}。
+     * 本项目默认部署形态是明文,因此默认 {@code false};生产 TLS 部署再显式打开。
+     */
+    private boolean sslEnabled = false;
+
+    /**
      * 消费者配置。
      */
     private Consumer consumer = new Consumer();

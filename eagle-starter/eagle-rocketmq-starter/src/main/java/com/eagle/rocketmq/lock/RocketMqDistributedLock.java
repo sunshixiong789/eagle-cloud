@@ -59,6 +59,7 @@ public class RocketMqDistributedLock implements DistributedLock, InitializingBea
         ClientConfiguration cfg = ClientConfiguration.newBuilder()
                 .setEndpoints(mqProps.getEndpoints())
                 .setRequestTimeout(Duration.ofMillis(mqProps.getRequestTimeoutMillis()))
+                .enableSsl(mqProps.isSslEnabled())
                 .build();
 
         if (lockProps.getGranularity() == LockProperties.Granularity.PER_KEY) {

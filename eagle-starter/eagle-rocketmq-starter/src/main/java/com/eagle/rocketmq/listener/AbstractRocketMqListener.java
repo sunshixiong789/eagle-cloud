@@ -205,6 +205,7 @@ public abstract class AbstractRocketMqListener<T extends BaseEvent> implements I
             ClientConfiguration configuration = ClientConfiguration.newBuilder()
                     .setEndpoints(getEndpoints())
                     .setRequestTimeout(Duration.ofMillis(rocketMqProperties.getRequestTimeoutMillis()))
+                    .enableSsl(rocketMqProperties.isSslEnabled())
                     .build();
 
             String tag = getTagExpression();

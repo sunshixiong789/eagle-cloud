@@ -59,6 +59,7 @@ public class RocketMqTransactionalEventPublisher implements TransactionalEventPu
             ClientConfiguration configuration = ClientConfiguration.newBuilder()
                     .setEndpoints(properties.getEndpoints())
                     .setRequestTimeout(Duration.ofMillis(properties.getRequestTimeoutMillis()))
+                    .enableSsl(properties.isSslEnabled())
                     .build();
 
             // 组合多个 Checker：按消息 Topic 路由到对应检查器，无匹配则 UNKNOWN

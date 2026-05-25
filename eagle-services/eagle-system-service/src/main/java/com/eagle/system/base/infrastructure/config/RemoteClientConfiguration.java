@@ -2,6 +2,7 @@ package com.eagle.system.base.infrastructure.config;
 
 import com.eagle.http.client.support.EagleRestServiceClientFactory;
 import com.eagle.system.base.infrastructure.remote.AuthAccountBlacklistClient;
+import com.eagle.system.base.infrastructure.remote.AuthAccountClient;
 import com.eagle.system.base.infrastructure.remote.AuthOnlineUserClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,5 +26,10 @@ class RemoteClientConfiguration {
     @Bean
     AuthAccountBlacklistClient authAccountBlacklistClient(EagleRestServiceClientFactory factory) {
         return factory.createLoadBalancedClient(AuthAccountBlacklistClient.class, AUTH_SERVICE_ID);
+    }
+
+    @Bean
+    AuthAccountClient authAccountClient(EagleRestServiceClientFactory factory) {
+        return factory.createLoadBalancedClient(AuthAccountClient.class, AUTH_SERVICE_ID);
     }
 }
