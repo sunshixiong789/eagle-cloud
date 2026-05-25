@@ -12,7 +12,6 @@ networks:
 
 # 数据卷（named volumes，由 docker 自动创建并持久化）
 volumes:
-  mysql-data:
   postgres-data:
   redis-data:
   nacos-data:
@@ -21,33 +20,7 @@ volumes:
   rocketmq-broker-store:
 
 services:
-  # MySQL 数据库
-  mysql:
-    image: mysql:8.0.30
-    container_name: eagle-mysql
-    restart: always
-    ports:
-      - "3306:3306"
-    networks:
-      - eagle-network
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root123456}
-      - MYSQL_DATABASE=${MYSQL_DATABASE:-eagle}
-      - TZ=${TZ:-Asia/Shanghai}
-    volumes:
-      - mysql-data:/var/lib/mysql
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
-      - --default-authentication-plugin=mysql_native_password
-    healthcheck:
-      test: [ "CMD-SHELL", "mysqladmin ping -h localhost -uroot -p${MYSQL_ROOT_PASSWORD:-root123456}" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  # PostgreSQL 数据库 — system-service 在 9550fdb 切到 PG;monolith-service 仍用 MySQL
+  # PostgreSQL 数据库 — compose 内唯一数据源；DB_USERNAME/DB_PASSWORD/DB_NAME 与 system 服务共用同一组 .env 变量
   postgres:
     image: postgres:16
     container_name: eagle-postgres
@@ -57,14 +30,14 @@ services:
     networks:
       - eagle-network
     environment:
-      - POSTGRES_DB=${POSTGRES_DB:-eagle_system}
-      - POSTGRES_USER=${POSTGRES_USER:-eagle}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-eagle123456}
+      - POSTGRES_DB=${DB_NAME:-eagle_system}
+      - POSTGRES_USER=${DB_USERNAME:-eagle}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-eagle123456}
       - TZ=${TZ:-Asia/Shanghai}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-eagle} -d ${POSTGRES_DB:-eagle_system}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME:-eagle} -d ${DB_NAME:-eagle_system}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -283,7 +256,7 @@ services:
     mem_limit: 3072m
     mem_reservation: 1536m
     # environment 显式枚举所有关键变量，统一 ${VAR:-default} 插值
-    # 默认值已包含容器网络约束（mysql:3306 / redis:6379 / nacos:8848 / SERVER_PORT=8082），.env 可整体覆盖
+    # 默认值已包含容器网络约束（postgres:5432 / redis:6379 / nacos:8848 / SERVER_PORT=8082），.env 可整体覆盖
     # 注意：.env 文件中的变量仅用于 compose.yml 的 ${VAR} 插值，必须在此 environment 段显式声明才会注入容器
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
@@ -358,8 +331,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-    # system-service 已在 9550fdb 切到 PostgreSQL,不再依赖 mysql 健康检查
-    # (mysql 容器仍保留供未切 PG 的 monolith-service 使用)
+    # system-service 数据源为 PostgreSQL；compose 已移除 MySQL
     depends_on:
       postgres:
         condition: service_healthy
