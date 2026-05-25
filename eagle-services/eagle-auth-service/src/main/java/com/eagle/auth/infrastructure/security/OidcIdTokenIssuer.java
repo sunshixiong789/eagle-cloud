@@ -17,8 +17,6 @@ import org.springframework.security.oauth2.server.authorization.token.DefaultOAu
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 
-import java.util.Map;
-
 /**
  * 自定义 grant_type（SMS / 微信 / 一键登录等）签发 OIDC ID Token 的共享逻辑。
  * <p>
@@ -26,9 +24,6 @@ import java.util.Map;
  * OidcIdToken 并写入 OAuth2Authorization。否则 refresh_token grant 在 SAS 内部
  * {@code OAuth2RefreshTokenAuthenticationProvider} 中生成新 ID Token 时会触发 NPE
  * （{@code JwtGenerator} 期望 authorization 中已存在 ID Token 上下文）。
- * <p>
- * ID Token 的 claims 同样走 {@link ClaimsMetadataSanitizer} 净化，避免持久化 metadata 中的
- * Number 类型被 SAS Jackson PolymorphicTypeValidator 拒绝反序列化。
  */
 final class OidcIdTokenIssuer {
 
@@ -72,8 +67,7 @@ final class OidcIdTokenIssuer {
                 idTokenJwt.getExpiresAt(),
                 idTokenJwt.getClaims()
         );
-        Map<String, Object> safeIdTokenClaims = ClaimsMetadataSanitizer.sanitize(idTokenJwt.getClaims());
         authorizationBuilder.token(idToken, metadata ->
-                metadata.put(OAuth2Authorization.Token.CLAIMS_METADATA_NAME, safeIdTokenClaims));
+                metadata.put(OAuth2Authorization.Token.CLAIMS_METADATA_NAME, idTokenJwt.getClaims()));
     }
 }

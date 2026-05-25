@@ -29,6 +29,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.jackson.SecurityJacksonModules;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -63,6 +64,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 
 import java.io.InputStream;
 import java.security.KeyStore;
@@ -143,14 +146,45 @@ public class SecurityConfig {
      * 刷新令牌等数据持久化到数据库，服务重启不丢失活跃授权，多实例部署共享授权状态。
      *
      * <p>SAS 7.0.5 默认使用 Jackson 3 的 {@code JsonMapperOAuth2AuthorizationRowMapper}
-     * 与 {@code JsonMapperOAuth2AuthorizationParametersMapper}，已内置 {@code java.time.*}
-     * 支持，无需自定义 ObjectMapper。
+     * 与 {@code JsonMapperOAuth2AuthorizationParametersMapper}。默认 PTV(
+     * {@code BasicPolymorphicTypeValidator}) 只放行 Spring Security 自带的类型与
+     * {@code java.time.*}，<strong>不</strong>包含 {@code java.lang.Long} 等基本包装类型。
+     *
+     * <p>{@link #jwtTokenCustomizer} 把 {@code user.getId()} (Long) 写入 access token claims,
+     * SAS 在 {@code oauth2_authorization.access_token_metadata.token.claims} 里
+     * 用 default typing 持久化时会写入 {@code @class: java.lang.Long},回读时 PTV 拒绝,
+     * 触发 "Could not resolve type id 'java.lang.Long' as a subtype of `java.lang.Object`"。
+     *
+     * <p>修复:基于 SAS 默认 PTV 追加包装类型白名单后构建自定义 {@link JsonMapper},
+     * 同时覆盖 RowMapper 和 ParametersMapper(两侧都用同一份 mapper,序列化/反序列化对称)。
      */
     @Bean
     public OAuth2AuthorizationService authorizationService(
             JdbcOperations jdbcOperations,
             RegisteredClientRepository registeredClientRepository) {
-        return new JdbcOAuth2AuthorizationService(jdbcOperations, registeredClientRepository);
+        JsonMapper jsonMapper = buildAuthorizationJsonMapper();
+        JdbcOAuth2AuthorizationService service =
+                new JdbcOAuth2AuthorizationService(jdbcOperations, registeredClientRepository);
+        service.setAuthorizationRowMapper(
+                new JdbcOAuth2AuthorizationService.JsonMapperOAuth2AuthorizationRowMapper(
+                        registeredClientRepository, jsonMapper));
+        service.setAuthorizationParametersMapper(
+                new JdbcOAuth2AuthorizationService.JsonMapperOAuth2AuthorizationParametersMapper(jsonMapper));
+        return service;
+    }
+
+    /**
+     * 构建 OAuth2Authorization 持久化用 JsonMapper:在 SAS 默认安全模块基础上,
+     * 把 JWT claims 中可能出现的基本包装类型加入 PTV 白名单。
+     */
+    private static JsonMapper buildAuthorizationJsonMapper() {
+        // 当前只有 user_id (Long) 一个非默认白名单类型;新增 Number/Boolean 等 claim 时按需追加
+        BasicPolymorphicTypeValidator.Builder ptvBuilder = BasicPolymorphicTypeValidator.builder()
+                .allowIfSubType(Long.class);
+        return JsonMapper.builder()
+                .addModules(SecurityJacksonModules.getModules(
+                        SecurityConfig.class.getClassLoader(), ptvBuilder))
+                .build();
     }
 
     @Bean

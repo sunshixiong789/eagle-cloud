@@ -40,7 +40,7 @@ import java.util.Map;
  * <ul>
  *   <li>客户端认证校验 + grant_type 白名单</li>
  *   <li>access_token / refresh_token / OIDC id_token 生成</li>
- *   <li>OAuth2Authorization 持久化（含 ClaimsMetadataSanitizer）</li>
+ *   <li>OAuth2Authorization 持久化</li>
  *   <li>账号冻结状态校验 — 强制各 grant 行为一致，避免 #6 类问题</li>
  * </ul>
  *
@@ -174,9 +174,8 @@ public abstract class AbstractCustomGrantAuthenticationProvider implements Authe
                 .attribute(Principal.class.getName(), userAuthentication);
 
         if (generatedAccess instanceof ClaimAccessor claimAccessor) {
-            Map<String, Object> safeClaims = ClaimsMetadataSanitizer.sanitize(claimAccessor.getClaims());
             authzBuilder.token(accessToken, md ->
-                    md.put(OAuth2Authorization.Token.CLAIMS_METADATA_NAME, safeClaims));
+                    md.put(OAuth2Authorization.Token.CLAIMS_METADATA_NAME, claimAccessor.getClaims()));
         } else {
             authzBuilder.accessToken(accessToken);
         }
