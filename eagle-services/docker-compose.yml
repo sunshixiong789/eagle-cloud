@@ -181,17 +181,18 @@ services:
       # Broker 默认堆 8g 太大；开发机收紧到 1g
       - JAVA_OPT_EXT=${ROCKETMQ_BROKER_JAVA_OPT_EXT:--server -Xms1g -Xmx1g -Xmn512m}
       - TZ=${TZ:-Asia/Shanghai}
-    # broker.conf 从宿主机挂载(./rocketmq/broker.conf)
+    # broker.conf 从宿主机挂载 ./rocketmq 目录(不挂单文件)
+    # 挂单文件在 macOS Docker Desktop 上偶尔会被错当成目录创建,挂目录更稳
     # 历史方案用 `printf 'k=v\n...' > broker.conf` 在 YAML `>` 折叠 + sh -c 嵌套下
     # \n 没被 printf 当转义,整文件变一行 → brokerIP1 吞掉后续所有配置,broker 注册到
     # NameServer 的地址变成 "rocketmq-brokernbrokerName=broker-an..." 全部连不上
-    command: sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/conf/broker.conf
+    command: sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/conf-eagle/broker.conf
     mem_limit: 1536m
     mem_reservation: 768m
     volumes:
       - rocketmq-broker-logs:/home/rocketmq/logs
       - rocketmq-broker-store:/home/rocketmq/store
-      - ./rocketmq/broker.conf:/home/rocketmq/conf/broker.conf:ro
+      - ./rocketmq:/home/rocketmq/conf-eagle:ro
 
   # RocketMQ Dashboard（开发环境可视化控制台，浏览器访问 http://localhost:8180）
   # 通过容器名 rocketmq-namesrv:9876 连 NameServer；关闭 VIP channel 避免与 broker 端口冲突
