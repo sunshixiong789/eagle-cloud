@@ -11,6 +11,7 @@ dependencies {
     compileOnly 'org.springframework:spring-webflux'
     compileOnly 'org.springframework.data:spring-data-commons'
     compileOnly 'com.fasterxml.jackson.core:jackson-databind'
+    compileOnly 'tools.jackson.core:jackson-databind'
     compileOnly 'org.apache.tomcat.embed:tomcat-embed-core'
     compileOnly 'io.micrometer:micrometer-core'
 
@@ -19,6 +20,7 @@ dependencies {
     testImplementation 'org.springframework:spring-webmvc'
     testImplementation 'org.springframework:spring-webflux'
     testImplementation 'com.fasterxml.jackson.core:jackson-databind'
+    testImplementation 'tools.jackson.core:jackson-databind'
     testImplementation 'org.apache.tomcat.embed:tomcat-embed-core'
     testImplementation 'io.micrometer:micrometer-core'
     testImplementation 'org.mockito:mockito-core'

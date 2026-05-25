@@ -11,7 +11,7 @@ import com.eagle.common.observability.RequestIdMdcFilter;
 import com.eagle.common.observability.RequestIdWebFilter;
 import com.eagle.common.pressuretest.PressureTestFilter;
 import com.eagle.common.pressuretest.ReactivePressureTestWebFilter;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.InitializingBean;

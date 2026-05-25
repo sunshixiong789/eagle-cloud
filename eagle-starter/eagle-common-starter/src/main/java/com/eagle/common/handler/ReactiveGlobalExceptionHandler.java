@@ -7,8 +7,9 @@ import com.eagle.common.exception.DomainException;
 import com.eagle.common.exception.NotFoundException;
 import com.eagle.common.exception.ServiceException;
 import com.eagle.common.observability.RequestIdWebFilter;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
@@ -41,7 +42,7 @@ public class ReactiveGlobalExceptionHandler implements WebExceptionHandler, Orde
     private final MessageSource messageSource;
 
     @Override
-    public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
+    public @NonNull Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
         if (exchange.getResponse().isCommitted()) {
             return Mono.error(ex);
         }
@@ -125,7 +126,7 @@ public class ReactiveGlobalExceptionHandler implements WebExceptionHandler, Orde
     private byte[] serialize(ErrorResult result) {
         try {
             return objectMapper.writeValueAsBytes(result);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             return "{\"message\":\"Failed to serialize error response\"}".getBytes(StandardCharsets.UTF_8);
         }
     }
