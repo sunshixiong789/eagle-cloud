@@ -180,9 +180,16 @@ public class SecurityConfig {
      * 把 JWT claims 中可能出现的基本包装类型加入 PTV 白名单。
      */
     private static JsonMapper buildAuthorizationJsonMapper() {
-        // 当前只有 user_id (Long) 一个非默认白名单类型;新增 Number/Boolean 等 claim 时按需追加
+        // SAS 默认 PTV(SecurityJacksonModules 内置)不放行的实际持久化类型,按 access_token_metadata
+        // 实测 JSON 补齐。注意 `iss` claim 被 JwtClaimsSet.Builder.issuer(String) 转成 java.net.URL
+        // 存进 claims;`aud`/`scope` 是 Collections 工厂方法返回的内部类(SingletonList/UnmodifiableSet)。
+        // 这些都用 default typing 写成 ["java.xxx.YYY", value],回读时 PTV 拒绝即抛
+        // "Could not resolve type id 'java.xxx.YYY' as a subtype",/userinfo 表现为 invalid_token。
         BasicPolymorphicTypeValidator.Builder ptvBuilder = BasicPolymorphicTypeValidator.builder()
-                .allowIfSubType(Long.class);
+                .allowIfSubType(Long.class)
+                .allowIfSubType(java.net.URL.class)
+                // 覆盖 Collections$SingletonList / $UnmodifiableSet / $UnmodifiableMap / $EmptyList ...
+                .allowIfSubType("java.util.Collections$");
         return JsonMapper.builder()
                 .addModules(SecurityJacksonModules.getModules(
                         SecurityConfig.class.getClassLoader(), ptvBuilder))
@@ -229,8 +236,7 @@ public class SecurityConfig {
             SecurityContextRepository securityContextRepository,
             TokenTrackingHandler tokenTrackingHandler,
             RegisteredClientRepository registeredClientRepository,
-            BlacklistAwareJwtDecoder jwtDecoder,
-            EagleJwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
+            BlacklistAwareJwtDecoder jwtDecoder) throws Exception {
 
         OAuth2AuthorizationServerConfigurer authServer = new OAuth2AuthorizationServerConfigurer();
         http.securityMatcher(authServer.getEndpointsMatcher())
@@ -255,9 +261,14 @@ public class SecurityConfig {
                 // oauth2AuthorizationServer().oidc(Customizer.withDefaults()) 不会注册
                 // BearerTokenAuthenticationFilter——必须在 @Order(1) chain 显式启用 Resource Server，
                 // 否则 OidcUserInfoAuthenticationProvider 拿不到 accessTokenAuthentication。
-                .oauth2ResourceServer(rs -> rs.jwt(jwt -> jwt
-                        .decoder(jwtDecoder)
-                        .jwtAuthenticationConverter(jwtAuthenticationConverter)));
+                //
+                // ⚠️ 此处<strong>不能</strong>用 EagleJwtAuthenticationConverter:
+                // 它返回的 EagleAuthentication 继承自 AbstractAuthenticationToken,principal 是 EagleUser。
+                // 而 SAS 的 OidcUserInfoAuthenticationProvider 要求 principal 必须是
+                // AbstractOAuth2TokenAuthenticationToken 子类(默认 JwtAuthenticationToken),否则直接
+                // 抛 INVALID_TOKEN。/api/* 业务端点(@Order(2) chain)才需要 EagleAuthentication
+                // 让 @PreAuthorize SpEL 直接访问 authentication.principal.id。
+                .oauth2ResourceServer(rs -> rs.jwt(jwt -> jwt.decoder(jwtDecoder)));
 
         return http.build();
     }
