@@ -12,7 +12,7 @@ import java.util.List;
  * 在线用户内部 API 客户端(调 auth-service /internal/online-users/**)。
  * <p>
  * 由 {@code RemoteClientConfiguration} 通过
- * {@code EagleRestServiceClientFactory.createLoadBalancedClient(...,"eagle-auth-service")}
+ * {@code EagleRestServiceClientFactory.createLoadBalancedClient(...,"auth")}
  * 创建代理 bean。Authorization / X-Tenant-Id / Seata XID 由 restclient-starter
  * 自动透传。
  */

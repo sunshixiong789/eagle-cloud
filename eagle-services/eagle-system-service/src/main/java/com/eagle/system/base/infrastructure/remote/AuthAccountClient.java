@@ -12,7 +12,7 @@ import org.springframework.web.service.annotation.HttpExchange;
  * 只首次发布 + MQ 链路不通即永久丢失"的强耦合。
  * <p>
  * 由 {@code RemoteClientConfiguration} 通过
- * {@code EagleRestServiceClientFactory.createLoadBalancedClient(...,"eagle-auth-service")}
+ * {@code EagleRestServiceClientFactory.createLoadBalancedClient(...,"auth")}
  * 创建代理 bean,JWT / X-Tenant-Id / Seata XID 由 restclient-starter 自动透传。
  */
 @HttpExchange("/internal/accounts")

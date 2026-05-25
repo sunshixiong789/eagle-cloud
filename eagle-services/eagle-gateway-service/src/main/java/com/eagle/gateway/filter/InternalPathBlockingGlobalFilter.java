@@ -46,7 +46,7 @@ public class InternalPathBlockingGlobalFilter implements GlobalFilter, Ordered {
      * 同时拦截:
      * <ul>
      *   <li>{@code /internal/online-users}</li>
-     *   <li>{@code /eagle-auth-service/internal/online-users}(服务发现路由)</li>
+     *   <li>{@code /auth/internal/online-users}(服务发现路由)</li>
      *   <li>{@code /system/internal/authorization/123}</li>
      * </ul>
      */

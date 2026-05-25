@@ -44,10 +44,10 @@ class InternalPathBlockingGlobalFilterTest {
         }
 
         @Test
-        @DisplayName("服务发现路由 /eagle-auth-service/internal/online-users 应返回 403")
+        @DisplayName("服务发现路由 /auth/internal/online-users 应返回 403")
         void blocksDiscoveryRoutedInternalPath() {
             MockServerWebExchange exchange =
-                    exchangeFor("/eagle-auth-service/internal/online-users");
+                    exchangeFor("/auth/internal/online-users");
             GatewayFilterChain chain = mock(GatewayFilterChain.class);
 
             filter.filter(exchange, chain).block();
@@ -83,7 +83,7 @@ class InternalPathBlockingGlobalFilterTest {
         void blocksUrlEncodedBypass() {
             // 用 URI.create 构造能保留 %2F 编码的 URI (UriComponentsBuilder 会按 path 段语义处理)
             java.net.URI raw = java.net.URI.create(
-                    "http://localhost/eagle-auth-service%2Finternal%2Fonline-users");
+                    "http://localhost/auth%2Finternal%2Fonline-users");
             MockServerHttpRequest request = MockServerHttpRequest
                     .method(org.springframework.http.HttpMethod.GET, raw)
                     .build();
@@ -162,8 +162,8 @@ class InternalPathBlockingGlobalFilterTest {
         @Test
         @DisplayName("正常路径解码: %2F → /")
         void decodesValidPath() {
-            assertEquals("/eagle-auth-service/internal/x",
-                    filter.safeUrlDecode("/eagle-auth-service%2Finternal%2Fx"));
+            assertEquals("/auth/internal/x",
+                    filter.safeUrlDecode("/auth%2Finternal%2Fx"));
         }
 
         @Test

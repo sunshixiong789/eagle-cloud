@@ -19,7 +19,7 @@ dependencies {
     implementation project(':eagle-starter:eagle-resilience-starter')
     implementation project(':eagle-starter:eagle-oss-minio-starter')
     implementation project(':eagle-starter:eagle-openapi-starter')
-    // 跨服务同步调用:通过 lb://eagle-auth-service 访问 auth-service 内部 API
+    // 跨服务同步调用:通过 lb://auth 访问 auth-service 内部 API
     implementation project(':eagle-starter:eagle-restclient-starter')
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'

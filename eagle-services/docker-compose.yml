@@ -480,7 +480,7 @@ services:
       - NACOS_PASSWORD=${NACOS_PASSWORD:-}
       # 多机部署时改为宿主机/公网 IP；单机留空，客户端自动取容器 IP
       - NACOS_REGISTER_IP=${NACOS_REGISTER_IP:-}
-      # AUTH_SERVER_URL: gateway 走 Nacos lb://eagle-auth-service，此处仅为兼容历史显式直连
+      # AUTH_SERVER_URL: gateway 走 Nacos lb://auth，此处仅为兼容历史显式直连
       - AUTH_SERVER_URL=${AUTH_SERVER_URL:-http://auth:8081}
       - SENTINEL_DASHBOARD=${SENTINEL_DASHBOARD:-sentinel-dashboard:8858}
       - EAGLE_GATEWAY_SENTINEL_ENABLED=${EAGLE_GATEWAY_SENTINEL_ENABLED:-true}

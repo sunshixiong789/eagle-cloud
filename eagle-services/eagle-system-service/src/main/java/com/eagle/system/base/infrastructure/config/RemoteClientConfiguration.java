@@ -10,13 +10,13 @@ import org.springframework.context.annotation.Configuration;
 /**
  * 注册 base 模块对 auth-service 的同步 HTTP 客户端代理。
  * <p>
- * 服务 ID {@code eagle-auth-service} 通过 Nacos 服务发现解析,
+ * 服务 ID {@code auth}(对应 auth-service 的 spring.application.name)通过 Nacos 服务发现解析,
  * restclient-starter 自动注入负载均衡 + Authorization / X-Tenant-Id / TX_XID 透传。
  */
 @Configuration(proxyBeanMethods = false)
 class RemoteClientConfiguration {
 
-    private static final String AUTH_SERVICE_ID = "eagle-auth-service";
+    private static final String AUTH_SERVICE_ID = "auth";
 
     @Bean
     AuthOnlineUserClient authOnlineUserClient(EagleRestServiceClientFactory factory) {
