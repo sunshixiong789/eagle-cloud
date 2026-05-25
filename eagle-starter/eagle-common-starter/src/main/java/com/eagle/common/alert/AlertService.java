@@ -12,15 +12,16 @@ package com.eagle.common.alert;
  *
  * <p>使用方式:
  * <pre>{@code
- * alertService.send(AlertEvent.builder()
- *     .severity(AlertSeverity.ERROR)
- *     .source("eagle-system-service")
- *     .category("mq-dlq")
- *     .title("AccountRegistered 死信投递")
- *     .context("eventId", event.getEventId())
- *     .context("totalAttempts", String.valueOf(attempts))
- *     .cause(throwable)
- *     .build());
+ * alertService.send(new AlertEvent(
+ *         AlertSeverity.ERROR,
+ *         "eagle-system-service",
+ *         "mq-dlq",
+ *         "AccountRegistered 死信投递",
+ *         "16 次重试均失败",
+ *         Map.of("eventId", event.getEventId(),
+ *                "totalAttempts", String.valueOf(attempts)),
+ *         throwable,
+ *         null));
  * }</pre>
  *
  * @author sunshixiong

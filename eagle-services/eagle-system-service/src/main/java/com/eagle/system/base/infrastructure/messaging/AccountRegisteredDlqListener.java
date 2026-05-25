@@ -13,6 +13,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.Map;
+
 /**
  * AccountRegistered DLQ 兜底 —— RocketMQ 重试 16 次仍失败时进入此处。
  * <p>
@@ -62,17 +64,19 @@ public class AccountRegisteredDlqListener extends AbstractDlqListener<AccountReg
         // 1) 落库 — 即使告警链路失败也留下原始证据
         persistDeadLetter(event, totalAttempts);
         // 2) 告警 — webhook 异常不影响落库
-        alertService.send(AlertEvent.builder()
-                .severity(AlertSeverity.ERROR)
-                .source(ALERT_SOURCE)
-                .category(ALERT_CATEGORY)
-                .title("AccountRegistered 死信投递")
-                .message("base 域 User 创建失败,可能导致登录鉴权降级,需人工补录")
-                .context("eventId", String.valueOf(event.getEventId()))
-                .context("accountId", String.valueOf(event.getAccountId()))
-                .context("username", String.valueOf(event.getUsername()))
-                .context("totalAttempts", String.valueOf(totalAttempts))
-                .build());
+        alertService.send(new AlertEvent(
+                AlertSeverity.ERROR,
+                ALERT_SOURCE,
+                ALERT_CATEGORY,
+                "AccountRegistered 死信投递",
+                "base 域 User 创建失败,可能导致登录鉴权降级,需人工补录",
+                Map.of(
+                        "eventId", String.valueOf(event.getEventId()),
+                        "accountId", String.valueOf(event.getAccountId()),
+                        "username", String.valueOf(event.getUsername()),
+                        "totalAttempts", String.valueOf(totalAttempts)),
+                null,
+                null));
     }
 
     private void persistDeadLetter(AccountRegisteredMessage event, int totalAttempts) {

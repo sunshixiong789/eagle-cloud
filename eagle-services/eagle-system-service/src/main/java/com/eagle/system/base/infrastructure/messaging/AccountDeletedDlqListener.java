@@ -13,6 +13,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.Map;
+
 /**
  * AccountDeleted DLQ 兜底 —— RocketMQ 重试 16 次仍失败时进入此处。
  * <p>
@@ -59,16 +61,18 @@ public class AccountDeletedDlqListener extends AbstractDlqListener<AccountDelete
         log.error("[DLQ ALERT] account-deleted dead-letter: eventId={}, accountId={}, attempts={}",
                 event.getEventId(), event.getAccountId(), totalAttempts);
         persistDeadLetter(event, totalAttempts);
-        alertService.send(AlertEvent.builder()
-                .severity(AlertSeverity.ERROR)
-                .source(ALERT_SOURCE)
-                .category(ALERT_CATEGORY)
-                .title("AccountDeleted 死信投递")
-                .message("base 域 User 未能级联删除,残留孤儿数据,需人工清理")
-                .context("eventId", String.valueOf(event.getEventId()))
-                .context("accountId", String.valueOf(event.getAccountId()))
-                .context("totalAttempts", String.valueOf(totalAttempts))
-                .build());
+        alertService.send(new AlertEvent(
+                AlertSeverity.ERROR,
+                ALERT_SOURCE,
+                ALERT_CATEGORY,
+                "AccountDeleted 死信投递",
+                "base 域 User 未能级联删除,残留孤儿数据,需人工清理",
+                Map.of(
+                        "eventId", String.valueOf(event.getEventId()),
+                        "accountId", String.valueOf(event.getAccountId()),
+                        "totalAttempts", String.valueOf(totalAttempts)),
+                null,
+                null));
     }
 
     private void persistDeadLetter(AccountDeletedMessage event, int totalAttempts) {

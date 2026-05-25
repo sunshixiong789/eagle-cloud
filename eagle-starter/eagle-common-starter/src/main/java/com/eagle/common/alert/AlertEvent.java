@@ -1,7 +1,5 @@
 package com.eagle.common.alert;
 
-import lombok.Builder;
-import lombok.Singular;
 import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
@@ -23,14 +21,13 @@ import java.util.Map;
  * @param cause    异常(可选)
  * @author sunshixiong
  */
-@Builder
 public record AlertEvent(
         AlertSeverity severity,
         String source,
         String category,
         String title,
         String message,
-        @Singular Map<String, String> contexts,
+        Map<String, String> contexts,
         @Nullable Throwable cause,
         Instant occurredAt
 ) {

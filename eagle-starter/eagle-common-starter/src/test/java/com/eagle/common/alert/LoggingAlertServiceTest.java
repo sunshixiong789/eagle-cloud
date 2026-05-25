@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -40,15 +41,15 @@ class LoggingAlertServiceTest {
     @Test
     @DisplayName("送告警事件写 ERROR 日志,字段格式化到 message + ctx KV")
     void sendsErrorWithFormattedContext() {
-        AlertEvent event = AlertEvent.builder()
-                .severity(AlertSeverity.ERROR)
-                .source("eagle-system-service")
-                .category("mq-dlq")
-                .title("AccountRegistered 死信")
-                .message("16 次重试均失败")
-                .context("eventId", "01HQ-XYZ")
-                .context("totalAttempts", "16")
-                .build();
+        AlertEvent event = new AlertEvent(
+                AlertSeverity.ERROR,
+                "eagle-system-service",
+                "mq-dlq",
+                "AccountRegistered 死信",
+                "16 次重试均失败",
+                Map.of("eventId", "01HQ-XYZ", "totalAttempts", "16"),
+                null,
+                null);
 
         service.send(event);
 
@@ -69,13 +70,9 @@ class LoggingAlertServiceTest {
     @Test
     @DisplayName("MDC 标签在发送期间填充,发送后清理")
     void mdcIsClearedAfterSend() {
-        AlertEvent event = AlertEvent.builder()
-                .severity(AlertSeverity.WARN)
-                .source("svc")
-                .category("rpc-circuit-open")
-                .title("title")
-                .message("msg")
-                .build();
+        AlertEvent event = new AlertEvent(
+                AlertSeverity.WARN, "svc", "rpc-circuit-open", "title", "msg",
+                null, null, null);
 
         service.send(event);
 
@@ -88,14 +85,9 @@ class LoggingAlertServiceTest {
     @Test
     @DisplayName("携带 cause 时日志含异常堆栈")
     void includesStackTraceWhenCausePresent() {
-        AlertEvent event = AlertEvent.builder()
-                .severity(AlertSeverity.CRITICAL)
-                .source("svc")
-                .category("data-corruption")
-                .title("数据损坏")
-                .message("foo bar")
-                .cause(new IllegalStateException("boom"))
-                .build();
+        AlertEvent event = new AlertEvent(
+                AlertSeverity.CRITICAL, "svc", "data-corruption", "数据损坏", "foo bar",
+                null, new IllegalStateException("boom"), null);
 
         service.send(event);
 
@@ -113,14 +105,10 @@ class LoggingAlertServiceTest {
     }
 
     @Test
-    @DisplayName("severity 未显式 → builder 给 null,compact ctor 回退为 ERROR")
+    @DisplayName("severity 传 null,compact ctor 回退为 ERROR")
     void severityDefaultsToErrorWhenMissing() {
-        AlertEvent event = AlertEvent.builder()
-                .source("svc")
-                .category("test")
-                .title("t")
-                .message("m")
-                .build();
+        AlertEvent event = new AlertEvent(
+                null, "svc", "test", "t", "m", null, null, null);
 
         assertThat(event.severity()).isEqualTo(AlertSeverity.ERROR);
     }
@@ -128,13 +116,8 @@ class LoggingAlertServiceTest {
     @Test
     @DisplayName("occurredAt 未显式 → compact ctor 填充非 null")
     void occurredAtDefaultsToNow() {
-        AlertEvent event = AlertEvent.builder()
-                .severity(AlertSeverity.INFO)
-                .source("svc")
-                .category("test")
-                .title("t")
-                .message("m")
-                .build();
+        AlertEvent event = new AlertEvent(
+                AlertSeverity.INFO, "svc", "test", "t", "m", null, null, null);
 
         assertThat(event.occurredAt()).isNotNull();
     }
@@ -142,13 +125,8 @@ class LoggingAlertServiceTest {
     @Test
     @DisplayName("空 contexts 渲染为 {}")
     void emptyContextsRendered() {
-        AlertEvent event = AlertEvent.builder()
-                .severity(AlertSeverity.INFO)
-                .source("svc")
-                .category("test")
-                .title("t")
-                .message("m")
-                .build();
+        AlertEvent event = new AlertEvent(
+                AlertSeverity.INFO, "svc", "test", "t", "m", null, null, null);
 
         service.send(event);
 
