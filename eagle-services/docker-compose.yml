@@ -33,9 +33,14 @@ services:
       - POSTGRES_DB=${DB_NAME:-eagle_system}
       - POSTGRES_USER=${DB_USERNAME:-eagle}
       - POSTGRES_PASSWORD=${DB_PASSWORD:-eagle123456}
+      # AUTH_DB_NAME 由 postgres-init/01-create-auth-db.sh 读取，用于创建附属库
+      - AUTH_DB_NAME=${AUTH_DB_NAME:-eagle_auth}
       - TZ=${TZ:-Asia/Shanghai}
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      # 多库初始化：首次启动时执行 ./postgres-init/*.sh 创建 eagle_auth 等附属库
+      # 仅在 postgres-data 卷为空时触发；若需要重建：docker compose down -v
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME:-eagle} -d ${DB_NAME:-eagle_system}" ]
       interval: 10s
