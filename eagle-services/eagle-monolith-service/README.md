@@ -1,140 +1,123 @@
 # eagle-monolith-service
 
-Eagle 平台**单体启动模块**。复用 `eagle-auth-service` 与 `eagle-system-service` 的业务代码（账号 / OAuth2 / JWT /
-用户 / 角色 / 菜单 / 权限等），剥离 Nacos / 注册中心 / Gateway / Sentinel 等微服务专属基础设施，下游用户拿到即可作为单体应用一键启动。
+Eagle 平台单体启动模块。它在一个 Spring Boot 进程内复用 `eagle-auth-service` 和
+`eagle-system-service` 的业务能力，用本地 Bean 替代服务间 HTTP / MQ 调用，剥离 Nacos、注册中心、Gateway
+等微服务专属基础设施。
+
+当前结论：单体模式可以继续启动，但需要按 profile 明确选择数据库。
 
 ## 定位
 
-- **零基础设施**：无需 Nacos / Gateway / 网关代理，独立 JAR 启动即可
-- **代码零拷贝**：通过 Gradle `implementation project(...)` 直接复用 `eagle-auth-service` 与 `eagle-system-service` 业务代码
-- **单实例可用**：内置 H2（local） + Caffeine（本地缓存），开箱即用
-- **生产就绪**：切到 `prod` profile 即可使用 MySQL + Redis 真实依赖
-- **二次扩展**：在 `com.eagle.monolith` 包下新增 Bean / Configuration 覆盖系统服务默认行为
+- 零注册中心：单体不依赖 Nacos / Gateway，直接启动 JAR。
+- 代码复用：通过 Gradle `implementation project(...)` 复用 auth + system 业务代码。
+- 本地启动：`local` profile 使用 H2 内存库 + Caffeine，不需要外部 MySQL、PostgreSQL、Redis。
+- 生产启动：`prod,mysql` 使用 MySQL + Redis，`prod,postgresql` 使用 PostgreSQL + Redis。
+- 单体集成：`com.eagle.monolith.integration` 提供本地 Port / Client 适配和账号事件桥接。
 
-## 启动类（EagleMonolithApplication）
+## Profile 约定
 
-```
-@SpringBootApplication
-@ConfigurationPropertiesScan(basePackages = {"com.eagle.auth", "com.eagle.system", "com.eagle.monolith"})
-@EnableCaching
-@ComponentScan(
-    basePackages = {"com.eagle.auth", "com.eagle.system", "com.eagle.monolith"},
-    excludeFilters = @ComponentScan.Filter(
-        type = FilterType.ASSIGNABLE_TYPE,
-        classes = EagleSystemApplication.class)
-)
-@EntityScan(basePackages = {"com.eagle.auth", "com.eagle.system", "com.eagle.monolith"})
-@EnableJpaRepositories(basePackages = {"com.eagle.auth", "com.eagle.system", "com.eagle.monolith"})
-public class EagleMonolithApplication { ... }
-```
+不要在 `application.yml` 中硬编码 `spring.profiles.active`，启动时通过环境变量或命令行指定。
 
-**关键设计**：
+| Profile | 数据库 | 缓存 | 用途 |
+| --- | --- | --- | --- |
+| `local` | H2 内存库 | Caffeine | 本地开发、快速验证 |
+| `prod,mysql` | MySQL | Redis | MySQL 生产或容器部署 |
+| `prod,postgresql` | PostgreSQL | Redis | PostgreSQL 生产或容器部署 |
 
-- **必须排除 `EagleSystemApplication`**：该类带 `@SpringBootApplication`（=
-  `@SpringBootConfiguration` + `@EnableAutoConfiguration` + `@ComponentScan`），若被组件扫描会触发二次 auto-configuration
-  加载，导致 `AsyncConfig` 等单例 bean 重复注册（典型表现："Only one AsyncConfigurer may exist"）
-- **显式 `@EntityScan` / `@EnableJpaRepositories`**：因服务模块以 `implementation` 范围引入 JPA
-  starter，传递依赖在本模块编译期不可见，不能依赖默认包扫描
-- **`@ComponentScan` 限定到业务包**：避免误扫 starter 内部 `@Component`（starter 应通过自身 `@AutoConfiguration` +
-  条件装配生效）
+对应配置文件：
 
-## 依赖（build.gradle）
+- `src/main/resources/application.yml`：通用配置，不绑定具体数据库。
+- `src/main/resources/application-local.yml`：H2 + Caffeine，本地零依赖启动。
+- `src/main/resources/application-prod.yml`：生产通用加固配置，必须搭配数据库 profile。
+- `src/main/resources/application-mysql.yml`：MySQL 数据源与方言。
+- `src/main/resources/application-postgresql.yml`：PostgreSQL 数据源与方言。
 
-```groovy
-implementation(project(':eagle-services:eagle-auth-service')) {
-    exclude group: 'com.alibaba.cloud',
-            module: 'spring-cloud-starter-alibaba-nacos-discovery'
-}
-implementation(project(':eagle-services:eagle-system-service')) {
-    exclude group: 'com.alibaba.cloud',
-            module: 'spring-cloud-starter-alibaba-nacos-discovery'   // 单体不需要注册中心
-}
-implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-implementation 'org.springframework.boot:spring-boot-starter-oauth2-authorization-server'
+## 环境变量
+
+已提供环境变量模板：
+
+```bash
+cd eagle-services/eagle-monolith-service
+cp .env.example .env
 ```
 
-排除 Nacos 后，单体直接使用本地配置 + 本地数据源，**无需 Nacos 即可启动**。
+`.env` 不要提交到 Git。生产环境必须替换密码、JWT keystore 密码、OAuth issuer、数据库和 Redis 参数。
+
+关键变量：
+
+| 变量 | 说明 |
+| --- | --- |
+| `SPRING_PROFILES_ACTIVE` | `local`、`prod,mysql` 或 `prod,postgresql` |
+| `SERVER_PORT` | 服务端口，默认 `80` |
+| `EAGLE_ADMIN_PASSWORD` | 初始管理员密码，生产必须注入强密码 |
+| `EAGLE_JWT_KEYSTORE_PASSWORD` | JWT keystore 密码，生产必须注入 |
+| `EAGLE_OAUTH_ISSUER` | OAuth2 issuer，生产应使用真实域名 |
+| `DB_HOST` / `DB_PORT` / `DB_NAME` | MySQL 或 PostgreSQL 连接信息 |
+| `DB_USERNAME` / `DB_PASSWORD` | 数据库账号和密码 |
+| `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` | Redis 连接信息，仅 `prod` 使用 |
 
 ## 启动
 
+本仓库当前未提交 Gradle Wrapper，按仓库规范使用本机 `gradle`。
+
+本地 H2 启动：
+
 ```bash
-# 本机零依赖启动（H2 内存库 + Caffeine 本地缓存）
-./gradlew :eagle-services:eagle-monolith-service:bootRun
-
-# 生产模式（MySQL + Redis）
-SPRING_PROFILES_ACTIVE=prod \
-EAGLE_ADMIN_PASSWORD=your-strong-password \
-SPRING_DATASOURCE_URL=jdbc:mysql://... \
-./gradlew :eagle-services:eagle-monolith-service:bootRun
+gradle :eagle-services:eagle-monolith-service:bootRun --args='--spring.profiles.active=local'
 ```
 
-| 端点               | 默认地址                              | 说明     |
-|------------------|-----------------------------------|--------|
-| Swagger UI       | http://localhost/swagger-ui.html  | API 文档 |
-| OAuth2 Token     | http://localhost/oauth2/token     | 令牌端点   |
-| OAuth2 Authorize | http://localhost/oauth2/authorize | 授权码端点  |
-| WebSocket（STOMP） | ws://localhost/ws-stomp           | 实时推送   |
-| Actuator Health  | http://localhost/actuator/health  | 健康检查   |
+MySQL 生产模式：
 
-## Profile
-
-| Profile | 数据源       | 缓存       | 用途          |
-|---------|-----------|----------|-------------|
-| `local` | H2（内存）    | Caffeine | 本机快速验证 / 默认 |
-| `prod`  | MySQL（外部） | Redis    | 生产 / 容器化部署  |
-
-切换：`SPRING_PROFILES_ACTIVE=prod` 或 `--spring.profiles.active=prod`。
-
-## 关键配置（前缀 `eagle.*`）
-
-| 配置项                            | 默认                           | 说明                            |
-|--------------------------------|------------------------------|-------------------------------|
-| `eagle.admin.password`         | `localDev@2026`              | 初始管理员密码（生产必须通过环境变量改）          |
-| `eagle.jwt.keystore-location`  | `classpath:jwt-keystore.p12` | JWT 签名 keystore（来自 system 服务） |
-| `eagle.jwt.keystore-password`  | `eagle-jwt-dev-2026`         | keystore 密码                   |
-| `eagle.oauth.default-client.*` | —                            | 默认 OAuth2 公开客户端（PKCE）         |
-| `eagle.websocket.endpoint`     | `/ws-stomp`                  | STOMP 握手路径                    |
-| `eagle.log.cleanup.cron`       | `0 0 2 * * ?`                | 审计日志每日清理                      |
-| `spring.jpa.open-in-view`      | `false`                      | 关闭 OSIV，避免视图层延迟加载             |
-
-完整字段见 `src/main/resources/application.yml` 与 `application-{local,prod}.yml`。
-
-## 单体 vs 微服务取舍
-
-| 维度      | 单体（本服务）              | 微服务（system + gateway）     |
-|---------|----------------------|---------------------------|
-| 部署      | 单 JAR / 单容器          | 至少 2 服务（system + gateway） |
-| 注册中心    | 不需要                  | 需要 Nacos                  |
-| 网关      | 不需要                  | 需要 eagle-gateway-service  |
-| 限流 / 链路 | 业务内 Spring AOP 即可    | Sentinel + Zipkin         |
-| 服务发现    | N/A                  | Nacos `lb://`             |
-| 启动复杂度   | 极低                   | 中等                        |
-| 适用规模    | 小型 SaaS / PoC / 私有部署 | 中大型团队 / 多业务域 / 高可用要求      |
-
-业务代码完全相同 — 当规模增长时，可平滑切换到 `eagle-auth-service` + `eagle-system-service` + `eagle-gateway-service` 部署模式，无需改业务代码。
-
-## 二次扩展
-
-在 `com.eagle.monolith` 下新增 `Configuration` / `Bean` 即可覆盖默认行为，例如：
-
-- 自定义 `DataSource`（多数据源）
-- 自定义 `CacheManager`（替换 Caffeine 为 Redis）
-- 增加业务模块（在新包根 `package-info.java` 加 `@ApplicationModule`，并加入 `@EnableJpaRepositories` 扫描范围）
-
-## 容器化
-
-```dockerfile
-FROM eclipse-temurin:25-jre
-COPY build/libs/eagle-monolith-service-*.jar app.jar
-ENV SPRING_PROFILES_ACTIVE=prod
-ENTRYPOINT ["java", "-jar", "app.jar"]
+```bash
+SPRING_PROFILES_ACTIVE=prod,mysql \
+DB_HOST=127.0.0.1 \
+DB_PORT=3306 \
+DB_NAME=eagle_monolith \
+DB_USERNAME=eagle \
+DB_PASSWORD=change-me \
+REDIS_HOST=127.0.0.1 \
+REDIS_PASSWORD=change-me \
+EAGLE_ADMIN_PASSWORD=change-me \
+EAGLE_JWT_KEYSTORE_PASSWORD=change-me \
+gradle :eagle-services:eagle-monolith-service:bootRun
 ```
 
-需注入的环境变量：`EAGLE_ADMIN_PASSWORD` / `EAGLE_JWT_KEYSTORE_PASSWORD` / `SPRING_DATASOURCE_*` / `SPRING_REDIS_*`。
+PostgreSQL 生产模式：
+
+```bash
+SPRING_PROFILES_ACTIVE=prod,postgresql \
+DB_HOST=127.0.0.1 \
+DB_PORT=5432 \
+DB_NAME=eagle_monolith \
+DB_USERNAME=eagle \
+DB_PASSWORD=change-me \
+REDIS_HOST=127.0.0.1 \
+REDIS_PASSWORD=change-me \
+EAGLE_ADMIN_PASSWORD=change-me \
+EAGLE_JWT_KEYSTORE_PASSWORD=change-me \
+gradle :eagle-services:eagle-monolith-service:bootRun
+```
+
+## 端点
+
+| 端点 | 默认地址 | 说明 |
+| --- | --- | --- |
+| Swagger UI | `http://localhost/swagger-ui.html` | API 文档，生产默认关闭 |
+| OAuth2 Token | `http://localhost/oauth2/token` | 令牌端点 |
+| OAuth2 Authorize | `http://localhost/oauth2/authorize` | 授权码端点 |
+| WebSocket STOMP | `ws://localhost/ws-stomp` | 实时推送 |
+| Actuator Health | `http://localhost/actuator/health` | 健康检查 |
+
+## 单体集成点
+
+- `MonolithLocalIntegrationConfiguration`：把 auth / system 原本跨服务调用的 Port 和 Client 切到本地 Bean。
+- `MonolithAccountEventBridge`：把 auth 账号领域事件转成 system 账号消息并在本地事务提交后处理。
+- `eagle.rocketmq.enabled=false`：单体默认关闭 RocketMQ 发送能力，避免启动依赖 MQ。
 
 ## 注意事项
 
-- **不要**重新引入 Nacos / Gateway 依赖 — 那会让单体退化为微服务节点
-- **不要**在 `com.eagle.monolith` 下定义带 `@SpringBootApplication` 的类（会被组件扫描触发 auto-configuration 重复加载）
-- **AsyncConfigurer 唯一性**：所有 `@Async` 公共线程池配置应在 `eagle-common-starter` 中统一声明，单体侧不要重复定义
-- 生产部署务必切到 `prod` profile，并通过环境变量注入敏感字段
+- `prod` 只是生产通用配置，必须和 `mysql` 或 `postgresql` 一起使用。
+- `local` 使用 `ddl-auto=update` 仅服务本地 H2 快速启动，生产配置固定为 `ddl-auto=validate`。
+- MySQL / PostgreSQL profile 会通过 `spring.sql.init.schema-locations` 初始化 OAuth2 授权服务表。
+- 不要重新引入 Nacos / Gateway 依赖，否则单体会退化成微服务节点。
+- 不要在 `com.eagle.monolith` 下新增带 `@SpringBootApplication` 的类，避免二次 auto-configuration。
