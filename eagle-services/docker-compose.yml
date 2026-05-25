@@ -181,18 +181,17 @@ services:
       # Broker 默认堆 8g 太大；开发机收紧到 1g
       - JAVA_OPT_EXT=${ROCKETMQ_BROKER_JAVA_OPT_EXT:--server -Xms1g -Xmx1g -Xmn512m}
       - TZ=${TZ:-Asia/Shanghai}
-    # 内联生成 broker.conf：单机 master + 自动建 Topic/订阅组；brokerIP1 指向容器服务名
-    # storePathRootDir 必须显式声明,否则某些代码路径派生 null → shutdown NPE
-    # namesrvAddr 写进 conf 兜底(避免环境变量在派生进程里丢失)
-    command: >
-      sh -c "mkdir -p /home/rocketmq/store /home/rocketmq/logs &&
-      printf 'brokerIP1=rocketmq-broker\nbrokerName=broker-a\nbrokerId=0\nbrokerClusterName=DefaultCluster\nnamesrvAddr=rocketmq-namesrv:9876\nstorePathRootDir=/home/rocketmq/store\nautoCreateTopicEnable=true\nautoCreateSubscriptionGroup=true\n' > /home/rocketmq/broker.conf &&
-      sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/broker.conf"
+    # broker.conf 从宿主机挂载(./rocketmq/broker.conf)
+    # 历史方案用 `printf 'k=v\n...' > broker.conf` 在 YAML `>` 折叠 + sh -c 嵌套下
+    # \n 没被 printf 当转义,整文件变一行 → brokerIP1 吞掉后续所有配置,broker 注册到
+    # NameServer 的地址变成 "rocketmq-brokernbrokerName=broker-an..." 全部连不上
+    command: sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/conf/broker.conf
     mem_limit: 1536m
     mem_reservation: 768m
     volumes:
       - rocketmq-broker-logs:/home/rocketmq/logs
       - rocketmq-broker-store:/home/rocketmq/store
+      - ./rocketmq/broker.conf:/home/rocketmq/conf/broker.conf:ro
 
   # RocketMQ Dashboard（开发环境可视化控制台，浏览器访问 http://localhost:8180）
   # 通过容器名 rocketmq-namesrv:9876 连 NameServer；关闭 VIP channel 避免与 broker 端口冲突
