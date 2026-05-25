@@ -43,6 +43,16 @@ spring:
               metadata:
                 response-timeout: 30000
                 connect-timeout: 3000
+            # /auth/userinfo 前端别名：StripPrefix=1 → 下游收到标准 /userinfo
+            - id: auth-userinfo-alias
+              uri: http://localhost:80
+              predicates:
+                - Path=/auth/userinfo
+              filters:
+                - StripPrefix=1
+              metadata:
+                response-timeout: 30000
+                connect-timeout: 3000
             - id: default
               uri: http://localhost:80
               predicates:

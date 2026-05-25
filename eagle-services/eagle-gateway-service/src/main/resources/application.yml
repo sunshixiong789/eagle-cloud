@@ -132,11 +132,21 @@ spring:
           # （auth-service 侧需开启 server.forward-headers-strategy=framework）。
           # 路由目标：auth-service（注册名 auth），OAuth2 Authorization Server
           # 在 24f3f21 从 system 拆出后承载所有认证 / 账号自助 / 短信流程。
+          #
+          # 例外：/auth/userinfo 是给前端用的别名路由，StripPrefix 后下游仍是标准 /userinfo。
+          # OIDC discovery 仍发布标准 /userinfo（issuer 派生），不受影响；OIDC 客户端按 discovery
+          # 走标准路径，前端业务调用走 /auth/userinfo 与其他 /auth/* 命名空间保持一致。
           routes:
             - id: auth-oauth2
               uri: lb://auth
               predicates:
                 - Path=/oauth2/**,/.well-known/**,/userinfo,/logout,/connect/**
+            - id: auth-userinfo-alias
+              uri: lb://auth
+              predicates:
+                - Path=/auth/userinfo
+              filters:
+                - StripPrefix=1
             - id: auth-login
               uri: lb://auth
               predicates:
@@ -224,7 +234,7 @@ eagle:
         # OAuth2 / 登录相关接口较重，单独收紧，避免拖垮授权链路。
         - resource: auth-sensitive-api
           resource-mode: api
-          path-prefixes: /oauth2/,/.well-known/,/userinfo,/logout,/connect/,/login
+          path-prefixes: /oauth2/,/.well-known/,/userinfo,/auth/userinfo,/logout,/connect/,/login
           qps: ${EAGLE_SENTINEL_AUTH_QPS:600}
           burst: ${EAGLE_SENTINEL_AUTH_BURST:100}
         # 短信 / 注册 / 重置密码牵涉 Redis、DB 和外部短信商，不能跟普通查询同阈值。
