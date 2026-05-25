@@ -127,7 +127,7 @@ eagle:
     permit-paths:
       - /internal/**
   # ----- RocketMQ -----
-  # 既消费站内消息,也消费 auth-service 的集成事件(eagle.auth.events)
+  # 既消费站内消息,也消费 auth-service 的集成事件(eagle_auth_events)
   # 默认 enabled;dev profile 可显式关闭以跳过 Consumer 注册(本地无 broker 时)
   rocketmq:
     endpoints: ${ROCKETMQ_ENDPOINTS:localhost:8081}

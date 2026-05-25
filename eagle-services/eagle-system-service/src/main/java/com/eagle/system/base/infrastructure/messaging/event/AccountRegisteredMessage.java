@@ -11,7 +11,7 @@ import lombok.Setter;
  * 与 auth-service 端 {@code com.eagle.auth.infrastructure.event.integration
  * .AccountRegisteredIntegrationEvent} 字段对齐;两侧各自维护,新增字段保持向后兼容。
  * <p>
- * topic {@code eagle.auth.events},tag {@code account.registered}。
+ * topic {@code eagle_auth_events},tag {@code account.registered}。
  */
 @Getter
 @Setter

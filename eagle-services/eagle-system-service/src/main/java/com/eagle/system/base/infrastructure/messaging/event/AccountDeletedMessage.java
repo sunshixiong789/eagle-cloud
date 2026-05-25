@@ -11,7 +11,7 @@ import lombok.Setter;
  * 与 auth-service 端 {@code com.eagle.auth.infrastructure.event.integration
  * .AccountDeletedIntegrationEvent} 字段对齐。
  * <p>
- * topic {@code eagle.auth.events},tag {@code account.deleted}。
+ * topic {@code eagle_auth_events},tag {@code account.deleted}。
  */
 @Getter
 @Setter

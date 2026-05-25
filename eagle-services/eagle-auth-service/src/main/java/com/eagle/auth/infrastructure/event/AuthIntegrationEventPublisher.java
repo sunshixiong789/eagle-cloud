@@ -16,8 +16,11 @@ import org.springframework.transaction.event.TransactionalEventListener;
  * Auth 域跨服务集成事件桥接器。
  *
  * <p>把 auth 内部的领域事件（record）转换为 {@code extends BaseEvent} 的集成事件，发布到
- * RocketMQ topic {@code eagle.auth.events}（tag 按事件类型区分），供 system-service /
+ * RocketMQ topic {@code eagle_auth_events}（tag 按事件类型区分），供 system-service /
  * 其他下游服务消费。
+ *
+ * <p><strong>Topic 命名</strong>:RocketMQ 5.x gRPC 客户端强制 topic 匹配
+ * {@code ^[%a-zA-Z0-9_-]+$}（禁止点号），因此用下划线分隔而非点号。
  *
  * <p>当前发布的跨服务集成事件:
  * <ul>
@@ -37,7 +40,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
  * <p>所有发布在 {@code AFTER_COMMIT} 阶段触发并 {@code @Async}，主事务无任何同步阻塞。
  *
  * <p><strong>Topic 命名约定</strong>:本 topic 故意<em>不</em>拼 {@code eagle.rocketmq.topic-env-prefix},
- * 走字面 {@code eagle.auth.events}(环境通过独立 RocketMQ 集群 / Nacos namespace 隔离,
+ * 走字面 {@code eagle_auth_events}(环境通过独立 RocketMQ 集群 / Nacos namespace 隔离,
  * topic 名本身不带 env 前缀,见 rules/15-messaging.md)。
  * 消费侧 {@code AccountRegisteredConsumer} / {@code AccountDeletedConsumer} 必须严格一致,
  * 不要在 {@code getTopic()} 里拼 prefix。
@@ -49,7 +52,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @RequiredArgsConstructor
 public class AuthIntegrationEventPublisher {
 
-    public static final String TOPIC = "eagle.auth.events";
+    public static final String TOPIC = "eagle_auth_events";
 
     private final DomainEventPublisher publisher;
 

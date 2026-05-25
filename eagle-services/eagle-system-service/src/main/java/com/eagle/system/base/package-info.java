@@ -5,7 +5,7 @@
  * <p>
  * <strong>与 auth-service 的关系(跨服务集成,已拆分为独立服务)</strong>
  * <ul>
- *   <li>通过 RocketMQ topic {@code eagle.auth.events} 异步消费 auth-service
+ *   <li>通过 RocketMQ topic {@code eagle_auth_events} 异步消费 auth-service
  *       的集成事件({@code account.registered} / {@code account.deleted}),
  *       在 base 域创建或删除对应 User。
  *   <li>通过 RestClient 同步调用 auth-service 的 {@code /internal/online-users/**}

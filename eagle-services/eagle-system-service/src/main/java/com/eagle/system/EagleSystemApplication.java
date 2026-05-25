@@ -24,7 +24,7 @@ import java.util.Optional;
  * <p>
  * 与 auth-service 通过两种方式集成:
  * <ul>
- *   <li>RocketMQ topic {@code eagle.auth.events} 异步消费集成事件</li>
+ *   <li>RocketMQ topic {@code eagle_auth_events} 异步消费集成事件</li>
  *   <li>RestClient 同步调用 {@code /internal/**} 内部 API</li>
  * </ul>
  * <p>

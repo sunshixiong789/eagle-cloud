@@ -6,7 +6,7 @@ import lombok.Getter;
 /**
  * 账号注册集成事件（跨服务）。
  *
- * <p>tag {@code account.registered}，topic {@code eagle.auth.events}。
+ * <p>tag {@code account.registered}，topic {@code eagle_auth_events}。
  *
  * <p><strong>版本契约</strong>:消费方按 {@link #eventVersion} 区分协议版本。
  * 字段加减(向后兼容)<em>不</em>升版本——消费方 JSON 反序列化天然容忍未知/缺失字段;

@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * auth 已拆分为独立的 eagle-auth-service,base 通过:
  * <ul>
  *   <li>RestClient 同步调用 auth-service 的 /internal/** 端点(在线用户、黑名单)</li>
- *   <li>RocketMQ topic {@code eagle.auth.events} 异步消费集成事件(注册、删除)</li>
+ *   <li>RocketMQ topic {@code eagle_auth_events} 异步消费集成事件(注册、删除)</li>
  * </ul>
  * 实现解耦,system-service 内部不再有 auth 包。
  *

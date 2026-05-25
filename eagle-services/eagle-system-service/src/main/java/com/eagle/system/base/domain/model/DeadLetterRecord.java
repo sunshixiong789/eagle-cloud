@@ -36,7 +36,7 @@ public class DeadLetterRecord extends BaseAggregateRoot<DeadLetterRecord> {
     @Column(name = "event_id", length = 64, comment = "集成事件 eventId(UUID v7)")
     private String eventId;
 
-    /** RocketMQ topic,例如 {@code eagle.auth.events}。 */
+    /** RocketMQ topic,例如 {@code eagle_auth_events}。 */
     @Column(nullable = false, length = 128, comment = "RocketMQ topic")
     private String topic;
 

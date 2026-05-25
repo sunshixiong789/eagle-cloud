@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 /**
  * 消费 auth-service 发布的"账号注册"集成事件,在 base 域创建对应 User。
  * <p>
- * topic {@code eagle.auth.events},tag {@code account.registered}。
+ * topic {@code eagle_auth_events},tag {@code account.registered}。
  * 幂等:依赖 {@code UserRepository.existsByAccountId(...)} 双重保护。
  * <p>
  * <strong>Topic 命名约定</strong>:与 auth-service 端 {@code AuthIntegrationEventPublisher.TOPIC}
@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty(name = "eagle.rocketmq.enabled", havingValue = "true")
 public class AccountRegisteredConsumer extends AbstractRocketMqListener<AccountRegisteredMessage> {
 
-    static final String TOPIC = "eagle.auth.events";
+    static final String TOPIC = "eagle_auth_events";
     static final String TAG = "account.registered";
     static final String CONSUMER_GROUP = "system_account_registered";
 

@@ -80,7 +80,7 @@ class AccountRegisteredDlqListenerTest {
         verify(deadLetterRepository).save(captor.capture());
         DeadLetterRecord saved = captor.getValue();
 
-        assertThat(saved.getTopic()).isEqualTo("eagle.auth.events");
+        assertThat(saved.getTopic()).isEqualTo("eagle_auth_events");
         assertThat(saved.getTag()).isEqualTo("account.registered");
         assertThat(saved.getConsumerGroup()).isEqualTo("system_account_registered");
         assertThat(saved.getTotalAttempts()).isEqualTo(16);

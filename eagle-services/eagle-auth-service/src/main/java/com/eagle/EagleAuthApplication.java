@@ -19,7 +19,7 @@ import java.util.Optional;
  * Phone One-Click）、JWT 签发与黑名单、账户聚合根与 WebSocket STOMP CONNECT 鉴权。
  *
  * <p>与 {@code eagle-system-service}（WebFlux）通过 RocketMQ JSON 事件 + 自建 RestClient
- * 解耦：本服务对外发布 {@code eagle.auth.events} 事件，并暴露 {@code /internal/**}
+ * 解耦：本服务对外发布 {@code eagle_auth_events} 事件，并暴露 {@code /internal/**}
  * 同步 API；下游服务自行维护事件 POJO 与客户端 DTO。
  *
  * @author sunshixiong

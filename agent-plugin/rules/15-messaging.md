@@ -19,23 +19,28 @@
 dev / test / staging / prod 各自连接独立的 RocketMQ 实例，部署期通过 Nacos 配置切换。
 这样能避免"测试消息漏到生产" / "topic 改名要全环境联动"等问题。
 
-格式：`{service}.{domain}.events`（点号分隔，全小写）：
+格式：`{service}_{domain}_events`（**下划线**分隔，全小写）：
 
 ```
-auth.account.events       # auth-service 账号生命周期事件
-order.order.events        # order-service 订单生命周期事件
-payment.payment.events    # payment-service 支付事件
-system.user.events        # system-service 用户域事件
+auth_account_events       # auth-service 账号生命周期事件
+order_order_events        # order-service 订单生命周期事件
+payment_payment_events    # payment-service 支付事件
+system_user_events        # system-service 用户域事件
 ```
 
 - `service` — 发布方服务名（**必须**带，避免不同服务相同 domain 撞名）
 - `domain` — 业务域（`account / order / payment / user`）
 - `events` — 固定后缀，标识这是事件 topic
 
-**Tag** 用过去时动词区分子事件类型：
+> **为什么是下划线不是点号**：RocketMQ 5.x gRPC 客户端（`rocketmq-client-java`）在
+> `MessageBuilderImpl.setTopic()` 强制校验 topic 必须匹配正则 `^[%a-zA-Z0-9_-]+$`，
+> **不允许点号 `.`**。违反会在 producer 发消息时直接抛 `IllegalArgumentException:
+> topic does not match the regex`，导致跨域事件链路彻底瘫痪。
+
+**Tag** 用过去时动词区分子事件类型（tag 只禁止 `|`，允许点号，可用点号细分子类型）：
 
 ```
-topic: auth.account.events
+topic: auth_account_events
   tag: registered      # AccountRegisteredIntegrationEvent
   tag: deleted         # AccountDeletedIntegrationEvent
 ```
@@ -57,7 +62,7 @@ public class NotificationApplicationService {
     private final DomainEventPublisher publisher;
 
     public void notifyAdmin(AdminAlert event) {
-        publisher.publish("notification.admin.events", "alert", event);
+        publisher.publish("notification_admin_events", "alert", event);
     }
 }
 
@@ -65,7 +70,7 @@ public class NotificationApplicationService {
 publisher.
 
 publishInTransaction(
-    "order.order.events",
+    "order_order_events",
     "created",
     event,
     () ->orderRepository.
@@ -102,7 +107,7 @@ public class OrderCreatedIntegrationEvent extends BaseEvent {
 @Async
 @TransactionalEventListener(phase = AFTER_COMMIT)
 public void onOrderCreated(OrderCreatedEvent e) {
-    publisher.publish("order.order.events", "created",
+    publisher.publish("order_order_events", "created",
             new OrderCreatedIntegrationEvent(e.orderId(), e.orderNo(), ...));
 }
 ```
@@ -135,7 +140,7 @@ public class OrderCreatedMessage extends BaseEvent {
 在仓库的 `docs/events/{topic}.md` 维护字段表 + 版本 + 已知消费方清单：
 
 ```markdown
-# order.order.events
+# order_order_events
 
 ## tag: created (v1.2)
 | 字段              | 类型         | 必填 | 版本    | 说明           |
@@ -193,7 +198,7 @@ public class OrderCreatedConsumer
 
     @Override
     protected String getTopic() {
-        return "order.order.events";
+        return "order_order_events";
     }
 
     /** 仅订阅 created tag（同 topic 其他 tag 的事件由别的 consumer 处理）。 */

@@ -30,7 +30,7 @@ class AccountDeletedConsumerTest {
     @Test
     @DisplayName("topic/tag/consumerGroup 与常量对齐")
     void wiringMatchesConstants() {
-        assertThat(consumer.getTopic()).isEqualTo("eagle.auth.events");
+        assertThat(consumer.getTopic()).isEqualTo("eagle_auth_events");
         assertThat(consumer.getTagExpression()).isEqualTo("account.deleted");
         assertThat(consumer.getConsumerGroup()).isEqualTo("system_account_deleted");
         assertThat(consumer.getEventClass()).isEqualTo(AccountDeletedMessage.class);

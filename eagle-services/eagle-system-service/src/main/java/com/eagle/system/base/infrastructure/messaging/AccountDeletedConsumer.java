@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 /**
  * 消费 auth-service 发布的"账号删除"集成事件,在 base 域级联删除对应 User。
  * <p>
- * topic {@code eagle.auth.events},tag {@code account.deleted}。
+ * topic {@code eagle_auth_events},tag {@code account.deleted}。
  * 幂等:{@code UserRepository.findByAccountId(...)} 找不到即跳过。
  * <p>
  * <strong>Topic 命名约定</strong>:与 auth-service 端 {@code AuthIntegrationEventPublisher.TOPIC}
@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty(name = "eagle.rocketmq.enabled", havingValue = "true")
 public class AccountDeletedConsumer extends AbstractRocketMqListener<AccountDeletedMessage> {
 
-    static final String TOPIC = "eagle.auth.events";
+    static final String TOPIC = "eagle_auth_events";
     static final String TAG = "account.deleted";
     static final String CONSUMER_GROUP = "system_account_deleted";
 

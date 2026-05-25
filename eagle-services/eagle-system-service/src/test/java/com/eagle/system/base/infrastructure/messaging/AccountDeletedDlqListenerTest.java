@@ -77,7 +77,7 @@ class AccountDeletedDlqListenerTest {
         verify(deadLetterRepository).save(captor.capture());
         DeadLetterRecord saved = captor.getValue();
 
-        assertThat(saved.getTopic()).isEqualTo("eagle.auth.events");
+        assertThat(saved.getTopic()).isEqualTo("eagle_auth_events");
         assertThat(saved.getTag()).isEqualTo("account.deleted");
         assertThat(saved.getConsumerGroup()).isEqualTo("system_account_deleted");
         assertThat(saved.getTotalAttempts()).isEqualTo(16);

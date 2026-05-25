@@ -77,7 +77,7 @@ public UploadResponse upload(MultipartFile file) {
 
 ```java
 // 上传后异步触发
-publisher.publish("oss.file.events", "uploaded", new FileUploadedEvent(bucket, key));
+publisher.publish("oss_file_events", "uploaded", new FileUploadedEvent(bucket, key));
 
 // 扫描消费者
 @Override

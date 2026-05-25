@@ -72,7 +72,7 @@ public void payOrder(Long orderId) {
     orderRepository.save(order);
 
     publisher.publishInTransaction(
-            "order.order.events",
+            "order_order_events",
             "paid",
             new OrderPaidIntegrationEvent(orderId, ...),
     () -> {
