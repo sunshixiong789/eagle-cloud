@@ -4,7 +4,7 @@ import com.eagle.ai.advisor.AiRateLimitAdvisor;
 import com.eagle.ai.advisor.TokenBudgetAdvisor;
 import com.eagle.ai.memory.RedisChatMemoryRepository;
 import com.eagle.ai.properties.AiProperties;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;

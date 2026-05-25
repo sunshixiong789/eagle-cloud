@@ -5,8 +5,8 @@ import com.eagle.audit.context.AuditLogUserProvider;
 import com.eagle.audit.event.AuditLogEvent;
 import com.eagle.audit.model.AuditLogEntry;
 import com.eagle.audit.properties.AuditLogProperties;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -113,7 +113,7 @@ public class AuditLogAspect {
         }
         try {
             return truncate(objectMapper.writeValueAsString(args), properties.getMaxArgsLength());
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             return "[serialization failed]";
         }
     }
@@ -121,7 +121,7 @@ public class AuditLogAspect {
     private String serialize(Object obj) {
         try {
             return objectMapper.writeValueAsString(obj);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             return "[serialization failed]";
         }
     }

@@ -1,6 +1,5 @@
 package com.eagle.auth.infrastructure.adapter;
 
-import com.alibaba.fastjson2.JSON;
 import com.eagle.auth.domain.port.OnlineUserInfo;
 import com.eagle.auth.domain.port.OnlineUserPort;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,11 +37,12 @@ public class OnlineUserAdapter implements OnlineUserPort {
     private static final long DEFAULT_TTL_SECONDS = 3600L;
 
     private final StringRedisTemplate redisTemplate;
+    private final ObjectMapper objectMapper;
 
     @Override
     public void trackLogin(OnlineUserInfo info) {
         try {
-            String json = JSON.toJSONString(info);
+            String json = objectMapper.writeValueAsString(info);
             redisTemplate.opsForValue().set(
                     ONLINE_KEY_PREFIX + info.tokenId(), json,
                     info.expiresIn(), TimeUnit.SECONDS);
@@ -65,7 +66,7 @@ public class OnlineUserAdapter implements OnlineUserPort {
                 String json = redisTemplate.opsForValue().get(key);
                 if (json != null) {
                     try {
-                        result.add(JSON.parseObject(json, OnlineUserInfo.class));
+                        result.add(objectMapper.readValue(json, OnlineUserInfo.class));
                     } catch (Exception e) {
                         log.warn("Skipping malformed OnlineUserInfo for key: {}", key, e);
                     }
@@ -101,7 +102,7 @@ public class OnlineUserAdapter implements OnlineUserPort {
 
             if (json != null) {
                 try {
-                    OnlineUserInfo info = JSON.parseObject(json, OnlineUserInfo.class);
+                    OnlineUserInfo info = objectMapper.readValue(json, OnlineUserInfo.class);
                     if (info.userId() != null) {
                         redisTemplate.opsForSet()
                                 .remove(ACCOUNT_INDEX_PREFIX + info.userId(), tokenId);

@@ -6,7 +6,7 @@ dependencies {
     compileOnly 'org.springframework.boot:spring-boot-starter-actuator'
 
     // SseEmitterManager 字段直接持有 ObjectMapper，类加载时即需要 jackson-databind，必须 api 暴露
-    api 'com.fasterxml.jackson.core:jackson-databind'
+    api 'tools.jackson.core:jackson-databind'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

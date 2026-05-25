@@ -6,7 +6,7 @@ dependencies {
     api 'org.springframework:spring-web'
 
     // EagleResponseErrorHandler 用 ObjectMapper 解析下游错误响应
-    compileOnly 'com.fasterxml.jackson.core:jackson-databind'
+    compileOnly 'tools.jackson.core:jackson-databind'
 
     // PropagatingHeadersClientHttpRequestInterceptor 仅在 servlet 环境装配；
     // 类编译需要 HttpServletRequest 符号，运行时由 servlet web 服务自身提供
@@ -18,6 +18,6 @@ dependencies {
     compileOnly 'org.apache.seata:seata-spring-boot-starter'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'com.fasterxml.jackson.core:jackson-databind'
+    testImplementation 'tools.jackson.core:jackson-databind'
     testImplementation 'jakarta.servlet:jakarta.servlet-api'
 }

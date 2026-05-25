@@ -2,10 +2,11 @@ package com.eagle.redis.config;
 
 import com.eagle.redis.properties.RedisProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DefaultTyping;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import org.jspecify.annotations.Nullable;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -25,7 +26,6 @@ import org.springframework.data.redis.serializer.SerializationException;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.util.StringUtils;
 
-import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -109,7 +109,7 @@ public class RedisCacheConfig {
                         BasicPolymorphicTypeValidator.builder()
                                 .allowIfSubType(Object.class)
                                 .build(),
-                        ObjectMapper.DefaultTyping.NON_FINAL,
+                        DefaultTyping.NON_FINAL,
                         JsonTypeInfo.As.PROPERTY)
                 .findAndAddModules()
                 .build();
@@ -139,7 +139,7 @@ public class RedisCacheConfig {
                 }
                 try {
                     return redisObjectMapper.writeValueAsBytes(normalizeRoot(value));
-                } catch (JsonProcessingException e) {
+                } catch (JacksonException e) {
                     throw new SerializationException("Redis JSON serialize failed", e);
                 }
             }
@@ -151,7 +151,7 @@ public class RedisCacheConfig {
                 }
                 try {
                     return redisObjectMapper.readValue(bytes, Object.class);
-                } catch (IOException e) {
+                } catch (JacksonException e) {
                     // 兼容 fix 前老数据：被 NON_FINAL 跳过类型包装的裸空集合
                     Object fallback = tryFallback(bytes);
                     if (fallback != null) {

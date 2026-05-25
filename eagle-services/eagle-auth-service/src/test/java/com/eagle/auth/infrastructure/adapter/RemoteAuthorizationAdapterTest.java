@@ -5,7 +5,7 @@ import com.eagle.auth.infrastructure.remote.SystemAuthorizationClient;
 import com.eagle.auth.infrastructure.remote.dto.AuthorizationInfoDto;
 import com.eagle.common.exception.ErrorCode;
 import com.eagle.common.exception.NotFoundException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

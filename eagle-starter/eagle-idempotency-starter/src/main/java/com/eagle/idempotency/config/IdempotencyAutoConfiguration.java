@@ -7,7 +7,7 @@ import com.eagle.idempotency.properties.IdempotencyProperties;
 import com.eagle.idempotency.support.IdempotencyTokenResolver;
 import com.eagle.idempotency.support.ReactiveIdempotencyTokenResolver;
 import com.eagle.idempotency.support.ServletIdempotencyTokenResolver;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.redisson.api.RedissonClient;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

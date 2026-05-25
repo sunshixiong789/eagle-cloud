@@ -1,6 +1,5 @@
 package com.eagle.auth.infrastructure.security;
 
-import com.alibaba.fastjson2.JSON;
 import com.eagle.common.dto.ErrorResult;
 import com.eagle.common.exception.AppException;
 import com.eagle.common.exception.ErrorCode;
@@ -17,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -44,6 +44,7 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
     private final LoginRateLimitProperties properties;
     private final RequestIpResolver requestIpResolver;
     private final BlacklistChecker blacklistChecker;
+    private final ObjectMapper objectMapper;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -89,6 +90,6 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
         response.setStatus(status.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        response.getWriter().write(JSON.toJSONString(err));
+        response.getWriter().write(objectMapper.writeValueAsString(err));
     }
 }

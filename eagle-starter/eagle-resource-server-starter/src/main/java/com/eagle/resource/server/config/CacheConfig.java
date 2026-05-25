@@ -1,10 +1,11 @@
 package com.eagle.resource.server.config;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DefaultTyping;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import org.jspecify.annotations.Nullable;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.cache.autoconfigure.CacheProperties;
@@ -17,8 +18,6 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.SerializationException;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-
-import java.io.IOException;
 
 /**
  * 缓存配置。
@@ -46,7 +45,7 @@ public class CacheConfig {
                         BasicPolymorphicTypeValidator.builder()
                                 .allowIfSubType(Object.class)
                                 .build(),
-                        ObjectMapper.DefaultTyping.NON_FINAL,
+                        DefaultTyping.NON_FINAL,
                         JsonTypeInfo.As.PROPERTY)
                 .findAndAddModules()
                 .build();
@@ -59,7 +58,7 @@ public class CacheConfig {
                 }
                 try {
                     return mapper.writeValueAsBytes(value);
-                } catch (JsonProcessingException e) {
+                } catch (JacksonException e) {
                     throw new SerializationException("Redis JSON serialize failed", e);
                 }
             }
@@ -71,7 +70,7 @@ public class CacheConfig {
                 }
                 try {
                     return mapper.readValue(bytes, Object.class);
-                } catch (IOException e) {
+                } catch (JacksonException e) {
                     throw new SerializationException("Redis JSON deserialize failed", e);
                 }
             }

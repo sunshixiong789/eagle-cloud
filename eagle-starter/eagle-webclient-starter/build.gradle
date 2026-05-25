@@ -9,7 +9,7 @@ dependencies {
     api 'io.projectreactor.netty:reactor-netty-http'
 
     // EagleWebClientErrorFilter 解析下游错误响应
-    compileOnly 'com.fasterxml.jackson.core:jackson-databind'
+    compileOnly 'tools.jackson.core:jackson-databind'
 
     // 可选：租户 ID 透传（eagle-tenant-starter 引入时生效）
     compileOnly project(':eagle-starter:eagle-tenant-starter')
@@ -17,5 +17,5 @@ dependencies {
     compileOnly 'org.apache.seata:seata-spring-boot-starter'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'com.fasterxml.jackson.core:jackson-databind'
+    testImplementation 'tools.jackson.core:jackson-databind'
 }

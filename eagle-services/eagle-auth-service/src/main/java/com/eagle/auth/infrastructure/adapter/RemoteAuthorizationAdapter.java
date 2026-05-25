@@ -5,8 +5,7 @@ import com.eagle.auth.domain.port.AuthorizationPort;
 import com.eagle.auth.infrastructure.remote.SystemAuthorizationClient;
 import com.eagle.auth.infrastructure.remote.dto.AuthorizationInfoDto;
 import com.eagle.common.exception.NotFoundException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -100,8 +99,8 @@ public class RemoteAuthorizationAdapter implements AuthorizationPort {
         try {
             String json = objectMapper.writeValueAsString(dto);
             redisTemplate.opsForValue().set(cacheKey(accountId), json, CACHE_TTL);
-        } catch (JsonProcessingException | RuntimeException e) {
-            // 缓存写失败不影响主流程
+        } catch (RuntimeException e) {
+            // 缓存写失败不影响主流程（含 Jackson 3 序列化异常，已是 RuntimeException）
             log.warn("authorization cache write failed: accountId={}", accountId, e);
         }
     }
@@ -114,7 +113,7 @@ public class RemoteAuthorizationAdapter implements AuthorizationPort {
             }
             AuthorizationInfoDto dto = objectMapper.readValue(json, AuthorizationInfoDto.class);
             return Optional.of(toAuthorizationInfo(dto));
-        } catch (JsonProcessingException | RuntimeException e) {
+        } catch (RuntimeException e) {
             log.warn("authorization cache read failed: accountId={}", accountId, e);
             return Optional.empty();
         }

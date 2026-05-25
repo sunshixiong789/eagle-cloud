@@ -5,7 +5,7 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-web'
 
     // AlipayPaymentGateway 用 ObjectMapper 解析支付回调
-    compileOnly 'com.fasterxml.jackson.core:jackson-databind'
+    compileOnly 'tools.jackson.core:jackson-databind'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

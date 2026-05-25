@@ -6,7 +6,7 @@ import com.eagle.idempotency.annotation.IdempotencyMode;
 import com.eagle.idempotency.annotation.Idempotent;
 import com.eagle.idempotency.aspect.IdempotencyAspect;
 import com.eagle.idempotency.properties.IdempotencyProperties;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.eagle.idempotency.support.ServletIdempotencyTokenResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.ProceedingJoinPoint;

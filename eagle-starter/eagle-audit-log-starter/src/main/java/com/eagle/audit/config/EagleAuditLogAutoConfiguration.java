@@ -6,7 +6,7 @@ import com.eagle.audit.handler.AuditLogHandler;
 import com.eagle.audit.handler.LoggingAuditLogHandler;
 import com.eagle.audit.listener.AuditLogEventListener;
 import com.eagle.audit.properties.AuditLogProperties;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

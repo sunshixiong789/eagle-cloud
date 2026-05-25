@@ -4,7 +4,7 @@ import com.eagle.common.exception.ConflictException;
 import com.eagle.common.exception.DomainException;
 import com.eagle.common.exception.NotFoundException;
 import com.eagle.common.exception.ServiceException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;

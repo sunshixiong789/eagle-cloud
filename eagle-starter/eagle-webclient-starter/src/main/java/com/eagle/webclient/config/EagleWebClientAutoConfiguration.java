@@ -7,7 +7,7 @@ import com.eagle.webclient.interceptor.SeataXidExchangeFilterFunction;
 import com.eagle.webclient.interceptor.TenantExchangeFilterFunction;
 import com.eagle.webclient.support.EagleReactiveServiceClientFactory;
 import com.eagle.webclient.support.EagleWebClientCustomizer;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;

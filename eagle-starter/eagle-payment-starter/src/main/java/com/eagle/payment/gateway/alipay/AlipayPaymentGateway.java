@@ -21,8 +21,8 @@ import com.eagle.payment.model.RefundResult;
 import com.eagle.payment.model.TransferRequest;
 import com.eagle.payment.model.TransferResult;
 import com.eagle.payment.properties.PaymentProperties;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
@@ -124,7 +124,7 @@ public class AlipayPaymentGateway implements PaymentGateway {
                         .errorMessage(response.getSubMsg())
                         .build();
             }
-        } catch (AlipayApiException | JsonProcessingException e) {
+        } catch (AlipayApiException | JacksonException e) {
             log.error("Alipay pay exception, outTradeNo: {}", request.getOutTradeNo(), e);
             return PayResult.builder()
                     .success(false)
@@ -171,7 +171,7 @@ public class AlipayPaymentGateway implements PaymentGateway {
                         .errorMessage(response.getSubMsg())
                         .build();
             }
-        } catch (AlipayApiException | JsonProcessingException e) {
+        } catch (AlipayApiException | JacksonException e) {
             log.error("Alipay refund exception, outTradeNo: {}", request.getOutTradeNo(), e);
             return RefundResult.builder()
                     .success(false)
@@ -271,7 +271,7 @@ public class AlipayPaymentGateway implements PaymentGateway {
                         .errorMessage(response.getSubMsg())
                         .build();
             }
-        } catch (AlipayApiException | JsonProcessingException e) {
+        } catch (AlipayApiException | JacksonException e) {
             log.error("Alipay transfer exception, outBizNo: {}", request.getOutBizNo(), e);
             return TransferResult.builder()
                     .success(false)
@@ -314,7 +314,7 @@ public class AlipayPaymentGateway implements PaymentGateway {
                         .errorMessage(response.getSubMsg())
                         .build();
             }
-        } catch (AlipayApiException | JsonProcessingException e) {
+        } catch (AlipayApiException | JacksonException e) {
             log.error("Alipay queryOrder exception, outTradeNo: {}", outTradeNo, e);
             return PayResult.builder()
                     .success(false)

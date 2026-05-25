@@ -7,7 +7,7 @@ import com.eagle.http.client.interceptor.SeataXidClientHttpRequestInterceptor;
 import com.eagle.http.client.interceptor.TenantClientHttpRequestInterceptor;
 import com.eagle.http.client.support.EagleRestClientCustomizer;
 import com.eagle.http.client.support.EagleRestServiceClientFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;

@@ -9,7 +9,7 @@ dependencies {
     // Servlet API（获取 HttpServletRequest），可选
     compileOnly 'org.apache.tomcat.embed:tomcat-embed-core'
     // Jackson（序列化请求/响应参数），可选
-    compileOnly 'com.fasterxml.jackson.core:jackson-databind'
+    compileOnly 'tools.jackson.core:jackson-databind'
     // Spring Security 用户上下文，可选
     compileOnly 'org.springframework.security:spring-security-core'
 

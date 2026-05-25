@@ -2,7 +2,7 @@ package com.eagle.http.client.error;
 
 import com.eagle.common.dto.ErrorResult;
 import com.eagle.common.exception.codes.ExternalErrorCode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;

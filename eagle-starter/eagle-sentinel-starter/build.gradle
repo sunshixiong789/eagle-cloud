@@ -3,7 +3,7 @@ dependencies {
     api 'com.alibaba.cloud:spring-cloud-starter-alibaba-sentinel'
 
     // EagleSentinelBlockExceptionHandler 用 ObjectMapper 写错误响应
-    compileOnly 'com.fasterxml.jackson.core:jackson-databind'
+    compileOnly 'tools.jackson.core:jackson-databind'
 
     compileOnly 'jakarta.servlet:jakarta.servlet-api'
     compileOnly 'org.projectlombok:lombok'

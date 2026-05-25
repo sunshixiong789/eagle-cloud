@@ -1,9 +1,9 @@
 package com.eagle.ai.memory;
 
 import com.eagle.ai.properties.AiProperties;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
@@ -95,7 +95,7 @@ public class RedisChatMemoryRepository implements ChatMemoryRepository {
             return dtos.stream()
                     .map(this::toMessage)
                     .toList();
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.warn("Failed to deserialize chat memory for conversationId={}, returning empty", conversationId, e);
             return Collections.emptyList();
         }
@@ -110,7 +110,7 @@ public class RedisChatMemoryRepository implements ChatMemoryRepository {
         try {
             String json = objectMapper.writeValueAsString(dtos);
             redisTemplate.opsForValue().set(key, json, ttlSeconds, TimeUnit.SECONDS);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Failed to serialize chat memory for conversationId={}", conversationId, e);
         }
     }

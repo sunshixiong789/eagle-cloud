@@ -1,6 +1,5 @@
 package com.eagle.system.base.infrastructure.messaging;
 
-import com.alibaba.fastjson2.JSON;
 import com.eagle.common.alert.AlertEvent;
 import com.eagle.common.alert.AlertService;
 import com.eagle.common.alert.AlertSeverity;
@@ -12,6 +11,7 @@ import com.eagle.system.base.infrastructure.messaging.event.AccountDeletedMessag
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * AccountDeleted DLQ 兜底 —— RocketMQ 重试 16 次仍失败时进入此处。
@@ -32,13 +32,16 @@ public class AccountDeletedDlqListener extends AbstractDlqListener<AccountDelete
 
     private final AlertService alertService;
     private final DeadLetterRecordRepository deadLetterRepository;
+    private final ObjectMapper objectMapper;
 
     public AccountDeletedDlqListener(RocketMqProperties props,
                                      AlertService alertService,
-                                     DeadLetterRecordRepository deadLetterRepository) {
+                                     DeadLetterRecordRepository deadLetterRepository,
+                                     ObjectMapper objectMapper) {
         super(props);
         this.alertService = alertService;
         this.deadLetterRepository = deadLetterRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -70,7 +73,7 @@ public class AccountDeletedDlqListener extends AbstractDlqListener<AccountDelete
 
     private void persistDeadLetter(AccountDeletedMessage event, int totalAttempts) {
         try {
-            String payload = JSON.toJSONString(event);
+            String payload = objectMapper.writeValueAsString(event);
             deadLetterRepository.save(DeadLetterRecord.capture(
                     event.getEventId(),
                     AccountDeletedConsumer.TOPIC,

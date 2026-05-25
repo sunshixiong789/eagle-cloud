@@ -1,7 +1,5 @@
 package com.eagle.system.message.announcement.infrastructure.cache;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.TypeReference;
 import com.eagle.system.message.announcement.domain.model.Announcement;
 import com.eagle.system.message.announcement.domain.repository.AnnouncementRepository;
 import jakarta.annotation.Nullable;
@@ -10,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -51,6 +51,7 @@ public class AnnouncementCache {
 
     private final RedissonClient redissonClient;
     private final AnnouncementRepository announcementRepository;
+    private final ObjectMapper objectMapper;
 
     /**
      * 取所有有效公告快照。多次调用同时 miss 时回库次数 ≤ 实例数（可接受），
@@ -60,11 +61,11 @@ public class AnnouncementCache {
         RBucket<String> bucket = redissonClient.getBucket(ACTIVE_KEY);
         String cached = bucket.get();
         if (cached != null) {
-            return JSON.parseObject(cached, SNAPSHOT_LIST_TYPE);
+            return objectMapper.readValue(cached, SNAPSHOT_LIST_TYPE);
         }
         List<Announcement> active = announcementRepository.findAllActive(LocalDateTime.now());
         List<AnnouncementSnapshot> snapshots = active.stream().map(AnnouncementSnapshot::of).toList();
-        bucket.set(JSON.toJSONString(snapshots), Duration.ofSeconds(ACTIVE_CACHE_TTL_SECONDS));
+        bucket.set(objectMapper.writeValueAsString(snapshots), Duration.ofSeconds(ACTIVE_CACHE_TTL_SECONDS));
         log.debug("announcement active cache rebuilt: size={}", snapshots.size());
         return snapshots;
     }

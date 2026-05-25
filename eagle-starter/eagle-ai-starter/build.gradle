@@ -11,7 +11,7 @@ dependencies {
     compileOnly 'org.springframework.boot:spring-boot-starter-data-redis'
 
     // Jackson：Redis 序列化依赖
-    compileOnly 'com.fasterxml.jackson.core:jackson-databind'
+    compileOnly 'tools.jackson.core:jackson-databind'
 
     // Bean Validation：AiProperties @Validated 依赖
     compileOnly 'org.springframework.boot:spring-boot-starter-validation'
@@ -31,6 +31,6 @@ dependencies {
     compileOnly 'org.springframework.ai:spring-ai-starter-model-ollama'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'com.fasterxml.jackson.core:jackson-databind'
+    testImplementation 'tools.jackson.core:jackson-databind'
     testImplementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
