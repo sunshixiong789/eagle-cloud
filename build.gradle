@@ -67,8 +67,9 @@ configure(subprojects.findAll { it.name != 'eagle-bom' }) {
         toolchain {
             languageVersion = JavaLanguageVersion.of(25)
         }
-        withSourcesJar()
-        withJavadocJar()
+        // 生成 sources.jar 和 javadoc.jar
+        // withSourcesJar()
+        // withJavadocJar()
     }
 
     jacoco {
