@@ -100,6 +100,18 @@ spring:
 # Eagle 业务配置（仅 auth 域相关）
 # ===========================================
 eagle:
+  # ----- 初始管理员 -----
+  # AdminInitializer 启动时创建 admin Account(已存在则幂等跳过),并通过
+  # AccountRegisteredEvent → RocketMQ eagle_auth_events → system-service 同步出 admin User。
+  # 与 system-service 端 eagle.admin.username 走同一 EAGLE_ADMIN_USERNAME 环境变量,
+  # 确保两侧"哪个 username 是管理员"的判定一致。
+  # 【安全】password 故意无默认值,缺失即 fail-fast;生产必须通过环境变量注入强密码。
+  admin:
+    username: ${EAGLE_ADMIN_USERNAME:admin}
+    password: ${EAGLE_ADMIN_PASSWORD}
+    name: ${EAGLE_ADMIN_NAME:系统管理员}
+    email: ${EAGLE_ADMIN_EMAIL:admin@eagle.com}
+    phone: ${EAGLE_ADMIN_PHONE:}
   jwt:
     keystore-location: classpath:jwt-keystore.p12
     keystore-password: ${EAGLE_JWT_KEYSTORE_PASSWORD}

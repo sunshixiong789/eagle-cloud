@@ -351,11 +351,10 @@ services:
       - REDIS_POOL_MAX_WAIT=${REDIS_POOL_MAX_WAIT:-2000ms}
       # RocketMQ（消息组件）
       - ROCKETMQ_NAME_SERVER=${ROCKETMQ_NAME_SERVER:-rocketmq-namesrv:9876}
-      # 初始管理员（application.yml 中 EAGLE_ADMIN_PASSWORD 无默认值，缺失即 fail-fast）
+      # 初始管理员 username —— system-service 端 AccountEventApplicationService 据此判定哪个
+      # User 应被赋予 admin 角色,与 auth-service 共用同一 EAGLE_ADMIN_USERNAME 保持两侧一致。
+      # PASSWORD/NAME/EMAIL 仅 auth-service 使用,system 侧不读,故此处不注入。
       - EAGLE_ADMIN_USERNAME=${EAGLE_ADMIN_USERNAME:-admin}
-      - EAGLE_ADMIN_PASSWORD=${EAGLE_ADMIN_PASSWORD}
-      - EAGLE_ADMIN_NAME=${EAGLE_ADMIN_NAME:-系统管理员}
-      - EAGLE_ADMIN_EMAIL=${EAGLE_ADMIN_EMAIL:-admin@eagle.com}
       # JWT keystore
       - EAGLE_JWT_KEYSTORE_LOCATION=${EAGLE_JWT_KEYSTORE_LOCATION:-classpath:jwt-keystore.p12}
       - EAGLE_JWT_KEYSTORE_PASSWORD=${EAGLE_JWT_KEYSTORE_PASSWORD:-eagle-jwt-dev-2026}
@@ -453,10 +452,3 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-    depends_on:
-      nacos:
-        condition: service_healthy
-      auth:
-        condition: service_healthy
-      system:
-        condition: service_healthy

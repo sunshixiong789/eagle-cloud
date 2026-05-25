@@ -4,12 +4,14 @@ import com.eagle.system.base.domain.model.Role;
 import com.eagle.system.base.domain.model.User;
 import com.eagle.system.base.domain.repository.RoleRepository;
 import com.eagle.system.base.domain.repository.UserRepository;
+import com.eagle.system.base.infrastructure.config.AdminProperties;
 import com.eagle.system.base.infrastructure.messaging.event.AccountDeletedMessage;
 import com.eagle.system.base.infrastructure.messaging.event.AccountRegisteredMessage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -19,6 +21,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -34,6 +37,8 @@ class AccountEventApplicationServiceTest {
     private RoleRepository roleRepository;
     @Mock
     private CacheManager cacheManager;
+    @Mock
+    private AdminProperties adminProperties;
     @InjectMocks
     private AccountEventApplicationService service;
 
@@ -42,7 +47,7 @@ class AccountEventApplicationServiceTest {
     class OnRegistered {
 
         @Test
-        @DisplayName("首次事件应创建 User")
+        @DisplayName("首次事件应创建 User 并仅分配 user 角色")
         void createsUserOnFirstSeen() {
             AccountRegisteredMessage event = new AccountRegisteredMessage();
             event.setAccountId(100L);
@@ -50,13 +55,40 @@ class AccountEventApplicationServiceTest {
             event.setPhone("13900000000");
 
             when(userRepository.existsByAccountId(100L)).thenReturn(false);
-            Role role = Mockito.mock(Role.class);
-            when(role.getId()).thenReturn(7L);
-            when(roleRepository.findByRoleCode("user")).thenReturn(Optional.of(role));
+            Role userRole = Mockito.mock(Role.class);
+            when(userRole.getId()).thenReturn(7L);
+            when(roleRepository.findByRoleCode("user")).thenReturn(Optional.of(userRole));
+            when(adminProperties.getUsername()).thenReturn("admin");
 
             service.onAccountRegistered(event);
 
-            verify(userRepository).save(any(User.class));
+            ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+            verify(userRepository).save(captor.capture());
+            assertThat(captor.getValue().getRoleIds()).containsExactly(7L);
+            verify(roleRepository, never()).findByRoleCode("admin");
+        }
+
+        @Test
+        @DisplayName("username 匹配 eagle.admin.username 时分配 user + admin 双角色")
+        void assignsAdminRoleWhenUsernameMatches() {
+            AccountRegisteredMessage event = new AccountRegisteredMessage();
+            event.setAccountId(1L);
+            event.setUsername("admin");
+
+            when(userRepository.existsByAccountId(1L)).thenReturn(false);
+            Role userRole = Mockito.mock(Role.class);
+            when(userRole.getId()).thenReturn(7L);
+            Role adminRole = Mockito.mock(Role.class);
+            when(adminRole.getId()).thenReturn(1L);
+            when(roleRepository.findByRoleCode("user")).thenReturn(Optional.of(userRole));
+            when(roleRepository.findByRoleCode("admin")).thenReturn(Optional.of(adminRole));
+            when(adminProperties.getUsername()).thenReturn("admin");
+
+            service.onAccountRegistered(event);
+
+            ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+            verify(userRepository).save(captor.capture());
+            assertThat(captor.getValue().getRoleIds()).containsExactlyInAnyOrder(7L, 1L);
         }
 
         @Test
@@ -83,6 +115,7 @@ class AccountEventApplicationServiceTest {
             Role role = Mockito.mock(Role.class);
             when(role.getId()).thenReturn(7L);
             when(roleRepository.findByRoleCode("user")).thenReturn(Optional.of(role));
+            when(adminProperties.getUsername()).thenReturn("admin");
             when(userRepository.save(any(User.class)))
                     .thenThrow(new DataIntegrityViolationException("uk_account_id violation"));
 

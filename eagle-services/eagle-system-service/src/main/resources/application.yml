@@ -118,6 +118,12 @@ spring:
 # Eagle 业务配置
 # ===========================================
 eagle:
+  # ----- Admin 用户名 -----
+  # 仅 username,识别消费 AccountRegisteredMessage 时哪个用户应被赋予 admin 角色。
+  # auth-service 端 AdminInitializer 用相同 EAGLE_ADMIN_USERNAME 环境变量创建初始 Account,
+  # 两侧通过环境变量联动保持一致;system 侧不读 password/email(那是 auth 端职责)。
+  admin:
+    username: ${EAGLE_ADMIN_USERNAME:admin}
   # ----- Resource Server -----
   # /internal/** 是跨服务内部 API(目前仅 /internal/authorization/{accountId} 供 auth-service
   # 在 OAuth2 登录流程中调用,此时尚无用户 JWT 可透传),必须放行。
