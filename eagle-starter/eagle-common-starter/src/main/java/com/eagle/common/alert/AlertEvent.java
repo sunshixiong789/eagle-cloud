@@ -20,7 +20,6 @@ import java.util.Map;
  * @param category 业务分类,例如 {@code mq-dlq}、{@code rpc-circuit-open}、{@code idempotency-violation}
  * @param title    简短标题(< 80 字符),用于 webhook 卡片主体
  * @param message  详细描述,可换行
- * @param context  附加上下文(eventId / orderId / tenantId 等),会被序列化到日志 KV
  * @param cause    异常(可选)
  * @author sunshixiong
  */

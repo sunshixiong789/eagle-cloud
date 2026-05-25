@@ -40,9 +40,9 @@ public class EagleServiceImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M,
      *
      * <p>排序处理逻辑：
      * <ol>
-     *   <li>若 {@link EaglePageQuery#getOrderBy()} 非空，按指定字段和方向排序</li>
+     *   <li>若 {@code EaglePageQuery.getOrderBy()} 非空，按指定字段和方向排序</li>
      *   <li>排序字段为驼峰命名（如 {@code createTime}），由 MyBatis-Plus 自动转换为下划线</li>
-     *   <li>{@link EaglePageQuery#getOrderDirection()} 不区分大小写，{@code "asc"} 为升序，其余均为降序</li>
+     *   <li>{@code EaglePageQuery.getOrderDirection()} 不区分大小写，{@code "asc"} 为升序，其余均为降序</li>
      * </ol>
      *
      * @param query   分页入参；不能为 {@code null}

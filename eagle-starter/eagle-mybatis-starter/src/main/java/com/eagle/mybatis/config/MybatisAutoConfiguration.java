@@ -77,7 +77,7 @@ public class MybatisAutoConfiguration {
     /**
      * 注册慢 SQL 拦截器。
      *
-     * <p>执行时间超过 {@link MybatisProperties#getSlowSqlMillis()} 阈值的 SQL
+     * <p>执行时间超过 {@code MybatisProperties.getSlowSqlMillis()} 阈值的 SQL
      * 将以 WARN 级别记录日志。
      *
      * @param properties MyBatis-Plus 配置属性

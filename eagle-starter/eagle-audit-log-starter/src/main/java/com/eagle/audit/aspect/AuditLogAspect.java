@@ -48,13 +48,30 @@ public class AuditLogAspect {
     @Around("@annotation(auditLog)")
     public Object around(ProceedingJoinPoint joinPoint, AuditLog auditLog) throws Throwable {
         long start = System.currentTimeMillis();
-        AuditLogEntry.AuditLogEntryBuilder builder = AuditLogEntry.builder()
+        var builder = AuditLogEntry.builder()
                 .module(auditLog.module())
                 .action(auditLog.action())
                 .occurredAt(LocalDateTime.now());
 
-        fillUserContext(builder);
-        fillWebContext(builder);
+        try {
+            builder.operatorId(userProvider.getCurrentUserId())
+                    .operatorName(userProvider.getCurrentUserName())
+                    .tenantId(userProvider.getCurrentTenantId());
+        } catch (Exception e) {
+            log.debug("Failed to fill audit user context", e);
+        }
+
+        try {
+            ServletRequestAttributes attrs =
+                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attrs != null) {
+                HttpServletRequest request = attrs.getRequest();
+                builder.clientIp(getClientIp(request))
+                        .userAgent(request.getHeader("User-Agent"));
+            }
+        } catch (Exception e) {
+            log.debug("Failed to fill audit web context", e);
+        }
 
         if (auditLog.logArgs()) {
             builder.requestArgs(serializeArgs(joinPoint.getArgs()));
@@ -80,30 +97,6 @@ public class AuditLogAspect {
                     .errorMessage(errorMessage)
                     .build();
             publishQuietly(entry);
-        }
-    }
-
-    private void fillUserContext(AuditLogEntry.AuditLogEntryBuilder builder) {
-        try {
-            builder.operatorId(userProvider.getCurrentUserId())
-                    .operatorName(userProvider.getCurrentUserName())
-                    .tenantId(userProvider.getCurrentTenantId());
-        } catch (Exception e) {
-            log.debug("Failed to fill audit user context", e);
-        }
-    }
-
-    private void fillWebContext(AuditLogEntry.AuditLogEntryBuilder builder) {
-        try {
-            ServletRequestAttributes attrs =
-                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            if (attrs != null) {
-                HttpServletRequest request = attrs.getRequest();
-                builder.clientIp(getClientIp(request))
-                        .userAgent(request.getHeader("User-Agent"));
-            }
-        } catch (Exception e) {
-            log.debug("Failed to fill audit web context", e);
         }
     }
 

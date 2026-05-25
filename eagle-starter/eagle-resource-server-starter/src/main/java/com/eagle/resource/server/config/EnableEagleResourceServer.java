@@ -16,7 +16,6 @@ import java.lang.annotation.Target;
  *   <li>OAuth2 JWT 资源服务器过滤链（无状态，支持可配置放行路径）</li>
  *   <li>{@link EagleJwtAuthenticationConverter}（{@link com.eagle.common.dto.EagleUser} 作为 Principal）</li>
  *   <li>缓存配置 {@link CacheConfig}</li>
- *   <li>Swagger / OpenAPI 配置 {@link OpenApiConfig}</li>
  * </ul>
  *
  * <p>与 Spring Boot 自动配置等效，两者不会重复注册（所有 Bean 均有 {@code @ConditionalOnMissingBean} 保护）：

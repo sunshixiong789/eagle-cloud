@@ -91,9 +91,9 @@ public class WechatPaymentGateway implements PaymentGateway {
     /**
      * {@inheritDoc}
      *
-     * <p>调用 JSAPI 支付预下单接口，返回的 {@link PayResult#getPayInfo()} 为
+     * <p>调用 JSAPI 支付预下单接口，返回的 {@code PayResult.getPayInfo()} 为
      * 前端调起 {@code wx.requestPayment} 所需的 JSON 字符串（含签名）。
-     * {@link PayRequest#getOpenId()} 为必填字段。
+     * {@code PayRequest.getOpenId()} 为必填字段。
      */
     @Override
     public PayResult pay(PayRequest request) {

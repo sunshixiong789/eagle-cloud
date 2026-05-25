@@ -21,7 +21,7 @@ import java.util.Set;
  * 公告聚合根。
  *
  * <p>一条公告写一行——不论受众多大。已读/未读通过用户级游标
- * {@link UserAnnouncementCursor#getLastReadPublishTime()} 比对 {@link #publishTime} 计算，
+ * {@code UserAnnouncementCursor.getLastReadPublishTime()} 比对 {@code publishTime} 计算，
  * 不维护"用户×公告"的关系表，避免笛卡尔积爆炸。
  *
  * @author sunshixiong
