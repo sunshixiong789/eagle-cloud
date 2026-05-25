@@ -51,6 +51,16 @@ spring:
       auto-commit: true
       connection-test-query: SELECT 1
 
+  # ---- Spring Authorization Server 原生 schema（裸 JDBC，不走 JPA）----
+  # JdbcOAuth2AuthorizationService / JdbcOAuth2AuthorizationConsentService 用裸 JdbcTemplate，
+  # 不是 JPA 实体，因此 ddl-auto=update 不会建对应的 oauth2_authorization /
+  # oauth2_authorization_consent 表。这里通过 spring.sql.init 在启动时按需创建（IF NOT EXISTS 幂等）。
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/oauth2-schema-postgresql.sql
+      continue-on-error: false
+
   # ---- JPA：Flyway 引入前由 Hibernate 自动同步 schema（update）；上线前切回 validate ----
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect

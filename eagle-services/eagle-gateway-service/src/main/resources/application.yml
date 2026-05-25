@@ -130,23 +130,29 @@ spring:
           # 网关必须按原路径透传到授权服务器，不能套 alias 前缀也不能 rewrite/strip。
           # issuer 由下游 Spring Authorization Server 从 X-Forwarded-* 自动派生为网关 URL
           # （auth-service 侧需开启 server.forward-headers-strategy=framework）。
-          # 路由目标：auth-service（注册名 eagle-auth-service），OAuth2 Authorization Server
+          # 路由目标：auth-service（注册名 auth），OAuth2 Authorization Server
           # 在 24f3f21 从 system 拆出后承载所有认证 / 账号自助 / 短信流程。
           routes:
             - id: auth-oauth2
-              uri: lb://eagle-auth-service
+              uri: lb://auth
               predicates:
                 - Path=/oauth2/**,/.well-known/**,/userinfo,/logout,/connect/**
             - id: auth-login
-              uri: lb://eagle-auth-service
+              uri: lb://auth
               predicates:
                 - Path=/login,/login/**
             # 账号自助 / 短信验证码：注册、重置密码、绑定手机、短信码下发等
             # auth-service 侧已在 SecurityConfig 中按需 permitAll；网关层只做透传不做鉴权
             - id: auth-account
-              uri: lb://eagle-auth-service
+              uri: lb://auth
               predicates:
                 - Path=/accounts/**,/sms/**
+            # favicon 透传到 auth-service（其 static/favicon.ico 已存在），
+            # 避免浏览器直连网关时被 WebFlux ResourceWebHandler 抛 404 刷栈
+            - id: auth-favicon
+              uri: lb://auth
+              predicates:
+                - Path=/favicon.ico
 
 # ===========================================
 # Actuator：生产安全基线
