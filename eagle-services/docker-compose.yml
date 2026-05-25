@@ -144,6 +144,10 @@ services:
     image: apache/rocketmq:5.3.2
     container_name: eagle-rocketmq-namesrv
     restart: always
+    # user: root —— 与 broker 同理:named volume 默认属主 root,rocketmq 用户(uid=3000)
+    # 无权在 /home/rocketmq/logs/ 下创建 rocketmqlogs 子目录,namesrv_traffic.log 等
+    # FileAppender 启动期就抛 FileNotFoundException
+    user: root
     ports:
       - "9876:9876"
     networks:
@@ -152,7 +156,14 @@ services:
       # NameServer 资源消耗低，限制内存避免占用过多开发机资源
       - JAVA_OPT_EXT=${ROCKETMQ_NAMESRV_JAVA_OPT_EXT:--server -Xms512m -Xmx512m -Xmn256m}
       - TZ=${TZ:-Asia/Shanghai}
-    command: sh mqnamesrv
+    # 启动前确保 logback FileAppender 写日志的子目录存在
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        mkdir -p /home/rocketmq/logs/rocketmqlogs
+        exec sh mqnamesrv
     mem_limit: 768m
     mem_reservation: 384m
     volumes:
@@ -181,18 +192,35 @@ services:
       # Broker 默认堆 8g 太大；开发机收紧到 1g
       - JAVA_OPT_EXT=${ROCKETMQ_BROKER_JAVA_OPT_EXT:--server -Xms1g -Xmx1g -Xmn512m}
       - TZ=${TZ:-Asia/Shanghai}
-    # broker.conf 从宿主机挂载 ./rocketmq 目录(不挂单文件)
-    # 挂单文件在 macOS Docker Desktop 上偶尔会被错当成目录创建,挂目录更稳
-    # 历史方案用 `printf 'k=v\n...' > broker.conf` 在 YAML `>` 折叠 + sh -c 嵌套下
-    # \n 没被 printf 当转义,整文件变一行 → brokerIP1 吞掉后续所有配置,broker 注册到
-    # NameServer 的地址变成 "rocketmq-brokernbrokerName=broker-an..." 全部连不上
-    command: sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/conf-eagle/broker.conf
+    # broker.conf 用 YAML `|` 字面块 + bash heredoc 在容器启动时写出
+    # 不挂 bind mount(macOS Docker Desktop 单文件 bind 有缓存怪问题,会被当目录)
+    # 不用 YAML `>` 折叠 + printf '\n'(\n 在多层嵌套下会被吞成字面 n)
+    # heredoc 用真实换行,最稳
+    # brokerIP1=rocketmq-broker 必须指向容器服务名,否则其他容器拿到默认宿主 IP 后连不上
+    # storePathRootDir 必须显式声明,否则某些代码路径派生 null → shutdown NPE
+    # autoCreateTopicEnable=true:开发环境允许首次发送时自动建 Topic(生产应关闭)
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        mkdir -p /home/rocketmq/store /home/rocketmq/logs/rocketmqlogs
+        cat > /home/rocketmq/broker.conf <<'EOF'
+        brokerIP1=rocketmq-broker
+        brokerName=broker-a
+        brokerId=0
+        brokerClusterName=DefaultCluster
+        namesrvAddr=rocketmq-namesrv:9876
+        storePathRootDir=/home/rocketmq/store
+        autoCreateTopicEnable=true
+        autoCreateSubscriptionGroup=true
+        EOF
+        exec sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/broker.conf
     mem_limit: 1536m
     mem_reservation: 768m
     volumes:
       - rocketmq-broker-logs:/home/rocketmq/logs
       - rocketmq-broker-store:/home/rocketmq/store
-      - ./rocketmq:/home/rocketmq/conf-eagle:ro
 
   # RocketMQ Dashboard（开发环境可视化控制台，浏览器访问 http://localhost:8180）
   # 通过容器名 rocketmq-namesrv:9876 连 NameServer；关闭 VIP channel 避免与 broker 端口冲突
