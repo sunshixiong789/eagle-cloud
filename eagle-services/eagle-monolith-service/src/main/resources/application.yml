@@ -21,7 +21,8 @@ spring:
       continue-on-error: false
   jpa:
     open-in-view: false
-
+  profiles:
+    active: h2
 eagle:
   jwt:
     keystore-location: ${EAGLE_JWT_KEYSTORE_LOCATION:classpath:jwt-keystore.p12}
