@@ -4,6 +4,7 @@ import com.eagle.auth.core.domain.event.AccountDeletedEvent;
 import com.eagle.auth.core.domain.event.AccountRegisteredEvent;
 import com.eagle.auth.core.infrastructure.event.integration.AccountDeletedIntegrationEvent;
 import com.eagle.auth.core.infrastructure.event.integration.AccountRegisteredIntegrationEvent;
+import com.eagle.auth.core.infrastructure.remote.SystemUserSyncClient;
 import com.eagle.rocketmq.publisher.DomainEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +56,7 @@ public class AuthIntegrationEventPublisher {
     public static final String TOPIC = "eagle_auth_events";
 
     private final DomainEventPublisher publisher;
+    private final SystemUserSyncClient systemUserSyncClient;
 
     @Async("taskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -62,8 +64,26 @@ public class AuthIntegrationEventPublisher {
         AccountRegisteredIntegrationEvent integration = new AccountRegisteredIntegrationEvent(
                 event.accountId(), event.username(), event.phone(),
                 event.nickname(), event.avatar(), event.email());
-        publisher.publish(TOPIC, "account.registered", integration);
-        log.debug("published account.registered, accountId={}", event.accountId());
+        try {
+            publisher.publish(TOPIC, "account.registered", integration);
+            log.debug("published account.registered, accountId={}", event.accountId());
+        } catch (RuntimeException mqEx) {
+            // MQ 投递失败(broker 不可达 / gRPC 连接关闭 / 超时等)→ 同步 HTTP 兜底,
+            // 保证 base_user 镜像不因 broker 抖动而永久缺失。下游已通过 existsByAccountId
+            // + DB 唯一索引兜住幂等,即使后续 MQ 恢复重投递也不会重复创建 user。
+            log.warn("RocketMQ publish failed, falling back to HTTP sync, accountId={}",
+                    event.accountId(), mqEx);
+            try {
+                systemUserSyncClient.syncFromAccount(integration);
+                log.info("HTTP fallback sync succeeded, accountId={}", event.accountId());
+            } catch (RuntimeException httpEx) {
+                // 两条通道都失败 — 此时 user 镜像确实丢了,只能告警让运维介入。
+                // 后续重新登录会触发新的 grant 路径但不会再发 register 事件(已存在 Account),
+                // 需要靠手工 reconcile / 定时任务补救。
+                log.error("Both MQ and HTTP sync failed for accountId={} — base_user mirror lost, "
+                        + "manual reconciliation required", event.accountId(), httpEx);
+            }
+        }
     }
 
     @Async("taskExecutor")

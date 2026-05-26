@@ -21,4 +21,8 @@ public interface AuthAccountClient {
     /** 按用户名查 Account 快照;Account 不存在时 RestClient 错误处理器抛 NotFoundException。 */
     @GetExchange("/by-username/{username}")
     AccountSnapshot findByUsername(@PathVariable String username);
+
+    /** 全量账号数(权威源,供 Dashboard 等聚合接口使用)。 */
+    @GetExchange("/count")
+    long count();
 }

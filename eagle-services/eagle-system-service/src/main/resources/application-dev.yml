@@ -8,9 +8,7 @@
 # ===========================================
 
 eagle:
-  # 本地无 RocketMQ broker 时关闭 Consumer 注册;接入联调环境改为 true 即可
   rocketmq:
-    enabled: ${ROCKETMQ_ENABLED:false}
     topic-env-prefix: dev_
 
 spring:

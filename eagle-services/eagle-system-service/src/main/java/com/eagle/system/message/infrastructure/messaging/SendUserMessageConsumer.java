@@ -7,7 +7,6 @@ import com.eagle.rocketmq.properties.RocketMqProperties;
 import com.eagle.system.message.application.service.SendMessageApplicationService;
 import com.eagle.system.message.domain.model.MessageCategory;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
@@ -23,7 +22,6 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@ConditionalOnProperty(name = "eagle.rocketmq.enabled", havingValue = "true")
 public class SendUserMessageConsumer extends AbstractRocketMqListener<SendUserMessageIntegrationEvent> {
 
     static final String CONSUMER_GROUP = "system_user_message_send";

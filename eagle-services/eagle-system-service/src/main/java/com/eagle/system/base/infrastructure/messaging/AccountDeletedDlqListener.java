@@ -9,7 +9,6 @@ import com.eagle.system.base.domain.model.DeadLetterRecord;
 import com.eagle.system.base.domain.repository.DeadLetterRecordRepository;
 import com.eagle.system.base.infrastructure.messaging.event.AccountDeletedMessage;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
@@ -26,7 +25,6 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-@ConditionalOnProperty(name = "eagle.rocketmq.enabled", havingValue = "true")
 public class AccountDeletedDlqListener extends AbstractDlqListener<AccountDeletedMessage> {
 
     private static final String ALERT_SOURCE = "eagle-system-service";

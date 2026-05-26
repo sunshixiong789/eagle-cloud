@@ -4,7 +4,6 @@ import com.eagle.rocketmq.events.SendUserMessageIntegrationEvent;
 import com.eagle.rocketmq.listener.AbstractDlqListener;
 import com.eagle.rocketmq.properties.RocketMqProperties;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@ConditionalOnProperty(name = "eagle.rocketmq.enabled", havingValue = "true")
 public class SendUserMessageDlqListener extends AbstractDlqListener<SendUserMessageIntegrationEvent> {
 
     public SendUserMessageDlqListener(RocketMqProperties props) {

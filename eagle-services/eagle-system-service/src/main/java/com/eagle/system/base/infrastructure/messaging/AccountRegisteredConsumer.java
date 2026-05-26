@@ -5,7 +5,6 @@ import com.eagle.rocketmq.properties.RocketMqProperties;
 import com.eagle.system.base.application.service.AccountEventApplicationService;
 import com.eagle.system.base.infrastructure.messaging.event.AccountRegisteredMessage;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
@@ -20,7 +19,6 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-@ConditionalOnProperty(name = "eagle.rocketmq.enabled", havingValue = "true")
 public class AccountRegisteredConsumer extends AbstractRocketMqListener<AccountRegisteredMessage> {
 
     static final String TOPIC = "eagle_auth_events";

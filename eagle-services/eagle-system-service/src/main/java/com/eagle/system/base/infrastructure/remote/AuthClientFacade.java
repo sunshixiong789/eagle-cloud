@@ -41,6 +41,7 @@ public class AuthClientFacade {
 
     private final AuthOnlineUserClient onlineUserClient;
     private final AuthAccountBlacklistClient blacklistClient;
+    private final AuthAccountClient accountClient;
 
     /**
      * 列出 auth-service 维护的全部在线用户。
@@ -102,6 +103,24 @@ public class AuthClientFacade {
      */
     public void forceLogout(String tokenId) {
         onlineUserClient.forceLogout(tokenId);
+    }
+
+    /**
+     * 全量账号数(权威源)。下游不可达 / 熔断开路 → 降级返回 -1,调用方据此选择是否走本地兜底。
+     * <p>选 -1 而非 0,是为了让调用方能区分"真的没账号"和"远程不可用"两种语义。
+     */
+    @CircuitBreaker(name = "eagle-default", fallbackMethod = "countAccountsFallback")
+    public long countAccounts() {
+        return accountClient.count();
+    }
+
+    @SuppressWarnings("unused")
+    private long countAccountsFallback(Throwable ex) {
+        if (!isFallbackEligible(ex)) {
+            sneakyThrow(ex);
+        }
+        log.warn("countAccounts 降级为 -1(可能熔断开路或下游故障)", ex);
+        return -1L;
     }
 
     /**

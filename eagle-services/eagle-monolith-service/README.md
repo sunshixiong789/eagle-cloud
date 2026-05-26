@@ -112,7 +112,7 @@ gradle :eagle-services:eagle-monolith-service:bootRun
 
 - `MonolithLocalIntegrationConfiguration`：把 auth / system 原本跨服务调用的 Port 和 Client 切到本地 Bean。
 - `MonolithAccountEventBridge`：把 auth 账号领域事件转成 system 账号消息并在本地事务提交后处理。
-- `eagle.rocketmq.enabled=false`：单体默认关闭 RocketMQ 发送能力，避免启动依赖 MQ。
+- 单体模式下 auth 与 system 共进程，通过 `MonolithAccountEventBridge` 在本地事务提交后直接处理账号事件，无需 RocketMQ。需要对外发集成事件时再配 `eagle.rocketmq.endpoints` 接入 broker。
 
 ## 注意事项
 

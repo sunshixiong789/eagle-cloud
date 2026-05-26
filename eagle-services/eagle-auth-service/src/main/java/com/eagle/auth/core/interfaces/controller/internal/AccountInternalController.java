@@ -40,6 +40,17 @@ public class AccountInternalController {
         return new AccountSnapshot(account.getId(), account.getUsername(), account.getPhone());
     }
 
+    /**
+     * 全量账号数（权威源）。
+     *
+     * <p>主用途：system-service Dashboard 统计"总用户数"——auth_account 是注册的事实来源,
+     * 比 base_user 镜像更可靠（后者依赖 RocketMQ 同步链路,broker 抖动期间会偏小）。
+     */
+    @GetMapping("/count")
+    public long count() {
+        return accountRepository.count();
+    }
+
     /** 内部 Account 快照（仅持久化字段）。 */
     public record AccountSnapshot(Long accountId, String username, String phone) {
     }

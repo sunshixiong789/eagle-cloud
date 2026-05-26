@@ -1,6 +1,7 @@
 package com.eagle.auth.core.infrastructure.config;
 
 import com.eagle.auth.core.infrastructure.remote.SystemAuthorizationClient;
+import com.eagle.auth.core.infrastructure.remote.SystemUserSyncClient;
 import com.eagle.http.client.support.EagleRestServiceClientFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,5 +20,10 @@ class RemoteClientConfiguration {
     @Bean
     SystemAuthorizationClient systemAuthorizationClient(EagleRestServiceClientFactory factory) {
         return factory.createLoadBalancedClient(SystemAuthorizationClient.class, SYSTEM_SERVICE_ID);
+    }
+
+    @Bean
+    SystemUserSyncClient systemUserSyncClient(EagleRestServiceClientFactory factory) {
+        return factory.createLoadBalancedClient(SystemUserSyncClient.class, SYSTEM_SERVICE_ID);
     }
 }

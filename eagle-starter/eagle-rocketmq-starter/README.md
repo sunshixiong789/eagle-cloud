@@ -80,7 +80,9 @@ dependencies {
 `RocketMqAutoConfiguration` 在以下条件满足时生效：
 
 - 类路径存在 `org.apache.rocketmq.client.apis.ClientServiceProvider`
-- 配置项 `eagle.rocketmq.enabled=true`（默认为 `true`）
+
+无总开关 — 引入 starter 即生效。本地无 broker 时让 `eagle.rocketmq.endpoints` 指向不可达地址即可，
+publish 失败会打日志但不阻断启动；消费者会持续重连。
 
 | Bean                          | 类型                                    | 条件                                                     |
 |-------------------------------|---------------------------------------|--------------------------------------------------------|
@@ -120,7 +122,6 @@ eagle:
 
 | 配置项                                                | 默认值              | 说明                                                                                 |
 |----------------------------------------------------|------------------|------------------------------------------------------------------------------------|
-| `eagle.rocketmq.enabled`                           | `true`           | 设为 `false` 时所有发布操作降级为打印警告日志，不发送                                                    |
 | `eagle.rocketmq.endpoints`                         | `localhost:8081` | RocketMQ 5.x Proxy 地址（不是 NameServer 端口 9876）                                       |
 | `eagle.rocketmq.topic-prefix`                      | `eagle-`         | `publish(event)` 自动推导 Topic 时的前缀，如 `OrderCreatedEvent` → `eagle-OrderCreatedEvent` |
 | `eagle.rocketmq.max-attempts`                      | `2`              | 同步发送失败后的额外重试次数，总计 `maxAttempts + 1` 次尝试                                            |

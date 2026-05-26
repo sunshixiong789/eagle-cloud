@@ -201,7 +201,6 @@ public class OrderTxChecker extends AbstractRocketMqTransactionChecker {
 
 | key                                                        | 类型      | 默认                     | 说明           |
 |------------------------------------------------------------|---------|------------------------|--------------|
-| `eagle.rocketmq.enabled`                                   | boolean | `true`                 | 总开关          |
 | `eagle.rocketmq.endpoints`                                 | String  | `localhost:8081`       | 接入点          |
 | `eagle.rocketmq.producer-group`                            | String  | `eagle-producer-group` | 生产者组         |
 | `eagle.rocketmq.consumer-group`                            | String  | `eagle-consumer-group` | 默认消费者组       |
