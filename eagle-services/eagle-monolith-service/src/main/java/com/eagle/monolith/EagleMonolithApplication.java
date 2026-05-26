@@ -42,8 +42,8 @@ import java.util.Optional;
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.ASSIGNABLE_TYPE,
                 classes = EagleSystemApplication.class))
-@EntityScan(basePackages = {"com.eagle.auth", "com.eagle.system", "com.eagle.monolith"})
-@EnableJpaRepositories(basePackages = {"com.eagle.auth", "com.eagle.system", "com.eagle.monolith"})
+@EntityScan(basePackages = {"com.eagle.auth", "com.eagle.system", "com.eagle.monolith", "com.eagle.audit"})
+@EnableJpaRepositories(basePackages = {"com.eagle.auth", "com.eagle.system", "com.eagle.monolith", "com.eagle.audit"})
 public class EagleMonolithApplication {
 
     private final Environment env;
