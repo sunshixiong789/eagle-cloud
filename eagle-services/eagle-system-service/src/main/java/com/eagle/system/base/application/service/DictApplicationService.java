@@ -1,5 +1,6 @@
 package com.eagle.system.base.application.service;
 
+import com.eagle.audit.annotation.AuditLog;
 import com.eagle.system.base.application.mapper.DictItemMapper;
 import com.eagle.system.base.application.mapper.DictMapper;
 import com.eagle.system.base.domain.model.Dict;
@@ -85,6 +86,7 @@ public class DictApplicationService {
     /**
      * 删除字典（级联删除所有字典项）
      */
+    @AuditLog(module = "字典管理", action = "删除字典")
     @Caching(evict = {
             @CacheEvict(value = "DICT_TYPE", allEntries = true),
             @CacheEvict(value = "DICT_TYPES", allEntries = true)
@@ -248,6 +250,7 @@ public class DictApplicationService {
      * @param dictId 字典 ID
      * @param itemId 字典项 ID
      */
+    @AuditLog(module = "字典管理", action = "删除字典项")
     @Caching(evict = {
             @CacheEvict(value = "DICT_TYPE", allEntries = true),
             @CacheEvict(value = "DICT_TYPES", allEntries = true)

@@ -1,5 +1,6 @@
 package com.eagle.auth.application.service;
 
+import com.eagle.audit.annotation.AuditLog;
 import com.eagle.common.exception.codes.DataErrorCode;
 import com.eagle.auth.application.command.FreezeAccountCommand;
 import com.eagle.auth.domain.AuthErrorCode;
@@ -89,6 +90,7 @@ public class AccountApplicationService {
     /**
      * 修改密码。
      */
+    @AuditLog(module = "账号管理", action = "修改密码", logArgs = false)
     @Transactional(rollbackFor = Exception.class)
     public void changePassword(Long accountId, String rawNewPassword) {
         Account account = findAccountById(accountId);
@@ -99,6 +101,7 @@ public class AccountApplicationService {
     /**
      * 冻结账号（管理员显式触发）。
      */
+    @AuditLog(module = "账号管理", action = "冻结账号")
     @Transactional(rollbackFor = Exception.class)
     public void freezeAccount(Long accountId, FreezeAccountCommand cmd) {
         Account account = findAccountById(accountId);
@@ -110,6 +113,7 @@ public class AccountApplicationService {
     /**
      * 解冻账号（管理员显式触发）。
      */
+    @AuditLog(module = "账号管理", action = "解冻账号")
     @Transactional(rollbackFor = Exception.class)
     public void unfreezeAccount(Long accountId, Long operatorId, String operatorName) {
         Account account = findAccountById(accountId);
@@ -123,6 +127,7 @@ public class AccountApplicationService {
      * <p>使用 {@link AccountRepository#delete} 配合 Spring Data 的 {@code @DomainEvents}
      * 机制：聚合根上注册的事件在删除事务提交后自动发布，无需手工 save。
      */
+    @AuditLog(module = "账号管理", action = "删除账号")
     @Transactional(rollbackFor = Exception.class)
     public void deleteAccount(Long accountId) {
         Account account = findAccountById(accountId);

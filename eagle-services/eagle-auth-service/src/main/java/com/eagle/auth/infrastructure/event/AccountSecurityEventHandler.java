@@ -16,17 +16,19 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import java.util.List;
 
 /**
- * 账号安全事件处理器。
+ * 账号安全事件处理器:执行级联副作用 + 技术细节日志。
  *
- * <p>覆盖以下安全审计与副作用：
+ * <p>三类事件:
  * <ul>
- *   <li>冻结 → 强制下线该账号所有在线 token + 审计日志</li>
- *   <li>解冻 → 审计日志</li>
- *   <li>删除 → 强制下线 + 审计日志</li>
+ *   <li>冻结 → 强制下线该账号所有在线 token</li>
+ *   <li>解冻 → 仅打印结构化执行日志</li>
+ *   <li>删除 → 强制下线该账号所有在线 token</li>
  * </ul>
  *
- * <p>审计当前以 {@code log.info} 结构化输出（由 Logback JSON encoder 收敛到 ELK），
- * 后续接入 {@code eagle-audit-log-starter} 可替换为 {@code @AuditLog} 切面。
+ * <p>用户操作的审计(谁在何时冻结/解冻/删除)由 {@code @AuditLog} 切面在
+ * {@code AccountApplicationService} 主线程内完成,写入 {@code eagle_audit_log} 表;
+ * 本处理器在异步线程内输出"实际下线了多少 jti"等技术细节,走 SLF4J 收敛到 ELK,
+ * 两者职责互补,不重叠。
  *
  * @author sunshixiong
  */

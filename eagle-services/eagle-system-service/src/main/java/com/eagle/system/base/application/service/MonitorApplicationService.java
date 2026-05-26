@@ -1,5 +1,6 @@
 package com.eagle.system.base.application.service;
 
+import com.eagle.audit.annotation.AuditLog;
 import com.eagle.common.exception.codes.OperationErrorCode;
 import com.eagle.system.base.domain.model.enums.LogStatus;
 import com.eagle.system.base.infrastructure.remote.AuthClientFacade;
@@ -31,9 +32,12 @@ import org.springframework.web.client.RestClient;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 监控应用服务：在线用户管理、登录日志统计、服务注册中心探测。
@@ -68,12 +72,20 @@ public class MonitorApplicationService {
     }
 
     /**
-     * 在线用户列表。降级 / 熔断 / 异常处理下沉到 {@link AuthClientFacade},
-     * 本方法只关心 DTO 映射。
+     * 在线用户列表。auth 端按 jti 存储(同一用户多端登录会有多条),
+     * 此处按用户身份去重,只保留 loginTime 最新的一条;
+     * tokenId 字段保留,管理员仍可针对该会话强制下线。
      */
     public OnlineUserListResponse listOnlineUsers() {
         List<OnlineUserSnapshot> infos = authClientFacade.listOnlineUsers();
         List<OnlineUserResponse> responses = infos.stream()
+                .collect(Collectors.toMap(
+                        this::onlineUserDedupKey,
+                        Function.identity(),
+                        MonitorApplicationService::pickLatestSession,
+                        LinkedHashMap::new))
+                .values()
+                .stream()
                 .map(info -> OnlineUserResponse.builder()
                         .tokenId(info.tokenId())
                         .userId(info.userId())
@@ -88,10 +100,32 @@ public class MonitorApplicationService {
         return new OnlineUserListResponse(responses.size(), responses);
     }
 
+    private String onlineUserDedupKey(OnlineUserSnapshot info) {
+        if (info.userId() != null) {
+            return "u:" + info.userId();
+        }
+        // userId 缺失退化到 username;username 也缺失退化到 tokenId(此时无法去重,保留原条目)
+        return "n:" + (info.username() != null ? info.username() : info.tokenId());
+    }
+
+    private static OnlineUserSnapshot pickLatestSession(OnlineUserSnapshot existing,
+                                                        OnlineUserSnapshot incoming) {
+        LocalDateTime a = existing.loginTime();
+        LocalDateTime b = incoming.loginTime();
+        if (a == null) {
+            return incoming;
+        }
+        if (b == null) {
+            return existing;
+        }
+        return b.isAfter(a) ? incoming : existing;
+    }
+
     // -------------------------------------------------------------------------
     // 登录日志
     // -------------------------------------------------------------------------
 
+    @AuditLog(module = "系统监控", action = "强制下线用户")
     public void forceLogout(String tokenId) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String currentJti = getCurrentJti(auth);

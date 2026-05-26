@@ -1,5 +1,6 @@
 package com.eagle.system.base.application.service;
 
+import com.eagle.audit.annotation.AuditLog;
 import com.eagle.system.base.application.mapper.UserMapper;
 import com.eagle.system.base.domain.model.User;
 import com.eagle.system.base.domain.model.enums.LogStatus;
@@ -58,6 +59,7 @@ public class UserApplicationService {
     /**
      * 更新用户档案信息
      */
+    @AuditLog(module = "用户管理", action = "更新用户档案")
     @Transactional(rollbackFor = Exception.class)
     public UserResponse updateUser(Long id, UpdateUserRequest request) {
         User user = findUserById(id);
@@ -118,6 +120,7 @@ public class UserApplicationService {
     /**
      * 分配角色
      */
+    @AuditLog(module = "用户管理", action = "分配角色")
     @Transactional(rollbackFor = Exception.class)
     public void assignRoles(Long id, Set<Long> roleIds) {
         User user = findUserById(id);

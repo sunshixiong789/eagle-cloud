@@ -1,5 +1,6 @@
 package com.eagle.system.base.application.service;
 
+import com.eagle.audit.annotation.AuditLog;
 import com.eagle.system.base.application.mapper.RoleMapper;
 import com.eagle.system.base.application.mapper.UserMapper;
 import com.eagle.system.base.domain.model.Role;
@@ -45,6 +46,7 @@ public class RoleApplicationService {
         return roleMapper.toResponse(saved);
     }
 
+    @AuditLog(module = "角色管理", action = "更新角色")
     @Transactional(rollbackFor = Exception.class)
     public RoleResponse updateRole(Long id, UpdateRoleRequest request) {
         Role role = findRoleById(id);
@@ -62,6 +64,7 @@ public class RoleApplicationService {
         return roleMapper.toResponse(saved);
     }
 
+    @AuditLog(module = "角色管理", action = "删除角色")
     @Transactional(rollbackFor = Exception.class)
     public void deleteRole(Long id) {
         Role role = findRoleById(id);

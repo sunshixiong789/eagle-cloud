@@ -128,6 +128,11 @@ eagle:
   resource-server:
     permit-paths:
       - /actuator/health/**
+  # ----- 审计日志(eagle-audit-log-starter) -----
+  # 启用 GET /audit-logs 查询接口(admin 角色),写入路径在 @AuditLog 注解的业务方法
+  audit-log:
+    controller-enabled: true
+    permit-role: admin
   jwt:
     keystore-location: classpath:jwt-keystore.p12
     keystore-password: ${EAGLE_JWT_KEYSTORE_PASSWORD}

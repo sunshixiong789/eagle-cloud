@@ -1,1 +1,4 @@
 com.eagle.audit.config.EagleAuditLogAutoConfiguration
+com.eagle.audit.config.EagleAuditLogJpaAutoConfiguration
+com.eagle.audit.config.EagleAuditLogSecurityAutoConfiguration
+com.eagle.audit.config.EagleAuditLogControllerAutoConfiguration

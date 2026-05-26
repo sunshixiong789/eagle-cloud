@@ -4,14 +4,34 @@ dependencies {
     // AOP 切面支持（Spring Boot 4.x 重命名为 spring-boot-starter-aspectj）
     implementation 'org.springframework.boot:spring-boot-starter-aspectj'
 
-    // Web 上下文（获取 IP/UA），可选——无 web 环境时优雅降级
+    // Web 上下文（获取 IP/UA / Controller），可选——无 web 环境时优雅降级
     compileOnly 'org.springframework:spring-web'
+    compileOnly 'org.springframework:spring-webmvc'
     // Servlet API（获取 HttpServletRequest），可选
     compileOnly 'org.apache.tomcat.embed:tomcat-embed-core'
+    // Bean Validation（查询 DTO 校验），可选
+    compileOnly 'jakarta.validation:jakarta.validation-api'
     // Jackson（序列化请求/响应参数），可选
     compileOnly 'tools.jackson.core:jackson-databind'
     // Spring Security 用户上下文，可选
     compileOnly 'org.springframework.security:spring-security-core'
+    compileOnly 'org.springframework.security:spring-security-config'
+    // OAuth2 JWT + Resource Server（从 JWT claim 抽取 user_id），可选
+    compileOnly 'org.springframework.security:spring-security-oauth2-jose'
+    compileOnly 'org.springframework.security:spring-security-oauth2-resource-server'
+    // JPA 持久化（消费方引入 data-jpa-starter 时自动启用 JpaAuditLogHandler）
+    compileOnly 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // Spring Boot autoconfigure（提供 @EntityScan / @ConditionalOnWebApplication 等元注解）
+    compileOnly 'org.springframework.boot:spring-boot-autoconfigure'
+    // 多租户上下文（消费方引入 tenant-starter 时自动启用 TenantAwareSecurityAuditLogUserProvider）
+    compileOnly project(':eagle-starter:eagle-tenant-starter')
+    // OpenAPI 注解（消费方启用 controller 时,Swagger 文档生效）
+    compileOnly 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-core'
+    testImplementation 'org.springframework.security:spring-security-oauth2-jose'
+    testImplementation 'org.springframework.security:spring-security-oauth2-resource-server'
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    testImplementation project(':eagle-starter:eagle-tenant-starter')
 }

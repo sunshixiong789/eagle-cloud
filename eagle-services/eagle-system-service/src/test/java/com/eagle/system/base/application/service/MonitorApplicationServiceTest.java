@@ -63,6 +63,63 @@ class MonitorApplicationServiceTest {
             assertEquals(1, resp.getTotalCount());
             assertEquals("jti-1", resp.getUsers().get(0).getTokenId());
         }
+
+        @Test
+        @DisplayName("should deduplicate by userId, keeping the latest login")
+        void shouldDeduplicateByUserId() {
+            LocalDateTime older = LocalDateTime.now().minusHours(1);
+            LocalDateTime newer = LocalDateTime.now();
+            OnlineUserSnapshot oldSession = new OnlineUserSnapshot(
+                    "jti-old", 100L, "alice", "10.0.0.1",
+                    older, older, "Chrome", "macOS", 3600L);
+            OnlineUserSnapshot newSession = new OnlineUserSnapshot(
+                    "jti-new", 100L, "alice", "10.0.0.2",
+                    newer, newer, "Firefox", "Windows", 3600L);
+            when(authClientFacade.listOnlineUsers()).thenReturn(List.of(oldSession, newSession));
+
+            OnlineUserListResponse resp = service.listOnlineUsers();
+
+            assertEquals(1, resp.getTotalCount());
+            assertEquals("jti-new", resp.getUsers().get(0).getTokenId());
+            assertEquals("10.0.0.2", resp.getUsers().get(0).getIp());
+        }
+
+        @Test
+        @DisplayName("should keep different users as separate rows")
+        void shouldKeepDifferentUsers() {
+            OnlineUserSnapshot a = new OnlineUserSnapshot(
+                    "jti-a", 100L, "alice", "10.0.0.1",
+                    LocalDateTime.now(), LocalDateTime.now(),
+                    "Chrome", "macOS", 3600L);
+            OnlineUserSnapshot b = new OnlineUserSnapshot(
+                    "jti-b", 200L, "bob", "10.0.0.2",
+                    LocalDateTime.now(), LocalDateTime.now(),
+                    "Chrome", "Linux", 3600L);
+            when(authClientFacade.listOnlineUsers()).thenReturn(List.of(a, b));
+
+            OnlineUserListResponse resp = service.listOnlineUsers();
+
+            assertEquals(2, resp.getTotalCount());
+        }
+
+        @Test
+        @DisplayName("should fall back to username when userId is null")
+        void shouldDeduplicateByUsernameWhenNoUserId() {
+            LocalDateTime older = LocalDateTime.now().minusHours(1);
+            LocalDateTime newer = LocalDateTime.now();
+            OnlineUserSnapshot oldSession = new OnlineUserSnapshot(
+                    "jti-old", null, "anon", "10.0.0.1",
+                    older, older, "Chrome", "macOS", 3600L);
+            OnlineUserSnapshot newSession = new OnlineUserSnapshot(
+                    "jti-new", null, "anon", "10.0.0.2",
+                    newer, newer, "Firefox", "Windows", 3600L);
+            when(authClientFacade.listOnlineUsers()).thenReturn(List.of(oldSession, newSession));
+
+            OnlineUserListResponse resp = service.listOnlineUsers();
+
+            assertEquals(1, resp.getTotalCount());
+            assertEquals("jti-new", resp.getUsers().get(0).getTokenId());
+        }
     }
 
     @Nested

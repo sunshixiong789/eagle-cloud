@@ -129,6 +129,11 @@ eagle:
   # 在 OAuth2 登录流程中调用,此时尚无用户 JWT 可透传),必须放行。
   # 【生产强约束】网关层必须用 IP 白名单 / mTLS / 客户端凭证(client-credentials scope)二次
   # 保护 /internal/**,本服务侧仅 permitAll 不足以构成访问控制。
+  # ----- 审计日志(eagle-audit-log-starter) -----
+  # 启用 GET /audit-logs 查询接口(admin 角色),写入路径在 @AuditLog 注解的业务方法
+  audit-log:
+    controller-enabled: true
+    permit-role: admin
   resource-server:
     permit-paths:
       - /internal/**
