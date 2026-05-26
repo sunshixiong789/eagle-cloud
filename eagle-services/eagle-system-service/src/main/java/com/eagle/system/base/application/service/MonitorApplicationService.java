@@ -100,6 +100,19 @@ public class MonitorApplicationService {
         return new OnlineUserListResponse(responses.size(), responses);
     }
 
+    /**
+     * 按账号去重后的当前在线用户数。
+     * <p>仅返回数量，不构建完整 DTO 列表，供 Dashboard 等聚合接口复用。
+     * 下游 auth-service 不可达 / 熔断开路时，{@link AuthClientFacade} 已降级为空列表，
+     * 此处自然得到 0，调用方无需额外处理。
+     */
+    public long countOnlineUsers() {
+        return authClientFacade.listOnlineUsers().stream()
+                .map(this::onlineUserDedupKey)
+                .distinct()
+                .count();
+    }
+
     private String onlineUserDedupKey(OnlineUserSnapshot info) {
         if (info.userId() != null) {
             return "u:" + info.userId();

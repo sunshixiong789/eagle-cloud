@@ -35,6 +35,7 @@ public class DashboardApplicationService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final LogRepository logRepository;
+    private final MonitorApplicationService monitorApplicationService;
 
     /**
      * 获取仪表盘统计卡片数据
@@ -63,6 +64,7 @@ public class DashboardApplicationService {
                 .todayLoginVsYesterday(vsYesterday)
                 .todayLogCount(logRepository.countByPeriod(todayStart, tomorrowStart))
                 .todayExceptionCount(logRepository.countByLogTypeAndPeriod(LogType.EXCEPTION, todayStart, tomorrowStart))
+                .onlineUserCount(monitorApplicationService.countOnlineUsers())
                 .build();
     }
 

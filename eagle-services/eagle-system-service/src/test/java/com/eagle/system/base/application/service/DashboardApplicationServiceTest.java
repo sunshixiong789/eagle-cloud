@@ -32,6 +32,8 @@ class DashboardApplicationServiceTest {
     RoleRepository roleRepository;
     @Mock
     LogRepository logRepository;
+    @Mock
+    MonitorApplicationService monitorApplicationService;
     @InjectMocks
     DashboardApplicationService service;
 
@@ -60,6 +62,7 @@ class DashboardApplicationServiceTest {
             when(logRepository.countByLogTypeAndPeriod(eq(LogType.EXCEPTION), any(), any()))
                     .thenReturn(1L);
             when(logRepository.countByPeriod(any(), any())).thenReturn(200L);
+            when(monitorApplicationService.countOnlineUsers()).thenReturn(3L);
 
             DashboardStatsResponse stats = service.getStats();
 
@@ -70,6 +73,7 @@ class DashboardApplicationServiceTest {
             assertEquals(100.0, stats.getTodayLoginVsYesterday());
             assertEquals(200L, stats.getTodayLogCount());
             assertEquals(1L, stats.getTodayExceptionCount());
+            assertEquals(3L, stats.getOnlineUserCount());
         }
 
         @Test
@@ -84,9 +88,11 @@ class DashboardApplicationServiceTest {
             when(logRepository.countByLogTypeAndPeriod(eq(LogType.EXCEPTION), any(), any()))
                     .thenReturn(0L);
             when(logRepository.countByPeriod(any(), any())).thenReturn(0L);
+            when(monitorApplicationService.countOnlineUsers()).thenReturn(0L);
 
             DashboardStatsResponse stats = service.getStats();
             assertEquals(100.0, stats.getTodayLoginVsYesterday());
+            assertEquals(0L, stats.getOnlineUserCount());
         }
     }
 

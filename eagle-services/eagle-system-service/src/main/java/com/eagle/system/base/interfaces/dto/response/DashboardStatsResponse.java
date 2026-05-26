@@ -65,4 +65,10 @@ public class DashboardStatsResponse {
      */
     @Schema(description = "今日异常日志数")
     private long todayExceptionCount;
+
+    /**
+     * 当前在线用户数（按账号去重）
+     */
+    @Schema(description = "当前在线用户数（按账号去重）")
+    private long onlineUserCount;
 }
