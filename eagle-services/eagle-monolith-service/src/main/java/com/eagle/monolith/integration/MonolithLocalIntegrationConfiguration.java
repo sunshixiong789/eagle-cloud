@@ -1,13 +1,13 @@
 package com.eagle.monolith.integration;
 
-import com.eagle.auth.domain.AuthErrorCode;
-import com.eagle.auth.domain.model.Account;
-import com.eagle.auth.domain.port.AccountBlacklistPort;
-import com.eagle.auth.domain.port.AuthorizationInfo;
-import com.eagle.auth.domain.port.AuthorizationPort;
-import com.eagle.auth.domain.port.OnlineUserInfo;
-import com.eagle.auth.domain.port.OnlineUserPort;
-import com.eagle.auth.domain.repository.AccountRepository;
+import com.eagle.auth.core.domain.AuthErrorCode;
+import com.eagle.auth.core.domain.model.Account;
+import com.eagle.auth.core.domain.port.AccountBlacklistPort;
+import com.eagle.auth.core.domain.port.AuthorizationInfo;
+import com.eagle.auth.core.domain.port.AuthorizationPort;
+import com.eagle.auth.core.domain.port.OnlineUserInfo;
+import com.eagle.auth.core.domain.port.OnlineUserPort;
+import com.eagle.auth.core.domain.repository.AccountRepository;
 import com.eagle.common.event.BaseEvent;
 import com.eagle.rocketmq.publisher.DomainEventPublisher;
 import com.eagle.system.base.application.service.AuthorizationQueryService;

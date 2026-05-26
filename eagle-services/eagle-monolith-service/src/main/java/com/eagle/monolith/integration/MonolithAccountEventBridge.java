@@ -1,7 +1,7 @@
 package com.eagle.monolith.integration;
 
-import com.eagle.auth.domain.event.AccountDeletedEvent;
-import com.eagle.auth.domain.event.AccountRegisteredEvent;
+import com.eagle.auth.core.domain.event.AccountDeletedEvent;
+import com.eagle.auth.core.domain.event.AccountRegisteredEvent;
 import com.eagle.system.base.application.service.AccountEventApplicationService;
 import com.eagle.system.base.infrastructure.messaging.event.AccountDeletedMessage;
 import com.eagle.system.base.infrastructure.messaging.event.AccountRegisteredMessage;

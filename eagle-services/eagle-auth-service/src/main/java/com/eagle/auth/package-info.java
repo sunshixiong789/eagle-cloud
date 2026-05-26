@@ -1,31 +1,19 @@
 /**
- * 认证授权模块（Auth Bounded Context）
- * <p>
- * 职责：用户身份认证、OAuth2 授权服务器、微信/短信第三方登录、账号管理。
- * <p>
- * <strong>对外公开的命名接口</strong>
- * <ul>
- *   <li>{@code auth::domain-services} — WechatService、SmsService</li>
- *   <li>{@code auth::security}        — Filter、Provider、Converter</li>
- * </ul>
- * <p>
- * <strong>依赖约束</strong>
- * <ul>
- *   <li>允许访问 {@code common} 共享内核（隐式，无需声明）</li>
- *   <li>禁止依赖 {@code system} 模块（六边形架构：auth 定义端口，system 实现端口）</li>
- *   <li>禁止依赖 {@code config} 模块</li>
- * </ul>
+ * Eagle Auth Service 应用根包。
+ *
+ * <p>本包仅承载 Spring Boot 应用入口 {@code EagleAuthApplication} 与
+ * {@code @Modulithic} 声明，不包含业务代码。所有业务代码位于
+ * {@link com.eagle.auth.core} 子包（单一有界上下文：认证授权核心域）。
+ *
+ * <p>选择"应用基础包 ≠ 模块基础包"的拓扑，是为了让
+ * {@code ApplicationModules.of(EagleAuthApplication.class).verify()} 能将
+ * {@code com.eagle.auth.core} 识别为单一模块（其下 {@code interfaces /
+ * application / domain / infrastructure} 视为内部包），而不是把 DDD 四层
+ * 误判为四个独立模块导致循环依赖告警。
  *
  * @author sunshixiong
  */
-@ApplicationModule(
-        displayName = "认证授权模块",
-        // allowedDependencies = {} 即"不允许任何模块依赖"（common 因为 @Modulithic(sharedModules)
-        // 隐式开放，无需写）。此声明把"禁止依赖 base/config"从注释升级为 ModulithArchitectureTest 硬约束。
-        allowedDependencies = {}
-)
 @NullMarked
 package com.eagle.auth;
 
 import org.jspecify.annotations.NullMarked;
-import org.springframework.modulith.ApplicationModule;

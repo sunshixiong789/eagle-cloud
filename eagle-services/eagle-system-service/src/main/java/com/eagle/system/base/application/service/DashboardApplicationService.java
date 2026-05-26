@@ -10,6 +10,7 @@ import com.eagle.system.base.interfaces.dto.response.DashboardStatsResponse;
 import com.eagle.system.base.interfaces.dto.response.LogSummaryItem;
 import com.eagle.system.base.interfaces.dto.response.LoginTrendItem;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +43,7 @@ public class DashboardApplicationService {
      *
      * @return 统计数据
      */
+    @Cacheable(value = "DASHBOARD_STATS")
     @Transactional(readOnly = true)
     public DashboardStatsResponse getStats() {
         LocalDateTime todayStart = LocalDate.now().atStartOfDay();

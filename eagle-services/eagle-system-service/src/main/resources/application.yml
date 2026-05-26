@@ -182,6 +182,11 @@ eagle:
       enabled: true
       retention-days: 90
       cron: "0 0 2 * * ?"
+  # ----- Redis 缓存区域独立 TTL(默认 30m,见 spring.cache.redis.time-to-live) -----
+  redis:
+    cache-ttls:
+      # 仪表盘聚合统计:5min 抗刷新风暴,可容忍短暂不一致
+      DASHBOARD_STATS: 5m
 
 # ===========================================
 # Actuator：生产安全基线（仅 health/info/prometheus，无详情）

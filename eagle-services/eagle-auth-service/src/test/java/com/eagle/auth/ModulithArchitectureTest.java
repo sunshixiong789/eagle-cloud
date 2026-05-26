@@ -1,7 +1,11 @@
 package com.eagle.auth;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.modulith.core.ApplicationModule;
+import org.springframework.modulith.core.ApplicationModules;
+import org.springframework.modulith.docs.Documenter;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,54 +16,96 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
- * eagle-auth-service 架构边界验证(防回退)。
+ * eagle-auth-service 架构边界验证。
  *
- * <p>auth 服务目前仅含 {@code com.eagle.auth} 一个有界上下文,
- * 不适合跑 Spring Modulith 的 {@code ApplicationModules.verify()}(默认按子包推断
- * 会把 DDD 四层视为独立模块并报循环依赖)。本测试改用纯文件扫描,
- * 强制约束 auth 拆分后不允许再 import system 域代码——这是拆分边界的最后一道护栏。
+ * <p>本服务仅含一个有界上下文 {@code com.eagle.auth.core}（认证授权核心域）。
+ * 应用基础包 {@code com.eagle.auth} 只承载 {@code EagleAuthApplication}，
+ * 因此 {@link ApplicationModules#verify()} 会把 {@code core} 识别为单一模块，
+ * 其下 {@code interfaces / application / domain / infrastructure} 视为内部包，
+ * 不会触发"四层互依"误报。
  *
- * <p>当未来 auth 拆出 session / keystore 等子模块、形成多模块结构时,
- * 可改回 {@code ApplicationModules.of(...).verify()}。
+ * <p>除 Modulith 标准校验外，本测试还附加文件扫描，禁止 import 其他服务
+ * （system / monolith / gateway）——这是 auth 拆分为独立服务后的最后一道护栏。
+ *
+ * <p><strong>运行</strong>
+ * <pre>gradle :eagle-services:eagle-auth-service:test --tests "*.ModulithArchitectureTest"</pre>
  *
  * @author sunshixiong
  */
 @DisplayName("Eagle Auth 架构边界验证")
 class ModulithArchitectureTest {
 
+    private static final ApplicationModules MODULES =
+            ApplicationModules.of(EagleAuthApplication.class);
+
     private static final Path SRC_MAIN = Paths.get("src/main/java");
 
     private static final List<Pattern> FORBIDDEN_IMPORTS = List.of(
-            // 拆分后 auth 不允许再依赖 system 内部代码(只能通过 RestClient + 集成事件解耦)
-            Pattern.compile("^import\\s+com\\.eagle\\.system\\..*;"),
-            // monolith 是单体备份,生产代码不应依赖
-            Pattern.compile("^import\\s+com\\.eagle\\.monolith\\..*;"),
-            // 网关代码不应被业务服务依赖
-            Pattern.compile("^import\\s+com\\.eagle\\.gateway\\..*;")
+            Pattern.compile("^import\\s+(static\\s+)?com\\.eagle\\.system\\..*;"),
+            Pattern.compile("^import\\s+(static\\s+)?com\\.eagle\\.monolith\\..*;"),
+            Pattern.compile("^import\\s+(static\\s+)?com\\.eagle\\.gateway\\..*;")
     );
 
     @Test
-    @DisplayName("auth-service 不应 import 其他服务(system / monolith / gateway)的代码")
-    void shouldNotImportOtherServicePackages() throws IOException {
-        List<String> violations = new ArrayList<>();
-        try (Stream<Path> stream = Files.walk(SRC_MAIN)) {
-            stream.filter(p -> p.toString().endsWith(".java"))
-                    .forEach(file -> scanFile(file, violations));
-        }
-        if (!violations.isEmpty()) {
-            fail("发现非法跨服务 import:\n  - " + String.join("\n  - ", violations));
-        }
+    @DisplayName("ApplicationModules.verify() — 模块结构合法,无循环依赖,无非法跨模块访问")
+    void verifiesModularStructure() {
+        MODULES.verify();
     }
 
     @Test
-    @DisplayName("源码根目录应存在")
-    void srcMainShouldExist() {
-        assertTrue(Files.isDirectory(SRC_MAIN),
-                "src/main/java 不存在,工作目录是否正确? cwd=" + Paths.get("").toAbsolutePath());
+    @DisplayName("生成模块依赖图文档(PlantUML)")
+    void writeDocumentationSnippets() {
+        new Documenter(MODULES)
+                .writeModulesAsPlantUml()
+                .writeIndividualModulesAsPlantUml();
+    }
+
+    @Nested
+    @DisplayName("模块拓扑")
+    class Topology {
+
+        @Test
+        @DisplayName("只应识别出一个业务模块 core")
+        void shouldHaveSingleCoreModule() {
+            List<String> moduleNames = MODULES.stream()
+                    .map(ApplicationModule::getName)
+                    .toList();
+            assertTrue(moduleNames.contains("core"),
+                    "core 模块未被识别;实际: " + moduleNames);
+            assertEquals(1, moduleNames.size(),
+                    "auth-service 仅应有一个模块 core,实际: " + moduleNames);
+        }
+    }
+
+    @Nested
+    @DisplayName("跨服务边界(文件扫描)")
+    class CrossServiceBoundary {
+
+        @Test
+        @DisplayName("auth-service 不应 import 其他服务(system / monolith / gateway)的代码")
+        void shouldNotImportOtherServicePackages() throws IOException {
+            List<String> violations = new ArrayList<>();
+            try (Stream<Path> stream = Files.walk(SRC_MAIN)) {
+                stream.filter(p -> p.toString().endsWith(".java"))
+                        .forEach(file -> scanFile(file, violations));
+            }
+            if (!violations.isEmpty()) {
+                fail("发现非法跨服务 import:\n  - " + String.join("\n  - ", violations));
+            }
+        }
+
+        @Test
+        @DisplayName("源码根目录应存在")
+        void srcMainShouldExist() {
+            assertTrue(Files.isDirectory(SRC_MAIN),
+                    "src/main/java 不存在,工作目录是否正确? cwd="
+                            + Paths.get("").toAbsolutePath());
+        }
     }
 
     private static void scanFile(Path file, List<String> violations) {
