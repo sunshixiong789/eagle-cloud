@@ -139,6 +139,7 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 
 | 文件                                            | 适用场景                                          |
 |-----------------------------------------------|-----------------------------------------------|
+| `.claude/rules/00-collaboration.md`           | **协作元规则（必看）**：回答使用中文、禁止 `@Value` 注入配置         |
 | `.claude/rules/01-naming.md`                  | 命名约定（类、方法、DDD 组件、ErrorCode）                   |
 | `.claude/rules/02-code-style.md`              | Google Java Style + Lombok 规则 + `@NullMarked` |
 | `.claude/rules/03-architecture.md`            | DDD 分层、跨域 Port/Adapter、聚合根创建型事件               |
