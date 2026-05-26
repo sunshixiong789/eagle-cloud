@@ -1,4 +1,4 @@
-package com.eagle;
+package com.eagle.auth;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

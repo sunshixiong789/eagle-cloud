@@ -1,4 +1,4 @@
-package com.eagle;
+package com.eagle.auth;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
@@ -21,6 +21,12 @@ import java.util.Optional;
  * <p>与 {@code eagle-system-service}（WebFlux）通过 RocketMQ JSON 事件 + 自建 RestClient
  * 解耦：本服务对外发布 {@code eagle_auth_events} 事件，并暴露 {@code /internal/**}
  * 同步 API；下游服务自行维护事件 POJO 与客户端 DTO。
+ *
+ * <p>主类必须放在 {@code com.eagle.auth} 包内，避免与其他 starter 的
+ * {@code AutoConfigurationPackages} 注册产生祖先/子包重叠（例如
+ * {@code com.eagle.audit.repository} 是 {@code com.eagle} 的子包，
+ * 主类若放在 {@code com.eagle} 顶级包会导致 Spring Data JPA 仓库扫描
+ * 在祖先与子包各扫到一次，触发 {@code BeanDefinitionOverrideException}）。
  *
  * @author sunshixiong
  */
