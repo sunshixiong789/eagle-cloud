@@ -43,10 +43,18 @@ public class MonolithLocalIntegrationConfiguration {
     @Bean
     @Primary
     public AuthAccountClient monolithAuthAccountClient(AccountRepository accountRepository) {
-        return username -> {
-            Account account = accountRepository.findByUsername(username)
-                    .orElseThrow(AuthErrorCode.ACCOUNT_NOT_FOUND::toNotFoundException);
-            return new AccountSnapshot(account.getId(), account.getUsername(), account.getPhone());
+        return new AuthAccountClient() {
+            @Override
+            public AccountSnapshot findByUsername(String username) {
+                Account account = accountRepository.findByUsername(username)
+                        .orElseThrow(AuthErrorCode.ACCOUNT_NOT_FOUND::toNotFoundException);
+                return new AccountSnapshot(account.getId(), account.getUsername(), account.getPhone());
+            }
+
+            @Override
+            public long count() {
+                return accountRepository.count();
+            }
         };
     }
 
