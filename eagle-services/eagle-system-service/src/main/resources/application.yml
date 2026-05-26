@@ -107,12 +107,12 @@ spring:
   # ---- OAuth2 资源服务器:直连 auth-service JWKS endpoint ----
   # 24f3f21/f7e82eb 拆出 auth-service 后,本服务作为纯资源服务器,JwtDecoder 必须有 jwk-set-uri 才能创建。
   # 直连 JWKS(不走 issuer-uri OIDC discovery)避免容器启动早于 auth 时的 503 + 重启风暴(参考既往 bug)。
-  # 容器内默认走 service name(auth:8081);本地开发走 localhost:8081。
+  # 容器内默认走 service name(auth:9090);本地开发走 localhost:9090。
   security:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: ${EAGLE_OAUTH_JWK_SET_URI:http://localhost:8081/oauth2/jwks}
+          jwk-set-uri: ${EAGLE_OAUTH_JWK_SET_URI:http://localhost:9090/oauth2/jwks}
 
 # ===========================================
 # Eagle 业务配置

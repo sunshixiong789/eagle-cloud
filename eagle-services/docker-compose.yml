@@ -222,6 +222,40 @@ services:
       - rocketmq-broker-logs:/home/rocketmq/logs
       - rocketmq-broker-store:/home/rocketmq/store
 
+  # RocketMQ Proxy（5.x gRPC 接入层，必装）
+  # rocketmq-client-java 5.x 是 gRPC 协议，业务客户端不再直连 broker/namesrv，统一走 Proxy:8081。
+  # 没有 Proxy 时 Consumer/Producer 启动会以 "Connection refused: localhost:8081" 失败。
+  rocketmq-proxy:
+    image: apache/rocketmq:5.3.2
+    container_name: eagle-rocketmq-proxy
+    restart: always
+    user: root
+    ports:
+      # 容器内 8081 是固定值（RocketMQ Proxy gRPC 默认端口）；宿主机映射到 18081
+      # 避开与 auth-service 的 8081 冲突，仅供本机调试连接 rocketmq-proxy 使用
+      # 业务容器之间走 docker 内网 rocketmq-proxy:8081，不经过宿主机映射
+      - "18081:8081"
+    networks:
+      - eagle-network
+    depends_on:
+      - rocketmq-namesrv
+      - rocketmq-broker
+    environment:
+      - NAMESRV_ADDR=${ROCKETMQ_NAMESRV_ADDR:-rocketmq-namesrv:9876}
+      - JAVA_OPT_EXT=${ROCKETMQ_PROXY_JAVA_OPT_EXT:--server -Xms512m -Xmx512m -Xmn256m}
+      - TZ=${TZ:-Asia/Shanghai}
+    # Cluster 模式（proxy 独立进程）；通过 NAMESRV_ADDR 发现 broker
+    # logs 子目录预创建逻辑与 namesrv/broker 一致
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        mkdir -p /home/rocketmq/logs/rocketmqlogs
+        exec sh mqproxy -n rocketmq-namesrv:9876
+    mem_limit: 768m
+    mem_reservation: 384m
+
   # RocketMQ Dashboard（开发环境可视化控制台，浏览器访问 http://localhost:8180）
   # 通过容器名 rocketmq-namesrv:9876 连 NameServer；关闭 VIP channel 避免与 broker 端口冲突
   rocketmq-dashboard:
@@ -252,7 +286,7 @@ services:
     container_name: eagle-auth
     restart: always
     ports:
-      - "8081:8081"
+      - "9090:9090"
     networks:
       - eagle-network
     # 单机 8G 部署基线：auth 承载 OAuth2/JPA/Hibernate，与 system 同档
@@ -262,7 +296,7 @@ services:
     # 注意：DB_NAME 单独走 AUTH_DB_NAME 变量（默认 eagle_auth），与 system 的 DB_NAME 区分
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
-      - SERVER_PORT=${AUTH_SERVER_PORT:-8081}
+      - SERVER_PORT=${AUTH_SERVER_PORT:-9090}
       # Nacos 注册中心
       - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
       - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
@@ -289,8 +323,8 @@ services:
       - REDIS_POOL_MAX_IDLE=${REDIS_POOL_MAX_IDLE:-32}
       - REDIS_POOL_MIN_IDLE=${REDIS_POOL_MIN_IDLE:-8}
       - REDIS_POOL_MAX_WAIT=${REDIS_POOL_MAX_WAIT:-2000ms}
-      # RocketMQ（auth-service 使用 eagle.rocketmq.endpoints，对应 namesrv:9876）
-      - ROCKETMQ_ENDPOINTS=${ROCKETMQ_ENDPOINTS:-rocketmq-namesrv:9876}
+      # RocketMQ 5.x gRPC 客户端必须连 Proxy:8081（不是 namesrv:9876）
+      - ROCKETMQ_ENDPOINTS=${ROCKETMQ_ENDPOINTS:-rocketmq-proxy:8081}
       - ROCKETMQ_TOPIC_ENV_PREFIX=${ROCKETMQ_TOPIC_ENV_PREFIX:-}
       # 初始管理员（AdminProperties.password 无默认值，缺失即 fail-fast；AdminInitializer 启动时创建管理员账号）
       - EAGLE_ADMIN_USERNAME=${EAGLE_ADMIN_USERNAME:-admin}
@@ -332,7 +366,7 @@ services:
       - HNSLS_SMS_CHARSET=${HNSLS_SMS_CHARSET:-UTF-8}
       - JAVA_OPTS=${AUTH_JAVA_OPTS:--server -XX:+UseG1GC -Xms768m -Xmx1536m -XX:MaxMetaspaceSize=320m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
     healthcheck:
-      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8081/actuator/health" ]
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/actuator/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -396,8 +430,10 @@ services:
       - REDIS_POOL_MAX_IDLE=${REDIS_POOL_MAX_IDLE:-32}
       - REDIS_POOL_MIN_IDLE=${REDIS_POOL_MIN_IDLE:-8}
       - REDIS_POOL_MAX_WAIT=${REDIS_POOL_MAX_WAIT:-2000ms}
-      # RocketMQ（消息组件）
-      - ROCKETMQ_NAME_SERVER=${ROCKETMQ_NAME_SERVER:-rocketmq-namesrv:9876}
+      # RocketMQ 5.x gRPC 客户端必须连 Proxy:8081（不是 namesrv:9876）
+      # application.yml 占位符：${ROCKETMQ_ENDPOINTS:localhost:8081}
+      - ROCKETMQ_ENDPOINTS=${ROCKETMQ_ENDPOINTS:-rocketmq-proxy:8081}
+      - ROCKETMQ_TOPIC_ENV_PREFIX=${ROCKETMQ_TOPIC_ENV_PREFIX:-}
       # 初始管理员 username —— system-service 端 AccountEventApplicationService 据此判定哪个
       # User 应被赋予 admin 角色,与 auth-service 共用同一 EAGLE_ADMIN_USERNAME 保持两侧一致。
       # PASSWORD/NAME/EMAIL 仅 auth-service 使用,system 侧不读,故此处不注入。
@@ -410,9 +446,9 @@ services:
       # OAuth2 回调白名单: 逗号分隔,与 application.yml 默认值保持一致;
       # 前端联调 / 多环境部署时在 .env 覆盖,补上额外的回调地址
       - EAGLE_OAUTH_REDIRECT_URIS=${EAGLE_OAUTH_REDIRECT_URIS:-http://localhost:8080/auth/oauth2/callback}
-      # OAuth2 资源服务器 JWKS endpoint: 直连 auth-service(service name=auth, 端口 8081),
+      # OAuth2 资源服务器 JWKS endpoint: 直连 auth-service(service name=auth, 端口 9090),
       # 不走 OIDC discovery 以规避 auth 容器未就绪时的 503 + 重启风暴(memory 1588/1589)
-      - EAGLE_OAUTH_JWK_SET_URI=${EAGLE_OAUTH_JWK_SET_URI:-http://auth:8081/oauth2/jwks}
+      - EAGLE_OAUTH_JWK_SET_URI=${EAGLE_OAUTH_JWK_SET_URI:-http://auth:9090/oauth2/jwks}
       # 第三方登录（按需启用，留空 = 禁用）
       - WECHAT_MINI_APP_ID=${WECHAT_MINI_APP_ID:-}
       - WECHAT_MINI_APP_SECRET=${WECHAT_MINI_APP_SECRET:-}
@@ -469,7 +505,7 @@ services:
     mem_limit: 1280m
     mem_reservation: 512m
     # environment 显式枚举所有关键变量，统一 ${VAR:-default} 插值
-    # 默认值已包含容器网络约束（nacos:8848 / auth:8081 / system:8082 / sentinel-dashboard:8858），.env 可整体覆盖
+    # 默认值已包含容器网络约束（nacos:8848 / auth:9090 / system:8082 / sentinel-dashboard:8858），.env 可整体覆盖
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
@@ -481,7 +517,7 @@ services:
       # 多机部署时改为宿主机/公网 IP；单机留空，客户端自动取容器 IP
       - NACOS_REGISTER_IP=${NACOS_REGISTER_IP:-}
       # AUTH_SERVER_URL: gateway 走 Nacos lb://auth，此处仅为兼容历史显式直连
-      - AUTH_SERVER_URL=${AUTH_SERVER_URL:-http://auth:8081}
+      - AUTH_SERVER_URL=${AUTH_SERVER_URL:-http://auth:9090}
       - SENTINEL_DASHBOARD=${SENTINEL_DASHBOARD:-sentinel-dashboard:8858}
       - EAGLE_GATEWAY_SENTINEL_ENABLED=${EAGLE_GATEWAY_SENTINEL_ENABLED:-true}
       - EAGLE_SENTINEL_GLOBAL_QPS=${EAGLE_SENTINEL_GLOBAL_QPS:-1800}

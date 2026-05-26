@@ -121,7 +121,7 @@ public class SecurityConfig {
     /**
      * 跨服务内部 API 路径,供同集群其他服务直连。本服务侧仅 permitAll;
      * <strong>必须</strong>叠加网关 {@code InternalPathBlockingGlobalFilter}(字面 + URL decode 双重过滤)
-     * 与部署期网络隔离(K8s NetworkPolicy / 安全组限制 8081 端口)构成完整防御。
+     * 与部署期网络隔离(K8s NetworkPolicy / 安全组限制 9090 端口)构成完整防御。
      * 详见 {@code agent-plugin/rules/12-security.md}。
      */
     private static final String[] INTERNAL_PATHS = {
