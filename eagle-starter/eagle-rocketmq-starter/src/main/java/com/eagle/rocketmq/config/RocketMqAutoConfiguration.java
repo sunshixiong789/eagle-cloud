@@ -2,6 +2,7 @@ package com.eagle.rocketmq.config;
 
 import com.eagle.common.lock.DistributedLock;
 import com.eagle.common.lock.LockProperties;
+import com.eagle.rocketmq.admin.RocketMqTopicAdmin;
 import com.eagle.rocketmq.lock.LockTokenInitializer;
 import com.eagle.rocketmq.lock.RocketMqDistributedLock;
 import com.eagle.rocketmq.properties.RocketMqProperties;
@@ -38,6 +39,21 @@ import java.util.List;
 @ConditionalOnClass(name = "org.apache.rocketmq.client.apis.ClientServiceProvider")
 @EnableConfigurationProperties(RocketMqProperties.class)
 public class RocketMqAutoConfiguration {
+
+    /**
+     * Topic admin 客户端:启动期幂等建 topic,避免依赖 Producer 首发触发 autoCreateTopicEnable。
+     *
+     * <p>仅在 {@code eagle.rocketmq.topic-admin.enabled=true}(默认 true)时启用。
+     * 生产严格运维场景可关闭,改为运维预建 topic。
+     */
+    @Bean(destroyMethod = "destroy")
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "eagle.rocketmq.topic-admin", name = "enabled",
+            havingValue = "true", matchIfMissing = true)
+    public RocketMqTopicAdmin rocketMqTopicAdmin(RocketMqProperties properties) {
+        log.info("Initializing RocketMQ topic admin, namesrv: {}", properties.getNamesrvAddr());
+        return new RocketMqTopicAdmin(properties);
+    }
 
     @Bean
     @ConditionalOnMissingBean

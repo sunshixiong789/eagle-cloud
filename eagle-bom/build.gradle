@@ -47,6 +47,9 @@ ext {
 
     // 消息中间件
     rocketMqVersion = '2.3.5'
+    // rocketmq-tools (4.x classic admin client,用于 starter 启动期主动建 topic;
+    // 与 broker 镜像版本对齐,5.x minor 版本间 remoting 协议兼容)
+    rocketMqToolsVersion = '5.3.2'
 
     // 对象存储
     minioVersion = '8.5.17'
@@ -141,6 +144,8 @@ dependencies {
         // RocketMQ
         add('api', "org.apache.rocketmq:rocketmq-spring-boot-starter:${rocketMqVersion}")
         add('api', "org.apache.rocketmq:rocketmq-v5-client-spring-boot-starter:${rocketMqVersion}")
+        // 4.x classic admin client,供 eagle-rocketmq-starter 启动期幂等建 topic 使用
+        add('api', "org.apache.rocketmq:rocketmq-tools:${rocketMqToolsVersion}")
 
         // 对象存储
         add('api', "io.minio:minio:${minioVersion}")

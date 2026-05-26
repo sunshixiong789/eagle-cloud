@@ -2,6 +2,7 @@ package com.eagle.rocketmq.listener;
 
 import com.alibaba.fastjson2.JSON;
 import com.eagle.common.event.BaseEvent;
+import com.eagle.rocketmq.admin.RocketMqTopicAdmin;
 import com.eagle.rocketmq.exception.RocketMqErrorCode;
 import com.eagle.rocketmq.properties.RocketMqProperties;
 import lombok.extern.slf4j.Slf4j;
@@ -14,12 +15,20 @@ import org.apache.rocketmq.client.apis.consumer.FilterExpressionType;
 import org.apache.rocketmq.client.apis.consumer.PushConsumer;
 import org.apache.rocketmq.client.apis.message.MessageView;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * RocketMQ 领域事件消费者抽象基类。
@@ -62,11 +71,24 @@ import java.util.Collections;
  * @author eagle
  */
 @Slf4j
-public abstract class AbstractRocketMqListener<T extends BaseEvent> implements InitializingBean, DisposableBean {
+public abstract class AbstractRocketMqListener<T extends BaseEvent>
+        implements InitializingBean, DisposableBean, ApplicationContextAware {
 
     private final RocketMqProperties rocketMqProperties;
 
-    private PushConsumer consumer;
+    private volatile PushConsumer consumer;
+
+    /** 可选注入的 topic admin,启用 {@code eagle.rocketmq.topic-admin.enabled=true} 时存在。 */
+    private @Nullable RocketMqTopicAdmin topicAdmin;
+
+    /** 启动期重试调度器（单线程,daemon),Consumer 启动成功后 / destroy() 时关闭。 */
+    private volatile @Nullable ScheduledExecutorService startupRetryExecutor;
+
+    /** destroy() 标记,防止后台重试任务在容器已关闭时继续创建 Consumer。 */
+    private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
+
+    /** 启动尝试次数计数,用于日志展示。 */
+    private final AtomicInteger startupAttempt = new AtomicInteger(0);
 
     /**
      * 构造器注入 {@link RocketMqProperties}。子类须在自身构造器中通过 {@code super(rocketMqProperties)} 透传。
@@ -75,6 +97,12 @@ public abstract class AbstractRocketMqListener<T extends BaseEvent> implements I
      */
     protected AbstractRocketMqListener(RocketMqProperties rocketMqProperties) {
         this.rocketMqProperties = rocketMqProperties;
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        // 用 BeanProvider 弱依赖 RocketMqTopicAdmin,关闭 topic-admin 时 Bean 不存在不报错
+        this.topicAdmin = applicationContext.getBeanProvider(RocketMqTopicAdmin.class).getIfAvailable();
     }
 
     // -------------------------------------------------------------------------
@@ -200,38 +228,116 @@ public abstract class AbstractRocketMqListener<T extends BaseEvent> implements I
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        // 首次同步尝试,成功即返回;失败时按配置决定 fail-fast 或后台重试
         try {
-            ClientServiceProvider provider = ClientServiceProvider.loadService();
-            ClientConfiguration configuration = ClientConfiguration.newBuilder()
-                    .setEndpoints(getEndpoints())
-                    .setRequestTimeout(Duration.ofMillis(rocketMqProperties.getRequestTimeoutMillis()))
-                    .enableSsl(rocketMqProperties.isSslEnabled())
-                    .build();
+            buildConsumer();
+        } catch (Exception e) {
+            RocketMqProperties.StartupRetry retryConfig = rocketMqProperties.getConsumer().getStartupRetry();
+            if (!retryConfig.isEnabled()) {
+                // 严格模式:fail-fast,与旧版行为一致
+                throw RocketMqErrorCode.CONSUMER_INIT_FAILED.toServiceException(e);
+            }
+            // 容错模式:启动期不阻塞应用,后台调度重试
+            log.warn("RocketMQ consumer first attempt failed (topic={}, group={}), will retry in background. " +
+                            "Common cause: topic route not yet created — Producer 首发消息后 autoCreateTopicEnable 会自动建 topic, " +
+                            "Consumer 后台会自动接上。Reason: {}",
+                    getTopic(), getConsumerGroup(), e.getMessage());
+            scheduleRetry(retryConfig, retryConfig.getInitialBackoff());
+        }
+    }
 
-            String tag = getTagExpression();
-            FilterExpression filterExpression = "*".equals(tag)
-                    ? new FilterExpression("*")
-                    : new FilterExpression(tag, FilterExpressionType.TAG);
+    /** 同步构建 Consumer。成功后赋值给 {@link #consumer};失败抛异常由调用方决定 fail-fast 还是重试。 */
+    private void buildConsumer() throws ClientException {
+        // 启动期主动建 topic(若 admin 启用),失败抛异常由调用方 retry 接管
+        if (topicAdmin != null) {
+            topicAdmin.ensureTopic(getTopic());
+        }
 
-            RocketMqProperties.Consumer consumerConfig = rocketMqProperties.getConsumer();
-            consumer = provider.newPushConsumerBuilder()
-                    .setClientConfiguration(configuration)
-                    .setConsumerGroup(getConsumerGroup())
-                    .setSubscriptionExpressions(Collections.singletonMap(getTopic(), filterExpression))
-                    .setMessageListener(this::onMessage)
-                    .setMaxCacheMessageCount(consumerConfig.getMaxCachedMessageCount())
-                    .setMaxCacheMessageSizeInBytes(consumerConfig.getMaxCachedMessageSizeInBytes())
-                    .build();
+        ClientServiceProvider provider = ClientServiceProvider.loadService();
+        ClientConfiguration configuration = ClientConfiguration.newBuilder()
+                .setEndpoints(getEndpoints())
+                .setRequestTimeout(Duration.ofMillis(rocketMqProperties.getRequestTimeoutMillis()))
+                .enableSsl(rocketMqProperties.isSslEnabled())
+                .build();
 
-            log.info("RocketMQ consumer started, topic: {}, group: {}, tag: {}, retryAlertThreshold: {}",
-                    getTopic(), getConsumerGroup(), tag, getRetryAlertThreshold());
-        } catch (ClientException e) {
-            throw RocketMqErrorCode.CONSUMER_INIT_FAILED.toServiceException(e);
+        String tag = getTagExpression();
+        FilterExpression filterExpression = "*".equals(tag)
+                ? new FilterExpression("*")
+                : new FilterExpression(tag, FilterExpressionType.TAG);
+
+        RocketMqProperties.Consumer consumerConfig = rocketMqProperties.getConsumer();
+        consumer = provider.newPushConsumerBuilder()
+                .setClientConfiguration(configuration)
+                .setConsumerGroup(getConsumerGroup())
+                .setSubscriptionExpressions(Collections.singletonMap(getTopic(), filterExpression))
+                .setMessageListener(this::onMessage)
+                .setMaxCacheMessageCount(consumerConfig.getMaxCachedMessageCount())
+                .setMaxCacheMessageSizeInBytes(consumerConfig.getMaxCachedMessageSizeInBytes())
+                .build();
+
+        log.info("RocketMQ consumer started, topic: {}, group: {}, tag: {}, retryAlertThreshold: {}, attempt: {}",
+                getTopic(), getConsumerGroup(), tag, getRetryAlertThreshold(),
+                startupAttempt.get() + 1);
+    }
+
+    /** 在 backoff 时长后重试 build,失败则按指数退避继续。容器关闭后自动停止。 */
+    private void scheduleRetry(RocketMqProperties.StartupRetry retryConfig, Duration backoff) {
+        if (shuttingDown.get()) {
+            return;
+        }
+        ScheduledExecutorService executor = startupRetryExecutor;
+        if (executor == null) {
+            // lazy init,只在需要重试时创建调度器
+            synchronized (this) {
+                executor = startupRetryExecutor;
+                if (executor == null) {
+                    String threadName = "rocketmq-consumer-startup-" + getTopic();
+                    executor = Executors.newSingleThreadScheduledExecutor(r -> {
+                        Thread t = new Thread(r, threadName);
+                        t.setDaemon(true);
+                        return t;
+                    });
+                    startupRetryExecutor = executor;
+                }
+            }
+        }
+
+        executor.schedule(() -> {
+            if (shuttingDown.get()) {
+                return;
+            }
+            int attempt = startupAttempt.incrementAndGet() + 1;
+            try {
+                buildConsumer();
+                shutdownStartupRetryExecutor();   // 启动成功,关闭调度器释放线程
+            } catch (Exception e) {
+                Duration next = nextBackoff(backoff, retryConfig);
+                log.warn("RocketMQ consumer retry #{} failed (topic={}), next attempt in {}s. Reason: {}",
+                        attempt, getTopic(), next.getSeconds(), e.getMessage());
+                scheduleRetry(retryConfig, next);
+            }
+        }, backoff.toMillis(), TimeUnit.MILLISECONDS);
+    }
+
+    /** 按 multiplier 退避,不超过 maxBackoff。 */
+    private static Duration nextBackoff(Duration current, RocketMqProperties.StartupRetry retryConfig) {
+        long nextMs = (long) (current.toMillis() * retryConfig.getMultiplier());
+        long capMs = retryConfig.getMaxBackoff().toMillis();
+        return Duration.ofMillis(Math.min(nextMs, capMs));
+    }
+
+    private void shutdownStartupRetryExecutor() {
+        ScheduledExecutorService executor = startupRetryExecutor;
+        if (executor != null) {
+            executor.shutdownNow();
+            startupRetryExecutor = null;
         }
     }
 
     @Override
     public void destroy() throws Exception {
+        shuttingDown.set(true);
+        shutdownStartupRetryExecutor();
         if (consumer != null) {
             consumer.close();
             log.info("RocketMQ consumer closed, topic: {}", getTopic());

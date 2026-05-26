@@ -3,6 +3,8 @@ package com.eagle.rocketmq.properties;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.time.Duration;
+
 /**
  * RocketMQ 配置属性。
  *
@@ -13,9 +15,23 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class RocketMqProperties {
 
     /**
-     * 接入点地址，如 {@code localhost:8081}。
+     * 接入点地址（5.x gRPC Proxy），如 {@code localhost:8081}。
      */
     private String endpoints = "localhost:8081";
+
+    /**
+     * NameServer 地址（4.x classic remoting),仅供 starter 启动期幂等建 topic 用。
+     *
+     * <p>5.x 业务流量(发消息/拉消息)走 {@link #endpoints} Proxy gRPC,但 admin createTopic
+     * 必须走 NameServer remoting(rocketmq-client-java 5.x 未暴露 admin API)。
+     * 容器部署默认 {@code rocketmq-namesrv:9876};本地开发可改为 {@code localhost:9876}。
+     */
+    private String namesrvAddr = "rocketmq-namesrv:9876";
+
+    /**
+     * Topic admin 配置(启动期建 topic 行为)。
+     */
+    private TopicAdmin topicAdmin = new TopicAdmin();
 
     /**
      * 默认生产者组。
@@ -86,5 +102,75 @@ public class RocketMqProperties {
          * 默认告警阈值为 3，提前感知消费异常。
          */
         private int retryAlertThreshold = 3;
+
+        /**
+         * Consumer 启动期容错配置。
+         */
+        private StartupRetry startupRetry = new StartupRetry();
+    }
+
+    /**
+     * Topic admin(启动期幂等建 topic)。
+     *
+     * <p>启用后,{@link com.eagle.rocketmq.listener.AbstractRocketMqListener} 在 build Consumer
+     * 之前会主动通过 {@code DefaultMQAdminExt} 在所有 broker 上创建 topic(已存在则更新配置,幂等)。
+     * 这样无需依赖 Producer 首发消息触发 {@code autoCreateTopicEnable},也无需运维预建。
+     *
+     * <p>生产环境通常关闭(topic 严格由运维预建),开发环境默认开启简化部署。
+     */
+    @Data
+    public static class TopicAdmin {
+
+        /** 是否启用启动期建 topic。默认 {@code true}。 */
+        private boolean enabled = true;
+
+        /** 集群名,需与 broker.conf 中 {@code brokerClusterName} 一致。默认 {@code DefaultCluster}。 */
+        private String clusterName = "DefaultCluster";
+
+        /** 读队列数。默认 4。 */
+        private int readQueueNums = 4;
+
+        /** 写队列数。默认 4。 */
+        private int writeQueueNums = 4;
+
+        /** 权限位:6=RW(读+写),4=R(只读),2=W(只写)。默认 6。 */
+        private int perm = 6;
+
+        /** admin client 建 topic 超时(毫秒)。默认 10000。 */
+        private long timeoutMillis = 10_000L;
+    }
+
+    /**
+     * Consumer 启动期容错策略。
+     *
+     * <p>开启后,{@code AbstractRocketMqListener.afterPropertiesSet()} 不再因 topic 路由不存在
+     * (Producer 还没发过第一条消息)/ broker 暂不可达 / proxy 重启 等瞬态异常导致应用启动失败,
+     * 改为后台调度异步重试。期间 Producer 一旦发出首条消息触发 {@code autoCreateTopicEnable},
+     * Consumer 下次重试即可成功订阅,无需任何手工干预。
+     *
+     * <p>关闭后行为退回到 fail-fast(适合生产 topic 必须预创建的严格运维场景)。
+     */
+    @Data
+    public static class StartupRetry {
+
+        /**
+         * 是否启用启动期后台重试。默认 {@code true}。
+         */
+        private boolean enabled = true;
+
+        /**
+         * 首次重试等待时长。默认 5 秒。
+         */
+        private Duration initialBackoff = Duration.ofSeconds(5);
+
+        /**
+         * 单次重试最长等待时长(指数退避上限)。默认 60 秒。
+         */
+        private Duration maxBackoff = Duration.ofSeconds(60);
+
+        /**
+         * 指数退避倍数。默认 2.0(5s → 10s → 20s → 40s → 60s → 60s ...)。
+         */
+        private double multiplier = 2.0;
     }
 }
