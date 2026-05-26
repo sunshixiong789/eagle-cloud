@@ -122,6 +122,12 @@ eagle:
     name: ${EAGLE_ADMIN_NAME:系统管理员}
     email: ${EAGLE_ADMIN_EMAIL:admin@eagle.com}
     phone: ${EAGLE_ADMIN_PHONE:}
+  # ----- Resource Server -----
+  # K8s liveness/readiness 探针:/actuator/health/liveness、/actuator/health/readiness
+  # starter DEFAULT_PERMIT_PATHS 仅放行 /actuator/health,需追加 /** 覆盖子路径
+  resource-server:
+    permit-paths:
+      - /actuator/health/**
   jwt:
     keystore-location: classpath:jwt-keystore.p12
     keystore-password: ${EAGLE_JWT_KEYSTORE_PASSWORD}

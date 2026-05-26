@@ -136,6 +136,9 @@ eagle:
       # 必须放行 HTTP 层鉴权;WebSocket 连接鉴权由 STOMP CONNECT 帧的
       # JwtWebSocketChannelInterceptor (message/infrastructure/push/) 负责。
       - /ws-stomp/**
+      # K8s liveness/readiness 探针:/actuator/health/liveness、/actuator/health/readiness
+      # starter DEFAULT_PERMIT_PATHS 仅放行 /actuator/health,需追加 /** 覆盖子路径
+      - /actuator/health/**
   # ----- RocketMQ -----
   # 既消费站内消息,也消费 auth-service 的集成事件(eagle_auth_events)
   # 默认 enabled;dev profile 可显式关闭以跳过 Consumer 注册(本地无 broker 时)
