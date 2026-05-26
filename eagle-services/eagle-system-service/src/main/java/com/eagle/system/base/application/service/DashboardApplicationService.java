@@ -6,6 +6,7 @@ import com.eagle.system.base.domain.repository.LogRepository;
 import com.eagle.system.base.domain.repository.LoginTrendProjection;
 import com.eagle.system.base.domain.repository.RoleRepository;
 import com.eagle.system.base.domain.repository.UserRepository;
+import com.eagle.system.base.infrastructure.config.AdminProperties;
 import com.eagle.system.base.infrastructure.remote.AuthClientFacade;
 import com.eagle.system.base.interfaces.dto.response.DashboardStatsResponse;
 import com.eagle.system.base.interfaces.dto.response.LogSummaryItem;
@@ -39,6 +40,7 @@ public class DashboardApplicationService {
     private final LogRepository logRepository;
     private final MonitorApplicationService monitorApplicationService;
     private final AuthClientFacade authClientFacade;
+    private final AdminProperties adminProperties;
 
     /**
      * 获取仪表盘统计卡片数据
@@ -61,12 +63,13 @@ public class DashboardApplicationService {
 
         // userCount 取权威源 auth_account：base_user 镜像依赖 RocketMQ 同步链路，broker 抖动期会偏小。
         // facade 熔断降级返回 -1 时回退到 base_user 兜底（至少有数字可显示）。
+        String adminUsername = adminProperties.getUsername();
         long authAccountCount = authClientFacade.countAccounts();
-        long userCount = authAccountCount >= 0 ? authAccountCount : userRepository.count();
+        long userCount = authAccountCount >= 0 ? authAccountCount : userRepository.countByUsernameNot(adminUsername);
 
         return DashboardStatsResponse.builder()
                 .userCount(userCount)
-                .userCountLast7Days(userRepository.countByCreateTimeSince(sevenDaysAgo))
+                .userCountLast7Days(userRepository.countByCreateTimeSinceAndUsernameNot(sevenDaysAgo, adminUsername))
                 .roleCount(roleRepository.count())
                 .roleEnabledCount(roleRepository.countByStatus(RoleStatus.NORMAL))
                 .todayLoginCount(todayLogins)

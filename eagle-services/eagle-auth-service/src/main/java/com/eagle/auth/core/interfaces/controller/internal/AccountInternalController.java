@@ -3,6 +3,7 @@ package com.eagle.auth.core.interfaces.controller.internal;
 import com.eagle.auth.core.domain.AuthErrorCode;
 import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.repository.AccountRepository;
+import com.eagle.auth.core.infrastructure.config.AdminProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AccountInternalController {
 
     private final AccountRepository accountRepository;
+    private final AdminProperties adminProperties;
 
     /**
      * 按用户名查 Account 快照。Account 不存在时返回 404（client 端 RestClient 错误处理器会
@@ -41,14 +43,14 @@ public class AccountInternalController {
     }
 
     /**
-     * 全量账号数（权威源）。
+     * 全量账号数（权威源，不包含初始化管理员）。
      *
      * <p>主用途：system-service Dashboard 统计"总用户数"——auth_account 是注册的事实来源,
      * 比 base_user 镜像更可靠（后者依赖 RocketMQ 同步链路,broker 抖动期间会偏小）。
      */
     @GetMapping("/count")
     public long count() {
-        return accountRepository.count();
+        return accountRepository.countByUsernameNot(adminProperties.getUsername());
     }
 
     /** 内部 Account 快照（仅持久化字段）。 */

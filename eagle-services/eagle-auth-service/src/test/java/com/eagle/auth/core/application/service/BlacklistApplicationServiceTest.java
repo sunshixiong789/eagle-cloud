@@ -4,10 +4,16 @@ import com.eagle.common.exception.ConflictException;
 import com.eagle.common.exception.NotFoundException;
 import com.eagle.auth.core.application.command.AddBlacklistCommand;
 import com.eagle.auth.core.application.mapper.BlacklistMapper;
+import com.eagle.auth.core.domain.AuthErrorCode;
 import com.eagle.auth.core.domain.model.Blacklist;
+import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.model.enums.BlacklistType;
+import com.eagle.auth.core.domain.repository.AccountRepository;
 import com.eagle.auth.core.domain.repository.BlacklistRepository;
 import com.eagle.auth.core.infrastructure.cache.BlacklistCacheStore;
+import com.eagle.auth.core.infrastructure.config.AdminProperties;
+import com.eagle.common.exception.AppException;
+import com.eagle.common.exception.DomainException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -38,6 +44,10 @@ class BlacklistApplicationServiceTest {
     BlacklistMapper mapper;
     @Mock
     BlacklistCacheStore cacheStore;
+    @Mock
+    AccountRepository accountRepository;
+    @Mock
+    AdminProperties adminProperties;
     @InjectMocks
     BlacklistApplicationService service;
 
@@ -68,6 +78,22 @@ class BlacklistApplicationServiceTest {
             assertThrows(ConflictException.class,
                     () -> service.addToBlacklist(new AddBlacklistCommand(
                             BlacklistType.PHONE, "13800138000", null, null, 99L, "admin")));
+            verify(repository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("should reject blacklisting configured admin account id")
+        void shouldRejectAdminAccountId() {
+            Account admin = Account.create("admin", "{bcrypt}encoded", "13800138000", null);
+            when(adminProperties.getUsername()).thenReturn("admin");
+            when(accountRepository.findById(100L)).thenReturn(Optional.of(admin));
+
+            AppException ex = assertThrows(DomainException.class,
+                    () -> service.addToBlacklist(new AddBlacklistCommand(
+                            BlacklistType.ACCOUNT_ID, "100",
+                            null, null, 99L, "operator")));
+
+            assertEquals(AuthErrorCode.ADMIN_ACCOUNT_PROTECTED, ex.getErrorCode());
             verify(repository, never()).save(any());
         }
     }

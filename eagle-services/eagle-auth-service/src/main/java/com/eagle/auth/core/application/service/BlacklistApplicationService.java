@@ -4,10 +4,13 @@ import com.eagle.auth.core.application.command.AddBlacklistCommand;
 import com.eagle.auth.core.application.command.BlacklistQuery;
 import com.eagle.auth.core.application.mapper.BlacklistMapper;
 import com.eagle.auth.core.domain.AuthErrorCode;
+import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.model.Blacklist;
 import com.eagle.auth.core.domain.model.enums.BlacklistType;
+import com.eagle.auth.core.domain.repository.AccountRepository;
 import com.eagle.auth.core.domain.repository.BlacklistRepository;
 import com.eagle.auth.core.infrastructure.cache.BlacklistCacheStore;
+import com.eagle.auth.core.infrastructure.config.AdminProperties;
 import com.eagle.auth.core.interfaces.dto.response.BlacklistResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +35,8 @@ public class BlacklistApplicationService {
     private final BlacklistRepository repository;
     private final BlacklistMapper mapper;
     private final BlacklistCacheStore cacheStore;
+    private final AccountRepository accountRepository;
+    private final AdminProperties adminProperties;
 
     @Transactional(readOnly = true)
     public Page<BlacklistResponse> queryBlacklist(BlacklistQuery query, Pageable pageable) {
@@ -48,6 +53,7 @@ public class BlacklistApplicationService {
 
     @Transactional(rollbackFor = Exception.class)
     public BlacklistResponse addToBlacklist(AddBlacklistCommand cmd) {
+        ensureNotAdminAccountBlacklist(cmd);
         if (cmd.expiresAt() != null && !cmd.expiresAt().isAfter(LocalDateTime.now())) {
             throw AuthErrorCode.ACCOUNT_FREEZE_UNTIL_INVALID.toDomainException();
         }
@@ -61,6 +67,24 @@ public class BlacklistApplicationService {
         log.info("blacklist added: id={}, type={}, value={}",
                 saved.getId(), saved.getType(), saved.getValue());
         return mapper.toResponse(saved);
+    }
+
+    private void ensureNotAdminAccountBlacklist(AddBlacklistCommand cmd) {
+        if (cmd.type() != BlacklistType.ACCOUNT_ID || cmd.value() == null || cmd.value().isBlank()) {
+            return;
+        }
+        Long accountId;
+        try {
+            accountId = Long.valueOf(cmd.value());
+        } catch (NumberFormatException ignored) {
+            return;
+        }
+        Account account = accountRepository.findById(accountId).orElse(null);
+        String adminUsername = adminProperties.getUsername();
+        if (account != null && adminUsername != null
+                && adminUsername.equalsIgnoreCase(account.getUsername())) {
+            throw AuthErrorCode.ADMIN_ACCOUNT_PROTECTED.toDomainException();
+        }
     }
 
     @Transactional(rollbackFor = Exception.class)

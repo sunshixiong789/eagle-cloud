@@ -9,6 +9,7 @@ import com.eagle.auth.core.domain.model.enums.AccountStatus;
 import com.eagle.auth.core.domain.model.valueobject.ProfileHints;
 import com.eagle.auth.core.domain.repository.AccountRepository;
 import com.eagle.auth.core.domain.service.SmsService;
+import com.eagle.auth.core.infrastructure.config.AdminProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class AccountApplicationService {
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
     private final SmsService smsService;
+    private final AdminProperties adminProperties;
 
     /**
      * 短信验证码 Web 登录：校验手机号格式 + 验证码后查 / 建账号。
@@ -94,6 +96,7 @@ public class AccountApplicationService {
     @Transactional(rollbackFor = Exception.class)
     public void changePassword(Long accountId, String rawNewPassword) {
         Account account = findAccountById(accountId);
+        ensureNotAdminAccount(account);
         account.changePassword(passwordEncoder.encode(rawNewPassword));
         accountRepository.save(account);
     }
@@ -105,6 +108,7 @@ public class AccountApplicationService {
     @Transactional(rollbackFor = Exception.class)
     public void freezeAccount(Long accountId, FreezeAccountCommand cmd) {
         Account account = findAccountById(accountId);
+        ensureNotAdminAccount(account);
         account.freezeByAdmin(cmd.operatorId(), cmd.operatorName(),
                 cmd.reason(), cmd.freezeUntil(), cmd.remark());
         accountRepository.save(account);
@@ -117,6 +121,7 @@ public class AccountApplicationService {
     @Transactional(rollbackFor = Exception.class)
     public void unfreezeAccount(Long accountId, Long operatorId, String operatorName) {
         Account account = findAccountById(accountId);
+        ensureNotAdminAccount(account);
         account.unfreeze(operatorId, operatorName);
         accountRepository.save(account);
     }
@@ -131,6 +136,7 @@ public class AccountApplicationService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteAccount(Long accountId) {
         Account account = findAccountById(accountId);
+        ensureNotAdminAccount(account);
         account.publishDeletedEvent();
         accountRepository.delete(account);
     }
@@ -220,5 +226,12 @@ public class AccountApplicationService {
     private Account findAccountById(Long accountId) {
         return accountRepository.findById(accountId)
                 .orElseThrow(AuthErrorCode.ACCOUNT_NOT_FOUND::toNotFoundException);
+    }
+
+    private void ensureNotAdminAccount(Account account) {
+        String adminUsername = adminProperties.getUsername();
+        if (adminUsername != null && adminUsername.equalsIgnoreCase(account.getUsername())) {
+            throw AuthErrorCode.ADMIN_ACCOUNT_PROTECTED.toDomainException();
+        }
     }
 }

@@ -2,6 +2,8 @@ package com.eagle.auth.core.domain.repository;
 
 import com.eagle.auth.core.domain.model.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -18,6 +20,12 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
      * 通过用户名查找账号（账密登录）
      */
     Optional<Account> findByUsername(String username);
+
+    /**
+     * 统计排除指定用户名后的账号数。
+     */
+    @Query("SELECT COUNT(a) FROM Account a WHERE LOWER(a.username) <> LOWER(:username)")
+    long countByUsernameNot(@Param("username") String username);
 
     /**
      * 通过手机号查找账号（短信登录）

@@ -89,6 +89,26 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     Long countByCreateTimeSince(@Param("since") LocalDateTime since);
 
     /**
+     * 统计排除初始化管理员后的用户数。
+     *
+     * @param username 初始化管理员用户名
+     * @return 用户数量
+     */
+    @Query("SELECT COUNT(u) FROM User u WHERE LOWER(u.username) <> LOWER(:username)")
+    Long countByUsernameNot(@Param("username") String username);
+
+    /**
+     * 统计指定时间之后创建且排除初始化管理员的用户数。
+     *
+     * @param since    起始时间
+     * @param username 初始化管理员用户名
+     * @return 用户数量
+     */
+    @Query("SELECT COUNT(u) FROM User u WHERE u.createTime >= :since AND LOWER(u.username) <> LOWER(:username)")
+    Long countByCreateTimeSinceAndUsernameNot(@Param("since") LocalDateTime since,
+                                              @Param("username") String username);
+
+    /**
      * 查询拥有指定角色的用户（分页）
      * 通过 ElementCollection sys_user_role 关联查询
      *

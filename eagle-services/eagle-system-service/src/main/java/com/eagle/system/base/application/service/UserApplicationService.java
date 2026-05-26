@@ -14,11 +14,12 @@ import com.eagle.system.base.domain.repository.UserRepository;
 import com.eagle.system.base.domain.repository.UserSpecification;
 import com.eagle.system.base.domain.repository.UserSummary;
 import com.eagle.system.base.domain.service.RoleValidationService;
+import com.eagle.system.base.infrastructure.config.AdminProperties;
+import com.eagle.system.base.infrastructure.remote.AuthClientFacade;
+import com.eagle.system.base.infrastructure.remote.dto.AccountBlacklistSnapshot;
 import com.eagle.system.base.interfaces.dto.request.UpdateUserRequest;
 import com.eagle.system.base.interfaces.dto.request.UserQueryRequest;
 import com.eagle.system.base.interfaces.dto.response.AssignedRoleResponse;
-import com.eagle.system.base.infrastructure.remote.AuthClientFacade;
-import com.eagle.system.base.infrastructure.remote.dto.AccountBlacklistSnapshot;
 import com.eagle.system.base.interfaces.dto.response.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +56,7 @@ public class UserApplicationService {
     private final RoleRepository roleRepository;
     private final LogRepository logRepository;
     private final AuthClientFacade authClientFacade;
+    private final AdminProperties adminProperties;
 
     /**
      * 更新用户档案信息
@@ -95,7 +97,7 @@ public class UserApplicationService {
      */
     @Transactional(readOnly = true)
     public Page<UserResponse> queryUsers(Pageable pageable) {
-        return userRepository.findAll(pageable).map(this::toListResponse);
+        return userRepository.findAll(visibleUserSpec(), pageable).map(this::toListResponse);
     }
 
     /**
@@ -105,7 +107,8 @@ public class UserApplicationService {
     public Page<UserResponse> queryUsers(UserQueryRequest request, Pageable pageable) {
         Specification<User> spec = Specification
                 .where(UserSpecification.usernameLike(request.getUsername()))
-                .and(UserSpecification.emailLike(request.getEmail()));
+                .and(UserSpecification.emailLike(request.getEmail()))
+                .and(visibleUserSpec());
         return userRepository.findAll(spec, pageable).map(this::toListResponse);
     }
 
@@ -124,6 +127,7 @@ public class UserApplicationService {
     @Transactional(rollbackFor = Exception.class)
     public void assignRoles(Long id, Set<Long> roleIds) {
         User user = findUserById(id);
+        ensureNotAdminUser(user);
         roleValidationService.validateRoles(roleIds);
         user.assignRoles(roleIds);
         userRepository.save(user);
@@ -202,5 +206,16 @@ public class UserApplicationService {
     private User findUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(UserErrorCode.USER_NOT_FOUND::toNotFoundException);
+    }
+
+    private Specification<User> visibleUserSpec() {
+        return UserSpecification.usernameNotEqual(adminProperties.getUsername());
+    }
+
+    private void ensureNotAdminUser(User user) {
+        String adminUsername = adminProperties.getUsername();
+        if (adminUsername != null && adminUsername.equalsIgnoreCase(user.getUsername())) {
+            throw UserErrorCode.ADMIN_USER_PROTECTED.toDomainException();
+        }
     }
 }

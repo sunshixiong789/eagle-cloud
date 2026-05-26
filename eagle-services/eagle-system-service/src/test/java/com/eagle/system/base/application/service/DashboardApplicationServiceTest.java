@@ -6,6 +6,7 @@ import com.eagle.system.base.domain.repository.LogRepository;
 import com.eagle.system.base.domain.repository.LoginTrendProjection;
 import com.eagle.system.base.domain.repository.RoleRepository;
 import com.eagle.system.base.domain.repository.UserRepository;
+import com.eagle.system.base.infrastructure.config.AdminProperties;
 import com.eagle.system.base.infrastructure.remote.AuthClientFacade;
 import com.eagle.system.base.interfaces.dto.response.DashboardStatsResponse;
 import com.eagle.system.base.interfaces.dto.response.LoginTrendItem;
@@ -37,6 +38,8 @@ class DashboardApplicationServiceTest {
     MonitorApplicationService monitorApplicationService;
     @Mock
     AuthClientFacade authClientFacade;
+    @Mock
+    AdminProperties adminProperties;
     @InjectMocks
     DashboardApplicationService service;
 
@@ -55,9 +58,10 @@ class DashboardApplicationServiceTest {
         @Test
         @DisplayName("should aggregate counts and compute today-vs-yesterday percentage")
         void shouldAggregate() {
+            when(adminProperties.getUsername()).thenReturn("admin");
             // userCount 取 auth 权威源(>=0 不走 fallback)
             when(authClientFacade.countAccounts()).thenReturn(50L);
-            when(userRepository.countByCreateTimeSince(any())).thenReturn(5L);
+            when(userRepository.countByCreateTimeSinceAndUsernameNot(any(), eq("admin"))).thenReturn(5L);
             when(roleRepository.count()).thenReturn(8L);
             when(roleRepository.countByStatus(RoleStatus.NORMAL)).thenReturn(6L);
             // today=20 vs yesterday=10 → +100.0%
@@ -83,9 +87,10 @@ class DashboardApplicationServiceTest {
         @Test
         @DisplayName("auth facade 降级返回 -1 时,userCount 回退 base_user 兜底")
         void shouldFallbackToLocalCountWhenAuthDown() {
+            when(adminProperties.getUsername()).thenReturn("admin");
             when(authClientFacade.countAccounts()).thenReturn(-1L);
-            when(userRepository.count()).thenReturn(42L);
-            when(userRepository.countByCreateTimeSince(any())).thenReturn(0L);
+            when(userRepository.countByUsernameNot("admin")).thenReturn(42L);
+            when(userRepository.countByCreateTimeSinceAndUsernameNot(any(), eq("admin"))).thenReturn(0L);
             when(roleRepository.count()).thenReturn(0L);
             when(roleRepository.countByStatus(any())).thenReturn(0L);
             when(logRepository.countByLogTypeAndPeriod(eq(LogType.LOGIN), any(), any()))
@@ -102,8 +107,9 @@ class DashboardApplicationServiceTest {
         @Test
         @DisplayName("should treat yesterday=0 as +100% growth")
         void shouldHandleZeroYesterday() {
+            when(adminProperties.getUsername()).thenReturn("admin");
             when(authClientFacade.countAccounts()).thenReturn(0L);
-            when(userRepository.countByCreateTimeSince(any())).thenReturn(0L);
+            when(userRepository.countByCreateTimeSinceAndUsernameNot(any(), eq("admin"))).thenReturn(0L);
             when(roleRepository.count()).thenReturn(0L);
             when(roleRepository.countByStatus(any())).thenReturn(0L);
             when(logRepository.countByLogTypeAndPeriod(eq(LogType.LOGIN), any(), any()))

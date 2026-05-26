@@ -10,6 +10,7 @@ import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.model.valueobject.ProfileHints;
 import com.eagle.auth.core.domain.repository.AccountRepository;
 import com.eagle.auth.core.domain.service.SmsService;
+import com.eagle.auth.core.infrastructure.config.AdminProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -47,6 +48,8 @@ class AccountApplicationServiceTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private SmsService smsService;
+    @Mock
+    private AdminProperties adminProperties;
     @InjectMocks
     private AccountApplicationService service;
 
@@ -128,6 +131,21 @@ class AccountApplicationServiceTest {
                     () -> service.changePassword(ACCOUNT_ID, RAW_PASSWORD));
             assertEquals(AuthErrorCode.ACCOUNT_NOT_FOUND, ex.getErrorCode());
         }
+
+        @Test
+        @DisplayName("should reject changing configured admin account password")
+        void shouldRejectChangingAdminPassword() {
+            Account admin = Account.create("admin", ENCODED_PASSWORD, PHONE, null);
+            when(adminProperties.getUsername()).thenReturn("admin");
+            when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(admin));
+
+            AppException ex = assertThrows(DomainException.class,
+                    () -> service.changePassword(ACCOUNT_ID, RAW_PASSWORD));
+
+            assertEquals(AuthErrorCode.ADMIN_ACCOUNT_PROTECTED, ex.getErrorCode());
+            verify(passwordEncoder, never()).encode(any());
+            verify(accountRepository, never()).save(any());
+        }
     }
 
     @Nested
@@ -137,6 +155,7 @@ class AccountApplicationServiceTest {
         @DisplayName("should freeze account and save")
         void shouldFreezeAccount() {
             Account account = existingAccount();
+            when(adminProperties.getUsername()).thenReturn("admin");
             when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
             when(accountRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
@@ -159,6 +178,22 @@ class AccountApplicationServiceTest {
                             com.eagle.auth.core.domain.model.enums.FreezeReason.ADMIN,
                             null, null, 99L, "admin")));
         }
+
+        @Test
+        @DisplayName("should reject freezing configured admin account")
+        void shouldRejectFreezingAdminAccount() {
+            Account admin = Account.create("admin", ENCODED_PASSWORD, PHONE, null);
+            when(adminProperties.getUsername()).thenReturn("admin");
+            when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(admin));
+
+            AppException ex = assertThrows(DomainException.class, () -> service.freezeAccount(ACCOUNT_ID,
+                    new com.eagle.auth.core.application.command.FreezeAccountCommand(
+                            com.eagle.auth.core.domain.model.enums.FreezeReason.ADMIN,
+                            null, null, 99L, "operator")));
+
+            assertEquals(AuthErrorCode.ADMIN_ACCOUNT_PROTECTED, ex.getErrorCode());
+            verify(accountRepository, never()).save(any());
+        }
     }
 
     @Nested
@@ -170,6 +205,7 @@ class AccountApplicationServiceTest {
             Account account = existingAccount();
             account.freezeByAdmin(99L, "admin",
                     com.eagle.auth.core.domain.model.enums.FreezeReason.ADMIN, null, null);
+            when(adminProperties.getUsername()).thenReturn("admin");
             when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
             when(accountRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
@@ -178,6 +214,20 @@ class AccountApplicationServiceTest {
             assertEquals(com.eagle.auth.core.domain.model.enums.AccountStatus.ACTIVE,
                     account.getStatus());
             verify(accountRepository).save(account);
+        }
+
+        @Test
+        @DisplayName("should reject unfreezing configured admin account")
+        void shouldRejectUnfreezingAdminAccount() {
+            Account admin = Account.create("admin", ENCODED_PASSWORD, PHONE, null);
+            when(adminProperties.getUsername()).thenReturn("admin");
+            when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(admin));
+
+            AppException ex = assertThrows(DomainException.class,
+                    () -> service.unfreezeAccount(ACCOUNT_ID, 99L, "operator"));
+
+            assertEquals(AuthErrorCode.ADMIN_ACCOUNT_PROTECTED, ex.getErrorCode());
+            verify(accountRepository, never()).save(any());
         }
     }
 
@@ -189,11 +239,26 @@ class AccountApplicationServiceTest {
         @DisplayName("should register deleted event and call repository.delete")
         void shouldRegisterEventAndDelete() {
             Account account = existingAccount();
+            when(adminProperties.getUsername()).thenReturn("admin");
             when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
 
             service.deleteAccount(ACCOUNT_ID);
 
             verify(accountRepository).delete(account);
+        }
+
+        @Test
+        @DisplayName("should reject deleting configured admin account")
+        void shouldRejectDeletingAdminAccount() {
+            Account admin = Account.create("admin", ENCODED_PASSWORD, PHONE, null);
+            when(adminProperties.getUsername()).thenReturn("admin");
+            when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(admin));
+
+            AppException ex = assertThrows(DomainException.class,
+                    () -> service.deleteAccount(ACCOUNT_ID));
+
+            assertEquals(AuthErrorCode.ADMIN_ACCOUNT_PROTECTED, ex.getErrorCode());
+            verify(accountRepository, never()).delete(any());
         }
     }
 

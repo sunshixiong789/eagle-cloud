@@ -53,4 +53,15 @@ public class UserSpecification {
     public static Specification<User> emailLike(String email) {
         return (root, query, cb) -> email == null ? null : cb.like(root.get("email"), "%" + email + "%");
     }
+
+    /**
+     * 排除指定用户名。
+     *
+     * @param username 用户名（null 或空白时返回 null，该条件会被忽略）
+     * @return JPA Specification
+     */
+    public static Specification<User> usernameNotEqual(String username) {
+        return (root, query, cb) -> username == null || username.isBlank()
+                ? null : cb.notEqual(cb.lower(root.get("username")), username.toLowerCase());
+    }
 }

@@ -14,7 +14,9 @@ import com.eagle.system.base.domain.repository.LogRepository;
 import com.eagle.system.base.domain.repository.RoleRepository;
 import com.eagle.system.base.domain.repository.UserRepository;
 import com.eagle.system.base.domain.service.RoleValidationService;
+import com.eagle.system.base.infrastructure.config.AdminProperties;
 import com.eagle.system.base.interfaces.dto.request.UpdateUserRequest;
+import com.eagle.system.base.interfaces.dto.request.UserQueryRequest;
 import com.eagle.system.base.interfaces.dto.response.AssignedRoleResponse;
 import com.eagle.system.base.infrastructure.remote.AuthClientFacade;
 import com.eagle.system.base.infrastructure.remote.dto.AccountBlacklistSnapshot;
@@ -62,6 +64,8 @@ class UserApplicationServiceTest {
     LogRepository logRepository;
     @Mock
     AuthClientFacade authClientFacade;
+    @Mock
+    AdminProperties adminProperties;
     @InjectMocks
     UserApplicationService service;
 
@@ -131,7 +135,9 @@ class UserApplicationServiceTest {
             Role admin = Role.create("Admin", "admin", null, 1);
             LocalDateTime lastLoginAt = LocalDateTime.of(2026, 5, 20, 9, 30);
 
-            when(userRepository.findAll(PageRequest.of(0, 10)))
+            when(adminProperties.getUsername()).thenReturn("admin");
+            when(userRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class),
+                    any(PageRequest.class)))
                     .thenReturn(new PageImpl<>(List.of(user)));
             when(userMapper.toResponse(user)).thenReturn(base);
             when(roleRepository.findAllById(user.getRoleIds())).thenReturn(List.of(admin));
@@ -153,6 +159,21 @@ class UserApplicationServiceTest {
             assertEquals(1, response.getRoles().size());
             assertEquals("Admin", response.getRoles().getFirst().getRoleName());
         }
+
+        @Test
+        @DisplayName("should exclude configured admin from plain and conditional user list")
+        void shouldExcludeAdminFromUserList() {
+            when(adminProperties.getUsername()).thenReturn("admin");
+            when(userRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class),
+                    any(PageRequest.class))).thenReturn(Page.empty());
+
+            service.queryUsers(PageRequest.of(0, 10));
+            service.queryUsers(new UserQueryRequest(), PageRequest.of(0, 10));
+
+            verify(userRepository, org.mockito.Mockito.times(2))
+                    .findAll(any(org.springframework.data.jpa.domain.Specification.class),
+                            any(PageRequest.class));
+        }
     }
 
     @Nested
@@ -170,6 +191,21 @@ class UserApplicationServiceTest {
             verify(roleValidationService).validateRoles(roleIds);
             assertEquals(roleIds, user.getRoleIds());
             verify(userRepository).save(user);
+        }
+
+        @Test
+        @DisplayName("should reject assigning roles to configured admin user")
+        void shouldRejectAssigningRolesToAdmin() {
+            User admin = User.create(ACCOUNT_ID, "admin", "admin@example.com", null);
+            when(adminProperties.getUsername()).thenReturn("admin");
+            when(userRepository.findById(USER_ID)).thenReturn(Optional.of(admin));
+
+            AppException ex = assertThrows(AppException.class,
+                    () -> service.assignRoles(USER_ID, Set.of(1L)));
+
+            assertEquals(UserErrorCode.ADMIN_USER_PROTECTED, ex.getErrorCode());
+            verify(roleValidationService, org.mockito.Mockito.never()).validateRoles(any());
+            verify(userRepository, org.mockito.Mockito.never()).save(any());
         }
     }
 
