@@ -9,10 +9,12 @@ import com.eagle.system.base.domain.model.valueobject.Address;
 import com.eagle.system.base.domain.model.valueobject.UserProfile;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
@@ -75,7 +77,8 @@ public class User extends BaseAggregateRoot<User> {
 
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "sys_user_role",
-            joinColumns = @JoinColumn(name = "user_id"))
+            joinColumns = @JoinColumn(name = "user_id",
+                    foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)))
     @Column(name = "role_id")
     private Set<Long> roleIds = new HashSet<>();
 

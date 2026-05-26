@@ -92,10 +92,6 @@ public class RoleDataInitializer {
      */
     private void ensureAdminUser() {
         String username = adminProperties.getUsername();
-        if (userRepository.findByUsername(username).isPresent()) {
-            ensureAdminRoleAssigned(username);
-            return;
-        }
         AccountSnapshot snapshot;
         try {
             snapshot = authAccountClient.findByUsername(username);
@@ -105,6 +101,10 @@ public class RoleDataInitializer {
         } catch (RuntimeException ex) {
             log.warn("启动期 HTTP 拉取 admin Account 失败, 将依赖 MQ 事件最终一致, username: {}, reason: {}",
                     username, ex.toString());
+            return;
+        }
+        if (userRepository.existsByAccountId(snapshot.accountId())) {
+            ensureAdminRoleAssigned(snapshot.accountId());
             return;
         }
         AccountRegisteredMessage message = new AccountRegisteredMessage();
@@ -117,7 +117,7 @@ public class RoleDataInitializer {
     }
 
     /** admin User 已存在但缺 admin 角色时补救(用户被旧版本逻辑创建过、未分配 admin 角色)。 */
-    private void ensureAdminRoleAssigned(String username) {
+    private void ensureAdminRoleAssigned(Long accountId) {
         TransactionTemplate tx = new TransactionTemplate(transactionManager);
         tx.execute(status -> {
             Long adminRoleId = roleRepository.findByRoleCode(ADMIN_ROLE_CODE)
@@ -125,7 +125,7 @@ public class RoleDataInitializer {
             if (adminRoleId == null) {
                 return null;
             }
-            User user = userRepository.findByUsername(username).orElse(null);
+            User user = userRepository.findByAccountId(accountId).orElse(null);
             if (user == null || user.getRoleIds().contains(adminRoleId)) {
                 return null;
             }
@@ -133,7 +133,7 @@ public class RoleDataInitializer {
             merged.add(adminRoleId);
             user.assignRoles(merged);
             userRepository.save(user);
-            log.info("补救为现有 admin User 分配 admin 角色, username: {}", username);
+            log.info("补救为现有 admin User 分配 admin 角色, accountId: {}", accountId);
             return null;
         });
     }

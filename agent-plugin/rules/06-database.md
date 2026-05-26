@@ -74,6 +74,49 @@ private List<Permission> permissions;
 private Department dept;
 ```
 
+## 外键约束（强制禁止物理 FK）
+
+**所有 DB 表禁止任何物理外键（`FOREIGN KEY` / `REFERENCES`）约束**，包括聚合内
+`@ElementCollection` / `@CollectionTable` 默认会生成的 FK。
+
+**为什么禁：** 物理 FK 阻塞跨服务拆分、分库分表、数据迁移、批量导入；引用完整性应该由聚合根的业务方法
+（级联保存 / 删除）和应用层校验保证，而不是 DB 层。
+
+**怎么做：** 任何会让 Hibernate 自动建 FK 的注解，都必须显式声明
+`foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)`。涵盖：
+
+- `@JoinColumn`（含 `@CollectionTable.joinColumns`、`@JoinTable.joinColumns/inverseJoinColumns`）
+- `@MapKeyJoinColumn`、`@PrimaryKeyJoinColumn`
+
+```java
+// ✅ 正确：聚合内 @ElementCollection 显式禁 FK
+@ElementCollection(fetch = FetchType.LAZY)
+@CollectionTable(name = "sys_user_role",
+        joinColumns = @JoinColumn(name = "user_id",
+                foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)))
+@Column(name = "role_id")
+private Set<Long> roleIds = new HashSet<>();
+
+// ❌ 错误：默认会生成 sys_user_role.user_id → sys_user.id 外键
+@ElementCollection
+@CollectionTable(name = "sys_user_role", joinColumns = @JoinColumn(name = "user_id"))
+@Column(name = "role_id")
+private Set<Long> roleIds = new HashSet<>();
+```
+
+**Flyway / 手写 DDL 同样禁：** `FOREIGN KEY` / `REFERENCES` 关键字一律不出现在迁移脚本。
+
+**自检：** PR 前扫描漏网的 `@JoinColumn`：
+
+```bash
+grep -rn --include="*.java" "@JoinColumn" eagle-services eagle-starter \
+  | grep -v "/build/" | grep -v "ConstraintMode.NO_CONSTRAINT"
+```
+
+输出非空必须修。
+
+**遗留 DB 上的 FK：** Hibernate 不会自动 `DROP` 现存 FK——需要 `ALTER TABLE ... DROP FOREIGN KEY ...` 手工清理或 DB wipe。
+
 ## 索引规范
 
 实体必须在 `@Table` 中显式声明索引，禁止无索引的大表全表扫描。

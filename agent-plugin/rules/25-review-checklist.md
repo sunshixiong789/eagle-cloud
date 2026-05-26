@@ -60,6 +60,7 @@ CI 流水线必跑：`clean build` + `test` + Modulith 验证。
 - [ ] 枚举字段 `@Enumerated(EnumType.STRING)`
 - [ ] 字段有 `@Column(comment = ...)`
 - [ ] 非空字段 `nullable = false`
+- [ ] **禁止物理 FK**：所有 `@JoinColumn` / `@CollectionTable.joinColumns` / `@JoinTable` 显式声明 `foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)`；Flyway 脚本无 `FOREIGN KEY` / `REFERENCES`
 - [ ] Flyway 迁移文件命名 `V{yyyyMMddHHmm}__{snake}.sql`
 - [ ] 迁移文件不修改已发布版本
 
