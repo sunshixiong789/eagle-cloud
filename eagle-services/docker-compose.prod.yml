@@ -1,0 +1,240 @@
+# 线上级 RocketMQ 5.3.2 部署(单机版,对齐官方 quickstart 三服务模型)
+# https://rocketmq.apache.org/docs/quickStart/03quickstartWithDockercompose
+#
+# 与开发版(docker-compose.yml)的差异:
+#   - 资源限制按线上规格(broker 6G,namesrv/proxy 3G,dashboard 1.5G)
+#   - JVM 参数固定堆 + G1GC + OOM dump,日志/数据全部持久化到 named volume
+#   - broker 关闭 autoCreate*(topic / 订阅组由运维预创建)
+#   - 启用 healthcheck + depends_on condition,确保启动顺序正确
+#   - restart: unless-stopped(手动 stop 后不自动拉起,便于运维介入)
+#   - 容器日志 json-file driver 限制单文件大小 + 滚动数量,防止磁盘打满
+#   - Dashboard 强制登录(loginRequired=true),首次启动后必须修改默认 admin/admin
+#
+# 跨主机访问 / 客户端在 docker 网络外:
+#   需把 ROCKETMQ_BROKER_IP 设为宿主机或外部 LB 可达的地址,
+#   否则 client 拿到 brokerIP1=rocketmq-broker 后无法路由。
+#
+# 高可用集群:
+#   单机版只适合单节点线上 / staging,真正多副本部署请用 K8s + RocketMQ Operator,
+#   或扩展为 DLedger / Master-Slave 模式(需增加 broker-b、broker-c 实例)。
+#
+# 启动:
+#   docker compose -f docker-compose.prod.yml up -d
+
+name: eagle-rocketmq-prod
+
+networks:
+  eagle-rocketmq:
+    name: eagle-rocketmq
+    driver: bridge
+
+volumes:
+  rocketmq-namesrv-logs:
+  rocketmq-broker-logs:
+  rocketmq-broker-store:
+  rocketmq-proxy-logs:
+  rocketmq-dashboard-data:
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "100m"
+    max-file: "10"
+
+services:
+  # NameServer — 路由注册中心
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.3.2
+    container_name: eagle-rocketmq-namesrv
+    restart: unless-stopped
+    # named volume 首次挂载属主 root,镜像内 rocketmq 用户(uid=3000)无写权限
+    # 真正生产建议预先在宿主机创建目录并 chown 3000:3000 后用 bind mount + user rocketmq
+    user: root
+    ports:
+      - "9876:9876"
+    networks:
+      - eagle-rocketmq
+    environment:
+      - JAVA_OPT_EXT=${ROCKETMQ_NAMESRV_JAVA_OPT_EXT:--server -Xms2g -Xmx2g -Xmn1g -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=320m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/rocketmq/logs/heapdump}
+      - TZ=${TZ:-Asia/Shanghai}
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        mkdir -p /home/rocketmq/logs/rocketmqlogs /home/rocketmq/logs/heapdump
+        exec sh mqnamesrv
+    volumes:
+      - rocketmq-namesrv-logs:/home/rocketmq/logs
+    mem_limit: 3g
+    mem_reservation: 2g
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "sh mqadmin clusterList -n 127.0.0.1:9876 >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Broker — 消息存储与转发(单机 ASYNC_MASTER,无 slave)
+  rocketmq-broker:
+    image: apache/rocketmq:5.3.2
+    container_name: eagle-rocketmq-broker
+    restart: unless-stopped
+    user: root
+    ports:
+      - "10909:10909"   # VIP channel
+      - "10911:10911"   # Broker 主端口(客户端读写)
+      - "10912:10912"   # HA 同步端口(扩主从时使用)
+    networks:
+      - eagle-rocketmq
+    depends_on:
+      rocketmq-namesrv:
+        condition: service_healthy
+    environment:
+      - NAMESRV_ADDR=${ROCKETMQ_NAMESRV_ADDR:-rocketmq-namesrv:9876}
+      - JAVA_OPT_EXT=${ROCKETMQ_BROKER_JAVA_OPT_EXT:--server -Xms4g -Xmx4g -Xmn2g -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=320m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/rocketmq/logs/heapdump}
+      - TZ=${TZ:-Asia/Shanghai}
+      # 客户端访问 broker 的可达地址;docker 网络内用容器名,跨主机改宿主机 IP / LB
+      - BROKER_IP=${ROCKETMQ_BROKER_IP:-rocketmq-broker}
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        mkdir -p /home/rocketmq/store /home/rocketmq/logs/rocketmqlogs /home/rocketmq/logs/heapdump
+        # $$ 让 compose 输出字面 $,容器内 shell 再展开 BROKER_IP(由 environment 注入)
+        cat > /home/rocketmq/broker.conf <<EOF
+        # === 集群标识 ===
+        brokerClusterName=DefaultCluster
+        brokerName=broker-a
+        brokerId=0
+        brokerRole=ASYNC_MASTER
+
+        # === 网络 ===
+        brokerIP1=$${BROKER_IP}
+        listenPort=10911
+        namesrvAddr=rocketmq-namesrv:9876
+
+        # === 存储路径 ===
+        storePathRootDir=/home/rocketmq/store
+        storePathCommitLog=/home/rocketmq/store/commitlog
+        storePathConsumeQueue=/home/rocketmq/store/consumequeue
+        storePathIndex=/home/rocketmq/store/index
+        storeCheckpoint=/home/rocketmq/store/checkpoint
+        abortFile=/home/rocketmq/store/abort
+
+        # === 刷盘策略 ===
+        # 吞吐优先;金融级强一致改 SYNC_FLUSH(性能下降约 30%)
+        flushDiskType=ASYNC_FLUSH
+
+        # === 生产安全 ===
+        # 关闭自动建 topic / 订阅组,所有 topic 由运维预创建
+        autoCreateTopicEnable=false
+        autoCreateSubscriptionGroup=false
+
+        # === 保留策略 ===
+        fileReservedTime=72
+        deleteWhen=04
+
+        # === 性能调优 ===
+        sendMessageThreadPoolNums=16
+        pullMessageThreadPoolNums=32
+        useReentrantLockWhenPutMessage=true
+        transientStorePoolEnable=false
+
+        # === ACL 鉴权(默认关闭)===
+        # 开启步骤:
+        #   1. 解开下行注释
+        #   2. 把宿主机 plain_acl.yml 挂载到 /home/rocketmq/conf/plain_acl.yml
+        # aclEnable=true
+        EOF
+        exec sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/broker.conf
+    volumes:
+      - rocketmq-broker-logs:/home/rocketmq/logs
+      - rocketmq-broker-store:/home/rocketmq/store
+      # 启用 ACL 时取消注释:
+      # - ./rocketmq/plain_acl.yml:/home/rocketmq/conf/plain_acl.yml:ro
+    mem_limit: 6g
+    mem_reservation: 4g
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "sh mqadmin brokerStatus -n rocketmq-namesrv:9876 -b 127.0.0.1:10911 >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 90s
+
+  # Proxy — 5.x gRPC 接入层(business client 走 8081)
+  rocketmq-proxy:
+    image: apache/rocketmq:5.3.2
+    container_name: eagle-rocketmq-proxy
+    restart: unless-stopped
+    user: root
+    ports:
+      - "8080:8080"   # remoting 兼容端口(4.x client)
+      - "8081:8081"   # gRPC 端口(5.x client,业务首选)
+    networks:
+      - eagle-rocketmq
+    depends_on:
+      rocketmq-namesrv:
+        condition: service_healthy
+      rocketmq-broker:
+        condition: service_healthy
+    environment:
+      - NAMESRV_ADDR=${ROCKETMQ_NAMESRV_ADDR:-rocketmq-namesrv:9876}
+      - JAVA_OPT_EXT=${ROCKETMQ_PROXY_JAVA_OPT_EXT:--server -Xms2g -Xmx2g -Xmn1g -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=320m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/rocketmq/logs/heapdump}
+      - TZ=${TZ:-Asia/Shanghai}
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        mkdir -p /home/rocketmq/logs/rocketmqlogs /home/rocketmq/logs/heapdump
+        exec sh mqproxy -n rocketmq-namesrv:9876
+    volumes:
+      - rocketmq-proxy-logs:/home/rocketmq/logs
+    mem_limit: 3g
+    mem_reservation: 2g
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "ps -ef | grep -v grep | grep -q ProxyStartup || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Dashboard — 运维可视化控制台
+  # 强制开启登录,首次启动后必须改默认账号密码:
+  #   1. docker exec -it eagle-rocketmq-dashboard cat /tmp/rocketmq-console/data/users.properties
+  #   2. 改 admin / 其他账号密码后,把文件 cp 到宿主机
+  #   3. 取消下方 users.properties 卷挂载并 docker compose up -d 让其生效
+  rocketmq-dashboard:
+    image: apacherocketmq/rocketmq-dashboard:1.0.0
+    container_name: eagle-rocketmq-dashboard
+    restart: unless-stopped
+    ports:
+      - "8180:8080"
+    networks:
+      - eagle-rocketmq
+    depends_on:
+      rocketmq-namesrv:
+        condition: service_healthy
+      rocketmq-broker:
+        condition: service_healthy
+    environment:
+      - JAVA_OPTS=${ROCKETMQ_DASHBOARD_JAVA_OPTS:--server -Xms512m -Xmx1g -XX:+UseG1GC -Drocketmq.namesrv.addr=rocketmq-namesrv:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false -Drocketmq.config.loginRequired=true -Drocketmq.config.dataPath=/tmp/rocketmq-console/data}
+      - TZ=${TZ:-Asia/Shanghai}
+    volumes:
+      - rocketmq-dashboard-data:/tmp/rocketmq-console
+      # 首次启动取出 users.properties 修改后挂回:
+      # - ./rocketmq/users.properties:/tmp/rocketmq-console/data/users.properties:ro
+    mem_limit: 1536m
+    mem_reservation: 768m
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/ >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s

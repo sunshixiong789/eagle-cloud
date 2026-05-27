@@ -234,7 +234,7 @@ services:
       # 容器内 8081 是固定值（RocketMQ Proxy gRPC 默认端口）；宿主机映射到 18081
       # 避开与 auth-service 的 8081 冲突，仅供本机调试连接 rocketmq-proxy 使用
       # 业务容器之间走 docker 内网 rocketmq-proxy:8081，不经过宿主机映射
-      - "18081:8081"
+      - "8081:8081"
     networks:
       - eagle-network
     depends_on:
