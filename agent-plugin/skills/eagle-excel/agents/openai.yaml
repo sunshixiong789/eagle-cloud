@@ -1,0 +1,3 @@
+interface:
+  display_name: "Eagle Excel"
+  short_description: "Use when importing or exporting Excel files in eagle-cloud — ExcelReader.read(), ExcelWriter.writeTo(), @ExcelColumn field mapping, auto SXSSF streaming for large datasets"

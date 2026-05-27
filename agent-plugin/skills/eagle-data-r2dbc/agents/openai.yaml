@@ -1,0 +1,3 @@
+interface:
+  display_name: "Eagle Data R2DBC"
+  short_description: "Use when building reactive (WebFlux/R2DBC) persistence in eagle-cloud — BaseR2dbcAggregateRoot, BaseR2dbcEntity, reactive domain event publishing after R2dbcRepository.save()"

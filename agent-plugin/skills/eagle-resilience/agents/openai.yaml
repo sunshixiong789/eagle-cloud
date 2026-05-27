@@ -1,0 +1,3 @@
+interface:
+  display_name: "Eagle Resilience"
+  short_description: "Use when adding fault tolerance to eagle-cloud services — Resilience4J eagle-default instance (CircuitBreaker/Retry/TimeLimiter), fallbackMethod signature rules, annotation composition order"

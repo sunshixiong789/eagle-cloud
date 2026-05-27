@@ -1,0 +1,3 @@
+interface:
+  display_name: "Eagle Restclient"
+  short_description: "Use when implementing service-to-service HTTP clients in eagle-cloud — Spring RestClient / HTTP Service Interface, auto JWT/tenant/Seata-XID propagation"

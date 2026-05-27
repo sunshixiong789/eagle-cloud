@@ -1,0 +1,3 @@
+interface:
+  display_name: "Eagle Webclient"
+  short_description: "Use when implementing reactive HTTP clients in eagle-cloud WebFlux services — EagleReactiveServiceClientFactory for @HttpExchange proxies, auto header/tenant/Seata-XID propagation, AppException error conversion"

@@ -1,0 +1,3 @@
+interface:
+  display_name: "Eagle Sharding"
+  short_description: "Use when configuring database sharding in eagle-cloud — Apache ShardingSphere 5.5.0 YAML-driven rules, HASH_MOD algorithm, SNOWFLAKE key generator, read-write splitting integration"

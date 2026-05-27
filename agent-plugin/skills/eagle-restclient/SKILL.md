@@ -1,5 +1,5 @@
 ---
-name: eagle-feign-client
+name: eagle-restclient
 description: Use when implementing service-to-service HTTP clients in eagle-cloud projects — Spring RestClient / HTTP Service Interface, automatic JWT/tenant-id/Seata-XID propagation, EagleResponseErrorHandler converting downstream HTTP errors to AppException hierarchy
 ---
 

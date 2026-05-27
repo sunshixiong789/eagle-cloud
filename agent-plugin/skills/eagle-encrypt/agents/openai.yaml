@@ -1,0 +1,3 @@
+interface:
+  display_name: "Eagle Encrypt"
+  short_description: "Use when encrypting sensitive JPA entity fields in eagle-cloud — EncryptedStringConverter with @Convert annotation, AES-256-GCM field-level encryption, mobile_hash pattern for equality queries"
