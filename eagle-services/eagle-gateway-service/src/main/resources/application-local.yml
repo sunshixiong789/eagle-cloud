@@ -24,7 +24,9 @@ spring:
             - id: system-server-ws
               uri: ws://localhost:80
               predicates:
-                - Path=/ws-stomp/**
+                - Path=/system/ws-stomp,/system/ws-stomp/**
+              filters:
+                - StripPrefix=1
             - id: system-server-api-docs
               uri: http://localhost:80
               predicates:

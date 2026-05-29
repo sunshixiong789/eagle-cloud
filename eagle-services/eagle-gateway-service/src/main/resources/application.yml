@@ -163,6 +163,14 @@ spring:
               uri: lb://auth
               predicates:
                 - Path=/favicon.ico
+            # WebSocket / STOMP：网关对外暴露 /system/ws-stomp，StripPrefix=1 后
+            # 转给下游 system 服务的真实端点 /ws-stomp。
+            - id: system-server-ws
+              uri: lb:ws://system
+              predicates:
+                - Path=/system/ws-stomp,/system/ws-stomp/**
+              filters:
+                - StripPrefix=1
 
 # ===========================================
 # Actuator：生产安全基线
