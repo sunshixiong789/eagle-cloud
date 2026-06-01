@@ -46,7 +46,7 @@ public class EagleResilienceAutoConfiguration {
                 .minimumNumberOfCalls(cfg.getMinimumNumberOfCalls())
                 .permittedNumberOfCallsInHalfOpenState(cfg.getPermittedNumberOfCallsInHalfOpenState());
         if (cfg.getIgnoreExceptions() != null && !cfg.getIgnoreExceptions().isEmpty()) {
-            @SuppressWarnings("unchecked")
+            @SuppressWarnings({"unchecked", "rawtypes"})
             Class<? extends Throwable>[] ignored = cfg.getIgnoreExceptions().toArray(new Class[0]);
             builder.ignoreExceptions(ignored);
         }
