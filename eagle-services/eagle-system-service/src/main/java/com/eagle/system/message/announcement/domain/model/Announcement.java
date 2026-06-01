@@ -8,6 +8,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Index;
 import jakarta.persistence.Lob;
+import jakarta.persistence.PostPersist;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -94,10 +95,21 @@ public class Announcement extends BaseAggregateRoot<Announcement> {
         this.revoked = true;
     }
 
-    /** 发布完成后注册广播事件——必须在 save 之后调用（事件需要 id）。 */
-    public void registerPublishedEvent() {
+    /**
+     * 插入后注册广播事件。
+     *
+     * <p>必须用 {@code @PostPersist} 而非在应用服务里 save 之后手动调用：Spring Data 的
+     * {@code AbstractAggregateRoot} 领域事件由 {@code EventPublishingMethodInterceptor} 在
+     * {@code save()} 执行期间抽取并发布，之后清空且不再回看实体。若在 {@code save()} 返回后才
+     * {@code registerEvent}，事件永远不会被发布，AFTER_COMMIT 监听器（广播 Publisher）也就不会触发。
+     *
+     * <p>{@code IDENTITY} 策略下 {@code em.persist} 立即 INSERT 并回填 id，此回调在 {@code save()}
+     * 调用栈内触发，id 已可用——单次 save 即可完成持久化 + 事件发布。
+     */
+    @PostPersist
+    private void onPostPersist() {
         registerEvent(new com.eagle.system.message.announcement.domain.event
-                .AnnouncementPublishedEvent(getId(), category, title, content));
+                .AnnouncementPublishedEvent(getId(), category, targetType, title, content));
     }
 
     /** 公告对当前请求是否仍有效（未撤回 + 未过期 + 已发布）。 */

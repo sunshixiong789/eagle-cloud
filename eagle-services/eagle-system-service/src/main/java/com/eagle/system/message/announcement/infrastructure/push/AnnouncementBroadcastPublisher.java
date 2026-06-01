@@ -2,6 +2,7 @@ package com.eagle.system.message.announcement.infrastructure.push;
 
 import com.eagle.redis.util.RedissonTopicUtil;
 import com.eagle.system.message.announcement.domain.event.AnnouncementPublishedEvent;
+import com.eagle.system.message.announcement.domain.model.TargetType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -29,6 +30,14 @@ public class AnnouncementBroadcastPublisher {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onAnnouncementPublished(AnnouncementPublishedEvent event) {
+        // 投递策略：仅 ALL 全员公告走 WebSocket 实时广播。ROLE/TAG 定向公告不上 WS——
+        // 广播到 /topic/announcements 会推送给所有在线连接,无法在会话层按受众过滤,
+        // 会把定向公告泄漏给无关用户。定向公告由客户端经 REST/未读轮询拉取。
+        if (event.getTargetType() != TargetType.ALL) {
+            log.debug("announcement broadcast skipped (non-ALL target): id={}, target={}",
+                    event.getAnnouncementId(), event.getTargetType());
+            return;
+        }
         AnnouncementBroadcastMessage payload = new AnnouncementBroadcastMessage(
                 event.getAnnouncementId(), event.getCategory(),
                 event.getTitle(), event.getContent());

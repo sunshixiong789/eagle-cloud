@@ -45,7 +45,8 @@ public class AnnouncementAdminService {
                 publishTime, req.expireTime()
         );
         Announcement saved = announcementRepository.save(a);
-        saved.registerPublishedEvent();
+        // 广播事件由 Announcement#onPostPersist (@PostPersist) 注册，Spring Data 在 save() 期间发布——
+        // 不能在此 save 之后手动 registerEvent，那样发生在事件抽取之后会永不发布。
         announcementCache.invalidateActiveCache();
         log.info("announcement published: id={}, category={}, target={}, publishTime={}",
                 saved.getId(), saved.getCategory(), saved.getTargetType(), publishTime);
