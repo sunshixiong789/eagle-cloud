@@ -300,7 +300,9 @@ public class SecurityConfig {
             HttpSecurity http,
             SecurityContextRepository securityContextRepository,
             BlacklistAwareJwtDecoder jwtDecoder,
-            EagleJwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
+            EagleJwtAuthenticationConverter jwtAuthenticationConverter,
+            UserDetailsService userDetailsService,
+            RememberMeProperties rememberMeProperties) throws Exception {
         http
                 // JWT 无状态，必须禁用 CSRF
                 .csrf(AbstractHttpConfigurer::disable)
@@ -317,6 +319,13 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .addFilterBefore(loginRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .formLogin(form -> form.loginPage("/login").permitAll())
+                // 登录页"记住我"勾选（input name="remember-me"，Spring 默认参数名）签发 hash-token Cookie：
+                // 会话过期 / 关闭浏览器后由 RememberMeAuthenticationFilter 凭该 Cookie 自动重建认证态。
+                // key 必须稳定且集群一致（详见 RememberMeProperties），否则 Cookie 互相无法校验 → 静默失效。
+                .rememberMe(remember -> remember
+                        .key(rememberMeProperties.getKey())
+                        .userDetailsService(userDetailsService)
+                        .tokenValiditySeconds((int) rememberMeProperties.getValidity().toSeconds()))
                 .logout(logout -> logout.logoutSuccessUrl(SecurityConstants.TOKEN_LOGOUT).permitAll())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt
                         .decoder(jwtDecoder)

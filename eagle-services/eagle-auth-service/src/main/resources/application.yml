@@ -137,6 +137,12 @@ eagle:
     keystore-location: classpath:jwt-keystore.p12
     keystore-password: ${EAGLE_JWT_KEYSTORE_PASSWORD}
     key-alias: eagle-jwt
+  # ----- 表单登录"记住我"(hash-token) -----
+  # 【安全】key 故意无默认值,缺失即 fail-fast;集群所有实例必须配置完全相同的强密钥,
+  # 否则各实例 / 重启之间签发的 remember-me Cookie 互相无法校验,"记住我"静默失效。
+  remember-me:
+    key: ${EAGLE_REMEMBER_ME_KEY}
+    validity: 14d
   rocketmq:
     endpoints: ${ROCKETMQ_ENDPOINTS:localhost:8081}
     consumer-group: auth_consumer
