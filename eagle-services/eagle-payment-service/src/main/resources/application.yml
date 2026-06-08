@@ -76,6 +76,7 @@ eagle:
       # 公网回调端点 (需配合网关层 IP 白名单 / Sentinel 防护)
       - /payment/alipay/notify
       - /payment/wechat/notify
+      - /payment/wechat/refund-notify
 
   # ----- 审计日志 -----
   audit-log:

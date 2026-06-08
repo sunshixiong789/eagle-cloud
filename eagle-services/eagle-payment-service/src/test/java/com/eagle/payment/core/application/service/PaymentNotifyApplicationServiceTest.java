@@ -1,11 +1,15 @@
 package com.eagle.payment.core.application.service;
 
 import com.eagle.payment.core.domain.model.aggregate.Payment;
+import com.eagle.payment.core.domain.model.aggregate.Refund;
 import com.eagle.payment.core.domain.model.enums.PaymentChannel;
 import com.eagle.payment.core.domain.model.enums.PaymentScene;
 import com.eagle.payment.core.domain.model.enums.PaymentStatus;
+import com.eagle.payment.core.domain.model.enums.RefundStatus;
 import com.eagle.payment.core.domain.port.GatewayNotifyResult;
+import com.eagle.payment.core.domain.port.GatewayRefundNotifyResult;
 import com.eagle.payment.core.domain.repository.PaymentRepository;
+import com.eagle.payment.core.domain.repository.RefundRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -32,6 +36,8 @@ class PaymentNotifyApplicationServiceTest {
 
     @Mock
     private PaymentRepository paymentRepository;
+    @Mock
+    private RefundRepository refundRepository;
     @InjectMocks
     private PaymentNotifyApplicationService service;
 
@@ -136,6 +142,114 @@ class PaymentNotifyApplicationServiceTest {
             assertThat(outcome).isEqualTo(
                     PaymentNotifyApplicationService.NotifyOutcome.NON_TERMINAL);
             assertThat(payment.getStatus()).isEqualTo(PaymentStatus.PAYING);
+        }
+    }
+
+    @Nested
+    @DisplayName("handleRefund")
+    class HandleRefund {
+
+        private Payment paid() {
+            Payment p = Payment.create("default", "ORD-001", PaymentChannel.ALIPAY,
+                    PaymentScene.PC_WEB, new BigDecimal("99.00"), "CNY", "subject", null,
+                    LocalDateTime.now().plusMinutes(30));
+            p.submittedToChannel("OUT-001");
+            p.markPaid(LocalDateTime.now(), "OUT-001");
+            return p;
+        }
+
+        private Refund refunding() {
+            Refund r = Refund.create("default", 1024L, "REF-001",
+                    PaymentChannel.ALIPAY, new BigDecimal("30.00"), null);
+            r.submittedToChannel("CHAN-REF-1");
+            return r;
+        }
+
+        @Test
+        @DisplayName("签名无效返回 SIGNATURE_INVALID")
+        void shouldReturnSignatureInvalid() {
+            GatewayRefundNotifyResult result = GatewayRefundNotifyResult.invalid("raw");
+            var outcome = service.handleRefund(PaymentChannel.ALIPAY, result);
+            assertThat(outcome).isEqualTo(
+                    PaymentNotifyApplicationService.NotifyOutcome.SIGNATURE_INVALID);
+            verify(refundRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("refundNo 在本地不存在返回 UNKNOWN_PAYMENT")
+        void shouldReturnUnknownRefund() {
+            when(refundRepository.findByChannelAndChannelRefundNo(
+                    eq(PaymentChannel.ALIPAY), anyString()))
+                    .thenReturn(Optional.empty());
+            when(refundRepository.findByTenantIdAndBizRefundNo(anyString(), anyString()))
+                    .thenReturn(Optional.empty());
+            GatewayRefundNotifyResult result = new GatewayRefundNotifyResult(true,
+                    "REF-001", "CHAN-REF-1", RefundStatus.REFUNDED,
+                    new BigDecimal("30.00"), LocalDateTime.now(), null, "raw");
+            var outcome = service.handleRefund(PaymentChannel.ALIPAY, result);
+            assertThat(outcome).isEqualTo(
+                    PaymentNotifyApplicationService.NotifyOutcome.UNKNOWN_PAYMENT);
+        }
+
+        @Test
+        @DisplayName("REFUNDED 推进 Refund 并累加 Payment.refundedAmount")
+        void shouldMarkRefundedAndAccumulate() {
+            Refund refund = refunding();
+            when(refundRepository.findByChannelAndChannelRefundNo(
+                    eq(PaymentChannel.ALIPAY), anyString()))
+                    .thenReturn(Optional.of(refund));
+            Payment payment = paid();
+            when(paymentRepository.findById(1024L)).thenReturn(Optional.of(payment));
+            GatewayRefundNotifyResult result = new GatewayRefundNotifyResult(true,
+                    "REF-001", "CHAN-REF-1", RefundStatus.REFUNDED,
+                    new BigDecimal("30.00"), LocalDateTime.now(), null, "raw");
+
+            var outcome = service.handleRefund(PaymentChannel.ALIPAY, result);
+
+            assertThat(outcome).isEqualTo(
+                    PaymentNotifyApplicationService.NotifyOutcome.PROCESSED);
+            assertThat(refund.getStatus()).isEqualTo(RefundStatus.REFUNDED);
+            assertThat(payment.getRefundedAmount()).isEqualByComparingTo("30.00");
+            verify(refundRepository).save(refund);
+            verify(paymentRepository).save(payment);
+        }
+
+        @Test
+        @DisplayName("FAILED 推进 Refund 但不动 Payment")
+        void shouldMarkFailedWithoutTouchingPayment() {
+            Refund refund = refunding();
+            when(refundRepository.findByChannelAndChannelRefundNo(
+                    eq(PaymentChannel.ALIPAY), anyString()))
+                    .thenReturn(Optional.of(refund));
+            GatewayRefundNotifyResult result = new GatewayRefundNotifyResult(true,
+                    "REF-001", "CHAN-REF-1", RefundStatus.FAILED,
+                    new BigDecimal("30.00"), null, "channel fail", "raw");
+
+            var outcome = service.handleRefund(PaymentChannel.ALIPAY, result);
+
+            assertThat(outcome).isEqualTo(
+                    PaymentNotifyApplicationService.NotifyOutcome.PROCESSED);
+            assertThat(refund.getStatus()).isEqualTo(RefundStatus.FAILED);
+            verify(refundRepository).save(refund);
+            verify(paymentRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("金额不一致返回 AMOUNT_MISMATCH")
+        void shouldRejectAmountMismatch() {
+            Refund refund = refunding();
+            when(refundRepository.findByChannelAndChannelRefundNo(
+                    eq(PaymentChannel.ALIPAY), anyString()))
+                    .thenReturn(Optional.of(refund));
+            GatewayRefundNotifyResult result = new GatewayRefundNotifyResult(true,
+                    "REF-001", "CHAN-REF-1", RefundStatus.REFUNDED,
+                    new BigDecimal("50.00"), LocalDateTime.now(), null, "raw");
+
+            var outcome = service.handleRefund(PaymentChannel.ALIPAY, result);
+
+            assertThat(outcome).isEqualTo(
+                    PaymentNotifyApplicationService.NotifyOutcome.AMOUNT_MISMATCH);
+            verify(refundRepository, never()).save(any());
         }
     }
 }

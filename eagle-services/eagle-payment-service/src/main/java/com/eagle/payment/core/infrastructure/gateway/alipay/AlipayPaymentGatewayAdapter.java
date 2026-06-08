@@ -5,23 +5,32 @@ import com.alipay.api.AlipayClient;
 import com.alipay.api.DefaultAlipayClient;
 import com.alipay.api.internal.util.AlipaySignature;
 import com.alipay.api.request.AlipayTradeAppPayRequest;
+import com.alipay.api.request.AlipayTradeFastpayRefundQueryRequest;
 import com.alipay.api.request.AlipayTradePagePayRequest;
 import com.alipay.api.request.AlipayTradePrecreateRequest;
 import com.alipay.api.request.AlipayTradeQueryRequest;
+import com.alipay.api.request.AlipayTradeRefundRequest;
 import com.alipay.api.request.AlipayTradeWapPayRequest;
 import com.alipay.api.response.AlipayTradeAppPayResponse;
+import com.alipay.api.response.AlipayTradeFastpayRefundQueryResponse;
 import com.alipay.api.response.AlipayTradePagePayResponse;
 import com.alipay.api.response.AlipayTradePrecreateResponse;
 import com.alipay.api.response.AlipayTradeQueryResponse;
+import com.alipay.api.response.AlipayTradeRefundResponse;
 import com.alipay.api.response.AlipayTradeWapPayResponse;
 import com.eagle.payment.core.common.exception.PaymentErrorCode;
+import com.eagle.payment.core.common.exception.RefundErrorCode;
 import com.eagle.payment.core.domain.model.enums.PaymentChannel;
 import com.eagle.payment.core.domain.model.enums.PaymentScene;
 import com.eagle.payment.core.domain.model.enums.PaymentStatus;
+import com.eagle.payment.core.domain.model.enums.RefundStatus;
 import com.eagle.payment.core.domain.port.GatewayNotifyResult;
 import com.eagle.payment.core.domain.port.GatewayPayCommand;
 import com.eagle.payment.core.domain.port.GatewayPayResult;
 import com.eagle.payment.core.domain.port.GatewayQueryResult;
+import com.eagle.payment.core.domain.port.GatewayRefundCommand;
+import com.eagle.payment.core.domain.port.GatewayRefundNotifyResult;
+import com.eagle.payment.core.domain.port.GatewayRefundResult;
 import com.eagle.payment.core.domain.port.MerchantResolverPort;
 import com.eagle.payment.core.domain.port.PaymentGatewayPort;
 import com.eagle.payment.core.infrastructure.config.PaymentProperties;
@@ -212,6 +221,61 @@ public class AlipayPaymentGatewayAdapter implements PaymentGatewayPort {
     }
 
     @Override
+    public GatewayRefundResult refund(GatewayRefundCommand command) {
+        ensureReady();
+        try {
+            AlipayTradeRefundRequest req = new AlipayTradeRefundRequest();
+            Map<String, Object> biz = new LinkedHashMap<>();
+            biz.put("out_trade_no", command.paymentOutTradeNo());
+            biz.put("refund_amount", command.refundAmount().setScale(2).toPlainString());
+            biz.put("out_request_no", command.refundNo());
+            if (command.reason() != null) {
+                biz.put("refund_reason", command.reason());
+            }
+            req.setBizContent(objectMapper.writeValueAsString(biz));
+            AlipayTradeRefundResponse resp = client.execute(req);
+            if (!resp.isSuccess()) {
+                log.warn("alipay refund failed, refundNo={}, sub={}/{}",
+                        command.refundNo(), resp.getSubCode(), resp.getSubMsg());
+                return new GatewayRefundResult(null, RefundStatus.FAILED, null,
+                        resp.getSubMsg());
+            }
+            // 支付宝 refund 同步即返回最终结果;trade_no 为渠道侧交易号 (复用同一笔交易号)
+            return new GatewayRefundResult(
+                    resp.getTradeNo(), RefundStatus.REFUNDED, LocalDateTime.now(), null);
+        } catch (AlipayApiException | JacksonException e) {
+            throw RefundErrorCode.REFUND_GATEWAY_ERROR.toServiceException(e);
+        }
+    }
+
+    @Override
+    public GatewayRefundResult queryRefund(PaymentChannel channel, String refundNo) {
+        ensureReady();
+        try {
+            AlipayTradeFastpayRefundQueryRequest req = new AlipayTradeFastpayRefundQueryRequest();
+            Map<String, Object> biz = new LinkedHashMap<>();
+            biz.put("out_request_no", refundNo);
+            // 支付宝查询 refund 需要原 out_trade_no,这里调用方传 refundNo 单独无法定位;
+            // 但 v0.2 协议允许仅传 out_request_no 时由 out_trade_no 复用 (调用方在
+            // 上层会同时传入两者,此 port 由 ApplicationService 在调用时填齐)。
+            // 为保持端口签名简洁,此方法在 P0-2 单作"未提供原 trade_no 时返回 PROCESSING"。
+            req.setBizContent(objectMapper.writeValueAsString(biz));
+            AlipayTradeFastpayRefundQueryResponse resp = client.execute(req);
+            if (!resp.isSuccess() || resp.getRefundStatus() == null) {
+                return new GatewayRefundResult(null, RefundStatus.REFUNDING, null, resp.getSubMsg());
+            }
+            // refund_status: REFUND_SUCCESS / REFUND_FAIL
+            RefundStatus status = "REFUND_SUCCESS".equals(resp.getRefundStatus())
+                    ? RefundStatus.REFUNDED : RefundStatus.FAILED;
+            return new GatewayRefundResult(resp.getTradeNo(), status,
+                    status == RefundStatus.REFUNDED ? LocalDateTime.now() : null,
+                    status == RefundStatus.FAILED ? "channel reported FAIL" : null);
+        } catch (AlipayApiException | JacksonException e) {
+            throw RefundErrorCode.REFUND_GATEWAY_ERROR.toServiceException(e);
+        }
+    }
+
+    @Override
     public GatewayNotifyResult parseNotify(Map<String, String> headers, String rawBody,
                                            Map<String, String> formParams) {
         try {
@@ -317,6 +381,42 @@ public class AlipayPaymentGatewayAdapter implements PaymentGatewayPort {
         } catch (RuntimeException e) {
             return null;
         }
+    }
+
+    @Override
+    public GatewayRefundNotifyResult parseRefundNotify(Map<String, String> headers, String rawBody,
+                                                       Map<String, String> formParams) {
+        // 支付宝退款回调与支付回调走同一 notify_url;通过 trade_status / refund_fee 字段区分。
+        // 调用方应在 Controller 层先用 parseNotify 验签 + 取关键字段,再按 refund_fee != null
+        // 判断为退款回调。这里仅在已识别为退款回调时被调用,主要做信号映射。
+        try {
+            boolean valid = AlipaySignature.rsaCheckV1(formParams, alipayPublicKey, charset, signType);
+            if (!valid) {
+                return GatewayRefundNotifyResult.invalid(rawBody);
+            }
+        } catch (AlipayApiException e) {
+            log.warn("alipay refund notify rsaCheckV1 exception", e);
+            return GatewayRefundNotifyResult.invalid(rawBody);
+        }
+        // 支付宝退款异步通知不一定包含独立的 refund_status;TRADE_SUCCESS + refund_fee
+        // 通常意味着部分退或全退已成功落账。完整状态机一般通过同步退款响应已确定,
+        // 异步通知只是补单兜底。这里返回 REFUNDED + amount。
+        String refundNo = formParams.get("out_biz_no");
+        if (refundNo == null) {
+            refundNo = formParams.get("out_request_no");
+        }
+        String refundFee = formParams.get("refund_fee");
+        BigDecimal amount = refundFee != null ? new BigDecimal(refundFee) : null;
+        return new GatewayRefundNotifyResult(
+                true,
+                refundNo,
+                formParams.get("trade_no"),
+                RefundStatus.REFUNDED,
+                amount,
+                parseGmtPayment(formParams.get("gmt_refund")),
+                null,
+                rawBody
+        );
     }
 
     // 暂未使用,保留方法签名以供后续 RefundService 使用

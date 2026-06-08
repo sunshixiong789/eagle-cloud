@@ -1,16 +1,27 @@
 package com.eagle.payment.core.infrastructure.gateway.wechat;
 
 import com.eagle.payment.core.common.exception.PaymentErrorCode;
+import com.eagle.payment.core.common.exception.RefundErrorCode;
 import com.eagle.payment.core.domain.model.enums.PaymentChannel;
 import com.eagle.payment.core.domain.model.enums.PaymentScene;
 import com.eagle.payment.core.domain.model.enums.PaymentStatus;
+import com.eagle.payment.core.domain.model.enums.RefundStatus;
 import com.eagle.payment.core.domain.port.GatewayNotifyResult;
 import com.eagle.payment.core.domain.port.GatewayPayCommand;
 import com.eagle.payment.core.domain.port.GatewayPayResult;
 import com.eagle.payment.core.domain.port.GatewayQueryResult;
+import com.eagle.payment.core.domain.port.GatewayRefundCommand;
+import com.eagle.payment.core.domain.port.GatewayRefundNotifyResult;
+import com.eagle.payment.core.domain.port.GatewayRefundResult;
 import com.eagle.payment.core.domain.port.MerchantResolverPort;
 import com.eagle.payment.core.domain.port.PaymentGatewayPort;
 import com.eagle.payment.core.infrastructure.config.PaymentProperties;
+import com.wechat.pay.java.service.refund.RefundService;
+import com.wechat.pay.java.service.refund.model.AmountReq;
+import com.wechat.pay.java.service.refund.model.CreateRequest;
+import com.wechat.pay.java.service.refund.model.QueryByOutRefundNoRequest;
+import com.wechat.pay.java.service.refund.model.RefundNotification;
+import com.wechat.pay.java.service.refund.model.Status;
 import com.wechat.pay.java.core.Config;
 import com.wechat.pay.java.core.RSAAutoCertificateConfig;
 import com.wechat.pay.java.core.notification.AutoCertificateNotificationConfig;
@@ -73,6 +84,7 @@ public class WechatPaymentGatewayAdapter implements PaymentGatewayPort {
     private JsapiService jsapiService;
     private AppService appService;
     private H5Service h5Service;
+    private RefundService refundService;
     private NotificationParser notificationParser;
 
     public WechatPaymentGatewayAdapter(MerchantResolverPort merchantResolver,
@@ -108,6 +120,7 @@ public class WechatPaymentGatewayAdapter implements PaymentGatewayPort {
         this.jsapiService = new JsapiService.Builder().config(config).build();
         this.appService = new AppService.Builder().config(config).build();
         this.h5Service = new H5Service.Builder().config(config).build();
+        this.refundService = new RefundService.Builder().config(config).build();
         log.info("WeChat Pay gateway initialized, mchId={}", creds.get("mchId"));
     }
 
@@ -344,6 +357,115 @@ public class WechatPaymentGatewayAdapter implements PaymentGatewayPort {
                 return null;
             }
         }
+    }
+
+    @Override
+    public GatewayRefundResult refund(GatewayRefundCommand command) {
+        ensureReady();
+        CreateRequest req = new CreateRequest();
+        req.setOutTradeNo(command.paymentOutTradeNo());
+        req.setOutRefundNo(command.refundNo());
+        if (command.reason() != null) {
+            req.setReason(command.reason());
+        }
+        req.setNotifyUrl(buildRefundNotifyUrl());
+        AmountReq amount = new AmountReq();
+        amount.setRefund(toLongCents(command.refundAmount()));
+        amount.setTotal(toLongCents(command.originalAmount()));
+        amount.setCurrency(command.currency() == null ? "CNY" : command.currency());
+        req.setAmount(amount);
+        try {
+            com.wechat.pay.java.service.refund.model.Refund resp = refundService.create(req);
+            RefundStatus status = mapRefundStatus(resp.getStatus());
+            return new GatewayRefundResult(
+                    resp.getRefundId(),
+                    status,
+                    parseSuccessTime(resp.getSuccessTime()),
+                    status == RefundStatus.FAILED ? resp.getStatus().name() : null
+            );
+        } catch (RuntimeException e) {
+            throw RefundErrorCode.REFUND_GATEWAY_ERROR.toServiceException(e);
+        }
+    }
+
+    @Override
+    public GatewayRefundResult queryRefund(PaymentChannel channel, String refundNo) {
+        ensureReady();
+        try {
+            QueryByOutRefundNoRequest req = new QueryByOutRefundNoRequest();
+            req.setOutRefundNo(refundNo);
+            com.wechat.pay.java.service.refund.model.Refund resp =
+                    refundService.queryByOutRefundNo(req);
+            RefundStatus status = mapRefundStatus(resp.getStatus());
+            return new GatewayRefundResult(
+                    resp.getRefundId(),
+                    status,
+                    parseSuccessTime(resp.getSuccessTime()),
+                    status == RefundStatus.FAILED ? resp.getStatus().name() : null
+            );
+        } catch (RuntimeException e) {
+            throw RefundErrorCode.REFUND_GATEWAY_ERROR.toServiceException(e);
+        }
+    }
+
+    @Override
+    public GatewayRefundNotifyResult parseRefundNotify(Map<String, String> headers, String rawBody,
+                                                       Map<String, String> formParams) {
+        try {
+            RequestParam param = new RequestParam.Builder()
+                    .serialNumber(headers.get("Wechatpay-Serial"))
+                    .nonce(headers.get("Wechatpay-Nonce"))
+                    .signature(headers.get("Wechatpay-Signature"))
+                    .timestamp(headers.get("Wechatpay-Timestamp"))
+                    .body(rawBody)
+                    .build();
+            RefundNotification notif = notificationParser.parse(param, RefundNotification.class);
+            RefundStatus status = mapRefundNotificationStatus(notif.getRefundStatus());
+            BigDecimal amount = notif.getAmount() == null || notif.getAmount().getRefund() == null
+                    ? null
+                    : BigDecimal.valueOf(notif.getAmount().getRefund()).movePointLeft(2);
+            return new GatewayRefundNotifyResult(
+                    true,
+                    notif.getOutRefundNo(),
+                    notif.getRefundId(),
+                    status,
+                    amount,
+                    parseSuccessTime(notif.getSuccessTime()),
+                    status == RefundStatus.FAILED ? "channel reported FAIL" : null,
+                    rawBody
+            );
+        } catch (RuntimeException e) {
+            log.warn("wechat refund notify parse / verify failed", e);
+            return GatewayRefundNotifyResult.invalid(rawBody);
+        }
+    }
+
+    private long toLongCents(BigDecimal amountYuan) {
+        return amountYuan.movePointRight(2).longValueExact();
+    }
+
+    private RefundStatus mapRefundStatus(@Nullable Status status) {
+        if (status == null) {
+            return RefundStatus.REFUNDING;
+        }
+        return switch (status) {
+            case SUCCESS -> RefundStatus.REFUNDED;
+            case CLOSED -> RefundStatus.FAILED;
+            case PROCESSING -> RefundStatus.REFUNDING;
+            case ABNORMAL -> RefundStatus.REFUNDING;   // 异常需人工介入,先 RFUNDING 占位
+        };
+    }
+
+    private RefundStatus mapRefundNotificationStatus(
+            com.wechat.pay.java.service.refund.model.@Nullable Status status) {
+        return mapRefundStatus(status);
+    }
+
+    private String buildRefundNotifyUrl() {
+        if (notifyBaseUrl == null || notifyBaseUrl.isEmpty()) {
+            return "";
+        }
+        return notifyBaseUrl + "/payment/wechat/refund-notify";
     }
 
     private void ensureReady() {

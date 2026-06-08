@@ -2,10 +2,14 @@ package com.eagle.payment.core.application.service;
 
 import com.eagle.payment.core.common.exception.PaymentErrorCode;
 import com.eagle.payment.core.domain.model.aggregate.Payment;
+import com.eagle.payment.core.domain.model.aggregate.Refund;
 import com.eagle.payment.core.domain.model.enums.PaymentChannel;
 import com.eagle.payment.core.domain.model.enums.PaymentStatus;
+import com.eagle.payment.core.domain.model.enums.RefundStatus;
 import com.eagle.payment.core.domain.port.GatewayNotifyResult;
+import com.eagle.payment.core.domain.port.GatewayRefundNotifyResult;
 import com.eagle.payment.core.domain.repository.PaymentRepository;
+import com.eagle.payment.core.domain.repository.RefundRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,6 +39,7 @@ import java.time.LocalDateTime;
 public class PaymentNotifyApplicationService {
 
     private final PaymentRepository paymentRepository;
+    private final RefundRepository refundRepository;
 
     @Transactional
     public NotifyOutcome handle(PaymentChannel channel, GatewayNotifyResult result) {
@@ -74,6 +79,69 @@ public class PaymentNotifyApplicationService {
         }
         paymentRepository.save(payment);
         return NotifyOutcome.PROCESSED;
+    }
+
+    /**
+     * 处理渠道退款异步通知。
+     */
+    @Transactional
+    public NotifyOutcome handleRefund(PaymentChannel channel, GatewayRefundNotifyResult result) {
+        if (!result.signatureValid()) {
+            log.warn("refund notify signature invalid, channel={}", channel);
+            return NotifyOutcome.SIGNATURE_INVALID;
+        }
+        if (result.refundNo() == null) {
+            log.warn("refund notify missing refundNo, channel={}, body={}",
+                    channel, result.rawBody());
+            return NotifyOutcome.UNKNOWN_PAYMENT;
+        }
+        // 支付宝退款回调通过 out_biz_no 匹配本地 bizRefundNo (我们提交渠道时用 bizRefundNo
+        // 作为 out_request_no);微信走 channelRefundNo 匹配。这里两种都尝试。
+        Refund refund = lookupRefund(channel, result.refundNo(), result.channelRefundNo());
+        if (refund == null) {
+            log.warn("refund notify references unknown refund, channel={}, refundNo={}, channelRefundNo={}",
+                    channel, result.refundNo(), result.channelRefundNo());
+            return NotifyOutcome.UNKNOWN_PAYMENT;
+        }
+        if (result.refundAmount() != null
+                && refund.getAmount().compareTo(result.refundAmount()) != 0) {
+            log.warn("refund notify amount mismatch, refundId={}, expected={}, actual={}",
+                    refund.getId(), refund.getAmount(), result.refundAmount());
+            return NotifyOutcome.AMOUNT_MISMATCH;
+        }
+        RefundStatus status = result.status() == null ? RefundStatus.REFUNDING : result.status();
+        if (status == RefundStatus.REFUNDED) {
+            LocalDateTime refundedAt = result.refundedAt() != null
+                    ? result.refundedAt() : LocalDateTime.now();
+            refund.markRefunded(refundedAt, result.channelRefundNo());
+            // 累加 Payment.refundedAmount (跨聚合操作由应用服务承担)
+            Payment payment = paymentRepository.findById(refund.getPaymentId())
+                    .orElseThrow(PaymentErrorCode.PAYMENT_NOT_FOUND::toNotFoundException);
+            payment.accumulateRefund(refund.getAmount());
+            paymentRepository.save(payment);
+        } else if (status == RefundStatus.FAILED) {
+            refund.markFailed(result.failReason());
+        } else {
+            log.info("refund notify with non-terminal status, refundId={}, status={}",
+                    refund.getId(), status);
+            return NotifyOutcome.NON_TERMINAL;
+        }
+        refundRepository.save(refund);
+        return NotifyOutcome.PROCESSED;
+    }
+
+    private Refund lookupRefund(PaymentChannel channel, String refundNo, String channelRefundNo) {
+        // 优先按渠道退款单号匹配 (异步通知场景一般都带);找不到再按业务退款号回退
+        if (channelRefundNo != null) {
+            var byChannel = refundRepository.findByChannelAndChannelRefundNo(channel, channelRefundNo);
+            if (byChannel.isPresent()) {
+                return byChannel.get();
+            }
+        }
+        return refundRepository.findByTenantIdAndBizRefundNo(
+                com.eagle.tenant.TenantContextHolder.getTenantId() == null
+                        ? "default" : com.eagle.tenant.TenantContextHolder.getTenantId(),
+                refundNo).orElse(null);
     }
 
     /** 强一致金额比较 (precision safe)。 */

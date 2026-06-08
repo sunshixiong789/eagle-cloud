@@ -17,7 +17,7 @@ import java.util.Map;
  *   <li>{@link #parseNotify} 完成验签 + 提取交易号 / 金额 / 状态,签名失败返回 invalid 结果;</li>
  * </ul>
  *
- * <p>实际方法将在 P0-2 / P1 扩展 refund / transfer / queryRefund / queryTransfer。
+ * <p>P1 扩展 transfer / queryTransfer。
  *
  * @author sunshixiong
  */
@@ -42,7 +42,20 @@ public interface PaymentGatewayPort {
     GatewayQueryResult queryPayment(PaymentChannel channel, String outTradeNo);
 
     /**
-     * 解析渠道异步通知 (回调),含验签。
+     * 提交退款到渠道。
+     *
+     * @param command 退款入参 (原订单号 + 退款单号 + 金额 + 原始金额 + 原因)
+     * @return 退款结果 (含渠道退款单号 + 状态 + 失败原因)
+     */
+    GatewayRefundResult refund(GatewayRefundCommand command);
+
+    /**
+     * 主动查询退款状态 (异步通知补单 / 对账)。
+     */
+    GatewayRefundResult queryRefund(PaymentChannel channel, String refundNo);
+
+    /**
+     * 解析支付完成异步通知 (回调),含验签。
      *
      * @param headers HTTP 头 (微信用到 Wechatpay-Serial / Signature 等)
      * @param rawBody POST 原始 body (微信 JSON / 支付宝 form 拼接后)
@@ -51,4 +64,16 @@ public interface PaymentGatewayPort {
      */
     GatewayNotifyResult parseNotify(Map<String, String> headers, String rawBody,
                                     Map<String, String> formParams);
+
+    /**
+     * 解析退款异步通知,含验签。
+     *
+     * <p>支付宝退款回调与支付回调走同一 notify_url,通过 trade_status / refund_fee 等字段区分;
+     * 适配器内部可以选择: (a) 在此方法中识别并解析退款回调,(b) 在 {@link #parseNotify}
+     * 中识别后 dispatcher 转发,本接口由调用方明确指定。
+     *
+     * <p>微信 V3 退款回调与支付回调走不同 URL,可直接区分。
+     */
+    GatewayRefundNotifyResult parseRefundNotify(Map<String, String> headers, String rawBody,
+                                                Map<String, String> formParams);
 }
