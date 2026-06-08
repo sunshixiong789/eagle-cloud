@@ -1,0 +1,50 @@
+package com.eagle.payment.core.domain.repository;
+
+import com.eagle.payment.core.domain.model.aggregate.Transfer;
+import com.eagle.payment.core.domain.model.enums.PaymentChannel;
+import com.eagle.payment.core.domain.model.enums.TransferStatus;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Transfer 聚合根 Repository。
+ *
+ * @author sunshixiong
+ */
+public interface TransferRepository extends JpaRepository<Transfer, Long> {
+
+    Optional<Transfer> findByTenantIdAndBizTransferNo(String tenantId, String bizTransferNo);
+
+    Optional<Transfer> findByChannelAndChannelTransferNo(PaymentChannel channel,
+                                                        String channelTransferNo);
+
+    boolean existsByTenantIdAndBizTransferNo(String tenantId, String bizTransferNo);
+
+    /**
+     * 当日累计提现金额 (按租户 + 状态 IN (REVIEWING, SUCCESS) 汇总)。
+     */
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transfer t " +
+            "WHERE t.tenantId = :tenantId AND t.status IN :statuses " +
+            "AND t.createTime >= :start AND t.createTime < :end")
+    BigDecimal sumAmountInPeriod(@Param("tenantId") String tenantId,
+                                 @Param("statuses") List<TransferStatus> statuses,
+                                 @Param("start") LocalDateTime start,
+                                 @Param("end") LocalDateTime end);
+
+    /**
+     * 当日提现笔数 (按租户 + 状态汇总)。
+     */
+    @Query("SELECT COUNT(t) FROM Transfer t " +
+            "WHERE t.tenantId = :tenantId AND t.status IN :statuses " +
+            "AND t.createTime >= :start AND t.createTime < :end")
+    long countInPeriod(@Param("tenantId") String tenantId,
+                       @Param("statuses") List<TransferStatus> statuses,
+                       @Param("start") LocalDateTime start,
+                       @Param("end") LocalDateTime end);
+}

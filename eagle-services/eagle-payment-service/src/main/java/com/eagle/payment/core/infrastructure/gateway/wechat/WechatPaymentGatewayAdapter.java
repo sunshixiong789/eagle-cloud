@@ -2,10 +2,12 @@ package com.eagle.payment.core.infrastructure.gateway.wechat;
 
 import com.eagle.payment.core.common.exception.PaymentErrorCode;
 import com.eagle.payment.core.common.exception.RefundErrorCode;
+import com.eagle.payment.core.common.exception.TransferErrorCode;
 import com.eagle.payment.core.domain.model.enums.PaymentChannel;
 import com.eagle.payment.core.domain.model.enums.PaymentScene;
 import com.eagle.payment.core.domain.model.enums.PaymentStatus;
 import com.eagle.payment.core.domain.model.enums.RefundStatus;
+import com.eagle.payment.core.domain.model.enums.TransferStatus;
 import com.eagle.payment.core.domain.port.GatewayNotifyResult;
 import com.eagle.payment.core.domain.port.GatewayPayCommand;
 import com.eagle.payment.core.domain.port.GatewayPayResult;
@@ -13,6 +15,8 @@ import com.eagle.payment.core.domain.port.GatewayQueryResult;
 import com.eagle.payment.core.domain.port.GatewayRefundCommand;
 import com.eagle.payment.core.domain.port.GatewayRefundNotifyResult;
 import com.eagle.payment.core.domain.port.GatewayRefundResult;
+import com.eagle.payment.core.domain.port.GatewayTransferCommand;
+import com.eagle.payment.core.domain.port.GatewayTransferResult;
 import com.eagle.payment.core.domain.port.MerchantResolverPort;
 import com.eagle.payment.core.domain.port.PaymentGatewayPort;
 import com.eagle.payment.core.infrastructure.config.PaymentProperties;
@@ -22,6 +26,13 @@ import com.wechat.pay.java.service.refund.model.CreateRequest;
 import com.wechat.pay.java.service.refund.model.QueryByOutRefundNoRequest;
 import com.wechat.pay.java.service.refund.model.RefundNotification;
 import com.wechat.pay.java.service.refund.model.Status;
+import com.wechat.pay.java.service.transferbatch.TransferBatchService;
+import com.wechat.pay.java.service.transferbatch.model.GetTransferBatchByOutNoRequest;
+import com.wechat.pay.java.service.transferbatch.model.InitiateBatchTransferRequest;
+import com.wechat.pay.java.service.transferbatch.model.InitiateBatchTransferResponse;
+import com.wechat.pay.java.service.transferbatch.model.TransferBatchEntity;
+import com.wechat.pay.java.service.transferbatch.model.TransferBatchGet;
+import com.wechat.pay.java.service.transferbatch.model.TransferDetailInput;
 import com.wechat.pay.java.core.Config;
 import com.wechat.pay.java.core.RSAAutoCertificateConfig;
 import com.wechat.pay.java.core.notification.AutoCertificateNotificationConfig;
@@ -85,6 +96,7 @@ public class WechatPaymentGatewayAdapter implements PaymentGatewayPort {
     private AppService appService;
     private H5Service h5Service;
     private RefundService refundService;
+    private TransferBatchService transferBatchService;
     private NotificationParser notificationParser;
 
     public WechatPaymentGatewayAdapter(MerchantResolverPort merchantResolver,
@@ -121,6 +133,7 @@ public class WechatPaymentGatewayAdapter implements PaymentGatewayPort {
         this.appService = new AppService.Builder().config(config).build();
         this.h5Service = new H5Service.Builder().config(config).build();
         this.refundService = new RefundService.Builder().config(config).build();
+        this.transferBatchService = new TransferBatchService.Builder().config(config).build();
         log.info("WeChat Pay gateway initialized, mchId={}", creds.get("mchId"));
     }
 
@@ -466,6 +479,71 @@ public class WechatPaymentGatewayAdapter implements PaymentGatewayPort {
             return "";
         }
         return notifyBaseUrl + "/payment/wechat/refund-notify";
+    }
+
+    @Override
+    public GatewayTransferResult transfer(GatewayTransferCommand command) {
+        ensureReady();
+        // 微信商家转账走 transferbatch API,单笔提现作为一个 batch 包一个 detail
+        InitiateBatchTransferRequest req = new InitiateBatchTransferRequest();
+        req.setAppid(appId);
+        req.setOutBatchNo(command.transferNo());
+        req.setBatchName(command.reason() == null ? "提现" : command.reason());
+        req.setBatchRemark(command.reason() == null ? "merchant transfer" : command.reason());
+        req.setTotalAmount(toLongCents(command.amount()));
+        req.setTotalNum(1);
+        TransferDetailInput detail = new TransferDetailInput();
+        detail.setOutDetailNo(command.transferNo() + "-1");
+        detail.setTransferAmount(toLongCents(command.amount()));
+        detail.setTransferRemark(command.reason() == null ? "提现" : command.reason());
+        detail.setOpenid(command.recipientAccount());
+        if (command.recipientName() != null) {
+            detail.setUserName(command.recipientName());
+        }
+        req.setTransferDetailList(java.util.List.of(detail));
+        try {
+            InitiateBatchTransferResponse resp = transferBatchService.initiateBatchTransfer(req);
+            TransferStatus status = mapBatchStatus(resp.getBatchStatus() == null
+                    ? null : resp.getBatchStatus().toString());
+            return new GatewayTransferResult(resp.getBatchId(), status,
+                    status == TransferStatus.SUCCESS ? LocalDateTime.now() : null, null);
+        } catch (RuntimeException e) {
+            throw TransferErrorCode.TRANSFER_GATEWAY_ERROR.toServiceException(e);
+        }
+    }
+
+    @Override
+    public GatewayTransferResult queryTransfer(PaymentChannel channel, String transferNo) {
+        ensureReady();
+        try {
+            GetTransferBatchByOutNoRequest req = new GetTransferBatchByOutNoRequest();
+            req.setOutBatchNo(transferNo);
+            req.setNeedQueryDetail(false);
+            TransferBatchEntity resp = transferBatchService.getTransferBatchByOutNo(req);
+            TransferBatchGet batch = resp.getTransferBatch();
+            String batchStatus = batch == null || batch.getBatchStatus() == null
+                    ? null : batch.getBatchStatus().toString();
+            TransferStatus status = mapBatchStatus(batchStatus);
+            return new GatewayTransferResult(
+                    batch == null ? null : batch.getBatchId(),
+                    status,
+                    status == TransferStatus.SUCCESS ? LocalDateTime.now() : null,
+                    status == TransferStatus.FAILED ? batchStatus : null);
+        } catch (RuntimeException e) {
+            throw TransferErrorCode.TRANSFER_GATEWAY_ERROR.toServiceException(e);
+        }
+    }
+
+    private TransferStatus mapBatchStatus(@Nullable String batchStatus) {
+        if (batchStatus == null) {
+            return TransferStatus.REVIEWING;
+        }
+        return switch (batchStatus) {
+            case "FINISHED" -> TransferStatus.SUCCESS;
+            case "CLOSED" -> TransferStatus.FAILED;
+            case "ACCEPTED", "PROCESSING" -> TransferStatus.REVIEWING;
+            default -> TransferStatus.REVIEWING;
+        };
     }
 
     private void ensureReady() {

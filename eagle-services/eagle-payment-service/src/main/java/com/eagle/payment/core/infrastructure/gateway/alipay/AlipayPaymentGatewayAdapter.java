@@ -4,6 +4,8 @@ import com.alipay.api.AlipayApiException;
 import com.alipay.api.AlipayClient;
 import com.alipay.api.DefaultAlipayClient;
 import com.alipay.api.internal.util.AlipaySignature;
+import com.alipay.api.request.AlipayFundTransUniTransferRequest;
+import com.alipay.api.request.AlipayFundTransCommonQueryRequest;
 import com.alipay.api.request.AlipayTradeAppPayRequest;
 import com.alipay.api.request.AlipayTradeFastpayRefundQueryRequest;
 import com.alipay.api.request.AlipayTradePagePayRequest;
@@ -11,6 +13,8 @@ import com.alipay.api.request.AlipayTradePrecreateRequest;
 import com.alipay.api.request.AlipayTradeQueryRequest;
 import com.alipay.api.request.AlipayTradeRefundRequest;
 import com.alipay.api.request.AlipayTradeWapPayRequest;
+import com.alipay.api.response.AlipayFundTransUniTransferResponse;
+import com.alipay.api.response.AlipayFundTransCommonQueryResponse;
 import com.alipay.api.response.AlipayTradeAppPayResponse;
 import com.alipay.api.response.AlipayTradeFastpayRefundQueryResponse;
 import com.alipay.api.response.AlipayTradePagePayResponse;
@@ -20,10 +24,12 @@ import com.alipay.api.response.AlipayTradeRefundResponse;
 import com.alipay.api.response.AlipayTradeWapPayResponse;
 import com.eagle.payment.core.common.exception.PaymentErrorCode;
 import com.eagle.payment.core.common.exception.RefundErrorCode;
+import com.eagle.payment.core.common.exception.TransferErrorCode;
 import com.eagle.payment.core.domain.model.enums.PaymentChannel;
 import com.eagle.payment.core.domain.model.enums.PaymentScene;
 import com.eagle.payment.core.domain.model.enums.PaymentStatus;
 import com.eagle.payment.core.domain.model.enums.RefundStatus;
+import com.eagle.payment.core.domain.model.enums.TransferStatus;
 import com.eagle.payment.core.domain.port.GatewayNotifyResult;
 import com.eagle.payment.core.domain.port.GatewayPayCommand;
 import com.eagle.payment.core.domain.port.GatewayPayResult;
@@ -31,6 +37,8 @@ import com.eagle.payment.core.domain.port.GatewayQueryResult;
 import com.eagle.payment.core.domain.port.GatewayRefundCommand;
 import com.eagle.payment.core.domain.port.GatewayRefundNotifyResult;
 import com.eagle.payment.core.domain.port.GatewayRefundResult;
+import com.eagle.payment.core.domain.port.GatewayTransferCommand;
+import com.eagle.payment.core.domain.port.GatewayTransferResult;
 import com.eagle.payment.core.domain.port.MerchantResolverPort;
 import com.eagle.payment.core.domain.port.PaymentGatewayPort;
 import com.eagle.payment.core.infrastructure.config.PaymentProperties;
@@ -417,6 +425,73 @@ public class AlipayPaymentGatewayAdapter implements PaymentGatewayPort {
                 null,
                 rawBody
         );
+    }
+
+    @Override
+    public GatewayTransferResult transfer(GatewayTransferCommand command) {
+        ensureReady();
+        try {
+            AlipayFundTransUniTransferRequest req = new AlipayFundTransUniTransferRequest();
+            Map<String, Object> biz = new LinkedHashMap<>();
+            biz.put("out_biz_no", command.transferNo());
+            biz.put("trans_amount", command.amount().setScale(2).toPlainString());
+            biz.put("product_code", "TRANS_ACCOUNT_NO_PWD");
+            biz.put("biz_scene", "DIRECT_TRANSFER");
+            if (command.reason() != null) {
+                biz.put("remark", command.reason());
+            }
+            Map<String, Object> payee = new LinkedHashMap<>();
+            payee.put("identity", command.recipientAccount());
+            payee.put("identity_type", "ALIPAY_LOGON_ID");
+            if (command.recipientName() != null) {
+                payee.put("name", command.recipientName());
+            }
+            biz.put("payee_info", payee);
+
+            req.setBizContent(objectMapper.writeValueAsString(biz));
+            AlipayFundTransUniTransferResponse resp = client.execute(req);
+            if (!resp.isSuccess()) {
+                log.warn("alipay transfer failed, transferNo={}, sub={}/{}",
+                        command.transferNo(), resp.getSubCode(), resp.getSubMsg());
+                return new GatewayTransferResult(null, TransferStatus.FAILED, null,
+                        resp.getSubMsg());
+            }
+            // 支付宝转账成功同步返回 order_id;status 字段不一定有,以 isSuccess() + 业务规范认为 SUCCESS
+            return new GatewayTransferResult(resp.getOrderId(), TransferStatus.SUCCESS,
+                    LocalDateTime.now(), null);
+        } catch (AlipayApiException | JacksonException e) {
+            throw TransferErrorCode.TRANSFER_GATEWAY_ERROR.toServiceException(e);
+        }
+    }
+
+    @Override
+    public GatewayTransferResult queryTransfer(PaymentChannel channel, String transferNo) {
+        ensureReady();
+        try {
+            AlipayFundTransCommonQueryRequest req = new AlipayFundTransCommonQueryRequest();
+            Map<String, Object> biz = new LinkedHashMap<>();
+            biz.put("product_code", "TRANS_ACCOUNT_NO_PWD");
+            biz.put("biz_scene", "DIRECT_TRANSFER");
+            biz.put("out_biz_no", transferNo);
+            req.setBizContent(objectMapper.writeValueAsString(biz));
+            AlipayFundTransCommonQueryResponse resp = client.execute(req);
+            if (!resp.isSuccess()) {
+                return new GatewayTransferResult(null, TransferStatus.REVIEWING, null,
+                        resp.getSubMsg());
+            }
+            // status: SUCCESS / FAIL / REFUND / DEALING / WAIT_PAY
+            TransferStatus status = switch (String.valueOf(resp.getStatus())) {
+                case "SUCCESS" -> TransferStatus.SUCCESS;
+                case "FAIL" -> TransferStatus.FAILED;
+                case "REFUND" -> TransferStatus.RETURNED;
+                default -> TransferStatus.REVIEWING;
+            };
+            return new GatewayTransferResult(resp.getOrderId(), status,
+                    status == TransferStatus.SUCCESS ? LocalDateTime.now() : null,
+                    status == TransferStatus.FAILED ? "channel reported FAIL" : null);
+        } catch (AlipayApiException | JacksonException e) {
+            throw TransferErrorCode.TRANSFER_GATEWAY_ERROR.toServiceException(e);
+        }
     }
 
     // 暂未使用,保留方法签名以供后续 RefundService 使用

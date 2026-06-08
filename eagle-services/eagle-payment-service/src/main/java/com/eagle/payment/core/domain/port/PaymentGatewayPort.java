@@ -17,8 +17,6 @@ import java.util.Map;
  *   <li>{@link #parseNotify} 完成验签 + 提取交易号 / 金额 / 状态,签名失败返回 invalid 结果;</li>
  * </ul>
  *
- * <p>P1 扩展 transfer / queryTransfer。
- *
  * @author sunshixiong
  */
 public interface PaymentGatewayPort {
@@ -76,4 +74,17 @@ public interface PaymentGatewayPort {
      */
     GatewayRefundNotifyResult parseRefundNotify(Map<String, String> headers, String rawBody,
                                                 Map<String, String> formParams);
+
+    /**
+     * 提交 B2C 转账 / 提现到渠道。
+     *
+     * <p>需要在渠道开放平台开通对应权限 (支付宝"转账到支付宝账户"、
+     * 微信"商家转账到零钱"),否则会被拒绝。
+     */
+    GatewayTransferResult transfer(GatewayTransferCommand command);
+
+    /**
+     * 主动查询转账状态。
+     */
+    GatewayTransferResult queryTransfer(PaymentChannel channel, String transferNo);
 }
