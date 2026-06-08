@@ -1,9 +1,15 @@
 package com.eagle.auth.core.infrastructure.security;
 
+import com.eagle.auth.core.infrastructure.event.AuthLoginLogPublisher;
+import com.eagle.auth.core.infrastructure.event.LoginLogIntegrationEvent;
+import com.eagle.common.dto.EagleUser;
+import com.eagle.rocketmq.publisher.DomainEventPublisher;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.authentication.event.AuthenticationFailureBadCredentialsEvent;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 /**
@@ -18,11 +24,13 @@ import org.springframework.stereotype.Component;
  *
  * @author sunshixiong
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AuthenticationEventListener {
 
     private final LoginAttemptService loginAttemptService;
+    private final DomainEventPublisher publisher;
 
     /**
      * 用户名/密码错误时递增失败计数（限缩到 BadCredentials，仅针对真实的登录尝试）。
@@ -39,6 +47,7 @@ public class AuthenticationEventListener {
         if (ip != null) {
             loginAttemptService.registerFailure(ip);
         }
+        publishLoginLog(event.getAuthentication(), ip, false, event.getException().getMessage());
     }
 
     /**
@@ -55,5 +64,30 @@ public class AuthenticationEventListener {
         if (ip != null) {
             loginAttemptService.registerSuccess(ip);
         }
+        publishLoginLog(event.getAuthentication(), ip, true, null);
+    }
+
+    private void publishLoginLog(Authentication authentication, String ip,
+                                 boolean success, String failReason) {
+        try {
+            LoginLogIntegrationEvent event = new LoginLogIntegrationEvent(
+                    resolveAccountId(authentication),
+                    authentication != null ? authentication.getName() : null,
+                    ip,
+                    ClientIpHolder.getUserAgent(),
+                    success,
+                    failReason);
+            publisher.publish(AuthLoginLogPublisher.TOPIC, AuthLoginLogPublisher.TAG, event);
+        } catch (RuntimeException ex) {
+            log.warn("publish login log failed, username={}",
+                    authentication != null ? authentication.getName() : null, ex);
+        }
+    }
+
+    private Long resolveAccountId(Authentication authentication) {
+        if (authentication != null && authentication.getPrincipal() instanceof EagleUser user) {
+            return user.getId();
+        }
+        return null;
     }
 }

@@ -31,7 +31,7 @@ public class ClientIpFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
         try {
-            ClientIpHolder.set(requestIpResolver.resolve(request));
+            ClientIpHolder.set(requestIpResolver.resolve(request), request.getHeader("User-Agent"));
             filterChain.doFilter(request, response);
         } finally {
             ClientIpHolder.clear();

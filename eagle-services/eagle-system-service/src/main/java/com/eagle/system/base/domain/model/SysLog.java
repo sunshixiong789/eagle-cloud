@@ -85,4 +85,51 @@ public class SysLog extends BaseEntity {
     @Column(nullable = false, length = 20, comment = "日志状态")
     @Enumerated(EnumType.STRING)
     private LogStatus status;
+
+    private SysLog(LogType logType, String title, Long userId, String username,
+                   String remoteAddr, String userAgent, String requestUri, String method,
+                   String params, String result, Long time, String exception,
+                   String serviceId, LogStatus status) {
+        this.logType = logType;
+        this.title = title;
+        this.userId = userId;
+        this.username = username;
+        this.remoteAddr = remoteAddr;
+        this.userAgent = userAgent;
+        this.requestUri = requestUri;
+        this.method = method;
+        this.params = params;
+        this.result = result;
+        this.time = time;
+        this.exception = exception;
+        this.serviceId = serviceId;
+        this.status = status;
+    }
+
+    /**
+     * 创建系统日志记录。
+     *
+     * @param logType    日志类型
+     * @param title      日志标题
+     * @param userId     用户 ID
+     * @param username   用户名
+     * @param remoteAddr 客户端 IP
+     * @param userAgent  User-Agent
+     * @param requestUri 请求路径
+     * @param method     请求方法
+     * @param params     请求参数
+     * @param result     响应结果
+     * @param time       耗时
+     * @param exception  异常信息
+     * @param serviceId  服务 ID
+     * @param status     日志状态
+     * @return 系统日志实体
+     */
+    public static SysLog create(LogType logType, String title, Long userId, String username,
+                                String remoteAddr, String userAgent, String requestUri,
+                                String method, String params, String result, Long time,
+                                String exception, String serviceId, LogStatus status) {
+        return new SysLog(logType, title, userId, username, remoteAddr, userAgent, requestUri,
+                method, params, result, time, exception, serviceId, status);
+    }
 }
