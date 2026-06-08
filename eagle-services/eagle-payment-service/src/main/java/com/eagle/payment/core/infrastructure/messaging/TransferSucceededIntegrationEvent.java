@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 public class TransferSucceededIntegrationEvent extends BaseEvent {
 
     private Long transferId;
-    private String tenantId;
     private String bizTransferNo;
     private PaymentChannel channel;
     private BigDecimal amount;
@@ -26,12 +25,11 @@ public class TransferSucceededIntegrationEvent extends BaseEvent {
     private String channelTransferNo;
     private LocalDateTime succeededAt;
 
-    public TransferSucceededIntegrationEvent(Long transferId, String tenantId, String bizTransferNo,
+    public TransferSucceededIntegrationEvent(Long transferId, String bizTransferNo,
                                              PaymentChannel channel, BigDecimal amount,
                                              String recipientAccount, String channelTransferNo,
                                              LocalDateTime succeededAt) {
         this.transferId = transferId;
-        this.tenantId = tenantId;
         this.bizTransferNo = bizTransferNo;
         this.channel = channel;
         this.amount = amount;

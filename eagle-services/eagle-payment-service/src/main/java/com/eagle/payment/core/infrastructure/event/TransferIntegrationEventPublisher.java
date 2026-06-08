@@ -35,7 +35,7 @@ public class TransferIntegrationEventPublisher {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onTransferSucceeded(TransferSucceededEvent event) {
         publisher.publish(TOPIC, "success", new TransferSucceededIntegrationEvent(
-                event.transferId(), event.tenantId(), event.bizTransferNo(), event.channel(),
+                event.transferId(), event.bizTransferNo(), event.channel(),
                 event.amount(), event.recipientAccount(), event.channelTransferNo(),
                 event.succeededAt()));
         log.debug("published transfer.success, transferId={}", event.transferId());
@@ -45,7 +45,7 @@ public class TransferIntegrationEventPublisher {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onTransferFailed(TransferFailedEvent event) {
         publisher.publish(TOPIC, "failed", new TransferFailedIntegrationEvent(
-                event.transferId(), event.tenantId(), event.bizTransferNo(), event.channel(),
+                event.transferId(), event.bizTransferNo(), event.channel(),
                 event.amount(), event.recipientAccount(), event.reason()));
         log.debug("published transfer.failed, transferId={}", event.transferId());
     }
@@ -54,7 +54,7 @@ public class TransferIntegrationEventPublisher {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onTransferReturned(TransferReturnedEvent event) {
         publisher.publish(TOPIC, "returned", new TransferReturnedIntegrationEvent(
-                event.transferId(), event.tenantId(), event.bizTransferNo(), event.channel(),
+                event.transferId(), event.bizTransferNo(), event.channel(),
                 event.amount(), event.recipientAccount(), event.reason()));
         log.debug("published transfer.returned, transferId={}", event.transferId());
     }

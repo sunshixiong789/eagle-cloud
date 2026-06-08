@@ -19,8 +19,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     /**
      * 按业务订单号 + 渠道查找;用于幂等判断。
      */
-    Optional<Payment> findByTenantIdAndBizOrderNoAndChannel(String tenantId, String bizOrderNo,
-                                                           PaymentChannel channel);
+    Optional<Payment> findByBizOrderNoAndChannel(String bizOrderNo, PaymentChannel channel);
 
     /**
      * 按渠道交易号查找;用于异步回调匹配。
@@ -36,6 +35,5 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     /**
      * 判断业务订单号是否已存在 (Mode A 幂等冲突匹配)。
      */
-    boolean existsByTenantIdAndBizOrderNoAndChannel(String tenantId, String bizOrderNo,
-                                                    PaymentChannel channel);
+    boolean existsByBizOrderNoAndChannel(String bizOrderNo, PaymentChannel channel);
 }

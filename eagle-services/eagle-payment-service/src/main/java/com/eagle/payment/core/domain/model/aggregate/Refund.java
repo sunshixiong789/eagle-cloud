@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
  * <p>跨聚合引用 {@link Payment} 只存 {@code paymentId} (按 06-database.md);引用关系完整性
  * 由应用层保证 (查 Payment.findById 不存在则不允许创建 Refund)。
  *
- * <p>幂等键: {@code (tenant_id, biz_refund_no)} UNIQUE;同一业务退款号只能发起一次。
+ * <p>幂等键: {@code (biz_refund_no)} UNIQUE;同一业务退款号只能发起一次。
  * {@code (channel, channel_refund_no)} 索引用于回调匹配。
  *
  * @author sunshixiong
@@ -37,20 +37,16 @@ import java.time.LocalDateTime;
 @Table(name = "t_refund", comment = "退款单",
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_refund_biz",
-                        columnNames = {"tenant_id", "biz_refund_no"})
+                        columnNames = {"biz_refund_no"})
         },
         indexes = {
                 @Index(name = "idx_refund_payment", columnList = "payment_id"),
-                @Index(name = "idx_refund_tenant_status_created",
-                        columnList = "tenant_id, status, create_time"),
+                @Index(name = "idx_refund_status_created",
+                        columnList = "status, create_time"),
                 @Index(name = "idx_refund_channel_no",
                         columnList = "channel, channel_refund_no")
         })
 public class Refund extends BaseAggregateRoot<Refund> {
-
-    @Column(name = "tenant_id", nullable = false, updatable = false, length = 64,
-            comment = "租户 ID")
-    private String tenantId;
 
     @Column(name = "payment_id", nullable = false, updatable = false,
             comment = "关联 Payment ID (跨聚合 ID 引用)")
@@ -85,9 +81,8 @@ public class Refund extends BaseAggregateRoot<Refund> {
     @Column(name = "fail_reason", length = 512, comment = "失败原因")
     private String failReason;
 
-    private Refund(String tenantId, Long paymentId, String bizRefundNo, PaymentChannel channel,
+    private Refund(Long paymentId, String bizRefundNo, PaymentChannel channel,
                    BigDecimal amount, @Nullable String reason) {
-        this.tenantId = tenantId;
         this.paymentId = paymentId;
         this.bizRefundNo = bizRefundNo;
         this.channel = channel;
@@ -105,13 +100,13 @@ public class Refund extends BaseAggregateRoot<Refund> {
      * </ul>
      * Refund 聚合根本身只校验 amount &gt; 0 与状态机一致性,跨聚合校验由应用服务承担。
      */
-    public static Refund create(String tenantId, Long paymentId, String bizRefundNo,
+    public static Refund create(Long paymentId, String bizRefundNo,
                                 PaymentChannel channel, BigDecimal amount,
                                 @Nullable String reason) {
         if (amount == null || amount.signum() <= 0) {
             throw RefundErrorCode.INVALID_REFUND_AMOUNT.toDomainException();
         }
-        return new Refund(tenantId, paymentId, bizRefundNo, channel, amount.setScale(2), reason);
+        return new Refund(paymentId, bizRefundNo, channel, amount.setScale(2), reason);
     }
 
     /**
@@ -141,7 +136,7 @@ public class Refund extends BaseAggregateRoot<Refund> {
         if (channelRefundNo != null) {
             this.channelRefundNo = channelRefundNo;
         }
-        registerEvent(new RefundCompletedEvent(getId(), paymentId, tenantId, bizRefundNo,
+        registerEvent(new RefundCompletedEvent(getId(), paymentId, bizRefundNo,
                 channel, amount, this.channelRefundNo, refundedAt));
     }
 
@@ -157,7 +152,7 @@ public class Refund extends BaseAggregateRoot<Refund> {
         }
         this.status = RefundStatus.FAILED;
         this.failReason = reason;
-        registerEvent(new RefundFailedEvent(getId(), paymentId, tenantId, bizRefundNo,
+        registerEvent(new RefundFailedEvent(getId(), paymentId, bizRefundNo,
                 channel, amount, reason));
     }
 }

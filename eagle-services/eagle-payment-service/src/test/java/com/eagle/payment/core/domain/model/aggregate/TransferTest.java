@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class TransferTest {
 
     private Transfer create() {
-        return Transfer.create("t1", "TRN-001", PaymentChannel.ALIPAY,
+        return Transfer.create("TRN-001", PaymentChannel.ALIPAY,
                 "user@example.com", "张三", new BigDecimal("500.00"), "月度结算");
     }
 
@@ -34,7 +34,7 @@ class TransferTest {
         @Test
         @DisplayName("金额 <= 0 应抛 DomainException")
         void shouldRejectInvalidAmount() {
-            assertThatThrownBy(() -> Transfer.create("t1", "TRN-001", PaymentChannel.ALIPAY,
+            assertThatThrownBy(() -> Transfer.create("TRN-001", PaymentChannel.ALIPAY,
                     "user", null, BigDecimal.ZERO, null))
                     .isInstanceOf(DomainException.class);
         }

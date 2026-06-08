@@ -19,32 +19,30 @@ import java.util.Optional;
  */
 public interface TransferRepository extends JpaRepository<Transfer, Long> {
 
-    Optional<Transfer> findByTenantIdAndBizTransferNo(String tenantId, String bizTransferNo);
+    Optional<Transfer> findByBizTransferNo(String bizTransferNo);
 
     Optional<Transfer> findByChannelAndChannelTransferNo(PaymentChannel channel,
                                                         String channelTransferNo);
 
-    boolean existsByTenantIdAndBizTransferNo(String tenantId, String bizTransferNo);
+    boolean existsByBizTransferNo(String bizTransferNo);
 
     /**
-     * 当日累计提现金额 (按租户 + 状态 IN (REVIEWING, SUCCESS) 汇总)。
+     * 当日累计提现金额 (按状态 IN (REVIEWING, SUCCESS) 汇总)。
      */
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transfer t " +
-            "WHERE t.tenantId = :tenantId AND t.status IN :statuses " +
+            "WHERE t.status IN :statuses " +
             "AND t.createTime >= :start AND t.createTime < :end")
-    BigDecimal sumAmountInPeriod(@Param("tenantId") String tenantId,
-                                 @Param("statuses") List<TransferStatus> statuses,
+    BigDecimal sumAmountInPeriod(@Param("statuses") List<TransferStatus> statuses,
                                  @Param("start") LocalDateTime start,
                                  @Param("end") LocalDateTime end);
 
     /**
-     * 当日提现笔数 (按租户 + 状态汇总)。
+     * 当日提现笔数 (按状态汇总)。
      */
     @Query("SELECT COUNT(t) FROM Transfer t " +
-            "WHERE t.tenantId = :tenantId AND t.status IN :statuses " +
+            "WHERE t.status IN :statuses " +
             "AND t.createTime >= :start AND t.createTime < :end")
-    long countInPeriod(@Param("tenantId") String tenantId,
-                       @Param("statuses") List<TransferStatus> statuses,
+    long countInPeriod(@Param("statuses") List<TransferStatus> statuses,
                        @Param("start") LocalDateTime start,
                        @Param("end") LocalDateTime end);
 }

@@ -34,7 +34,7 @@ public class RefundIntegrationEventPublisher {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onRefundCompleted(RefundCompletedEvent event) {
         publisher.publish(TOPIC, "refunded", new RefundCompletedIntegrationEvent(
-                event.refundId(), event.paymentId(), event.tenantId(), event.bizRefundNo(),
+                event.refundId(), event.paymentId(), event.bizRefundNo(),
                 event.channel(), event.amount(), event.channelRefundNo(), event.refundedAt()));
         log.debug("published refund.refunded, refundId={}", event.refundId());
     }
@@ -43,7 +43,7 @@ public class RefundIntegrationEventPublisher {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onRefundFailed(RefundFailedEvent event) {
         publisher.publish(TOPIC, "failed", new RefundFailedIntegrationEvent(
-                event.refundId(), event.paymentId(), event.tenantId(), event.bizRefundNo(),
+                event.refundId(), event.paymentId(), event.bizRefundNo(),
                 event.channel(), event.amount(), event.reason()));
         log.debug("published refund.failed, refundId={}", event.refundId());
     }

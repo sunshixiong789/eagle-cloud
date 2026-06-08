@@ -9,7 +9,6 @@ import com.eagle.payment.core.domain.model.enums.PaymentChannel;
  */
 public record PaymentExpiredEvent(
         Long paymentId,
-        String tenantId,
         String bizOrderNo,
         PaymentChannel channel
 ) {

@@ -15,15 +15,13 @@ import lombok.NoArgsConstructor;
 public class PaymentFailedIntegrationEvent extends BaseEvent {
 
     private Long paymentId;
-    private String tenantId;
     private String bizOrderNo;
     private PaymentChannel channel;
     private String reason;
 
-    public PaymentFailedIntegrationEvent(Long paymentId, String tenantId, String bizOrderNo,
+    public PaymentFailedIntegrationEvent(Long paymentId, String bizOrderNo,
                                          PaymentChannel channel, String reason) {
         this.paymentId = paymentId;
-        this.tenantId = tenantId;
         this.bizOrderNo = bizOrderNo;
         this.channel = channel;
         this.reason = reason;

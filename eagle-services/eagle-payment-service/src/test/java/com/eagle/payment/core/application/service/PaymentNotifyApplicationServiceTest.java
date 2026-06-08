@@ -42,7 +42,7 @@ class PaymentNotifyApplicationServiceTest {
     private PaymentNotifyApplicationService service;
 
     private Payment ofStatus(PaymentStatus initial) {
-        Payment p = Payment.create("t1", "ORD-001", PaymentChannel.ALIPAY, PaymentScene.PC_WEB,
+        Payment p = Payment.create("ORD-001", PaymentChannel.ALIPAY, PaymentScene.PC_WEB,
                 new BigDecimal("99.00"), "CNY", "subject", null,
                 LocalDateTime.now().plusMinutes(30));
         if (initial == PaymentStatus.PAYING) {
@@ -150,7 +150,7 @@ class PaymentNotifyApplicationServiceTest {
     class HandleRefund {
 
         private Payment paid() {
-            Payment p = Payment.create("default", "ORD-001", PaymentChannel.ALIPAY,
+            Payment p = Payment.create("ORD-001", PaymentChannel.ALIPAY,
                     PaymentScene.PC_WEB, new BigDecimal("99.00"), "CNY", "subject", null,
                     LocalDateTime.now().plusMinutes(30));
             p.submittedToChannel("OUT-001");
@@ -159,7 +159,7 @@ class PaymentNotifyApplicationServiceTest {
         }
 
         private Refund refunding() {
-            Refund r = Refund.create("default", 1024L, "REF-001",
+            Refund r = Refund.create(1024L, "REF-001",
                     PaymentChannel.ALIPAY, new BigDecimal("30.00"), null);
             r.submittedToChannel("CHAN-REF-1");
             return r;
@@ -181,7 +181,7 @@ class PaymentNotifyApplicationServiceTest {
             when(refundRepository.findByChannelAndChannelRefundNo(
                     eq(PaymentChannel.ALIPAY), anyString()))
                     .thenReturn(Optional.empty());
-            when(refundRepository.findByTenantIdAndBizRefundNo(anyString(), anyString()))
+            when(refundRepository.findByBizRefundNo(anyString()))
                     .thenReturn(Optional.empty());
             GatewayRefundNotifyResult result = new GatewayRefundNotifyResult(true,
                     "REF-001", "CHAN-REF-1", RefundStatus.REFUNDED,

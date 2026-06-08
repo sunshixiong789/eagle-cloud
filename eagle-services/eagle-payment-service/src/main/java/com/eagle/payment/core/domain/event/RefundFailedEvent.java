@@ -12,7 +12,6 @@ import java.math.BigDecimal;
 public record RefundFailedEvent(
         Long refundId,
         Long paymentId,
-        String tenantId,
         String bizRefundNo,
         PaymentChannel channel,
         BigDecimal amount,

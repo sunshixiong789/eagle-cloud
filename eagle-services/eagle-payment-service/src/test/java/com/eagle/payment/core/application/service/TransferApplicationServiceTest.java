@@ -27,7 +27,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -70,9 +69,9 @@ class TransferApplicationServiceTest {
     }
 
     private void stubRiskControlOk() {
-        when(transferRepository.sumAmountInPeriod(anyString(), anyList(), any(), any()))
+        when(transferRepository.sumAmountInPeriod(anyList(), any(), any()))
                 .thenReturn(BigDecimal.ZERO);
-        when(transferRepository.countInPeriod(anyString(), anyList(), any(), any()))
+        when(transferRepository.countInPeriod(anyList(), any(), any()))
                 .thenReturn(0L);
     }
 
@@ -92,7 +91,7 @@ class TransferApplicationServiceTest {
         @DisplayName("支付宝同步成功: 应保存 SUCCESS")
         void shouldCompleteSyncForAlipay() {
             stubRiskControlOk();
-            when(transferRepository.existsByTenantIdAndBizTransferNo(anyString(), eq("TRN-001")))
+            when(transferRepository.existsByBizTransferNo(eq("TRN-001")))
                     .thenReturn(false);
             when(transferRepository.saveAndFlush(any(Transfer.class)))
                     .thenAnswer(inv -> inv.getArgument(0));
@@ -118,7 +117,7 @@ class TransferApplicationServiceTest {
         @Test
         @DisplayName("超过日累计金额抛 EXCEED_DAILY_AMOUNT")
         void shouldRejectOverDailyAmount() {
-            when(transferRepository.sumAmountInPeriod(anyString(), anyList(), any(), any()))
+            when(transferRepository.sumAmountInPeriod(anyList(), any(), any()))
                     .thenReturn(new BigDecimal("49600.00"));
             assertThatThrownBy(() -> service.create(request(new BigDecimal("500.00"))))
                     .isInstanceOf(DomainException.class);
@@ -127,9 +126,9 @@ class TransferApplicationServiceTest {
         @Test
         @DisplayName("超过日笔数抛 EXCEED_DAILY_COUNT")
         void shouldRejectOverDailyCount() {
-            when(transferRepository.sumAmountInPeriod(anyString(), anyList(), any(), any()))
+            when(transferRepository.sumAmountInPeriod(anyList(), any(), any()))
                     .thenReturn(BigDecimal.ZERO);
-            when(transferRepository.countInPeriod(anyString(), anyList(), any(), any()))
+            when(transferRepository.countInPeriod(anyList(), any(), any()))
                     .thenReturn(20L);
             assertThatThrownBy(() -> service.create(request(new BigDecimal("500.00"))))
                     .isInstanceOf(DomainException.class);
@@ -139,7 +138,7 @@ class TransferApplicationServiceTest {
         @DisplayName("bizTransferNo 重复抛 ConflictException")
         void shouldRejectDuplicate() {
             stubRiskControlOk();
-            when(transferRepository.existsByTenantIdAndBizTransferNo(anyString(), eq("TRN-001")))
+            when(transferRepository.existsByBizTransferNo(eq("TRN-001")))
                     .thenReturn(true);
             assertThatThrownBy(() -> service.create(request(new BigDecimal("500.00"))))
                     .isInstanceOf(ConflictException.class);

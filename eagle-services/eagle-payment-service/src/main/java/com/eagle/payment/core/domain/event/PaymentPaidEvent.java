@@ -17,7 +17,6 @@ import java.time.LocalDateTime;
  */
 public record PaymentPaidEvent(
         Long paymentId,
-        String tenantId,
         String bizOrderNo,
         PaymentChannel channel,
         BigDecimal amount,

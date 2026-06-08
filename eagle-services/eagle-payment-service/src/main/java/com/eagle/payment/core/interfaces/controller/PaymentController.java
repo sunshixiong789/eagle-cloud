@@ -37,7 +37,7 @@ public class PaymentController {
     private final PaymentMapper mapper;
 
     @Operation(summary = "创建支付订单",
-            description = "幂等键: (tenantId, bizOrderNo, channel);返回渠道支付参数 payload + payloadType")
+            description = "幂等键: (bizOrderNo, channel);返回渠道支付参数 payload + payloadType")
     @PreAuthorize("hasRole('service')")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

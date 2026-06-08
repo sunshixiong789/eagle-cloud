@@ -17,18 +17,16 @@ import java.math.BigDecimal;
 public class TransferReturnedIntegrationEvent extends BaseEvent {
 
     private Long transferId;
-    private String tenantId;
     private String bizTransferNo;
     private PaymentChannel channel;
     private BigDecimal amount;
     private String recipientAccount;
     private String reason;
 
-    public TransferReturnedIntegrationEvent(Long transferId, String tenantId, String bizTransferNo,
+    public TransferReturnedIntegrationEvent(Long transferId, String bizTransferNo,
                                             PaymentChannel channel, BigDecimal amount,
                                             String recipientAccount, String reason) {
         this.transferId = transferId;
-        this.tenantId = tenantId;
         this.bizTransferNo = bizTransferNo;
         this.channel = channel;
         this.amount = amount;

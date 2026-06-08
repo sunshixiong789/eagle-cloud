@@ -19,20 +19,18 @@ public class RefundCompletedIntegrationEvent extends BaseEvent {
 
     private Long refundId;
     private Long paymentId;
-    private String tenantId;
     private String bizRefundNo;
     private PaymentChannel channel;
     private BigDecimal amount;
     private String channelRefundNo;
     private LocalDateTime refundedAt;
 
-    public RefundCompletedIntegrationEvent(Long refundId, Long paymentId, String tenantId,
+    public RefundCompletedIntegrationEvent(Long refundId, Long paymentId,
                                            String bizRefundNo, PaymentChannel channel,
                                            BigDecimal amount, String channelRefundNo,
                                            LocalDateTime refundedAt) {
         this.refundId = refundId;
         this.paymentId = paymentId;
-        this.tenantId = tenantId;
         this.bizRefundNo = bizRefundNo;
         this.channel = channel;
         this.amount = amount;

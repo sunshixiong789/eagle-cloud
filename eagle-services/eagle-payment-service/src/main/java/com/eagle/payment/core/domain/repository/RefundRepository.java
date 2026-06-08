@@ -15,14 +15,14 @@ import java.util.Optional;
  */
 public interface RefundRepository extends JpaRepository<Refund, Long> {
 
-    /** 业务退款号 + 租户唯一查询 (幂等键)。 */
-    Optional<Refund> findByTenantIdAndBizRefundNo(String tenantId, String bizRefundNo);
+    /** 业务退款号唯一查询 (幂等键)。 */
+    Optional<Refund> findByBizRefundNo(String bizRefundNo);
 
     /** 渠道退款号匹配 (异步回调)。 */
     Optional<Refund> findByChannelAndChannelRefundNo(PaymentChannel channel, String channelRefundNo);
 
     /** 是否已存在 (DataIntegrityViolation 兜底)。 */
-    boolean existsByTenantIdAndBizRefundNo(String tenantId, String bizRefundNo);
+    boolean existsByBizRefundNo(String bizRefundNo);
 
     /** 列出指定 Payment 下的所有 Refund。 */
     List<Refund> findByPaymentId(Long paymentId);

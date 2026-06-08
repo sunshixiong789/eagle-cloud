@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
  */
 public record TransferSucceededEvent(
         Long transferId,
-        String tenantId,
         String bizTransferNo,
         PaymentChannel channel,
         BigDecimal amount,

@@ -138,10 +138,7 @@ public class PaymentNotifyApplicationService {
                 return byChannel.get();
             }
         }
-        return refundRepository.findByTenantIdAndBizRefundNo(
-                com.eagle.tenant.TenantContextHolder.getTenantId() == null
-                        ? "default" : com.eagle.tenant.TenantContextHolder.getTenantId(),
-                refundNo).orElse(null);
+        return refundRepository.findByBizRefundNo(refundNo).orElse(null);
     }
 
     /** 强一致金额比较 (precision safe)。 */

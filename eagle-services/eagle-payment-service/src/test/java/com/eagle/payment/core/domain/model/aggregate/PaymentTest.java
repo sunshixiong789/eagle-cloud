@@ -17,12 +17,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayName("Payment 聚合根状态机")
 class PaymentTest {
 
-    private static final String TENANT = "t1";
     private static final String BIZ_ORDER_NO = "ORD-001";
     private static final BigDecimal AMOUNT = new BigDecimal("99.00");
 
     private Payment createPayment() {
-        return Payment.create(TENANT, BIZ_ORDER_NO, PaymentChannel.ALIPAY, PaymentScene.PC_WEB,
+        return Payment.create(BIZ_ORDER_NO, PaymentChannel.ALIPAY, PaymentScene.PC_WEB,
                 AMOUNT, "CNY", "Subject", "u1",
                 LocalDateTime.now().plusMinutes(30));
     }
@@ -42,7 +41,7 @@ class PaymentTest {
         @Test
         @DisplayName("金额 <= 0 应抛 DomainException")
         void shouldRejectInvalidAmount() {
-            assertThatThrownBy(() -> Payment.create(TENANT, BIZ_ORDER_NO, PaymentChannel.ALIPAY,
+            assertThatThrownBy(() -> Payment.create(BIZ_ORDER_NO, PaymentChannel.ALIPAY,
                     PaymentScene.PC_WEB, BigDecimal.ZERO, "CNY", "subj", null,
                     LocalDateTime.now().plusMinutes(30)))
                     .isInstanceOf(DomainException.class);

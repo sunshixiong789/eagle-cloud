@@ -18,18 +18,16 @@ public class RefundFailedIntegrationEvent extends BaseEvent {
 
     private Long refundId;
     private Long paymentId;
-    private String tenantId;
     private String bizRefundNo;
     private PaymentChannel channel;
     private BigDecimal amount;
     private String reason;
 
-    public RefundFailedIntegrationEvent(Long refundId, Long paymentId, String tenantId,
+    public RefundFailedIntegrationEvent(Long refundId, Long paymentId,
                                         String bizRefundNo, PaymentChannel channel,
                                         BigDecimal amount, String reason) {
         this.refundId = refundId;
         this.paymentId = paymentId;
-        this.tenantId = tenantId;
         this.bizRefundNo = bizRefundNo;
         this.channel = channel;
         this.amount = amount;

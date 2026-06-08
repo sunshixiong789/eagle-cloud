@@ -14,7 +14,6 @@ import com.eagle.payment.core.domain.repository.PaymentRepository;
 import com.eagle.payment.core.domain.repository.RefundRepository;
 import com.eagle.payment.core.infrastructure.config.PaymentProperties;
 import com.eagle.payment.core.interfaces.dto.request.CreateRefundRequest;
-import com.eagle.tenant.TenantContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -33,7 +32,7 @@ import java.util.Map;
  *   <li>查 Payment, 校验 status == PAID</li>
  *   <li>校验 amount 合法 (&gt; 0 且 &lt;= Payment.refundableAmount)</li>
  *   <li>校验部分退款开关 (eagle.payment.refund.allow-partial)</li>
- *   <li>幂等检查 - (tenantId, bizRefundNo) UNIQUE,DB 兜底 (Mode A)</li>
+ *   <li>幂等检查 - (bizRefundNo) UNIQUE,DB 兜底 (Mode A)</li>
  *   <li>创建 Refund (PENDING) → 提交到渠道 → submittedToChannel / markRefunded</li>
  *   <li>同步成功的 (支付宝)立即累加 Payment.refundedAmount;异步成功的 (微信) 由回调推进</li>
  * </ol>
@@ -65,8 +64,7 @@ public class RefundApplicationService {
 
     @Transactional
     public Refund create(CreateRefundRequest request) {
-        String tenantId = resolveTenantId();
-        if (refundRepository.existsByTenantIdAndBizRefundNo(tenantId, request.getBizRefundNo())) {
+        if (refundRepository.existsByBizRefundNo(request.getBizRefundNo())) {
             throw RefundErrorCode.DUPLICATE_REFUND.toConflictException();
         }
         Payment payment = paymentRepository.findById(request.getPaymentId())
@@ -84,12 +82,12 @@ public class RefundApplicationService {
             throw RefundErrorCode.PARTIAL_DISABLED.toDomainException();
         }
 
-        Refund refund = Refund.create(tenantId, payment.getId(), request.getBizRefundNo(),
+        Refund refund = Refund.create(payment.getId(), request.getBizRefundNo(),
                 payment.getChannel(), request.getAmount(), request.getReason());
         try {
             refund = refundRepository.saveAndFlush(refund);
         } catch (DataIntegrityViolationException e) {
-            if (refundRepository.existsByTenantIdAndBizRefundNo(tenantId, request.getBizRefundNo())) {
+            if (refundRepository.existsByBizRefundNo(request.getBizRefundNo())) {
                 throw RefundErrorCode.DUPLICATE_REFUND.toConflictException();
             }
             throw e;
@@ -134,13 +132,7 @@ public class RefundApplicationService {
 
     @Transactional(readOnly = true)
     public Refund findByBizRefundNo(String bizRefundNo) {
-        return refundRepository
-                .findByTenantIdAndBizRefundNo(resolveTenantId(), bizRefundNo)
+        return refundRepository.findByBizRefundNo(bizRefundNo)
                 .orElseThrow(RefundErrorCode.REFUND_NOT_FOUND::toNotFoundException);
-    }
-
-    private String resolveTenantId() {
-        String tenantId = TenantContextHolder.getTenantId();
-        return tenantId == null ? "default" : tenantId;
     }
 }

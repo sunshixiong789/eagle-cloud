@@ -11,7 +11,6 @@ import java.math.BigDecimal;
  */
 public record TransferReturnedEvent(
         Long transferId,
-        String tenantId,
         String bizTransferNo,
         PaymentChannel channel,
         BigDecimal amount,

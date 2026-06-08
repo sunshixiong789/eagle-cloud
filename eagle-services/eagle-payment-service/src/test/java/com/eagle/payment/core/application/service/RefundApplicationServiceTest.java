@@ -32,7 +32,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -61,7 +60,7 @@ class RefundApplicationServiceTest {
     }
 
     private Payment paidPayment(BigDecimal amount, BigDecimal alreadyRefunded) {
-        Payment p = Payment.create("default", "ORD-001", PaymentChannel.ALIPAY,
+        Payment p = Payment.create("ORD-001", PaymentChannel.ALIPAY,
                 PaymentScene.PC_WEB, amount, "CNY", "subject", null,
                 LocalDateTime.now().plusMinutes(30));
         p.submittedToChannel("OUT-001");
@@ -88,7 +87,7 @@ class RefundApplicationServiceTest {
         @Test
         @DisplayName("支付宝同步成功: 应保存 REFUNDED 并累加 Payment.refundedAmount")
         void shouldCompleteSyncForAlipay() {
-            when(refundRepository.existsByTenantIdAndBizRefundNo(anyString(), eq("REF-001")))
+            when(refundRepository.existsByBizRefundNo(eq("REF-001")))
                     .thenReturn(false);
             Payment payment = paidPayment(new BigDecimal("99.00"), BigDecimal.ZERO);
             when(paymentRepository.findById(1024L)).thenReturn(Optional.of(payment));
@@ -109,7 +108,7 @@ class RefundApplicationServiceTest {
         @Test
         @DisplayName("微信异步处理: REFUNDING 状态保存,不累加 Payment.refundedAmount")
         void shouldPersistRefundingForWechat() {
-            when(refundRepository.existsByTenantIdAndBizRefundNo(anyString(), eq("REF-001")))
+            when(refundRepository.existsByBizRefundNo(eq("REF-001")))
                     .thenReturn(false);
             Payment payment = paidPayment(new BigDecimal("99.00"), BigDecimal.ZERO);
             when(paymentRepository.findById(1024L)).thenReturn(Optional.of(payment));
@@ -129,7 +128,7 @@ class RefundApplicationServiceTest {
         @Test
         @DisplayName("Payment 不存在抛 NotFoundException")
         void shouldRejectMissingPayment() {
-            when(refundRepository.existsByTenantIdAndBizRefundNo(anyString(), eq("REF-001")))
+            when(refundRepository.existsByBizRefundNo(eq("REF-001")))
                     .thenReturn(false);
             when(paymentRepository.findById(1024L)).thenReturn(Optional.empty());
 
@@ -140,9 +139,9 @@ class RefundApplicationServiceTest {
         @Test
         @DisplayName("Payment 非 PAID 抛 DomainException (PAYMENT_NOT_PAID)")
         void shouldRejectNonPaidPayment() {
-            when(refundRepository.existsByTenantIdAndBizRefundNo(anyString(), eq("REF-001")))
+            when(refundRepository.existsByBizRefundNo(eq("REF-001")))
                     .thenReturn(false);
-            Payment p = Payment.create("default", "ORD-001", PaymentChannel.ALIPAY,
+            Payment p = Payment.create("ORD-001", PaymentChannel.ALIPAY,
                     PaymentScene.PC_WEB, new BigDecimal("99.00"), "CNY", "subj", null,
                     LocalDateTime.now().plusMinutes(30));
             when(paymentRepository.findById(1024L)).thenReturn(Optional.of(p));
@@ -154,7 +153,7 @@ class RefundApplicationServiceTest {
         @Test
         @DisplayName("退款超过可退余额抛 DomainException (EXCEED_REFUNDABLE)")
         void shouldRejectExceedRefundable() {
-            when(refundRepository.existsByTenantIdAndBizRefundNo(anyString(), eq("REF-001")))
+            when(refundRepository.existsByBizRefundNo(eq("REF-001")))
                     .thenReturn(false);
             Payment payment = paidPayment(new BigDecimal("99.00"), new BigDecimal("80.00"));
             when(paymentRepository.findById(1024L)).thenReturn(Optional.of(payment));
@@ -166,7 +165,7 @@ class RefundApplicationServiceTest {
         @Test
         @DisplayName("bizRefundNo 重复抛 ConflictException")
         void shouldRejectDuplicate() {
-            when(refundRepository.existsByTenantIdAndBizRefundNo(anyString(), eq("REF-001")))
+            when(refundRepository.existsByBizRefundNo(eq("REF-001")))
                     .thenReturn(true);
 
             assertThatThrownBy(() -> service.create(request(new BigDecimal("30.00"))))
@@ -178,7 +177,7 @@ class RefundApplicationServiceTest {
         @DisplayName("关闭部分退款时,非全额退款抛 PARTIAL_DISABLED")
         void shouldRejectPartialWhenDisabled() {
             properties.getRefund().setAllowPartial(false);
-            when(refundRepository.existsByTenantIdAndBizRefundNo(anyString(), eq("REF-001")))
+            when(refundRepository.existsByBizRefundNo(eq("REF-001")))
                     .thenReturn(false);
             Payment payment = paidPayment(new BigDecimal("99.00"), BigDecimal.ZERO);
             when(paymentRepository.findById(1024L)).thenReturn(Optional.of(payment));

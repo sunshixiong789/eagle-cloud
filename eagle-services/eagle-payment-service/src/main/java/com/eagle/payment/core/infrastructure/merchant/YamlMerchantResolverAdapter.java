@@ -13,12 +13,8 @@ import java.util.Map;
 /**
  * v1 单商户 / yml 凭证实现。
  *
- * <p>忽略 {@code tenantId},所有租户共用一套凭证(由 {@link PaymentProperties} 注入)。
- * v2 会替换为 {@code DatabaseMerchantResolverAdapter},按租户查 {@code t_payment_merchant}
- * 表;接口契约保持不变,无需调整 ApplicationService。
- *
- * <p>渠道返回 null 即表示该渠道未启用或未配置必要字段,Gateway 适配器据此抛
- * {@code CHANNEL_UNAVAILABLE}。
+ * <p>从 {@link PaymentProperties} 读全局凭证。渠道返回 null 即表示该渠道未启用
+ * 或未配置必要字段,Gateway 适配器据此抛 {@code CHANNEL_UNAVAILABLE}。
  *
  * @author sunshixiong
  */
@@ -30,7 +26,7 @@ public class YamlMerchantResolverAdapter implements MerchantResolverPort {
 
     @Override
     @Nullable
-    public Map<String, String> resolve(String tenantId, PaymentChannel channel) {
+    public Map<String, String> resolve(PaymentChannel channel) {
         return switch (channel) {
             case ALIPAY -> resolveAlipay();
             case WECHAT -> resolveWechat();

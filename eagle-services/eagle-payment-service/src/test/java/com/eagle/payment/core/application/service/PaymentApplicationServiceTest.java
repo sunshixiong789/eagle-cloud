@@ -29,7 +29,6 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -74,8 +73,8 @@ class PaymentApplicationServiceTest {
         @Test
         @DisplayName("应保存 Payment 并提交到渠道后迁移到 PAYING")
         void shouldCreatePaymentAndSubmitToGateway() {
-            when(paymentRepository.existsByTenantIdAndBizOrderNoAndChannel(
-                    anyString(), eq("ORD-001"), eq(PaymentChannel.ALIPAY))).thenReturn(false);
+            when(paymentRepository.existsByBizOrderNoAndChannel(
+                    eq("ORD-001"), eq(PaymentChannel.ALIPAY))).thenReturn(false);
             when(paymentRepository.saveAndFlush(any(Payment.class))).thenAnswer(inv -> inv.getArgument(0));
             when(paymentRepository.save(any(Payment.class))).thenAnswer(inv -> inv.getArgument(0));
             when(idGenerator.nextIdStr()).thenReturn("16812340000001");
@@ -102,8 +101,8 @@ class PaymentApplicationServiceTest {
         @Test
         @DisplayName("bizOrderNo + channel 已存在应抛 ConflictException")
         void shouldRejectDuplicate() {
-            when(paymentRepository.existsByTenantIdAndBizOrderNoAndChannel(
-                    anyString(), eq("ORD-001"), eq(PaymentChannel.ALIPAY))).thenReturn(true);
+            when(paymentRepository.existsByBizOrderNoAndChannel(
+                    eq("ORD-001"), eq(PaymentChannel.ALIPAY))).thenReturn(true);
 
             assertThatThrownBy(() -> service.create(request()))
                     .isInstanceOf(ConflictException.class);
@@ -114,8 +113,8 @@ class PaymentApplicationServiceTest {
         @Test
         @DisplayName("渠道未注册应抛 DomainException (CHANNEL_UNAVAILABLE)")
         void shouldRejectMissingChannel() {
-            when(paymentRepository.existsByTenantIdAndBizOrderNoAndChannel(
-                    anyString(), eq("ORD-001"), eq(PaymentChannel.WECHAT))).thenReturn(false);
+            when(paymentRepository.existsByBizOrderNoAndChannel(
+                    eq("ORD-001"), eq(PaymentChannel.WECHAT))).thenReturn(false);
             CreatePaymentRequest req = request();
             req.setChannel(PaymentChannel.WECHAT);
 

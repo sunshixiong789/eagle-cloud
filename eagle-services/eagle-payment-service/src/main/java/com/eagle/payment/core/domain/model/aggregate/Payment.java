@@ -31,7 +31,7 @@ import java.time.LocalDateTime;
  *
  * <p>金额一律 {@link BigDecimal} (scale=2,单位元),DB 存 {@code DECIMAL(18,2)}。
  *
- * <p>幂等键: {@code (tenant_id, biz_order_no, channel)} 唯一约束;同一业务订单 + 同一
+ * <p>幂等键: {@code (biz_order_no, channel)} 唯一约束;同一业务订单 + 同一
  * 渠道不允许重复下单。{@code (channel, out_trade_no)} 为渠道返回的交易号,用于回调匹配。
  *
  * @author sunshixiong
@@ -42,19 +42,15 @@ import java.time.LocalDateTime;
 @Table(name = "t_payment", comment = "支付订单",
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_payment_biz",
-                        columnNames = {"tenant_id", "biz_order_no", "channel"})
+                        columnNames = {"biz_order_no", "channel"})
         },
         indexes = {
-                @Index(name = "idx_payment_tenant_status_created",
-                        columnList = "tenant_id, status, create_time"),
+                @Index(name = "idx_payment_status_created",
+                        columnList = "status, create_time"),
                 @Index(name = "idx_payment_out_trade_no", columnList = "channel, out_trade_no"),
-                @Index(name = "idx_payment_user", columnList = "tenant_id, user_id")
+                @Index(name = "idx_payment_user_id", columnList = "user_id")
         })
 public class Payment extends BaseAggregateRoot<Payment> {
-
-    @Column(name = "tenant_id", nullable = false, updatable = false, length = 64,
-            comment = "租户 ID")
-    private String tenantId;
 
     @Column(name = "biz_order_no", nullable = false, updatable = false, length = 64,
             comment = "业务订单号 (上游调用方提供)")
@@ -105,10 +101,9 @@ public class Payment extends BaseAggregateRoot<Payment> {
     @Column(name = "fail_reason", length = 512, comment = "失败原因 (failed 状态)")
     private String failReason;
 
-    private Payment(String tenantId, String bizOrderNo, PaymentChannel channel, PaymentScene scene,
+    private Payment(String bizOrderNo, PaymentChannel channel, PaymentScene scene,
                     BigDecimal amount, String currency, String subject, @Nullable String userId,
                     LocalDateTime expiresAt) {
-        this.tenantId = tenantId;
         this.bizOrderNo = bizOrderNo;
         this.channel = channel;
         this.scene = scene;
@@ -125,14 +120,14 @@ public class Payment extends BaseAggregateRoot<Payment> {
      * 创建一个 CREATED 状态的支付订单。聚合根不知道渠道结果,outTradeNo 由 {@link #submittedToChannel}
      * 在收到渠道返回后回填。
      */
-    public static Payment create(String tenantId, String bizOrderNo, PaymentChannel channel,
+    public static Payment create(String bizOrderNo, PaymentChannel channel,
                                  PaymentScene scene, BigDecimal amount, String currency,
                                  String subject, @Nullable String userId,
                                  LocalDateTime expiresAt) {
         if (amount == null || amount.signum() <= 0) {
             throw PaymentErrorCode.INVALID_AMOUNT.toDomainException();
         }
-        return new Payment(tenantId, bizOrderNo, channel, scene, amount.setScale(2),
+        return new Payment(bizOrderNo, channel, scene, amount.setScale(2),
                 currency, subject, userId, expiresAt);
     }
 
@@ -163,7 +158,7 @@ public class Payment extends BaseAggregateRoot<Payment> {
         if (outTradeNo != null) {
             this.outTradeNo = outTradeNo;
         }
-        registerEvent(new PaymentPaidEvent(getId(), tenantId, bizOrderNo, channel,
+        registerEvent(new PaymentPaidEvent(getId(), bizOrderNo, channel,
                 amount, currency, this.outTradeNo, paidAt));
     }
 
@@ -179,7 +174,7 @@ public class Payment extends BaseAggregateRoot<Payment> {
         }
         this.status = PaymentStatus.FAILED;
         this.failReason = reason;
-        registerEvent(new PaymentFailedEvent(getId(), tenantId, bizOrderNo, channel, reason));
+        registerEvent(new PaymentFailedEvent(getId(), bizOrderNo, channel, reason));
     }
 
     /**
@@ -191,7 +186,7 @@ public class Payment extends BaseAggregateRoot<Payment> {
         }
         this.status = PaymentStatus.CANCELLED;
         this.failReason = reason;
-        registerEvent(new PaymentCancelledEvent(getId(), tenantId, bizOrderNo, channel, reason));
+        registerEvent(new PaymentCancelledEvent(getId(), bizOrderNo, channel, reason));
     }
 
     /**
@@ -202,7 +197,7 @@ public class Payment extends BaseAggregateRoot<Payment> {
             throw PaymentErrorCode.INVALID_STATUS.toDomainException();
         }
         this.status = PaymentStatus.EXPIRED;
-        registerEvent(new PaymentExpiredEvent(getId(), tenantId, bizOrderNo, channel));
+        registerEvent(new PaymentExpiredEvent(getId(), bizOrderNo, channel));
     }
 
     /**

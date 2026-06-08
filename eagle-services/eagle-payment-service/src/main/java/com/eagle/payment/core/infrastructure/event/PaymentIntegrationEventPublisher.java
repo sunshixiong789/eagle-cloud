@@ -45,7 +45,7 @@ public class PaymentIntegrationEventPublisher {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onPaymentPaid(PaymentPaidEvent event) {
         publisher.publish(TOPIC, "paid", new PaymentPaidIntegrationEvent(
-                event.paymentId(), event.tenantId(), event.bizOrderNo(), event.channel(),
+                event.paymentId(), event.bizOrderNo(), event.channel(),
                 event.amount(), event.currency(), event.outTradeNo(), event.paidAt()));
         log.debug("published payment.paid, paymentId={}", event.paymentId());
     }
@@ -54,7 +54,7 @@ public class PaymentIntegrationEventPublisher {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onPaymentFailed(PaymentFailedEvent event) {
         publisher.publish(TOPIC, "failed", new PaymentFailedIntegrationEvent(
-                event.paymentId(), event.tenantId(), event.bizOrderNo(),
+                event.paymentId(), event.bizOrderNo(),
                 event.channel(), event.reason()));
         log.debug("published payment.failed, paymentId={}", event.paymentId());
     }
@@ -63,7 +63,7 @@ public class PaymentIntegrationEventPublisher {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onPaymentCancelled(PaymentCancelledEvent event) {
         publisher.publish(TOPIC, "cancelled", new PaymentCancelledIntegrationEvent(
-                event.paymentId(), event.tenantId(), event.bizOrderNo(),
+                event.paymentId(), event.bizOrderNo(),
                 event.channel(), event.reason()));
         log.debug("published payment.cancelled, paymentId={}", event.paymentId());
     }
@@ -72,7 +72,7 @@ public class PaymentIntegrationEventPublisher {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onPaymentExpired(PaymentExpiredEvent event) {
         publisher.publish(TOPIC, "expired", new PaymentExpiredIntegrationEvent(
-                event.paymentId(), event.tenantId(), event.bizOrderNo(), event.channel()));
+                event.paymentId(), event.bizOrderNo(), event.channel()));
         log.debug("published payment.expired, paymentId={}", event.paymentId());
     }
 }

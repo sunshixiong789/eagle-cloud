@@ -30,7 +30,7 @@ import java.time.LocalDateTime;
  * (eagle-encrypt-starter);v1 先以明文 + DB 列字符串形式落库,P1 后期 hook 进
  * AttributeConverter 加密。
  *
- * <p>幂等键: {@code (tenant_id, biz_transfer_no)} UNIQUE。
+ * <p>幂等键: {@code (biz_transfer_no)} UNIQUE。
  *
  * @author sunshixiong
  */
@@ -40,21 +40,17 @@ import java.time.LocalDateTime;
 @Table(name = "t_transfer", comment = "提现单",
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_transfer_biz",
-                        columnNames = {"tenant_id", "biz_transfer_no"})
+                        columnNames = {"biz_transfer_no"})
         },
         indexes = {
-                @Index(name = "idx_transfer_tenant_status_created",
-                        columnList = "tenant_id, status, create_time"),
+                @Index(name = "idx_transfer_status_created",
+                        columnList = "status, create_time"),
                 @Index(name = "idx_transfer_channel_no",
                         columnList = "channel, channel_transfer_no"),
                 @Index(name = "idx_transfer_recipient",
-                        columnList = "tenant_id, recipient_account")
+                        columnList = "recipient_account")
         })
 public class Transfer extends BaseAggregateRoot<Transfer> {
-
-    @Column(name = "tenant_id", nullable = false, updatable = false, length = 64,
-            comment = "租户 ID")
-    private String tenantId;
 
     @Column(name = "biz_transfer_no", nullable = false, updatable = false, length = 64,
             comment = "业务提现号 (上游调用方提供)")
@@ -93,10 +89,9 @@ public class Transfer extends BaseAggregateRoot<Transfer> {
     @Column(name = "fail_reason", length = 512, comment = "失败原因 / 退票原因")
     private String failReason;
 
-    private Transfer(String tenantId, String bizTransferNo, PaymentChannel channel,
+    private Transfer(String bizTransferNo, PaymentChannel channel,
                      String recipientAccount, @Nullable String recipientName,
                      BigDecimal amount, @Nullable String reason) {
-        this.tenantId = tenantId;
         this.bizTransferNo = bizTransferNo;
         this.channel = channel;
         this.recipientAccount = recipientAccount;
@@ -106,13 +101,13 @@ public class Transfer extends BaseAggregateRoot<Transfer> {
         this.status = TransferStatus.PENDING;
     }
 
-    public static Transfer create(String tenantId, String bizTransferNo, PaymentChannel channel,
+    public static Transfer create(String bizTransferNo, PaymentChannel channel,
                                   String recipientAccount, @Nullable String recipientName,
                                   BigDecimal amount, @Nullable String reason) {
         if (amount == null || amount.signum() <= 0) {
             throw TransferErrorCode.INVALID_TRANSFER_AMOUNT.toDomainException();
         }
-        return new Transfer(tenantId, bizTransferNo, channel, recipientAccount, recipientName,
+        return new Transfer(bizTransferNo, channel, recipientAccount, recipientName,
                 amount.setScale(2), reason);
     }
 
@@ -142,7 +137,7 @@ public class Transfer extends BaseAggregateRoot<Transfer> {
         if (channelTransferNo != null) {
             this.channelTransferNo = channelTransferNo;
         }
-        registerEvent(new TransferSucceededEvent(getId(), tenantId, bizTransferNo, channel,
+        registerEvent(new TransferSucceededEvent(getId(), bizTransferNo, channel,
                 amount, recipientAccount, this.channelTransferNo, succeededAt));
     }
 
@@ -158,7 +153,7 @@ public class Transfer extends BaseAggregateRoot<Transfer> {
         }
         this.status = TransferStatus.FAILED;
         this.failReason = reason;
-        registerEvent(new TransferFailedEvent(getId(), tenantId, bizTransferNo, channel,
+        registerEvent(new TransferFailedEvent(getId(), bizTransferNo, channel,
                 amount, recipientAccount, reason));
     }
 
@@ -174,7 +169,7 @@ public class Transfer extends BaseAggregateRoot<Transfer> {
         }
         this.status = TransferStatus.RETURNED;
         this.failReason = reason;
-        registerEvent(new TransferReturnedEvent(getId(), tenantId, bizTransferNo, channel,
+        registerEvent(new TransferReturnedEvent(getId(), bizTransferNo, channel,
                 amount, recipientAccount, reason));
     }
 }

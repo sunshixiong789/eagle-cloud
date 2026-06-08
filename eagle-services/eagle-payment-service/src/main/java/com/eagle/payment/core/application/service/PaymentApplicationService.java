@@ -11,7 +11,6 @@ import com.eagle.payment.core.domain.repository.PaymentRepository;
 import com.eagle.payment.core.infrastructure.config.PaymentProperties;
 import com.eagle.payment.core.interfaces.dto.request.CreatePaymentRequest;
 import com.eagle.payment.core.interfaces.dto.response.CreatePaymentResponse;
-import com.eagle.tenant.TenantContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -27,7 +26,7 @@ import java.util.Map;
  *
  * <p>下单核心流程:
  * <ol>
- *   <li>幂等检查 - (tenantId, bizOrderNo, channel) UNIQUE,DB 兜底</li>
+ *   <li>幂等检查 - (bizOrderNo, channel) UNIQUE,DB 兜底</li>
  *   <li>创建 CREATED 状态聚合根,生成 outTradeNo (Snowflake)</li>
  *   <li>提交到渠道,渠道返回 channelTradeNo + payload</li>
  *   <li>聚合根 submittedToChannel,迁移到 PAYING</li>
@@ -64,10 +63,8 @@ public class PaymentApplicationService {
      */
     @Transactional
     public CreatePaymentResponse create(CreatePaymentRequest request) {
-        String tenantId = resolveTenantId();
         PaymentChannel channel = request.getChannel();
-        if (paymentRepository.existsByTenantIdAndBizOrderNoAndChannel(
-                tenantId, request.getBizOrderNo(), channel)) {
+        if (paymentRepository.existsByBizOrderNoAndChannel(request.getBizOrderNo(), channel)) {
             throw PaymentErrorCode.DUPLICATE_PAYMENT.toConflictException();
         }
         PaymentGatewayPort gateway = gateways.get(channel);
@@ -78,7 +75,6 @@ public class PaymentApplicationService {
                 ? request.getExpireMinutes() : properties.getExpireMinutes();
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(expireMinutes);
         Payment payment = Payment.create(
-                tenantId,
                 request.getBizOrderNo(),
                 channel,
                 request.getScene(),
@@ -92,8 +88,7 @@ public class PaymentApplicationService {
             payment = paymentRepository.saveAndFlush(payment);
         } catch (DataIntegrityViolationException e) {
             // Mode A 兜底:并发下两个相同 bizOrderNo 同时进 existsBy 检查通过,落库时唯一约束抛
-            if (paymentRepository.existsByTenantIdAndBizOrderNoAndChannel(
-                    tenantId, request.getBizOrderNo(), channel)) {
+            if (paymentRepository.existsByBizOrderNoAndChannel(request.getBizOrderNo(), channel)) {
                 throw PaymentErrorCode.DUPLICATE_PAYMENT.toConflictException();
             }
             throw e;
@@ -149,13 +144,7 @@ public class PaymentApplicationService {
      */
     @Transactional(readOnly = true)
     public Payment findByBizOrderNo(String bizOrderNo, PaymentChannel channel) {
-        return paymentRepository.findByTenantIdAndBizOrderNoAndChannel(
-                        resolveTenantId(), bizOrderNo, channel)
+        return paymentRepository.findByBizOrderNoAndChannel(bizOrderNo, channel)
                 .orElseThrow(PaymentErrorCode.PAYMENT_NOT_FOUND::toNotFoundException);
-    }
-
-    private String resolveTenantId() {
-        String tenantId = TenantContextHolder.getTenantId();
-        return tenantId == null ? "default" : tenantId;
     }
 }

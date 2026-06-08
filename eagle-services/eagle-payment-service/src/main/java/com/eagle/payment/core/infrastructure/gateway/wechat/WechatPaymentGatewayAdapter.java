@@ -108,7 +108,7 @@ public class WechatPaymentGatewayAdapter implements PaymentGatewayPort {
     @SuppressWarnings("deprecation")
     @PostConstruct
     void init() {
-        Map<String, String> creds = merchantResolver.resolve("", PaymentChannel.WECHAT);
+        Map<String, String> creds = merchantResolver.resolve(PaymentChannel.WECHAT);
         if (creds == null) {
             log.warn("WeChat Pay enabled but credentials missing — gateway will reject all requests");
             return;

@@ -23,7 +23,6 @@ import java.time.LocalDateTime;
 public class PaymentPaidIntegrationEvent extends BaseEvent {
 
     private Long paymentId;
-    private String tenantId;
     private String bizOrderNo;
     private PaymentChannel channel;
     private BigDecimal amount;
@@ -31,11 +30,10 @@ public class PaymentPaidIntegrationEvent extends BaseEvent {
     private String outTradeNo;
     private LocalDateTime paidAt;
 
-    public PaymentPaidIntegrationEvent(Long paymentId, String tenantId, String bizOrderNo,
+    public PaymentPaidIntegrationEvent(Long paymentId, String bizOrderNo,
                                        PaymentChannel channel, BigDecimal amount, String currency,
                                        String outTradeNo, LocalDateTime paidAt) {
         this.paymentId = paymentId;
-        this.tenantId = tenantId;
         this.bizOrderNo = bizOrderNo;
         this.channel = channel;
         this.amount = amount;

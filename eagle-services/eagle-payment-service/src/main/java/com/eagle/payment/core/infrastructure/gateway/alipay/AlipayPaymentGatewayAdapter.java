@@ -104,8 +104,7 @@ public class AlipayPaymentGatewayAdapter implements PaymentGatewayPort {
 
     @PostConstruct
     void init() {
-        // v1 单商户:用空 tenantId 取全局凭证
-        Map<String, String> creds = merchantResolver.resolve("", PaymentChannel.ALIPAY);
+        Map<String, String> creds = merchantResolver.resolve(PaymentChannel.ALIPAY);
         if (creds == null) {
             log.warn("Alipay enabled but credentials missing — gateway will reject all requests");
             return;

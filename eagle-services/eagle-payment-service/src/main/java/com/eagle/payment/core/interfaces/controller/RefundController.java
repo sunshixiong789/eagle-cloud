@@ -35,7 +35,7 @@ public class RefundController {
 
     @Operation(summary = "发起退款",
             description = "支持部分退 (取决于 eagle.payment.refund.allow-partial 开关);" +
-                    "幂等键 (tenantId, bizRefundNo)")
+                    "幂等键 (bizRefundNo)")
     @PreAuthorize("hasRole('service')")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

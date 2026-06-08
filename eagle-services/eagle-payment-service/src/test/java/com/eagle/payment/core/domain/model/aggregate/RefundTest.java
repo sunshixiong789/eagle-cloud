@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class RefundTest {
 
     private Refund create() {
-        return Refund.create("t1", 1024L, "REF-001",
+        return Refund.create(1024L, "REF-001",
                 PaymentChannel.ALIPAY, new BigDecimal("30.00"), "user-cancel");
     }
 
@@ -35,7 +35,7 @@ class RefundTest {
         @Test
         @DisplayName("金额 <= 0 应抛 DomainException")
         void shouldRejectInvalidAmount() {
-            assertThatThrownBy(() -> Refund.create("t1", 1024L, "REF-001",
+            assertThatThrownBy(() -> Refund.create(1024L, "REF-001",
                     PaymentChannel.ALIPAY, BigDecimal.ZERO, null))
                     .isInstanceOf(DomainException.class);
         }

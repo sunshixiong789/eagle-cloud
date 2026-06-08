@@ -17,7 +17,6 @@ import java.time.LocalDateTime;
 public record RefundCompletedEvent(
         Long refundId,
         Long paymentId,
-        String tenantId,
         String bizRefundNo,
         PaymentChannel channel,
         BigDecimal amount,
