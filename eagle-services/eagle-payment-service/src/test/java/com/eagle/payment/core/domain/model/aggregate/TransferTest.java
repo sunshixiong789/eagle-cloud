@@ -2,6 +2,7 @@ package com.eagle.payment.core.domain.model.aggregate;
 
 import com.eagle.common.exception.DomainException;
 import com.eagle.payment.core.domain.model.enums.PaymentChannel;
+import com.eagle.payment.core.domain.model.enums.TransferMode;
 import com.eagle.payment.core.domain.model.enums.TransferStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -17,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class TransferTest {
 
     private Transfer create() {
-        return Transfer.create("TRN-001", PaymentChannel.ALIPAY,
+        return Transfer.create("TRN-001", TransferMode.IMMEDIATE, PaymentChannel.ALIPAY,
                 "user@example.com", "张三", new BigDecimal("500.00"), "月度结算");
     }
 
@@ -34,9 +35,29 @@ class TransferTest {
         @Test
         @DisplayName("金额 <= 0 应抛 DomainException")
         void shouldRejectInvalidAmount() {
-            assertThatThrownBy(() -> Transfer.create("TRN-001", PaymentChannel.ALIPAY,
-                    "user", null, BigDecimal.ZERO, null))
+            assertThatThrownBy(() -> Transfer.create("TRN-001", TransferMode.IMMEDIATE,
+                    PaymentChannel.ALIPAY, "user", null, BigDecimal.ZERO, null))
                     .isInstanceOf(DomainException.class);
+        }
+
+        @Test
+        @DisplayName("IMMEDIATE 模式初始状态应为 PENDING")
+        void shouldStartAtPendingForImmediate() {
+            Transfer t = Transfer.create("TRN-001", TransferMode.IMMEDIATE,
+                    PaymentChannel.ALIPAY, "user@example.com", "张三",
+                    new BigDecimal("500.00"), "月度结算");
+            assertThat(t.getStatus()).isEqualTo(TransferStatus.PENDING);
+            assertThat(t.getMode()).isEqualTo(TransferMode.IMMEDIATE);
+        }
+
+        @Test
+        @DisplayName("APPROVAL 模式初始状态应为 PENDING_APPROVAL")
+        void shouldStartAtPendingApprovalForApproval() {
+            Transfer t = Transfer.create("TRN-001", TransferMode.APPROVAL,
+                    PaymentChannel.ALIPAY, "user@example.com", "张三",
+                    new BigDecimal("500.00"), "月度结算");
+            assertThat(t.getStatus()).isEqualTo(TransferStatus.PENDING_APPROVAL);
+            assertThat(t.getMode()).isEqualTo(TransferMode.APPROVAL);
         }
     }
 

@@ -3,6 +3,7 @@ package com.eagle.payment.core.application.service;
 import com.eagle.payment.core.common.exception.TransferErrorCode;
 import com.eagle.payment.core.domain.model.aggregate.Transfer;
 import com.eagle.payment.core.domain.model.enums.PaymentChannel;
+import com.eagle.payment.core.domain.model.enums.TransferMode;
 import com.eagle.payment.core.domain.model.enums.TransferStatus;
 import com.eagle.payment.core.domain.port.GatewayTransferCommand;
 import com.eagle.payment.core.domain.port.GatewayTransferResult;
@@ -81,6 +82,7 @@ public class TransferApplicationService {
             throw TransferErrorCode.CHANNEL_UNAVAILABLE.toDomainException();
         }
         Transfer transfer = Transfer.create(request.getBizTransferNo(),
+                TransferMode.IMMEDIATE,
                 request.getChannel(), request.getRecipientAccount(),
                 request.getRecipientName(), request.getAmount(), request.getReason());
         try {

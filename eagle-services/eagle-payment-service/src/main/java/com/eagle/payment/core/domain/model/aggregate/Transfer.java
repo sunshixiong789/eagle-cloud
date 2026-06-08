@@ -6,6 +6,7 @@ import com.eagle.payment.core.domain.event.TransferFailedEvent;
 import com.eagle.payment.core.domain.event.TransferReturnedEvent;
 import com.eagle.payment.core.domain.event.TransferSucceededEvent;
 import com.eagle.payment.core.domain.model.enums.PaymentChannel;
+import com.eagle.payment.core.domain.model.enums.TransferMode;
 import com.eagle.payment.core.domain.model.enums.TransferStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -48,7 +49,9 @@ import java.time.LocalDateTime;
                 @Index(name = "idx_transfer_channel_no",
                         columnList = "channel, channel_transfer_no"),
                 @Index(name = "idx_transfer_recipient",
-                        columnList = "recipient_account")
+                        columnList = "recipient_account"),
+                @Index(name = "idx_transfer_mode_status",
+                        columnList = "mode, status, create_time")
         })
 public class Transfer extends BaseAggregateRoot<Transfer> {
 
@@ -89,25 +92,50 @@ public class Transfer extends BaseAggregateRoot<Transfer> {
     @Column(name = "fail_reason", length = 512, comment = "失败原因 / 退票原因")
     private String failReason;
 
-    private Transfer(String bizTransferNo, PaymentChannel channel,
+    @Enumerated(EnumType.STRING)
+    @Column(name = "mode", nullable = false, updatable = false, length = 16,
+            comment = "受理模式:IMMEDIATE 立即到账 / APPROVAL 需审核")
+    private TransferMode mode;
+
+    @Column(name = "approver_id", length = 64, comment = "审核人用户 ID")
+    @Nullable
+    private String approverId;
+
+    @Column(name = "approved_at", comment = "审核通过时间")
+    @Nullable
+    private LocalDateTime approvedAt;
+
+    @Column(name = "rejected_at", comment = "审核拒绝时间")
+    @Nullable
+    private LocalDateTime rejectedAt;
+
+    @Column(name = "reject_reason", length = 512, comment = "审核拒绝原因")
+    @Nullable
+    private String rejectReason;
+
+    private Transfer(String bizTransferNo, TransferMode mode, PaymentChannel channel,
                      String recipientAccount, @Nullable String recipientName,
                      BigDecimal amount, @Nullable String reason) {
         this.bizTransferNo = bizTransferNo;
+        this.mode = mode;
         this.channel = channel;
         this.recipientAccount = recipientAccount;
         this.recipientName = recipientName;
         this.amount = amount;
         this.reason = reason;
-        this.status = TransferStatus.PENDING;
+        this.status = (mode == TransferMode.APPROVAL)
+                ? TransferStatus.PENDING_APPROVAL
+                : TransferStatus.PENDING;
     }
 
-    public static Transfer create(String bizTransferNo, PaymentChannel channel,
+    public static Transfer create(String bizTransferNo, TransferMode mode,
+                                  PaymentChannel channel,
                                   String recipientAccount, @Nullable String recipientName,
                                   BigDecimal amount, @Nullable String reason) {
         if (amount == null || amount.signum() <= 0) {
             throw TransferErrorCode.INVALID_TRANSFER_AMOUNT.toDomainException();
         }
-        return new Transfer(bizTransferNo, channel, recipientAccount, recipientName,
+        return new Transfer(bizTransferNo, mode, channel, recipientAccount, recipientName,
                 amount.setScale(2), reason);
     }
 
