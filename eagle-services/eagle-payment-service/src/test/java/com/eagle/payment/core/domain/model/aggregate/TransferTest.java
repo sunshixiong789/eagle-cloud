@@ -135,4 +135,77 @@ class TransferTest {
                     .isInstanceOf(DomainException.class);
         }
     }
+
+    @Nested
+    @DisplayName("approve")
+    class Approve {
+
+        @Test
+        @DisplayName("APPROVAL 模式 PENDING_APPROVAL → PENDING + 记录 approverId/approvedAt")
+        void shouldTransitionToPendingAndRecordApprover() {
+            Transfer t = Transfer.create("TRN-001", TransferMode.APPROVAL,
+                    PaymentChannel.ALIPAY, "user@example.com", "张三",
+                    new BigDecimal("500.00"), "结算");
+
+            t.approve("admin-1");
+
+            assertThat(t.getStatus()).isEqualTo(TransferStatus.PENDING);
+            assertThat(t.getApproverId()).isEqualTo("admin-1");
+            assertThat(t.getApprovedAt()).isNotNull();
+        }
+
+        @Test
+        @DisplayName("IMMEDIATE 模式 approve 抛 NOT_APPROVAL_MODE")
+        void shouldRejectApproveOnImmediate() {
+            Transfer t = Transfer.create("TRN-001", TransferMode.IMMEDIATE,
+                    PaymentChannel.ALIPAY, "user@example.com", "张三",
+                    new BigDecimal("500.00"), "结算");
+
+            assertThatThrownBy(() -> t.approve("admin-1"))
+                    .isInstanceOf(DomainException.class);
+        }
+
+        @Test
+        @DisplayName("非 PENDING_APPROVAL 状态 approve 抛 APPROVAL_NOT_ALLOWED_IN_STATUS")
+        void shouldRejectApproveWhenStatusNotPendingApproval() {
+            Transfer t = Transfer.create("TRN-001", TransferMode.APPROVAL,
+                    PaymentChannel.ALIPAY, "user@example.com", "张三",
+                    new BigDecimal("500.00"), "结算");
+            t.approve("admin-1");
+
+            assertThatThrownBy(() -> t.approve("admin-2"))
+                    .isInstanceOf(DomainException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("reject")
+    class Reject {
+
+        @Test
+        @DisplayName("APPROVAL 模式 PENDING_APPROVAL → REJECTED + 记录原因")
+        void shouldTransitionToRejected() {
+            Transfer t = Transfer.create("TRN-001", TransferMode.APPROVAL,
+                    PaymentChannel.ALIPAY, "user@example.com", "张三",
+                    new BigDecimal("500.00"), "结算");
+
+            t.reject("admin-1", "金额可疑");
+
+            assertThat(t.getStatus()).isEqualTo(TransferStatus.REJECTED);
+            assertThat(t.getApproverId()).isEqualTo("admin-1");
+            assertThat(t.getRejectReason()).isEqualTo("金额可疑");
+            assertThat(t.getRejectedAt()).isNotNull();
+        }
+
+        @Test
+        @DisplayName("非 PENDING_APPROVAL 状态 reject 应抛 DomainException")
+        void shouldRejectRejectWhenStatusNotPendingApproval() {
+            Transfer t = Transfer.create("TRN-001", TransferMode.IMMEDIATE,
+                    PaymentChannel.ALIPAY, "user@example.com", "张三",
+                    new BigDecimal("500.00"), "结算");
+
+            assertThatThrownBy(() -> t.reject("admin-1", "any"))
+                    .isInstanceOf(DomainException.class);
+        }
+    }
 }

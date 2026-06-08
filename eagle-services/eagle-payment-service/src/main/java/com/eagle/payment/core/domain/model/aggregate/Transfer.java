@@ -2,7 +2,9 @@ package com.eagle.payment.core.domain.model.aggregate;
 
 import com.eagle.datajpa.base.BaseAggregateRoot;
 import com.eagle.payment.core.common.exception.TransferErrorCode;
+import com.eagle.payment.core.domain.event.TransferApprovedEvent;
 import com.eagle.payment.core.domain.event.TransferFailedEvent;
+import com.eagle.payment.core.domain.event.TransferRejectedEvent;
 import com.eagle.payment.core.domain.event.TransferReturnedEvent;
 import com.eagle.payment.core.domain.event.TransferSucceededEvent;
 import com.eagle.payment.core.domain.model.enums.PaymentChannel;
@@ -199,5 +201,38 @@ public class Transfer extends BaseAggregateRoot<Transfer> {
         this.failReason = reason;
         registerEvent(new TransferReturnedEvent(getId(), bizTransferNo, channel,
                 amount, recipientAccount, reason));
+    }
+
+    /**
+     * 审核通过:仅允许从 APPROVAL 模式 + PENDING_APPROVAL 状态迁出,
+     * 状态先迁到 PENDING (内部过渡态,事务内由 submitToGateway 继续推进)。
+     */
+    public void approve(String approverId) {
+        if (this.mode != TransferMode.APPROVAL) {
+            throw TransferErrorCode.NOT_APPROVAL_MODE.toDomainException();
+        }
+        if (this.status != TransferStatus.PENDING_APPROVAL) {
+            throw TransferErrorCode.APPROVAL_NOT_ALLOWED_IN_STATUS.toDomainException();
+        }
+        this.status = TransferStatus.PENDING;
+        this.approverId = approverId;
+        this.approvedAt = LocalDateTime.now();
+        registerEvent(new TransferApprovedEvent(getId(), bizTransferNo, channel,
+                amount, recipientAccount, approverId, this.approvedAt));
+    }
+
+    /**
+     * 审核拒绝:仅允许从 PENDING_APPROVAL 迁出 → REJECTED 终态。
+     */
+    public void reject(String approverId, String reason) {
+        if (this.status != TransferStatus.PENDING_APPROVAL) {
+            throw TransferErrorCode.APPROVAL_NOT_ALLOWED_IN_STATUS.toDomainException();
+        }
+        this.status = TransferStatus.REJECTED;
+        this.approverId = approverId;
+        this.rejectReason = reason;
+        this.rejectedAt = LocalDateTime.now();
+        registerEvent(new TransferRejectedEvent(getId(), bizTransferNo, channel,
+                amount, recipientAccount, approverId, reason, this.rejectedAt));
     }
 }
