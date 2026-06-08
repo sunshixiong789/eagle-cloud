@@ -11,11 +11,18 @@ import com.eagle.payment.core.domain.port.PaymentGatewayPort;
 import com.eagle.payment.core.domain.repository.TransferRepository;
 import com.eagle.payment.core.infrastructure.config.PaymentProperties;
 import com.eagle.payment.core.interfaces.dto.request.CreateTransferRequest;
+import com.eagle.payment.core.interfaces.dto.request.TransferAdminQueryRequest;
+import jakarta.persistence.criteria.Predicate;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -177,6 +184,37 @@ public class TransferApplicationService {
     public Transfer findByBizTransferNo(String bizTransferNo) {
         return transferRepository.findByBizTransferNo(bizTransferNo)
                 .orElseThrow(TransferErrorCode.TRANSFER_NOT_FOUND::toNotFoundException);
+    }
+
+    /**
+     * Admin 后台分页查询: 支持 mode / status / channel / bizTransferNo / 创建时间区间 过滤。
+     */
+    @Transactional(readOnly = true)
+    public Page<Transfer> queryForAdmin(TransferAdminQueryRequest query, Pageable pageable) {
+        Specification<Transfer> spec = (root, q, cb) -> {
+            List<Predicate> ps = new ArrayList<>();
+            if (query.getMode() != null) {
+                ps.add(cb.equal(root.get("mode"), query.getMode()));
+            }
+            if (query.getStatus() != null) {
+                ps.add(cb.equal(root.get("status"), query.getStatus()));
+            }
+            if (query.getChannel() != null) {
+                ps.add(cb.equal(root.get("channel"), query.getChannel()));
+            }
+            if (query.getBizTransferNo() != null) {
+                ps.add(cb.equal(root.get("bizTransferNo"), query.getBizTransferNo()));
+            }
+            if (query.getCreateTimeFrom() != null) {
+                ps.add(cb.greaterThanOrEqualTo(root.get("createTime"),
+                        query.getCreateTimeFrom()));
+            }
+            if (query.getCreateTimeTo() != null) {
+                ps.add(cb.lessThan(root.get("createTime"), query.getCreateTimeTo()));
+            }
+            return cb.and(ps.toArray(new Predicate[0]));
+        };
+        return transferRepository.findAll(spec, pageable);
     }
 
     /**
