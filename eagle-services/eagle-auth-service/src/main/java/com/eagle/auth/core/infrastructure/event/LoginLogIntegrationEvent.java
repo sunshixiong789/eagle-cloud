@@ -13,10 +13,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class LoginLogIntegrationEvent extends BaseEvent {
 
-    /** 事件协议版本。 */
-    public static final String EVENT_VERSION = "1.0";
-
-    private String eventVersion;
     private Long accountId;
     private String username;
     private String ip;
@@ -26,7 +22,6 @@ public class LoginLogIntegrationEvent extends BaseEvent {
 
     public LoginLogIntegrationEvent(Long accountId, String username, String ip,
                                     String userAgent, boolean success, String failReason) {
-        this.eventVersion = EVENT_VERSION;
         this.accountId = accountId;
         this.username = username;
         this.ip = ip;

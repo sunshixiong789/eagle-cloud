@@ -145,4 +145,12 @@ public interface LogRepository extends JpaRepository<SysLog, Long>,
             @Param("username") String username,
             @Param("logType") LogType logType,
             @Param("status") LogStatus status);
+
+    /**
+     * 判断指定事件 ID 的日志是否已存在(MQ 幂等校验)。
+     *
+     * @param eventId MQ 事件 ID
+     * @return 已存在返回 true
+     */
+    boolean existsByEventId(String eventId);
 }

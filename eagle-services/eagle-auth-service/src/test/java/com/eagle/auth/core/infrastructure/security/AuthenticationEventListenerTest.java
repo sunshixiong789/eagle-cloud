@@ -18,6 +18,7 @@ import org.springframework.security.authentication.event.AuthenticationFailureBa
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,7 +52,7 @@ class AuthenticationEventListenerTest {
             verify(loginAttemptService).registerSuccess("203.0.113.10");
             ArgumentCaptor<LoginLogIntegrationEvent> captor =
                     ArgumentCaptor.forClass(LoginLogIntegrationEvent.class);
-            verify(publisher).publish(AuthLoginLogPublisher.TOPIC, AuthLoginLogPublisher.TAG, captor.capture());
+            verify(publisher).publish(eq(AuthLoginLogPublisher.TOPIC), eq(AuthLoginLogPublisher.TAG), captor.capture());
             LoginLogIntegrationEvent event = captor.getValue();
             assertThat(event.getUsername()).isEqualTo("alice");
             assertThat(event.getIp()).isEqualTo("203.0.113.10");
@@ -76,7 +77,7 @@ class AuthenticationEventListenerTest {
             verify(loginAttemptService).registerFailure("203.0.113.20");
             ArgumentCaptor<LoginLogIntegrationEvent> captor =
                     ArgumentCaptor.forClass(LoginLogIntegrationEvent.class);
-            verify(publisher).publish(AuthLoginLogPublisher.TOPIC, AuthLoginLogPublisher.TAG, captor.capture());
+            verify(publisher).publish(eq(AuthLoginLogPublisher.TOPIC), eq(AuthLoginLogPublisher.TAG), captor.capture());
             LoginLogIntegrationEvent event = captor.getValue();
             assertThat(event.getUsername()).isEqualTo("bob");
             assertThat(event.getIp()).isEqualTo("203.0.113.20");
