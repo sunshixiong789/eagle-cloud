@@ -18,7 +18,14 @@ public enum TransferErrorCode implements ErrorCode {
     EXCEED_DAILY_COUNT(70046, "error.transfer.exceed_daily_count", "当日提现次数超过上限"),
     TRANSFER_GATEWAY_ERROR(70047, "error.transfer.gateway_error", "提现渠道异常"),
     INVALID_TRANSFER_STATUS(70048, "error.transfer.invalid_status", "提现单状态不允许此操作"),
-    CHANNEL_UNAVAILABLE(70049, "error.transfer.channel_unavailable", "提现渠道暂不可用");
+    CHANNEL_UNAVAILABLE(70049, "error.transfer.channel_unavailable", "提现渠道暂不可用"),
+    TRANSFER_MODE_REQUIRED(70050, "error.transfer.mode_required", "受理模式不能为空"),
+    APPROVAL_NOT_ALLOWED_IN_STATUS(70051, "error.transfer.approval_not_allowed",
+            "当前状态不允许审核操作"),
+    REJECT_REASON_REQUIRED(70052, "error.transfer.reject_reason_required",
+            "拒绝原因不能为空"),
+    NOT_APPROVAL_MODE(70053, "error.transfer.not_approval_mode",
+            "立即到账模式不支持审核操作");
 
     private final ErrorCode.Meta meta;
 
