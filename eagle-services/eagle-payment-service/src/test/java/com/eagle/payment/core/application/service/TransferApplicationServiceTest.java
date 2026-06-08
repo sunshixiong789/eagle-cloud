@@ -4,6 +4,7 @@ import com.eagle.common.exception.ConflictException;
 import com.eagle.common.exception.DomainException;
 import com.eagle.payment.core.domain.model.aggregate.Transfer;
 import com.eagle.payment.core.domain.model.enums.PaymentChannel;
+import com.eagle.payment.core.domain.model.enums.TransferMode;
 import com.eagle.payment.core.domain.model.enums.TransferStatus;
 import com.eagle.payment.core.domain.port.GatewayTransferCommand;
 import com.eagle.payment.core.domain.port.GatewayTransferResult;
@@ -60,6 +61,7 @@ class TransferApplicationServiceTest {
     private CreateTransferRequest request(BigDecimal amount) {
         CreateTransferRequest req = new CreateTransferRequest();
         req.setBizTransferNo("TRN-001");
+        req.setMode(TransferMode.IMMEDIATE);
         req.setChannel(PaymentChannel.ALIPAY);
         req.setRecipientAccount("user@example.com");
         req.setRecipientName("张三");
@@ -143,6 +145,24 @@ class TransferApplicationServiceTest {
             assertThatThrownBy(() -> service.create(request(new BigDecimal("500.00"))))
                     .isInstanceOf(ConflictException.class);
             verify(transferRepository, never()).saveAndFlush(any());
+        }
+
+        @Test
+        @DisplayName("APPROVAL 模式 create 应停在 PENDING_APPROVAL,不调渠道")
+        void shouldStopAtPendingApprovalForApprovalMode() {
+            stubRiskControlOk();
+            when(transferRepository.existsByBizTransferNo(eq("TRN-001"))).thenReturn(false);
+            when(transferRepository.saveAndFlush(any(Transfer.class)))
+                    .thenAnswer(inv -> inv.getArgument(0));
+
+            CreateTransferRequest req = request(new BigDecimal("500.00"));
+            req.setMode(TransferMode.APPROVAL);
+
+            Transfer result = service.create(req);
+
+            assertThat(result.getStatus()).isEqualTo(TransferStatus.PENDING_APPROVAL);
+            assertThat(result.getMode()).isEqualTo(TransferMode.APPROVAL);
+            verify(alipayGateway, never()).transfer(any());
         }
     }
 }

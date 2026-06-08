@@ -82,7 +82,7 @@ public class TransferApplicationService {
             throw TransferErrorCode.CHANNEL_UNAVAILABLE.toDomainException();
         }
         Transfer transfer = Transfer.create(request.getBizTransferNo(),
-                TransferMode.IMMEDIATE,
+                request.getMode(),
                 request.getChannel(), request.getRecipientAccount(),
                 request.getRecipientName(), request.getAmount(), request.getReason());
         try {
@@ -94,8 +94,21 @@ public class TransferApplicationService {
             throw e;
         }
 
+        if (request.getMode() == TransferMode.APPROVAL) {
+            log.info("transfer created (awaiting approval), id={}, channel={}, status={}",
+                    transfer.getId(), request.getChannel(), transfer.getStatus());
+            return transfer;
+        }
+        return submitToGateway(transfer, gateway);
+    }
+
+    /**
+     * 把 PENDING 状态 transfer 推送到渠道,并按渠道返回结果更新状态。
+     * 复用于 IMMEDIATE 模式 create() 和 APPROVAL 模式 approve() 两个入口。
+     */
+    private Transfer submitToGateway(Transfer transfer, PaymentGatewayPort gateway) {
         GatewayTransferResult result = gateway.transfer(new GatewayTransferCommand(
-                request.getChannel(),
+                transfer.getChannel(),
                 transfer.getBizTransferNo(),
                 transfer.getAmount(),
                 "CNY",
@@ -114,8 +127,8 @@ public class TransferApplicationService {
             transfer.submittedToChannel(result.channelTransferNo());
         }
         Transfer saved = transferRepository.save(transfer);
-        log.info("transfer created, id={}, channel={}, status={}, channelTransferNo={}",
-                saved.getId(), request.getChannel(), saved.getStatus(),
+        log.info("transfer submitted to gateway, id={}, channel={}, status={}, channelTransferNo={}",
+                saved.getId(), saved.getChannel(), saved.getStatus(),
                 saved.getChannelTransferNo());
         return saved;
     }
