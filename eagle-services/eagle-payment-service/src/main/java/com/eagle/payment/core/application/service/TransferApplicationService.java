@@ -12,6 +12,7 @@ import com.eagle.payment.core.domain.repository.TransferRepository;
 import com.eagle.payment.core.infrastructure.config.PaymentProperties;
 import com.eagle.payment.core.interfaces.dto.request.CreateTransferRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -130,6 +131,39 @@ public class TransferApplicationService {
         log.info("transfer submitted to gateway, id={}, channel={}, status={}, channelTransferNo={}",
                 saved.getId(), saved.getChannel(), saved.getStatus(),
                 saved.getChannelTransferNo());
+        return saved;
+    }
+
+    /**
+     * 审核通过: 仅允许 APPROVAL 模式 PENDING_APPROVAL 状态迁出。
+     * 同事务调渠道,与 IMMEDIATE create 流程行为对称。
+     */
+    @Transactional
+    public Transfer approve(Long transferId, String approverId, @Nullable String remark) {
+        Transfer transfer = transferRepository.findByIdForUpdate(transferId)
+                .orElseThrow(TransferErrorCode.TRANSFER_NOT_FOUND::toNotFoundException);
+        transfer.approve(approverId);
+        PaymentGatewayPort gateway = gateways.get(transfer.getChannel());
+        if (gateway == null) {
+            throw TransferErrorCode.CHANNEL_UNAVAILABLE.toDomainException();
+        }
+        Transfer result = submitToGateway(transfer, gateway);
+        log.info("transfer approved, id={}, approverId={}, remark={}, finalStatus={}",
+                result.getId(), approverId, remark, result.getStatus());
+        return result;
+    }
+
+    /**
+     * 审核拒绝: 仅允许 PENDING_APPROVAL 迁出 → REJECTED 终态,不调渠道。
+     */
+    @Transactional
+    public Transfer reject(Long transferId, String approverId, String reason) {
+        Transfer transfer = transferRepository.findByIdForUpdate(transferId)
+                .orElseThrow(TransferErrorCode.TRANSFER_NOT_FOUND::toNotFoundException);
+        transfer.reject(approverId, reason);
+        Transfer saved = transferRepository.save(transfer);
+        log.info("transfer rejected, id={}, approverId={}, reason={}",
+                saved.getId(), approverId, reason);
         return saved;
     }
 

@@ -3,7 +3,9 @@ package com.eagle.payment.core.domain.repository;
 import com.eagle.payment.core.domain.model.aggregate.Transfer;
 import com.eagle.payment.core.domain.model.enums.PaymentChannel;
 import com.eagle.payment.core.domain.model.enums.TransferStatus;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -25,6 +27,13 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
                                                         String channelTransferNo);
 
     boolean existsByBizTransferNo(String bizTransferNo);
+
+    /**
+     * 加 PESSIMISTIC_WRITE 锁查询,用于审核操作防并发双审。
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT t FROM Transfer t WHERE t.id = :id")
+    Optional<Transfer> findByIdForUpdate(@Param("id") Long id);
 
     /**
      * 当日累计提现金额 (按状态 IN (SUBMITTED, SUCCESS) 汇总)。

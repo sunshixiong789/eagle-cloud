@@ -165,4 +165,63 @@ class TransferApplicationServiceTest {
             verify(alipayGateway, never()).transfer(any());
         }
     }
+
+    @Nested
+    @DisplayName("approve")
+    class Approve {
+
+        @Test
+        @DisplayName("APPROVAL 模式 PENDING_APPROVAL → 同事务调渠道并到达 SUCCESS")
+        void shouldApproveAndSubmitToGateway() {
+            Transfer pending = Transfer.create("TRN-001", TransferMode.APPROVAL,
+                    PaymentChannel.ALIPAY, "user@example.com", "张三",
+                    new BigDecimal("500.00"), "结算");
+            when(transferRepository.findByIdForUpdate(eq(1L)))
+                    .thenReturn(java.util.Optional.of(pending));
+            when(transferRepository.save(any(Transfer.class)))
+                    .thenAnswer(inv -> inv.getArgument(0));
+            when(alipayGateway.transfer(any(GatewayTransferCommand.class)))
+                    .thenReturn(new GatewayTransferResult("CH-TRN-001",
+                            TransferStatus.SUCCESS, LocalDateTime.now(), null));
+
+            Transfer out = service.approve(1L, "admin-1", "ok");
+
+            assertThat(out.getStatus()).isEqualTo(TransferStatus.SUCCESS);
+            assertThat(out.getApproverId()).isEqualTo("admin-1");
+            verify(alipayGateway).transfer(any(GatewayTransferCommand.class));
+        }
+
+        @Test
+        @DisplayName("transfer 不存在抛 TRANSFER_NOT_FOUND")
+        void shouldThrowWhenTransferNotFound() {
+            when(transferRepository.findByIdForUpdate(eq(1L)))
+                    .thenReturn(java.util.Optional.empty());
+
+            assertThatThrownBy(() -> service.approve(1L, "admin-1", null))
+                    .isInstanceOf(com.eagle.common.exception.NotFoundException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("reject")
+    class Reject {
+
+        @Test
+        @DisplayName("APPROVAL 模式 PENDING_APPROVAL → REJECTED,不调渠道")
+        void shouldRejectAndNotCallGateway() {
+            Transfer pending = Transfer.create("TRN-001", TransferMode.APPROVAL,
+                    PaymentChannel.ALIPAY, "user@example.com", "张三",
+                    new BigDecimal("500.00"), "结算");
+            when(transferRepository.findByIdForUpdate(eq(1L)))
+                    .thenReturn(java.util.Optional.of(pending));
+            when(transferRepository.save(any(Transfer.class)))
+                    .thenAnswer(inv -> inv.getArgument(0));
+
+            Transfer out = service.reject(1L, "admin-1", "金额可疑");
+
+            assertThat(out.getStatus()).isEqualTo(TransferStatus.REJECTED);
+            assertThat(out.getRejectReason()).isEqualTo("金额可疑");
+            verify(alipayGateway, never()).transfer(any());
+        }
+    }
 }
