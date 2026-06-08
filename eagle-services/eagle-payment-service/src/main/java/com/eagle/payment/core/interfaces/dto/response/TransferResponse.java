@@ -1,6 +1,7 @@
 package com.eagle.payment.core.interfaces.dto.response;
 
 import com.eagle.payment.core.domain.model.enums.PaymentChannel;
+import com.eagle.payment.core.domain.model.enums.TransferMode;
 import com.eagle.payment.core.domain.model.enums.TransferStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 public record TransferResponse(
         @Schema(description = "提现单 ID") Long id,
         @Schema(description = "业务提现号") String bizTransferNo,
+        @Schema(description = "受理模式") TransferMode mode,
         @Schema(description = "渠道") PaymentChannel channel,
         @Schema(description = "收款方账号") String recipientAccount,
         @Schema(description = "收款方姓名") String recipientName,
@@ -25,6 +27,10 @@ public record TransferResponse(
         @Schema(description = "状态") TransferStatus status,
         @Schema(description = "到账时间") LocalDateTime succeededAt,
         @Schema(description = "失败 / 退票原因") String failReason,
+        @Schema(description = "审核人 ID") String approverId,
+        @Schema(description = "审核通过时间") LocalDateTime approvedAt,
+        @Schema(description = "审核拒绝时间") LocalDateTime rejectedAt,
+        @Schema(description = "审核拒绝原因") String rejectReason,
         @Schema(description = "创建时间") LocalDateTime createTime
 ) {
 }

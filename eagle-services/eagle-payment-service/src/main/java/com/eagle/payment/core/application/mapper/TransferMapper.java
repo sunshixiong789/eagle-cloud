@@ -19,6 +19,7 @@ public class TransferMapper {
         return new TransferResponse(
                 transfer.getId(),
                 transfer.getBizTransferNo(),
+                transfer.getMode(),
                 transfer.getChannel(),
                 transfer.getRecipientAccount(),
                 transfer.getRecipientName(),
@@ -28,6 +29,10 @@ public class TransferMapper {
                 transfer.getStatus(),
                 transfer.getSucceededAt(),
                 transfer.getFailReason(),
+                transfer.getApproverId(),
+                transfer.getApprovedAt(),
+                transfer.getRejectedAt(),
+                transfer.getRejectReason(),
                 transfer.getCreateTime()
         );
     }
