@@ -475,7 +475,7 @@ public class AlipayPaymentGatewayAdapter implements PaymentGatewayPort {
             req.setBizContent(objectMapper.writeValueAsString(biz));
             AlipayFundTransCommonQueryResponse resp = client.execute(req);
             if (!resp.isSuccess()) {
-                return new GatewayTransferResult(null, TransferStatus.REVIEWING, null,
+                return new GatewayTransferResult(null, TransferStatus.SUBMITTED, null,
                         resp.getSubMsg());
             }
             // status: SUCCESS / FAIL / REFUND / DEALING / WAIT_PAY
@@ -483,7 +483,7 @@ public class AlipayPaymentGatewayAdapter implements PaymentGatewayPort {
                 case "SUCCESS" -> TransferStatus.SUCCESS;
                 case "FAIL" -> TransferStatus.FAILED;
                 case "REFUND" -> TransferStatus.RETURNED;
-                default -> TransferStatus.REVIEWING;
+                default -> TransferStatus.SUBMITTED;
             };
             return new GatewayTransferResult(resp.getOrderId(), status,
                     status == TransferStatus.SUCCESS ? LocalDateTime.now() : null,

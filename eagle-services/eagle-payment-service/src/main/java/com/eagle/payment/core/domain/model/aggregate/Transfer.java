@@ -112,24 +112,24 @@ public class Transfer extends BaseAggregateRoot<Transfer> {
     }
 
     /**
-     * 已提交到渠道,迁移到 REVIEWING 并回填渠道转账号。
+     * 已提交到渠道,迁移到 SUBMITTED 并回填渠道转账号。
      */
     public void submittedToChannel(String channelTransferNo) {
         if (this.status != TransferStatus.PENDING) {
             throw TransferErrorCode.INVALID_TRANSFER_STATUS.toDomainException();
         }
-        this.status = TransferStatus.REVIEWING;
+        this.status = TransferStatus.SUBMITTED;
         this.channelTransferNo = channelTransferNo;
     }
 
     /**
-     * 渠道回调通知到账成功。允许从 PENDING / REVIEWING 迁移。
+     * 渠道回调通知到账成功。允许从 PENDING / SUBMITTED 迁移。
      */
     public void markSucceeded(LocalDateTime succeededAt, @Nullable String channelTransferNo) {
         if (this.status == TransferStatus.SUCCESS) {
             return;
         }
-        if (this.status != TransferStatus.PENDING && this.status != TransferStatus.REVIEWING) {
+        if (this.status != TransferStatus.PENDING && this.status != TransferStatus.SUBMITTED) {
             throw TransferErrorCode.INVALID_TRANSFER_STATUS.toDomainException();
         }
         this.status = TransferStatus.SUCCESS;
@@ -148,7 +148,7 @@ public class Transfer extends BaseAggregateRoot<Transfer> {
         if (this.status == TransferStatus.FAILED) {
             return;
         }
-        if (this.status != TransferStatus.PENDING && this.status != TransferStatus.REVIEWING) {
+        if (this.status != TransferStatus.PENDING && this.status != TransferStatus.SUBMITTED) {
             throw TransferErrorCode.INVALID_TRANSFER_STATUS.toDomainException();
         }
         this.status = TransferStatus.FAILED;

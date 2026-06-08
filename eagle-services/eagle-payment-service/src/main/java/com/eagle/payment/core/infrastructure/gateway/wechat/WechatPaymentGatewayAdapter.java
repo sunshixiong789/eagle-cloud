@@ -536,13 +536,13 @@ public class WechatPaymentGatewayAdapter implements PaymentGatewayPort {
 
     private TransferStatus mapBatchStatus(@Nullable String batchStatus) {
         if (batchStatus == null) {
-            return TransferStatus.REVIEWING;
+            return TransferStatus.SUBMITTED;
         }
         return switch (batchStatus) {
             case "FINISHED" -> TransferStatus.SUCCESS;
             case "CLOSED" -> TransferStatus.FAILED;
-            case "ACCEPTED", "PROCESSING" -> TransferStatus.REVIEWING;
-            default -> TransferStatus.REVIEWING;
+            case "ACCEPTED", "PROCESSING" -> TransferStatus.SUBMITTED;
+            default -> TransferStatus.SUBMITTED;
         };
     }
 

@@ -30,15 +30,15 @@ import java.util.Map;
  * <ol>
  *   <li>提现总开关 - {@code enabled=false} 直接拒</li>
  *   <li>单笔限额 - amount &gt; single-amount-limit 拒</li>
- *   <li>当日累计金额限额 - 当日 REVIEWING + SUCCESS 的金额 + 新单 &gt; daily-amount-limit 拒</li>
- *   <li>当日笔数限额 - 当日 REVIEWING + SUCCESS 的笔数 + 1 &gt; daily-count-limit 拒</li>
+ *   <li>当日累计金额限额 - 当日 SUBMITTED + SUCCESS 的金额 + 新单 &gt; daily-amount-limit 拒</li>
+ *   <li>当日笔数限额 - 当日 SUBMITTED + SUCCESS 的笔数 + 1 &gt; daily-count-limit 拒</li>
  * </ol>
  *
  * <p>风控通过后:
  * <ol>
  *   <li>幂等检查 (bizTransferNo) UNIQUE,DB 兜底</li>
  *   <li>创建 Transfer (PENDING) → 提交到渠道</li>
- *   <li>支付宝同步 SUCCESS → 直接 markSucceeded;微信异步 REVIEWING → submittedToChannel 等回调</li>
+ *   <li>支付宝同步 SUCCESS → 直接 markSucceeded;微信异步 SUBMITTED → submittedToChannel 等回调</li>
  * </ol>
  *
  * @author sunshixiong
@@ -48,7 +48,7 @@ import java.util.Map;
 public class TransferApplicationService {
 
     private static final List<TransferStatus> ACCOUNTED_STATUSES =
-            List.of(TransferStatus.REVIEWING, TransferStatus.SUCCESS);
+            List.of(TransferStatus.SUBMITTED, TransferStatus.SUCCESS);
 
     private final TransferRepository transferRepository;
     private final PaymentProperties properties;

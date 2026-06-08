@@ -45,11 +45,11 @@ class TransferTest {
     class HappyPath {
 
         @Test
-        @DisplayName("PENDING → REVIEWING → SUCCESS")
+        @DisplayName("PENDING → SUBMITTED → SUCCESS")
         void shouldFlowToSuccess() {
             Transfer t = create();
             t.submittedToChannel("CHAN-T-1");
-            assertThat(t.getStatus()).isEqualTo(TransferStatus.REVIEWING);
+            assertThat(t.getStatus()).isEqualTo(TransferStatus.SUBMITTED);
             LocalDateTime ts = LocalDateTime.now();
             t.markSucceeded(ts, "CHAN-T-1");
             assertThat(t.getStatus()).isEqualTo(TransferStatus.SUCCESS);

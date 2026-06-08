@@ -27,7 +27,7 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
     boolean existsByBizTransferNo(String bizTransferNo);
 
     /**
-     * 当日累计提现金额 (按状态 IN (REVIEWING, SUCCESS) 汇总)。
+     * 当日累计提现金额 (按状态 IN (SUBMITTED, SUCCESS) 汇总)。
      */
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transfer t " +
             "WHERE t.status IN :statuses " +
