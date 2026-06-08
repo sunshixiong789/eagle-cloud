@@ -1,9 +1,13 @@
 package com.eagle.payment.core.infrastructure.event;
 
+import com.eagle.payment.core.domain.event.TransferApprovedEvent;
 import com.eagle.payment.core.domain.event.TransferFailedEvent;
+import com.eagle.payment.core.domain.event.TransferRejectedEvent;
 import com.eagle.payment.core.domain.event.TransferReturnedEvent;
 import com.eagle.payment.core.domain.event.TransferSucceededEvent;
+import com.eagle.payment.core.infrastructure.messaging.TransferApprovedIntegrationEvent;
 import com.eagle.payment.core.infrastructure.messaging.TransferFailedIntegrationEvent;
+import com.eagle.payment.core.infrastructure.messaging.TransferRejectedIntegrationEvent;
 import com.eagle.payment.core.infrastructure.messaging.TransferReturnedIntegrationEvent;
 import com.eagle.payment.core.infrastructure.messaging.TransferSucceededIntegrationEvent;
 import com.eagle.rocketmq.publisher.DomainEventPublisher;
@@ -18,7 +22,8 @@ import org.springframework.transaction.event.TransactionalEventListener;
  * Transfer 域跨服务集成事件桥接器。
  *
  * <p>topic {@code payment_transfer_events}, tag: {@code success} / {@code failed} /
- * {@code returned}。Transfer 是独立聚合,按 rules/15-messaging.md 走独立 topic。
+ * {@code returned} / {@code approved} / {@code rejected}。Transfer 是独立聚合,
+ * 按 rules/15-messaging.md 走独立 topic。
  *
  * @author sunshixiong
  */
@@ -57,5 +62,25 @@ public class TransferIntegrationEventPublisher {
                 event.transferId(), event.bizTransferNo(), event.channel(),
                 event.amount(), event.recipientAccount(), event.reason()));
         log.debug("published transfer.returned, transferId={}", event.transferId());
+    }
+
+    @Async("taskExecutor")
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onTransferApproved(TransferApprovedEvent event) {
+        publisher.publish(TOPIC, "approved", new TransferApprovedIntegrationEvent(
+                event.transferId(), event.bizTransferNo(), event.channel(),
+                event.amount(), event.recipientAccount(),
+                event.approverId(), event.approvedAt()));
+        log.debug("published transfer.approved, transferId={}", event.transferId());
+    }
+
+    @Async("taskExecutor")
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onTransferRejected(TransferRejectedEvent event) {
+        publisher.publish(TOPIC, "rejected", new TransferRejectedIntegrationEvent(
+                event.transferId(), event.bizTransferNo(), event.channel(),
+                event.amount(), event.recipientAccount(),
+                event.approverId(), event.rejectReason(), event.rejectedAt()));
+        log.debug("published transfer.rejected, transferId={}", event.transferId());
     }
 }
