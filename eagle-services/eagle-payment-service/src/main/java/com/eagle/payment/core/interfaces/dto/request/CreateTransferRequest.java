@@ -1,6 +1,7 @@
 package com.eagle.payment.core.interfaces.dto.request;
 
 import com.eagle.payment.core.domain.model.enums.PaymentChannel;
+import com.eagle.payment.core.domain.model.enums.TransferMode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
@@ -31,6 +32,11 @@ public class CreateTransferRequest {
     @Schema(description = "提现渠道", requiredMode = Schema.RequiredMode.REQUIRED,
             example = "ALIPAY")
     private PaymentChannel channel;
+
+    @NotNull
+    @Schema(description = "受理模式:IMMEDIATE 立即到账 / APPROVAL 需审核",
+            requiredMode = Schema.RequiredMode.REQUIRED, example = "APPROVAL")
+    private TransferMode mode;
 
     @NotBlank
     @Size(max = 128)
