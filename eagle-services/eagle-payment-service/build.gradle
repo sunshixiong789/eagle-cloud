@@ -1,0 +1,47 @@
+// 排除旧式 SAX 解析器(参照 auth-service / system-service,避免支付 SDK 传递引入老 XML 解析器)。
+configurations.configureEach {
+    exclude group: 'xpp3', module: 'xpp3'
+    exclude group: 'xpp3', module: 'xpp3_min'
+    exclude group: 'xmlpull', module: 'xmlpull'
+    exclude group: 'io.github.x-stream', module: 'mxparser'
+    exclude group: 'pull-parser', module: 'pull-parser'
+}
+
+dependencies {
+    // Eagle 基础设施 starter
+    implementation project(':eagle-starter:eagle-data-jpa-starter')
+    implementation project(':eagle-starter:eagle-resource-server-starter')
+    implementation project(':eagle-starter:eagle-rocketmq-starter')
+    implementation project(':eagle-starter:eagle-openapi-starter')
+    implementation project(':eagle-starter:eagle-resilience-starter')
+    implementation project(':eagle-starter:eagle-tenant-starter')
+    implementation project(':eagle-starter:eagle-audit-log-starter')
+    implementation project(':eagle-starter:eagle-scheduler-starter')
+    implementation project(':eagle-starter:eagle-id-generator-starter')
+    implementation project(':eagle-starter:eagle-encrypt-starter')
+    implementation project(':eagle-starter:eagle-restclient-starter')
+
+    // Spring Boot Web (Servlet)
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
+
+    // PostgreSQL JDBC 驱动(Flyway 暂未引入,DDL 由 JPA 自动管理;上线前补 Flyway 脚本)
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // Nacos 服务注册与发现
+    implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery'
+
+    // 支付 SDK
+    implementation 'com.alipay.sdk:alipay-sdk-java'
+    implementation 'com.github.wechatpay-apiv3:wechatpay-java'
+
+    // JSON 解析(回调 / 渠道 SDK 返回值)
+    implementation 'tools.jackson.core:jackson-databind'
+
+    // 本地开发:自动加载 .env 到 Spring Environment
+    runtimeOnly 'me.paulschwarz:spring-dotenv:4.0.0'
+
+    // Spring Modulith:架构验证(测试期 + 运行期注解可见即可)
+    compileOnly 'org.springframework.modulith:spring-modulith-core'
+    testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
+}

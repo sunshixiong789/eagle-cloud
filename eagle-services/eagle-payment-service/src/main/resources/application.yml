@@ -1,0 +1,180 @@
+# ===========================================
+# Eagle Payment Service · 基线配置 (Servlet + JPA + PostgreSQL)
+# 设计原则:
+#   - application.yml 承载完整配置;环境变量仅暴露外部接入字段(数据源/Nacos/凭证)
+#   - 默认值取"生产安全"基线 (validate / show-sql=false / details=never / WARN 日志)
+#   - 商户凭证一律通过环境变量或 Jasypt ENC() 注入,禁止 yml 明文写
+# ===========================================
+
+server:
+  port: ${SERVER_PORT:8083}
+  shutdown: graceful
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: payment
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
+        namespace: ${NACOS_NAMESPACE:}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:}
+        ip: ${NACOS_REGISTER_IP:}
+        metadata:
+          spring-doc: payment
+          spring-doc-name: Payment Service
+
+  # ---- 数据源:PostgreSQL ----
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:eagle_payment}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:}
+    hikari:
+      pool-name: EaglePaymentHikariPool
+      connection-timeout: 30000
+      maximum-pool-size: ${DB_POOL_MAX:20}
+      minimum-idle: ${DB_POOL_MIN:5}
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      auto-commit: true
+      connection-test-query: SELECT 1
+
+  # ---- JPA:Flyway 引入前由 Hibernate 自动同步 schema(update);上线前切回 validate ----
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          batch_size: 100
+          fetch_size: 100
+        order_inserts: true
+        order_updates: true
+        default_batch_fetch_size: 16
+
+# ===========================================
+# Eagle 业务配置 (仅 payment 域相关)
+# ===========================================
+eagle:
+  # ----- Resource Server -----
+  resource-server:
+    permit-paths:
+      - /actuator/health/**
+      # 公网回调端点 (需配合网关层 IP 白名单 / Sentinel 防护)
+      - /payment/alipay/notify
+      - /payment/wechat/notify
+
+  # ----- 审计日志 -----
+  audit-log:
+    controller-enabled: true
+    permit-role: admin
+
+  # ----- RocketMQ -----
+  rocketmq:
+    endpoints: ${ROCKETMQ_ENDPOINTS:localhost:8081}
+    consumer-group: payment_consumer
+    topic-env-prefix: ${ROCKETMQ_TOPIC_ENV_PREFIX:dev_}
+
+  # ----- 支付渠道凭证 (v1 单商户,凭证一律走 ENC() 或环境变量) -----
+  payment:
+    alipay:
+      enabled: ${ALIPAY_ENABLED:false}
+      app-id: ${ALIPAY_APP_ID:}
+      gateway-url: ${ALIPAY_GATEWAY_URL:https://openapi.alipay.com/gateway.do}
+      sign-type: ${ALIPAY_SIGN_TYPE:RSA2}
+      charset: UTF-8
+      format: json
+      # 商户应用私钥 (RSA2,PKCS8 格式,base64);必须 ENC() 加密
+      private-key: ${ALIPAY_PRIVATE_KEY:}
+      # 支付宝公钥
+      alipay-public-key: ${ALIPAY_PUBLIC_KEY:}
+      # 异步回调入口 (会拼到 notify_url 字段)
+      notify-base-url: ${ALIPAY_NOTIFY_BASE_URL:https://api.example.com}
+    wechat:
+      enabled: ${WECHAT_PAY_ENABLED:false}
+      app-id: ${WECHAT_PAY_APP_ID:}
+      mch-id: ${WECHAT_PAY_MCH_ID:}
+      # 商户 API V3 密钥;必须 ENC() 加密
+      api-v3-key: ${WECHAT_PAY_API_V3_KEY:}
+      # 商户证书私钥 (PEM);必须 ENC() 加密
+      private-key: ${WECHAT_PAY_PRIVATE_KEY:}
+      private-key-serial-no: ${WECHAT_PAY_PRIVATE_KEY_SERIAL_NO:}
+      notify-base-url: ${WECHAT_PAY_NOTIFY_BASE_URL:https://api.example.com}
+    # 默认超时与重试 (覆盖 eagle.resilience.* 默认值)
+    timeout:
+      connect-ms: 3000
+      read-ms: 10000
+    # 默认支付订单过期时间 (分钟)
+    expire-minutes: 30
+    # 部分退款累计校验 / 风控开关
+    refund:
+      allow-partial: true
+    transfer:
+      enabled: false
+      # 单笔限额 (元)
+      single-amount-limit: 5000
+      # 日累计限额 (元)
+      daily-amount-limit: 50000
+      # 同一收款账户日频次
+      daily-count-limit: 20
+    reconcile:
+      enabled: false
+      # 拉取昨日清算单的 cron (XXL-JOB)
+      cron: "0 0 2 * * ?"
+
+# ===========================================
+# Actuator
+# ===========================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
+      probes:
+        enabled: true
+    metrics:
+      enabled: true
+  health:
+    db:
+      enabled: true
+  info:
+    env:
+      enabled: false
+
+# ===========================================
+# Springdoc / Swagger
+# ===========================================
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    doc-expansion: none
+
+# ===========================================
+# Logging
+# ===========================================
+logging:
+  level:
+    root: INFO
+    com.eagle.payment: INFO
