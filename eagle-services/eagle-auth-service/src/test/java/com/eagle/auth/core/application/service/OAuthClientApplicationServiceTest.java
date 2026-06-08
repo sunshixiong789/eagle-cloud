@@ -77,7 +77,7 @@ class OAuthClientApplicationServiceTest {
     @DisplayName("createClient")
     class Create {
         @Test
-        @DisplayName("should encode secret and save when clientId is free")
+        @DisplayName("应创建")
         void shouldCreate() {
             when(oAuthClientRepository.existsByClientId(CLIENT_ID)).thenReturn(false);
             when(passwordEncoder.encode("plain-secret")).thenReturn("{bcrypt}secret");
@@ -94,7 +94,7 @@ class OAuthClientApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should throw conflict when clientId already exists")
+        @DisplayName("IDExists时应抛出")
         void shouldThrowWhenIdExists() {
             when(oAuthClientRepository.existsByClientId(CLIENT_ID)).thenReturn(true);
             AppException ex = assertThrows(ConflictException.class,
@@ -108,7 +108,7 @@ class OAuthClientApplicationServiceTest {
     @DisplayName("updateClient")
     class Update {
         @Test
-        @DisplayName("should update existing client")
+        @DisplayName("应更新")
         void shouldUpdate() {
             OAuthClient existing = sampleClient();
             when(oAuthClientRepository.findById(ID)).thenReturn(Optional.of(existing));
@@ -127,7 +127,7 @@ class OAuthClientApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should throw NotFound when client missing")
+        @DisplayName("缺失时应抛出")
         void shouldThrowWhenMissing() {
             when(oAuthClientRepository.findById(ID)).thenReturn(Optional.empty());
             UpdateOAuthClientRequest req = new UpdateOAuthClientRequest();
@@ -141,7 +141,7 @@ class OAuthClientApplicationServiceTest {
     @DisplayName("deleteClient")
     class Delete {
         @Test
-        @DisplayName("should delete when exists")
+        @DisplayName("应删除")
         void shouldDelete() {
             when(oAuthClientRepository.existsById(ID)).thenReturn(true);
             service.deleteClient(ID);
@@ -149,7 +149,7 @@ class OAuthClientApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should throw NotFound when client missing")
+        @DisplayName("缺失时应抛出")
         void shouldThrowWhenMissing() {
             when(oAuthClientRepository.existsById(ID)).thenReturn(false);
             assertThrows(NotFoundException.class, () -> service.deleteClient(ID));
@@ -166,7 +166,7 @@ class OAuthClientApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should re-enable a disabled client")
+        @DisplayName("应启用")
         void shouldEnable() {
             OAuthClient client = sampleClient();
             client.disable();
@@ -177,7 +177,7 @@ class OAuthClientApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should disable an active client")
+        @DisplayName("应禁用")
         void shouldDisable() {
             OAuthClient client = sampleClient();
             when(oAuthClientRepository.findById(ID)).thenReturn(Optional.of(client));
@@ -190,7 +190,7 @@ class OAuthClientApplicationServiceTest {
     @DisplayName("queryClients")
     class Query {
         @Test
-        @DisplayName("should map page entries via mapper")
+        @DisplayName("应映射分页")
         void shouldMapPage() {
             OAuthClient c = sampleClient();
             Page<OAuthClient> page = new PageImpl<>(List.of(c));

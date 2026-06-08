@@ -2,6 +2,7 @@ package com.eagle.http.client.interceptor;
 
 import com.eagle.common.pressuretest.PressureTestContext;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -29,6 +30,7 @@ class PropagatingHeadersClientHttpRequestInterceptorTest {
     }
 
     @Test
+    @DisplayName("应透传认证、语言和压测请求头")
     void shouldPropagateAuthLanguageAndPressureTestHeaders() {
         MockHttpServletRequest inbound = new MockHttpServletRequest();
         inbound.addHeader("Authorization", "Bearer token");

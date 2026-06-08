@@ -42,7 +42,7 @@ class WechatWebUserServiceTest {
     class FindOrCreate {
 
         @Test
-        @DisplayName("should reuse and bind PC openid on existing account when unionid matches")
+        @DisplayName("应Merge通过unionid")
         void shouldMergeByUnionid() {
             Account existing = Account.createFromPhone("13800138000");
             when(accountRepository.findByWechatBindingUnionid(UNIONID)).thenReturn(Optional.of(existing));
@@ -56,7 +56,7 @@ class WechatWebUserServiceTest {
         }
 
         @Test
-        @DisplayName("should find existing PC account by webOpenid when unionid absent")
+        @DisplayName("unionid不存在时应查找通过Pcopenid")
         void shouldFindByPcOpenidWhenUnionidAbsent() {
             Account existing = Account.createFromWechatWeb(OPENID, null, "Nick", null);
             when(accountRepository.findByWechatBindingWebOpenid(OPENID)).thenReturn(Optional.of(existing));
@@ -69,7 +69,7 @@ class WechatWebUserServiceTest {
         }
 
         @Test
-        @DisplayName("should find existing H5 account by mpOpenid")
+        @DisplayName("应查找通过小时5openid")
         void shouldFindByH5Openid() {
             Account existing = Account.createFromWechatH5(OPENID, null, "Nick", null);
             when(accountRepository.findByWechatBindingMpOpenid(OPENID)).thenReturn(Optional.of(existing));
@@ -80,7 +80,7 @@ class WechatWebUserServiceTest {
         }
 
         @Test
-        @DisplayName("should create new PC account when nothing matches")
+        @DisplayName("应创建NewPc账号")
         void shouldCreateNewPcAccount() {
             when(accountRepository.findByWechatBindingUnionid(UNIONID)).thenReturn(Optional.empty());
             when(accountRepository.findByWechatBindingWebOpenid(OPENID)).thenReturn(Optional.empty());
@@ -95,7 +95,7 @@ class WechatWebUserServiceTest {
         }
 
         @Test
-        @DisplayName("should create new H5 account when nothing matches and channel is h5")
+        @DisplayName("应创建New小时5账号")
         void shouldCreateNewH5Account() {
             when(accountRepository.findByWechatBindingUnionid(any())).thenReturn(Optional.empty());
             when(accountRepository.findByWechatBindingMpOpenid(OPENID)).thenReturn(Optional.empty());

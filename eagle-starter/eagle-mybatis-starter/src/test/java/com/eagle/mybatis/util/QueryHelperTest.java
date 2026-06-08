@@ -57,7 +57,7 @@ class QueryHelperTest {
     class LikeAny {
 
         @Test
-        @DisplayName("should append or-like conditions when keyword has text")
+        @DisplayName("关键字HasText时应追加条件")
         void shouldAppendConditionsWhenKeywordHasText() {
             LambdaQueryWrapper<StubEntity> wrapper = QueryHelper.likeAny(
                     "张三",
@@ -71,7 +71,7 @@ class QueryHelperTest {
         }
 
         @Test
-        @DisplayName("should return wrapper with no conditions when keyword is null")
+        @DisplayName("关键字Isnull时应返回空Wrapper")
         void shouldReturnEmptyWrapperWhenKeywordIsNull() {
             LambdaQueryWrapper<StubEntity> wrapper = QueryHelper.likeAny(
                     null,
@@ -84,7 +84,7 @@ class QueryHelperTest {
         }
 
         @Test
-        @DisplayName("should return wrapper with no conditions when keyword is blank")
+        @DisplayName("关键字Is空白时应返回空Wrapper")
         void shouldReturnEmptyWrapperWhenKeywordIsBlank() {
             LambdaQueryWrapper<StubEntity> wrapper = QueryHelper.likeAny(
                     "   ",
@@ -97,7 +97,7 @@ class QueryHelperTest {
         }
 
         @Test
-        @DisplayName("should return empty wrapper when keyword is empty string")
+        @DisplayName("关键字Is空时应返回空Wrapper")
         void shouldReturnEmptyWrapperWhenKeywordIsEmpty() {
             LambdaQueryWrapper<StubEntity> wrapper = QueryHelper.likeAny(
                     "",
@@ -110,7 +110,7 @@ class QueryHelperTest {
         }
 
         @Test
-        @DisplayName("should return empty wrapper when no columns are provided")
+        @DisplayName("无Columns时应返回空Wrapper")
         void shouldReturnEmptyWrapperWhenNoColumns() {
             LambdaQueryWrapper<StubEntity> wrapper = QueryHelper.likeAny("keyword");
 
@@ -127,7 +127,7 @@ class QueryHelperTest {
     class LikeIfPresent {
 
         @Test
-        @DisplayName("should append like condition when value has text")
+        @DisplayName("值HasText时应追加条件")
         void shouldAppendConditionWhenValueHasText() {
             LambdaQueryWrapper<StubEntity> wrapper = new LambdaQueryWrapper<>();
             QueryHelper.likeIfPresent(wrapper, StubEntity::getName, "张三");
@@ -137,7 +137,7 @@ class QueryHelperTest {
         }
 
         @Test
-        @DisplayName("should not append like condition when value is null")
+        @DisplayName("值Isnull时不应追加条件")
         void shouldNotAppendConditionWhenValueIsNull() {
             LambdaQueryWrapper<StubEntity> wrapper = new LambdaQueryWrapper<>();
             QueryHelper.likeIfPresent(wrapper, StubEntity::getName, null);
@@ -147,7 +147,7 @@ class QueryHelperTest {
         }
 
         @Test
-        @DisplayName("should not append like condition when value is blank")
+        @DisplayName("值Is空白时不应追加条件")
         void shouldNotAppendConditionWhenValueIsBlank() {
             LambdaQueryWrapper<StubEntity> wrapper = new LambdaQueryWrapper<>();
             QueryHelper.likeIfPresent(wrapper, StubEntity::getName, "  ");
@@ -167,7 +167,7 @@ class QueryHelperTest {
         private static final LocalDateTime END = LocalDateTime.of(2024, 12, 31, 23, 59);
 
         @Test
-        @DisplayName("should append both ge and le conditions when start and end are both present")
+        @DisplayName("启动并End时应追加同时条件")
         void shouldAppendBothConditionsWhenStartAndEnd() {
             LambdaQueryWrapper<StubEntity> wrapper = new LambdaQueryWrapper<>();
             LambdaQueryWrapper<StubEntity> result =
@@ -184,7 +184,7 @@ class QueryHelperTest {
         }
 
         @Test
-        @DisplayName("should append only ge condition when only start is present")
+        @DisplayName("仅启动存在时应追加仅Ge")
         void shouldAppendOnlyGeWhenOnlyStartPresent() {
             LambdaQueryWrapper<StubEntity> wrapper = new LambdaQueryWrapper<>();
             QueryHelper.dateBetween(wrapper, StubEntity::getCreateTime, START, null);
@@ -196,7 +196,7 @@ class QueryHelperTest {
         }
 
         @Test
-        @DisplayName("should append only le condition when only end is present")
+        @DisplayName("仅End存在时应追加仅Le")
         void shouldAppendOnlyLeWhenOnlyEndPresent() {
             LambdaQueryWrapper<StubEntity> wrapper = new LambdaQueryWrapper<>();
             QueryHelper.dateBetween(wrapper, StubEntity::getCreateTime, null, END);
@@ -208,7 +208,7 @@ class QueryHelperTest {
         }
 
         @Test
-        @DisplayName("should not append any conditions when both start and end are null")
+        @DisplayName("同时null时不应追加条件")
         void shouldNotAppendConditionsWhenBothNull() {
             LambdaQueryWrapper<StubEntity> wrapper = new LambdaQueryWrapper<>();
             QueryHelper.dateBetween(wrapper, StubEntity::getCreateTime, null, null);
@@ -225,7 +225,7 @@ class QueryHelperTest {
     class ConditionEq {
 
         @Test
-        @DisplayName("should append eq condition when condition is true")
+        @DisplayName("条件Istrue时应追加条件")
         void shouldAppendConditionWhenConditionIsTrue() {
             LambdaQueryWrapper<StubEntity> wrapper = new LambdaQueryWrapper<>();
             LambdaQueryWrapper<StubEntity> result =
@@ -237,7 +237,7 @@ class QueryHelperTest {
         }
 
         @Test
-        @DisplayName("should not append eq condition when condition is false")
+        @DisplayName("条件Isfalse时不应追加条件")
         void shouldNotAppendConditionWhenConditionIsFalse() {
             LambdaQueryWrapper<StubEntity> wrapper = new LambdaQueryWrapper<>();
             LambdaQueryWrapper<StubEntity> result =
@@ -256,7 +256,7 @@ class QueryHelperTest {
     class ConditionEqIfPresent {
 
         @Test
-        @DisplayName("should append eq condition when value is non-null")
+        @DisplayName("值Is非null时应追加条件")
         void shouldAppendConditionWhenValueIsNonNull() {
             LambdaQueryWrapper<StubEntity> wrapper = new LambdaQueryWrapper<>();
             QueryHelper.conditionEqIfPresent(wrapper, StubEntity::getStatus, 1);
@@ -266,7 +266,7 @@ class QueryHelperTest {
         }
 
         @Test
-        @DisplayName("should not append eq condition when value is null")
+        @DisplayName("值Isnull时不应追加条件")
         void shouldNotAppendConditionWhenValueIsNull() {
             LambdaQueryWrapper<StubEntity> wrapper = new LambdaQueryWrapper<>();
             QueryHelper.conditionEqIfPresent(wrapper, StubEntity::getStatus, null);
@@ -283,7 +283,7 @@ class QueryHelperTest {
     class ConditionIn {
 
         @Test
-        @DisplayName("should append in condition when values collection is non-empty")
+        @DisplayName("值非空时应追加条件")
         void shouldAppendConditionWhenValuesNonEmpty() {
             LambdaQueryWrapper<StubEntity> wrapper = new LambdaQueryWrapper<>();
             QueryHelper.conditionIn(wrapper, StubEntity::getId, Arrays.asList(1L, 2L, 3L));
@@ -293,7 +293,7 @@ class QueryHelperTest {
         }
 
         @Test
-        @DisplayName("should not append in condition when values collection is empty")
+        @DisplayName("值空时不应追加条件")
         void shouldNotAppendConditionWhenValuesEmpty() {
             LambdaQueryWrapper<StubEntity> wrapper = new LambdaQueryWrapper<>();
             QueryHelper.conditionIn(wrapper, StubEntity::getId, Collections.emptyList());
@@ -303,7 +303,7 @@ class QueryHelperTest {
         }
 
         @Test
-        @DisplayName("should not append in condition when values collection is null")
+        @DisplayName("值null时不应追加条件")
         void shouldNotAppendConditionWhenValuesNull() {
             LambdaQueryWrapper<StubEntity> wrapper = new LambdaQueryWrapper<>();
             QueryHelper.conditionIn(wrapper, StubEntity::getId, null);
@@ -320,7 +320,7 @@ class QueryHelperTest {
     class Constructor {
 
         @Test
-        @DisplayName("should throw UnsupportedOperationException when instantiated via reflection")
+        @DisplayName("Instantiated时应抛出")
         void shouldThrowWhenInstantiated() throws Exception {
             var constructor = QueryHelper.class.getDeclaredConstructor();
             constructor.setAccessible(true);

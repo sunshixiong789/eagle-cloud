@@ -17,7 +17,7 @@ class DynamicDataSourcePropertiesTest {
     class SingleSlave {
 
         @Test
-        @DisplayName("should return single-element list from slave field when slaves is empty")
+        @DisplayName("应返回单个从库从字段")
         void shouldReturnSingleSlaveFromField() {
             DynamicDataSourceProperties props = new DynamicDataSourceProperties();
             props.getSlave().setUrl("jdbc:mysql://slave:3306/db");
@@ -29,7 +29,7 @@ class DynamicDataSourcePropertiesTest {
         }
 
         @Test
-        @DisplayName("should return empty list when slave URL is null")
+        @DisplayName("从库URLnull时应返回空")
         void shouldReturnEmptyWhenSlaveUrlNull() {
             DynamicDataSourceProperties props = new DynamicDataSourceProperties();
 
@@ -37,7 +37,7 @@ class DynamicDataSourcePropertiesTest {
         }
 
         @Test
-        @DisplayName("should return empty list when slave URL is blank")
+        @DisplayName("从库URL空白时应返回空")
         void shouldReturnEmptyWhenSlaveUrlBlank() {
             DynamicDataSourceProperties props = new DynamicDataSourceProperties();
             props.getSlave().setUrl("   ");
@@ -51,7 +51,7 @@ class DynamicDataSourcePropertiesTest {
     class MultiSlaves {
 
         @Test
-        @DisplayName("should return slaves list when configured")
+        @DisplayName("应返回从库列表")
         void shouldReturnSlavesList() {
             DynamicDataSourceProperties props = new DynamicDataSourceProperties();
             DynamicDataSourceProperties.SingleDataSource s0 = new DynamicDataSourceProperties.SingleDataSource();
@@ -68,7 +68,7 @@ class DynamicDataSourcePropertiesTest {
         }
 
         @Test
-        @DisplayName("should prefer slaves list over single slave field when both configured")
+        @DisplayName("应优先使用从库列表超过单个从库字段")
         void shouldPreferSlavesListOverSingleSlaveField() {
             DynamicDataSourceProperties props = new DynamicDataSourceProperties();
             props.getSlave().setUrl("jdbc:mysql://slave-single:3306/db");

@@ -52,7 +52,7 @@ class EagleWebClientErrorFilterTest {
     }
 
     @Test
-    @DisplayName("409 → ConflictException")
+    @DisplayName("409时应抛出Conflict")
     void shouldRaiseConflictOn409() {
         Mono<ClientResponse> mono = filter.filter(dummyRequest(),
                 stubResponse(409, "{\"status\":409,\"message\":\"订单已支付\"}"));
@@ -61,7 +61,7 @@ class EagleWebClientErrorFilterTest {
     }
 
     @Test
-    @DisplayName("400 → DomainException")
+    @DisplayName("400时应抛出Domain")
     void shouldRaiseDomainOn400() {
         Mono<ClientResponse> mono = filter.filter(dummyRequest(),
                 stubResponse(400, "{\"status\":400,\"message\":\"参数非法\"}"));
@@ -70,7 +70,7 @@ class EagleWebClientErrorFilterTest {
     }
 
     @Test
-    @DisplayName("500 → ServiceException")
+    @DisplayName("500时应抛出服务")
     void shouldRaiseServiceOn500() {
         Mono<ClientResponse> mono = filter.filter(dummyRequest(), stubResponse(500, "internal error"));
 

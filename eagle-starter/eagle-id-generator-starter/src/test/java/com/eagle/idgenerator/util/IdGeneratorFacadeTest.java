@@ -54,7 +54,7 @@ class IdGeneratorFacadeTest {
     class SnowflakeId {
 
         @Test
-        @DisplayName("should delegate to default generator and return positive id")
+        @DisplayName("应委托到默认")
         void shouldDelegateToDefault() {
             when(defaultGenerator.nextId()).thenReturn(MOCK_SNOWFLAKE_ID);
 
@@ -71,7 +71,7 @@ class IdGeneratorFacadeTest {
     class Uuid {
 
         @Test
-        @DisplayName("should delegate to UuidIdGenerator for 32-char uuid string")
+        @DisplayName("应委托UUIDStr")
         void shouldDelegateUuidStr() {
             when(uuidGenerator.nextIdStr()).thenReturn("018f3a1b2c9d7e4f5g6h7i8j9k0l1m2n");
 
@@ -87,7 +87,7 @@ class IdGeneratorFacadeTest {
     class TsidId {
 
         @Test
-        @DisplayName("should delegate to TsidIdGenerator for tsid string")
+        @DisplayName("应委托TSIDStr")
         void shouldDelegateTsidStr() {
             when(tsidGenerator.nextIdStr()).thenReturn("0AXFXR7X8PWGS");
 
@@ -103,7 +103,7 @@ class IdGeneratorFacadeTest {
     class NanoId {
 
         @Test
-        @DisplayName("should delegate to NanoIdGenerator for default nanoid")
+        @DisplayName("应委托默认 Nano ID")
         void shouldDelegateDefaultNanoId() {
             when(nanoIdGenerator.nextId()).thenReturn("V1StGXR8_Z5jdHi6B-myT");
 
@@ -114,7 +114,7 @@ class IdGeneratorFacadeTest {
         }
 
         @Test
-        @DisplayName("should delegate to NanoIdGenerator for sized nanoid")
+        @DisplayName("应委托指定长度 Nano ID")
         void shouldDelegateSizedNanoId() {
             when(nanoIdGenerator.nextId(8)).thenReturn("Ab3xY7zQ");
 
@@ -130,7 +130,7 @@ class IdGeneratorFacadeTest {
     class OrderNo {
 
         @Test
-        @DisplayName("should generate order no with ORD prefix format")
+        @DisplayName("应生成排序号格式")
         void shouldGenerateOrderNoFormat() {
             when(orderNoGenerator.generate("ORD")).thenReturn(MOCK_ORDER_NO);
 
@@ -141,7 +141,7 @@ class IdGeneratorFacadeTest {
         }
 
         @Test
-        @DisplayName("should delegate to orderNoGenerator when calling orderNo with no args")
+        @DisplayName("使用out 前缀时应生成排序号")
         void shouldGenerateOrderNoWithoutPrefix() {
             when(orderNoGenerator.generate()).thenReturn("20240115123456789");
 
@@ -157,7 +157,7 @@ class IdGeneratorFacadeTest {
     class PayNo {
 
         @Test
-        @DisplayName("should generate pay no with PAY prefix format")
+        @DisplayName("应生成支付无格式")
         void shouldGeneratePayNoFormat() {
             when(orderNoGenerator.generate("PAY")).thenReturn(MOCK_PAY_NO);
 
@@ -173,7 +173,7 @@ class IdGeneratorFacadeTest {
     class RefundNo {
 
         @Test
-        @DisplayName("should generate refund no with RFD prefix format")
+        @DisplayName("应生成退款无格式")
         void shouldGenerateRefundNoFormat() {
             when(orderNoGenerator.generate("RFD")).thenReturn(MOCK_RFD_NO);
 

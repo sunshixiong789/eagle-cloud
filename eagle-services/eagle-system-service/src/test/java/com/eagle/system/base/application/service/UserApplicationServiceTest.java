@@ -78,7 +78,7 @@ class UserApplicationServiceTest {
     @DisplayName("updateUser")
     class Update {
         @Test
-        @DisplayName("should update profile fields and email")
+        @DisplayName("应更新")
         void shouldUpdate() {
             User user = sampleUser();
             when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
@@ -96,7 +96,7 @@ class UserApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should throw NotFound when user missing")
+        @DisplayName("缺失时应抛出")
         void shouldThrowWhenMissing() {
             when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
             AppException ex = assertThrows(NotFoundException.class,
@@ -105,7 +105,7 @@ class UserApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should preserve existing profile when request fields are null")
+        @DisplayName("无Changes时应保留资料")
         void shouldPreserveProfileWhenNoChanges() {
             User user = sampleUser();
             String originalNick = user.getProfile().getNickname();
@@ -123,7 +123,7 @@ class UserApplicationServiceTest {
     @DisplayName("queryUsers")
     class QueryUsers {
         @Test
-        @DisplayName("should enrich user list with account id roles login time online status and blacklist status")
+        @DisplayName("应Enrich用户列表")
         void shouldEnrichUserList() {
             User user = sampleUser();
             user.assignRoles(Set.of(1L));
@@ -161,7 +161,7 @@ class UserApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should exclude configured admin from plain and conditional user list")
+        @DisplayName("应Exclude管理员从用户列表")
         void shouldExcludeAdminFromUserList() {
             when(adminProperties.getUsername()).thenReturn("admin");
             when(userRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class),
@@ -180,7 +180,7 @@ class UserApplicationServiceTest {
     @DisplayName("assignRoles")
     class AssignRoles {
         @Test
-        @DisplayName("should validate and assign roles via aggregate")
+        @DisplayName("应Assign")
         void shouldAssign() {
             User user = sampleUser();
             when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
@@ -194,7 +194,7 @@ class UserApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should reject assigning roles to configured admin user")
+        @DisplayName("应拒绝Assigning角色到管理员")
         void shouldRejectAssigningRolesToAdmin() {
             User admin = User.create(ACCOUNT_ID, "admin", "admin@example.com", null);
             when(adminProperties.getUsername()).thenReturn("admin");
@@ -213,7 +213,7 @@ class UserApplicationServiceTest {
     @DisplayName("getUserRoles")
     class GetUserRoles {
         @Test
-        @DisplayName("should return empty list when user has no roles")
+        @DisplayName("应返回空")
         void shouldReturnEmpty() {
             User user = sampleUser();
             when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
@@ -222,7 +222,7 @@ class UserApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should map roles to assigned role responses")
+        @DisplayName("应映射角色")
         void shouldMapRoles() {
             User user = sampleUser();
             user.assignRoles(Set.of(1L, 2L));

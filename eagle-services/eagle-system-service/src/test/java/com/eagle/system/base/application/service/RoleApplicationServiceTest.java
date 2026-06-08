@@ -60,7 +60,7 @@ class RoleApplicationServiceTest {
     @DisplayName("createRole")
     class Create {
         @Test
-        @DisplayName("should save business role")
+        @DisplayName("应创建")
         void shouldCreate() {
             CreateRoleRequest req = new CreateRoleRequest();
             req.setRoleName("Manager");
@@ -81,7 +81,7 @@ class RoleApplicationServiceTest {
     @DisplayName("updateRole")
     class Update {
         @Test
-        @DisplayName("should update business role")
+        @DisplayName("应更新")
         void shouldUpdate() {
             Role role = businessRole();
             when(roleRepository.findById(ID)).thenReturn(Optional.of(role));
@@ -95,7 +95,7 @@ class RoleApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should reject update on system role")
+        @DisplayName("应拒绝System角色")
         void shouldRejectSystemRole() {
             Role role = systemRole();
             when(roleRepository.findById(ID)).thenReturn(Optional.of(role));
@@ -106,7 +106,7 @@ class RoleApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should throw NotFound when role missing")
+        @DisplayName("缺失时应抛出")
         void shouldThrowWhenMissing() {
             when(roleRepository.findById(ID)).thenReturn(Optional.empty());
             AppException ex = assertThrows(NotFoundException.class,
@@ -119,7 +119,7 @@ class RoleApplicationServiceTest {
     @DisplayName("deleteRole")
     class Delete {
         @Test
-        @DisplayName("should delete business role")
+        @DisplayName("应删除")
         void shouldDelete() {
             Role role = businessRole();
             when(roleRepository.findById(ID)).thenReturn(Optional.of(role));
@@ -128,7 +128,7 @@ class RoleApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should reject delete on system role")
+        @DisplayName("应拒绝System角色")
         void shouldRejectSystemRole() {
             Role role = systemRole();
             when(roleRepository.findById(ID)).thenReturn(Optional.of(role));
@@ -142,7 +142,7 @@ class RoleApplicationServiceTest {
     @DisplayName("enable / disable")
     class EnableDisable {
         @Test
-        @DisplayName("should enable role")
+        @DisplayName("应启用")
         void shouldEnable() {
             Role role = businessRole();
             role.disable();
@@ -152,7 +152,7 @@ class RoleApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should disable business role")
+        @DisplayName("应禁用")
         void shouldDisable() {
             Role role = businessRole();
             when(roleRepository.findById(ID)).thenReturn(Optional.of(role));
@@ -161,7 +161,7 @@ class RoleApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should reject disable on system role")
+        @DisplayName("应拒绝System角色禁用")
         void shouldRejectSystemRoleDisable() {
             Role role = systemRole();
             when(roleRepository.findById(ID)).thenReturn(Optional.of(role));

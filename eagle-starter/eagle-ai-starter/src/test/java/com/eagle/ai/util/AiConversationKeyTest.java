@@ -14,7 +14,7 @@ class AiConversationKeyTest {
     class OfUserId {
 
         @Test
-        @DisplayName("should return userId when no tenantId")
+        @DisplayName("应返回用户ID")
         void shouldReturnUserId() {
             assertEquals("user123", AiConversationKey.of("user123"));
         }
@@ -25,25 +25,25 @@ class AiConversationKeyTest {
     class OfTenantIdAndUserId {
 
         @Test
-        @DisplayName("should combine tenantId and userId with colon")
+        @DisplayName("使用Colon时应Combine")
         void shouldCombineWithColon() {
             assertEquals("tenant1:user123", AiConversationKey.of("tenant1", "user123"));
         }
 
         @Test
-        @DisplayName("should return userId only when tenantId is null")
+        @DisplayName("租户IDnull时应返回用户ID")
         void shouldReturnUserIdWhenTenantIdNull() {
             assertEquals("user123", AiConversationKey.of(null, "user123"));
         }
 
         @Test
-        @DisplayName("should return userId only when tenantId is blank")
+        @DisplayName("租户ID空白时应返回用户ID")
         void shouldReturnUserIdWhenTenantIdBlank() {
             assertEquals("user123", AiConversationKey.of("  ", "user123"));
         }
 
         @Test
-        @DisplayName("should return userId only when tenantId is empty")
+        @DisplayName("租户ID空时应返回用户ID")
         void shouldReturnUserIdWhenTenantIdEmpty() {
             assertEquals("user123", AiConversationKey.of("", "user123"));
         }

@@ -50,7 +50,7 @@ class LogApplicationServiceTest {
     @DisplayName("getLogById")
     class GetById {
         @Test
-        @DisplayName("should return mapped log when found")
+        @DisplayName("应返回Log")
         void shouldReturnLog() {
             SysLog log = new SysLog();
             when(logRepository.findById(ID)).thenReturn(Optional.of(log));
@@ -59,7 +59,7 @@ class LogApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should throw NotFound when log missing")
+        @DisplayName("缺失时应抛出")
         void shouldThrowWhenMissing() {
             when(logRepository.findById(ID)).thenReturn(Optional.empty());
             AppException ex = assertThrows(NotFoundException.class, () -> service.getLogById(ID));
@@ -71,7 +71,7 @@ class LogApplicationServiceTest {
     @DisplayName("queryLogs")
     class QueryLogs {
         @Test
-        @DisplayName("should map plain pageable query")
+        @DisplayName("应查询普通")
         void shouldQueryPlain() {
             Page<SysLog> page = new PageImpl<>(List.of(new SysLog()));
             when(logRepository.findAll(any(PageRequest.class))).thenReturn(page);
@@ -80,7 +80,7 @@ class LogApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should apply spec when query request supplied")
+        @DisplayName("应应用Spec")
         @SuppressWarnings("unchecked")
         void shouldApplySpec() {
             Page<SysLog> page = new PageImpl<>(List.of(new SysLog()));
@@ -92,7 +92,7 @@ class LogApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("queryLogSummaries should delegate to projection query")
+        @DisplayName("应查询Summaries")
         @SuppressWarnings("unchecked")
         void shouldQuerySummaries() {
             LogSummary summary = org.mockito.Mockito.mock(LogSummary.class);
@@ -108,7 +108,7 @@ class LogApplicationServiceTest {
     @DisplayName("exportLogs")
     class Export {
         @Test
-        @DisplayName("should throw when result exceeds 10_000 rows")
+        @DisplayName("TooMany时应抛出")
         @SuppressWarnings("unchecked")
         void shouldThrowWhenTooMany() {
             when(logRepository.count(any(Specification.class))).thenReturn(10_001L);
@@ -119,7 +119,7 @@ class LogApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should write empty xlsx when no rows match")
+        @DisplayName("应写入空Xlsx")
         @SuppressWarnings("unchecked")
         void shouldWriteEmptyXlsx() throws Exception {
             when(logRepository.count(any(Specification.class))).thenReturn(0L);

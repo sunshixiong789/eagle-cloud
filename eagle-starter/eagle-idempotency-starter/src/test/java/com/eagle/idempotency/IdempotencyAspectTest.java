@@ -162,7 +162,7 @@ class IdempotencyAspectTest {
         }
 
         @Test
-        @DisplayName("shouldThrowWhenTokenMissing — Header 无 Token 时抛出 DomainException")
+        @DisplayName("shouldThrowWhenTokenMissing — 无 Token 时抛出 DomainException")
         void shouldThrowWhenTokenMissing() {
             Idempotent annotation = buildAnnotation(IdempotencyMode.TOKEN, "", TOKEN_HEADER, "");
 

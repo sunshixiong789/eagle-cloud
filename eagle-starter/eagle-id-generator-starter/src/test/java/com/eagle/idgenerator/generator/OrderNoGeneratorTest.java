@@ -41,7 +41,7 @@ class OrderNoGeneratorTest {
     class GenerateWithPrefix {
 
         @Test
-        @DisplayName("should generate order no starting with ORD prefix")
+        @DisplayName("使用前缀时应生成排序号")
         void shouldGenerateOrderNoWithPrefix() {
             String orderNo = orderNoGenerator.generate(PREFIX_ORD);
 
@@ -54,7 +54,7 @@ class OrderNoGeneratorTest {
         }
 
         @Test
-        @DisplayName("should embed today's date in the order no")
+        @DisplayName("应包含当天日期")
         void shouldEmbedTodaysDate() {
             String today = LocalDate.now().format(DATE_FORMATTER);
             String orderNo = orderNoGenerator.generate(PREFIX_ORD);
@@ -64,7 +64,7 @@ class OrderNoGeneratorTest {
         }
 
         @Test
-        @DisplayName("should generate pay no starting with PAY prefix")
+        @DisplayName("应生成支付无")
         void shouldGeneratePayNo() {
             String payNo = orderNoGenerator.generate(PREFIX_PAY);
 
@@ -74,7 +74,7 @@ class OrderNoGeneratorTest {
         }
 
         @Test
-        @DisplayName("should generate refund no starting with RFD prefix")
+        @DisplayName("应生成退款无")
         void shouldGenerateRefundNo() {
             String refundNo = orderNoGenerator.generate(PREFIX_RFD);
 
@@ -84,7 +84,7 @@ class OrderNoGeneratorTest {
         }
 
         @Test
-        @DisplayName("should generate no with empty prefix when prefix is empty string")
+        @DisplayName("使用空前缀时应生成无")
         void shouldGenerateNoWithEmptyPrefix() {
             String orderNo = orderNoGenerator.generate("");
 
@@ -95,7 +95,7 @@ class OrderNoGeneratorTest {
         }
 
         @Test
-        @DisplayName("should generate no with null prefix treated as empty")
+        @DisplayName("使用null 前缀时应生成无")
         void shouldGenerateNoWithNullPrefix() {
             String orderNo = orderNoGenerator.generate(null);
 
@@ -110,7 +110,7 @@ class OrderNoGeneratorTest {
     class GenerateNoArgs {
 
         @Test
-        @DisplayName("should generate order no without prefix when called with no args")
+        @DisplayName("使用out 前缀时应生成排序号")
         void shouldGenerateOrderNoWithoutPrefix() {
             String orderNo = orderNoGenerator.generate();
 

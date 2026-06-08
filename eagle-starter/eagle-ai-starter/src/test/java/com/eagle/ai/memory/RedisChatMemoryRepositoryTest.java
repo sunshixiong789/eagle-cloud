@@ -68,7 +68,7 @@ class RedisChatMemoryRepositoryTest {
     class FindConversationIds {
 
         @Test
-        @DisplayName("should return conversationIds extracted from Redis keys via SCAN")
+        @DisplayName("应返回会话ID通过Scan")
         void shouldReturnConversationIdsViaScan() {
             List<String> redisKeys = List.of(
                     KEY_PREFIX + ":conv-1",
@@ -89,7 +89,7 @@ class RedisChatMemoryRepositoryTest {
         }
 
         @Test
-        @DisplayName("should return empty list when no keys found")
+        @DisplayName("无key时应返回空")
         void shouldReturnEmptyWhenNoKeys() {
             @SuppressWarnings("unchecked")
             Cursor<String> cursor = mock(Cursor.class);
@@ -103,7 +103,7 @@ class RedisChatMemoryRepositoryTest {
         }
 
         @Test
-        @DisplayName("should return partial results when scan throws exception")
+        @DisplayName("异常时应返回PartialResults")
         void shouldReturnPartialResultsOnException() {
             @SuppressWarnings("unchecked")
             Cursor<String> cursor = mock(Cursor.class);
@@ -118,7 +118,7 @@ class RedisChatMemoryRepositoryTest {
         }
 
         @Test
-        @DisplayName("should use SCAN (not KEYS) to list conversations")
+        @DisplayName("应UseScan不key")
         void shouldUseScanNotKeys() {
             @SuppressWarnings("unchecked")
             Cursor<String> cursor = mock(Cursor.class);
@@ -142,7 +142,7 @@ class RedisChatMemoryRepositoryTest {
         }
 
         @Test
-        @DisplayName("should deserialize messages from Redis JSON")
+        @DisplayName("应DeserializeMessages")
         void shouldDeserializeMessages() throws Exception {
             String json = "[{\"type\":\"USER\",\"content\":\"Hello\"},{\"type\":\"ASSISTANT\",\"content\":\"Hi!\"}]";
             when(valueOps.get(KEY_PREFIX + ":conv-1")).thenReturn(json);
@@ -157,7 +157,7 @@ class RedisChatMemoryRepositoryTest {
         }
 
         @Test
-        @DisplayName("should return empty list when key not found")
+        @DisplayName("key不Found时应返回空")
         void shouldReturnEmptyWhenKeyNotFound() {
             when(valueOps.get(anyString())).thenReturn(null);
 
@@ -168,7 +168,7 @@ class RedisChatMemoryRepositoryTest {
         }
 
         @Test
-        @DisplayName("should return empty list when JSON is invalid")
+        @DisplayName("JSON无效时应返回空")
         void shouldReturnEmptyWhenJsonInvalid() {
             when(valueOps.get(anyString())).thenReturn("not-valid-json");
 
@@ -179,7 +179,7 @@ class RedisChatMemoryRepositoryTest {
         }
 
         @Test
-        @DisplayName("should map SYSTEM type to SystemMessage")
+        @DisplayName("应映射System类型")
         void shouldMapSystemType() throws Exception {
             String json = "[{\"type\":\"SYSTEM\",\"content\":\"You are a helper.\"}]";
             when(valueOps.get(anyString())).thenReturn(json);
@@ -190,7 +190,7 @@ class RedisChatMemoryRepositoryTest {
         }
 
         @Test
-        @DisplayName("should treat unknown message type as USER")
+        @DisplayName("应视为未知类型作为用户")
         void shouldTreatUnknownTypeAsUser() throws Exception {
             String json = "[{\"type\":\"TOOL\",\"content\":\"tool result\"}]";
             when(valueOps.get(anyString())).thenReturn(json);
@@ -211,7 +211,7 @@ class RedisChatMemoryRepositoryTest {
         }
 
         @Test
-        @DisplayName("should serialize messages and save with TTL")
+        @DisplayName("使用TTL时应保存")
         void shouldSaveWithTtl() {
             List<Message> messages = List.of(
                     new UserMessage("Hello"),
@@ -229,7 +229,7 @@ class RedisChatMemoryRepositoryTest {
         }
 
         @Test
-        @DisplayName("should use configured TTL from properties")
+        @DisplayName("应Use配置的TTL")
         void shouldUseConfiguredTtl() {
             AiProperties properties = new AiProperties();
             properties.getMemory().setTtl(java.time.Duration.ofDays(14));
@@ -246,7 +246,7 @@ class RedisChatMemoryRepositoryTest {
     class DeleteByConversationId {
 
         @Test
-        @DisplayName("should delete the conversation key")
+        @DisplayName("应删除key")
         void shouldDeleteKey() {
             repository.deleteByConversationId("conv-1");
 

@@ -75,7 +75,7 @@ class FileApplicationServiceTest {
     class Upload {
 
         @Test
-        @DisplayName("should persist metadata and call storage when file is valid")
+        @DisplayName("应Upload有效文件")
         void shouldUploadValidFile() {
             MultipartFile file = new MockMultipartFile("file", "report.pdf",
                     "application/pdf", "hello".getBytes());
@@ -101,7 +101,7 @@ class FileApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should reject empty file")
+        @DisplayName("应拒绝空")
         void shouldRejectEmpty() {
             MultipartFile empty = new MockMultipartFile("file", "x.pdf", "application/pdf", new byte[0]);
             DomainException ex = assertThrows(DomainException.class, () -> service.upload(empty));
@@ -110,7 +110,7 @@ class FileApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should reject oversize file")
+        @DisplayName("应拒绝Oversize")
         void shouldRejectOversize() {
             byte[] tooLarge = new byte[(int) properties.getMaxSizeBytes() + 1];
             MultipartFile big = new MockMultipartFile("file", "x.pdf", "application/pdf", tooLarge);
@@ -119,7 +119,7 @@ class FileApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should reject extension not in whitelist")
+        @DisplayName("应拒绝Unsupported")
         void shouldRejectUnsupported() {
             MultipartFile exe = new MockMultipartFile("file", "evil.exe",
                     "application/x-msdownload", "x".getBytes());
@@ -128,7 +128,7 @@ class FileApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should reject path traversal in filename")
+        @DisplayName("应拒绝路径Traversal")
         void shouldRejectPathTraversal() {
             MultipartFile evil = new MockMultipartFile("file", "../etc/passwd.txt",
                     "text/plain", "x".getBytes());
@@ -142,7 +142,7 @@ class FileApplicationServiceTest {
     class GetMetadata {
 
         @Test
-        @DisplayName("should return metadata when file exists")
+        @DisplayName("应返回Metadata")
         void shouldReturnMetadata() {
             FileMetadata metadata = FileMetadata.create("default", BUCKET, "default/1024/2026/05/16/abc.pdf",
                     "report.pdf", 100L, "application/pdf", null, USER_ID.toString());
@@ -155,7 +155,7 @@ class FileApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should throw NotFoundException when missing")
+        @DisplayName("应抛出不Found")
         void shouldThrowNotFound() {
             when(fileRepository.findByIdAndDeletedFalse(404L)).thenReturn(Optional.empty());
             NotFoundException ex = assertThrows(NotFoundException.class, () -> service.getMetadata(404L));
@@ -168,7 +168,7 @@ class FileApplicationServiceTest {
     class Delete {
 
         @Test
-        @DisplayName("owner can soft-delete own file")
+        @DisplayName("所有者Can删除")
         void ownerCanDelete() {
             FileMetadata metadata = FileMetadata.create("default", BUCKET, "key",
                     "x.pdf", 10L, "application/pdf", null, USER_ID.toString());
@@ -182,7 +182,7 @@ class FileApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("admin can soft-delete other's file")
+        @DisplayName("管理员Can删除")
         void adminCanDelete() {
             securityMock.when(() -> SecurityUtils.hasRole("admin")).thenReturn(true);
             FileMetadata metadata = FileMetadata.create("default", BUCKET, "key",
@@ -197,7 +197,7 @@ class FileApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("non-owner non-admin cannot delete")
+        @DisplayName("other用户Cannot删除")
         void otherUserCannotDelete() {
             FileMetadata metadata = FileMetadata.create("default", BUCKET, "key",
                     "x.pdf", 10L, "application/pdf", null, OTHER_USER_ID);

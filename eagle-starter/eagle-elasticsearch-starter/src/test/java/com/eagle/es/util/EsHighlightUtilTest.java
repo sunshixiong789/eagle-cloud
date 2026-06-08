@@ -73,7 +73,7 @@ class EsHighlightUtilTest {
     class ConstructorGuard {
 
         @Test
-        @DisplayName("should throw UnsupportedOperationException when instantiated via reflection")
+        @DisplayName("Instantiation时应抛出")
         void shouldThrowOnInstantiation() throws Exception {
             var constructor = EsHighlightUtil.class.getDeclaredConstructor();
             constructor.setAccessible(true);
@@ -91,13 +91,13 @@ class EsHighlightUtilTest {
     class ApplyHighlightGuards {
 
         @Test
-        @DisplayName("should do nothing when hit is null")
+        @DisplayName("命中Isnull时应不执行操作")
         void shouldDoNothingWhenHitIsNull() {
             assertDoesNotThrow(() -> EsHighlightUtil.applyHighlight(null));
         }
 
         @Test
-        @DisplayName("should do nothing when hit content is null")
+        @DisplayName("内容Isnull时应不执行操作")
         @SuppressWarnings("unchecked")
         void shouldDoNothingWhenContentIsNull() {
             SearchHit<Object> hit = mock(SearchHit.class);
@@ -107,7 +107,7 @@ class EsHighlightUtilTest {
         }
 
         @Test
-        @DisplayName("should do nothing when highlight fields map is empty")
+        @DisplayName("高亮字段空时应不执行操作")
         @SuppressWarnings("unchecked")
         void shouldDoNothingWhenHighlightFieldsEmpty() {
             TestDocument doc = new TestDocument("original title");
@@ -122,7 +122,7 @@ class EsHighlightUtilTest {
         }
 
         @Test
-        @DisplayName("should do nothing when highlight fields map is null")
+        @DisplayName("高亮字段null时应不执行操作")
         @SuppressWarnings("unchecked")
         void shouldDoNothingWhenHighlightFieldsNull() {
             TestDocument doc = new TestDocument("original title");
@@ -141,7 +141,7 @@ class EsHighlightUtilTest {
     class ApplyHighlightReplacement {
 
         @Test
-        @DisplayName("should replace field value with single highlight fragment")
+        @DisplayName("应替换单个Fragment")
         @SuppressWarnings("unchecked")
         void shouldReplaceSingleFragment() {
             TestDocument doc = new TestDocument("iPhone 15 Pro");
@@ -158,7 +158,7 @@ class EsHighlightUtilTest {
         }
 
         @Test
-        @DisplayName("should join multiple fragments with '...' separator")
+        @DisplayName("应Join多个Fragments")
         @SuppressWarnings("unchecked")
         void shouldJoinMultipleFragments() {
             TestDocument doc = new TestDocument("Long description about iPhone 15 Pro Max");
@@ -177,7 +177,7 @@ class EsHighlightUtilTest {
         }
 
         @Test
-        @DisplayName("should skip field when fragment list is empty")
+        @DisplayName("Fragment列表空时应跳过")
         @SuppressWarnings("unchecked")
         void shouldSkipWhenFragmentListEmpty() {
             TestDocument doc = new TestDocument("original");
@@ -194,7 +194,7 @@ class EsHighlightUtilTest {
         }
 
         @Test
-        @DisplayName("should skip field when the field does not exist in the document class")
+        @DisplayName("字段不Found在Document时应跳过")
         @SuppressWarnings("unchecked")
         void shouldSkipWhenFieldNotFoundInDocument() {
             TestDocument doc = new TestDocument("original");
@@ -210,7 +210,7 @@ class EsHighlightUtilTest {
         }
 
         @Test
-        @DisplayName("should skip non-String fields (only String fields are replaceable)")
+        @DisplayName("应跳过非String字段")
         @SuppressWarnings("unchecked")
         void shouldSkipNonStringFields() {
             DocumentWithIntField doc = new DocumentWithIntField(42);

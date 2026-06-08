@@ -24,7 +24,7 @@ class DictTest {
     class Create {
 
         @Test
-        @DisplayName("should create dict with ACTIVE status and non-system flag")
+        @DisplayName("应创建")
         void shouldCreate() {
             Dict dict = Dict.create(DictType.USER_STATUS, "用户状态", "状态字典", "备注");
             assertEquals(DictType.USER_STATUS, dict.getDictType());
@@ -40,7 +40,7 @@ class DictTest {
     class UpdateInfo {
 
         @Test
-        @DisplayName("should update only non-null fields")
+        @DisplayName("应更新非null")
         void shouldUpdateNonNull() {
             Dict dict = Dict.create(DictType.USER_STATUS, "旧", "旧描述", "旧备注");
             dict.updateInfo("新", null, "新备注");
@@ -55,7 +55,7 @@ class DictTest {
     class ItemLifecycle {
 
         @Test
-        @DisplayName("should add item and locate it by id")
+        @DisplayName("应添加并查找")
         void shouldAddAndFind() {
             Dict dict = Dict.create(DictType.USER_STATUS, "用户状态", null, null);
             DictItemEntity item = dict.addItem("ACTIVE", "已激活", 0L, "desc", 1, null);
@@ -66,7 +66,7 @@ class DictTest {
         }
 
         @Test
-        @DisplayName("should remove item by id")
+        @DisplayName("应移除Item")
         void shouldRemoveItem() {
             Dict dict = Dict.create(DictType.USER_STATUS, "用户状态", null, null);
             DictItemEntity item = dict.addItem("V", "L", 0L, null, 1, null);
@@ -76,7 +76,7 @@ class DictTest {
         }
 
         @Test
-        @DisplayName("findItemById should throw NotFoundException when id unknown")
+        @DisplayName("Item缺失时应抛出")
         void shouldThrowWhenItemMissing() {
             Dict dict = Dict.create(DictType.USER_STATUS, "用户状态", null, null);
             AppException ex = assertThrows(NotFoundException.class, () -> dict.findItemById(999L));
@@ -89,7 +89,7 @@ class DictTest {
     class ActivateDeactivate {
 
         @Test
-        @DisplayName("should toggle status")
+        @DisplayName("应切换")
         void shouldToggle() {
             Dict dict = Dict.create(DictType.USER_STATUS, "用户状态", null, null);
             dict.deactivate();
@@ -104,7 +104,7 @@ class DictTest {
     class DictItemEntityTests {
 
         @Test
-        @DisplayName("create should populate with parentId fallback to 0")
+        @DisplayName("使用默认时应创建Item")
         void shouldCreateItemWithDefaults() {
             DictItemEntity item = DictItemEntity.create(1L, "V", "L", DictType.USER_STATUS,
                     null, "d", 5, "r");
@@ -114,7 +114,7 @@ class DictTest {
         }
 
         @Test
-        @DisplayName("updateInfo should update only non-null fields")
+        @DisplayName("应更新非null")
         void shouldUpdateNonNull() {
             DictItemEntity item = DictItemEntity.create(1L, "V", "L", DictType.USER_STATUS,
                     null, "d", 5, "r");
@@ -126,7 +126,7 @@ class DictTest {
         }
 
         @Test
-        @DisplayName("activate / deactivate toggles status")
+        @DisplayName("应切换状态")
         void shouldToggleStatus() {
             DictItemEntity item = DictItemEntity.create(1L, "V", "L", DictType.USER_STATUS,
                     0L, null, 1, null);

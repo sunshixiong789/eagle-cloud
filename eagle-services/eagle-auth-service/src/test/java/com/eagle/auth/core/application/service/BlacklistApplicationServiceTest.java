@@ -55,7 +55,7 @@ class BlacklistApplicationServiceTest {
     @DisplayName("addToBlacklist")
     class Add {
         @Test
-        @DisplayName("should save when not duplicated")
+        @DisplayName("应保存")
         void shouldSave() {
             when(repository.findByTypeAndValue(BlacklistType.PHONE, "13800138000"))
                     .thenReturn(Optional.empty());
@@ -69,7 +69,7 @@ class BlacklistApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should throw on duplicate")
+        @DisplayName("应拒绝重复")
         void shouldRejectDuplicate() {
             when(repository.findByTypeAndValue(BlacklistType.PHONE, "13800138000"))
                     .thenReturn(Optional.of(Blacklist.create(
@@ -82,7 +82,7 @@ class BlacklistApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should reject blacklisting configured admin account id")
+        @DisplayName("应拒绝管理员账号ID")
         void shouldRejectAdminAccountId() {
             Account admin = Account.create("admin", "{bcrypt}encoded", "13800138000", null);
             when(adminProperties.getUsername()).thenReturn("admin");
@@ -102,7 +102,7 @@ class BlacklistApplicationServiceTest {
     @DisplayName("removeFromBlacklist")
     class Remove {
         @Test
-        @DisplayName("should throw NotFound")
+        @DisplayName("不Found")
         void notFound() {
             when(repository.findById(99L)).thenReturn(Optional.empty());
             assertThrows(NotFoundException.class, () -> service.removeFromBlacklist(99L));
@@ -114,7 +114,7 @@ class BlacklistApplicationServiceTest {
     class IsBlack {
 
         @Test
-        @DisplayName("should return false when cache misses")
+        @DisplayName("缓存未命中")
         void cacheMiss() {
             when(cacheStore.isMember(BlacklistType.IP, "1.1.1.1")).thenReturn(false);
             assertFalse(service.isBlacklisted(BlacklistType.IP, "1.1.1.1"));
@@ -122,7 +122,7 @@ class BlacklistApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should hit cache and return true when DB entry still valid")
+        @DisplayName("命中")
         void hit() {
             when(cacheStore.isMember(BlacklistType.IP, "1.1.1.1")).thenReturn(true);
             when(repository.findByTypeAndValue(BlacklistType.IP, "1.1.1.1"))
@@ -132,7 +132,7 @@ class BlacklistApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should evict cache only when DB row is missing (no transactional self-call)")
+        @DisplayName("Db缺失时应清理缓存")
         void shouldEvictCacheWhenDbMissing() {
             when(cacheStore.isMember(BlacklistType.IP, "1.1.1.1")).thenReturn(true);
             when(repository.findByTypeAndValue(BlacklistType.IP, "1.1.1.1"))
@@ -148,7 +148,7 @@ class BlacklistApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should evict cache only when DB entry already expired (purge is async)")
+        @DisplayName("Expired时应清理缓存")
         void shouldEvictCacheWhenExpired() {
             Blacklist expired = Blacklist.create(
                     BlacklistType.IP, "1.1.1.1", null,
@@ -173,7 +173,7 @@ class BlacklistApplicationServiceTest {
     @DisplayName("purgeExpired")
     class Purge {
         @Test
-        @DisplayName("should delete only entries whose expiresAt has passed")
+        @DisplayName("lyExpired时应Purge")
         void shouldPurgeOnlyExpired() {
             Blacklist active = Blacklist.create(
                     BlacklistType.IP, "1.1.1.1", null, null, 1L, "admin");

@@ -50,7 +50,7 @@ class MonitorApplicationServiceTest {
     @DisplayName("listOnlineUsers")
     class ListOnline {
         @Test
-        @DisplayName("should map port infos to responses")
+        @DisplayName("应映射")
         void shouldMap() {
             OnlineUserSnapshot info = new OnlineUserSnapshot(
                     "jti-1", 100L, "alice", "127.0.0.1",
@@ -65,7 +65,7 @@ class MonitorApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should deduplicate by userId, keeping the latest login")
+        @DisplayName("应Deduplicate通过用户ID")
         void shouldDeduplicateByUserId() {
             LocalDateTime older = LocalDateTime.now().minusHours(1);
             LocalDateTime newer = LocalDateTime.now();
@@ -85,7 +85,7 @@ class MonitorApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should keep different users as separate rows")
+        @DisplayName("应Keep不同Users")
         void shouldKeepDifferentUsers() {
             OnlineUserSnapshot a = new OnlineUserSnapshot(
                     "jti-a", 100L, "alice", "10.0.0.1",
@@ -103,7 +103,7 @@ class MonitorApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should fall back to username when userId is null")
+        @DisplayName("无用户ID时应Deduplicate通过用户名")
         void shouldDeduplicateByUsernameWhenNoUserId() {
             LocalDateTime older = LocalDateTime.now().minusHours(1);
             LocalDateTime newer = LocalDateTime.now();
@@ -127,7 +127,7 @@ class MonitorApplicationServiceTest {
     class ForceLogout {
 
         @Test
-        @DisplayName("should reject kicking out the current user")
+        @DisplayName("应拒绝SelfKick")
         void shouldRejectSelfKick() {
             Jwt jwt = Jwt.withTokenValue("token").header("alg", "none")
                     .claim("jti", "self-jti")
@@ -146,7 +146,7 @@ class MonitorApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should delegate to port for non-self target")
+        @DisplayName("应委托")
         void shouldDelegate() {
             Jwt jwt = Jwt.withTokenValue("token").header("alg", "none")
                     .claim("jti", "self-jti")
@@ -162,7 +162,7 @@ class MonitorApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should allow forceLogout when no current auth context")
+        @DisplayName("使用out认证时应允许")
         void shouldAllowWithoutAuth() {
             service.forceLogout("any");
             verify(authClientFacade).forceLogout("any");

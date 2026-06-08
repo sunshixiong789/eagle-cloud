@@ -1,5 +1,6 @@
 package com.eagle.webclient.support;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -17,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class EagleReactiveServiceClientFactoryTest {
 
     @Test
+    @DisplayName("应创建声明式响应式客户端")
     void shouldCreateDeclarativeReactiveClient() {
         EagleReactiveServiceClientFactory factory = new EagleReactiveServiceClientFactory(
                 WebClient.builder(), WebClient.builder());
@@ -28,6 +30,7 @@ class EagleReactiveServiceClientFactoryTest {
     }
 
     @Test
+    @DisplayName("应根据服务 ID 创建负载均衡响应式客户端")
     void shouldCreateLoadBalancedReactiveClientFromServiceId() {
         EagleReactiveServiceClientFactory factory = new EagleReactiveServiceClientFactory(
                 WebClient.builder(), WebClient.builder());

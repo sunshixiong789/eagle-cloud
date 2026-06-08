@@ -41,7 +41,7 @@ class LoginAttemptServiceTest {
     }
 
     @Test
-    @DisplayName("first failure should set TTL but not write block key")
+    @DisplayName("首次失败SetsTTL")
     void firstFailureSetsTtl() {
         when(ops.increment("auth:login-fail:1.1.1.1")).thenReturn(1L);
         service.registerFailure("1.1.1.1");
@@ -50,7 +50,7 @@ class LoginAttemptServiceTest {
     }
 
     @Test
-    @DisplayName("hitting MAX_ATTEMPTS writes block key")
+    @DisplayName("threshold阻断IP")
     void thresholdBlocksIp() {
         when(ops.increment("auth:login-fail:1.1.1.1")).thenReturn(5L);
         service.registerFailure("1.1.1.1");
@@ -58,14 +58,14 @@ class LoginAttemptServiceTest {
     }
 
     @Test
-    @DisplayName("isBlocked returns true when block key exists")
+    @DisplayName("isBlocked命中")
     void isBlockedHit() {
         when(redis.hasKey("auth:login-block:1.1.1.1")).thenReturn(true);
         assertTrue(service.isBlocked("1.1.1.1"));
     }
 
     @Test
-    @DisplayName("isBlocked returns false when redis throws (fail-open)")
+    @DisplayName("isBlocked失败开放")
     void isBlockedFailOpen() {
         when(redis.hasKey("auth:login-block:1.1.1.1"))
                 .thenThrow(new RuntimeException("redis down"));
@@ -73,7 +73,7 @@ class LoginAttemptServiceTest {
     }
 
     @Test
-    @DisplayName("registerSuccess clears both attempt and block keys")
+    @DisplayName("成功Clearskey")
     void successClearsKeys() {
         service.registerSuccess("1.1.1.1");
         verify(redis).delete("auth:login-fail:1.1.1.1");
@@ -81,7 +81,7 @@ class LoginAttemptServiceTest {
     }
 
     @Test
-    @DisplayName("null / blank IP is no-op")
+    @DisplayName("nullIP无操作")
     void nullIpNoOp() {
         service.registerFailure(null);
         service.registerSuccess("");

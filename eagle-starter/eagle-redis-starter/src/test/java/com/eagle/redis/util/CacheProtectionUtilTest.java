@@ -63,7 +63,7 @@ class CacheProtectionUtilTest {
         }
 
         @Test
-        @DisplayName("should return cached value directly without calling loader on cache hit")
+        @DisplayName("获取使用互斥锁：命中时应返回从缓存")
         void getWithMutex_shouldReturnFromCacheOnHit() {
             String cachedValue = "cached-product";
             when(valueOps.get(CACHE_KEY)).thenReturn(cachedValue);
@@ -77,7 +77,7 @@ class CacheProtectionUtilTest {
         }
 
         @Test
-        @DisplayName("should call loader on cache miss and cache the result")
+        @DisplayName("获取使用互斥锁：缓存未命中时应调用Loader")
         void getWithMutex_shouldCallLoaderOnCacheMiss() throws InterruptedException {
             when(valueOps.get(CACHE_KEY))
                     .thenReturn(null)   // 1st call: cache miss
@@ -95,7 +95,7 @@ class CacheProtectionUtilTest {
         }
 
         @Test
-        @DisplayName("should cache null placeholder when loader returns null")
+        @DisplayName("获取使用互斥锁：空Loader时应返回nullPlaceholder")
         void getWithMutex_shouldReturnNullPlaceholderOnEmptyLoader() throws InterruptedException {
             when(valueOps.get(CACHE_KEY))
                     .thenReturn(null)   // 1st call: cache miss
@@ -114,7 +114,7 @@ class CacheProtectionUtilTest {
         }
 
         @Test
-        @DisplayName("should return null when cached value is the null placeholder")
+        @DisplayName("获取使用互斥锁：PlaceholderIs命中时应返回null")
         void getWithMutex_shouldReturnNullWhenPlaceholderIsHit() {
             when(valueOps.get(CACHE_KEY)).thenReturn("__NULL__");
 
@@ -125,7 +125,7 @@ class CacheProtectionUtilTest {
         }
 
         @Test
-        @DisplayName("should acquire and release the Redisson mutex lock on cache miss")
+        @DisplayName("获取使用互斥锁：应Use互斥锁Lock")
         void getWithMutex_shouldUseMutexLock() throws InterruptedException {
             when(valueOps.get(CACHE_KEY))
                     .thenReturn(null)
@@ -147,7 +147,7 @@ class CacheProtectionUtilTest {
     class Jitter {
 
         @Test
-        @DisplayName("should return a Duration within the expected jitter range")
+        @DisplayName("jitter：使用在Range时应返回时长")
         void jitter_shouldReturnDurationWithinRange() {
             Duration base = Duration.ofSeconds(60);
             double ratio = 0.2;
@@ -163,7 +163,7 @@ class CacheProtectionUtilTest {
         }
 
         @RepeatedTest(20)
-        @DisplayName("repeated calls should not always return identical results (randomness check)")
+        @DisplayName("jitter：应ProduceVariedResults")
         void jitter_shouldProduceVariedResults() {
             Duration base = Duration.ofSeconds(60);
             double ratio = 0.2;
@@ -179,7 +179,7 @@ class CacheProtectionUtilTest {
         }
 
         @Test
-        @DisplayName("should never return less than half the base duration")
+        @DisplayName("jitter：应不返回LessThanHalfBase")
         void jitter_shouldNotReturnLessThanHalfBase() {
             Duration base = Duration.ofMinutes(1);
 

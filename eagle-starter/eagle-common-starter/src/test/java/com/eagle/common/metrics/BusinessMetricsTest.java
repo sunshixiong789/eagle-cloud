@@ -36,7 +36,7 @@ class BusinessMetricsTest {
     class IncrementOrderCreated {
 
         @Test
-        @DisplayName("should register counter and increment to 1 on first call")
+        @DisplayName("递增排序Created：应注册计数器")
         void incrementOrderCreated_shouldRegisterCounter() {
             businessMetrics.incrementOrderCreated("app");
 
@@ -49,7 +49,7 @@ class BusinessMetricsTest {
         }
 
         @Test
-        @DisplayName("should accumulate count on multiple calls with same channel")
+        @DisplayName("递增排序Created：应累加计数")
         void incrementOrderCreated_shouldAccumulateCount() {
             businessMetrics.incrementOrderCreated("web");
             businessMetrics.incrementOrderCreated("web");
@@ -69,7 +69,7 @@ class BusinessMetricsTest {
     class IncrementPaymentSuccess {
 
         @Test
-        @DisplayName("should register counter with payment method tag")
+        @DisplayName("递增支付成功：使用Method时应Tag")
         void incrementPaymentSuccess_shouldTagWithMethod() {
             businessMetrics.incrementPaymentSuccess("alipay");
 
@@ -82,7 +82,7 @@ class BusinessMetricsTest {
         }
 
         @Test
-        @DisplayName("should track different payment methods independently")
+        @DisplayName("递增支付成功：应追踪MethodsIndependently")
         void incrementPaymentSuccess_shouldTrackMethodsIndependently() {
             businessMetrics.incrementPaymentSuccess("alipay");
             businessMetrics.incrementPaymentSuccess("wechat");
@@ -103,7 +103,7 @@ class BusinessMetricsTest {
     class IncrementPaymentFailed {
 
         @Test
-        @DisplayName("should register counter with reason tag")
+        @DisplayName("递增支付Failed：使用Reason时应Tag")
         void incrementPaymentFailed_shouldTagWithReason() {
             businessMetrics.incrementPaymentFailed("balance_insufficient");
 
@@ -121,7 +121,7 @@ class BusinessMetricsTest {
     class TimerOperations {
 
         @Test
-        @DisplayName("startTimer should return a non-null Timer.Sample")
+        @DisplayName("启动计时器：应返回Sample")
         void startTimer_shouldReturnSample() {
             Timer.Sample sample = businessMetrics.startTimer();
 
@@ -129,7 +129,7 @@ class BusinessMetricsTest {
         }
 
         @Test
-        @DisplayName("recordDuration with sample should register timer in registry")
+        @DisplayName("record时长：应注册计时器")
         void recordDuration_shouldRegisterTimer() {
             Timer.Sample sample = businessMetrics.startTimer();
 
@@ -143,7 +143,7 @@ class BusinessMetricsTest {
         }
 
         @Test
-        @DisplayName("recordDuration with milliseconds should register timer in registry")
+        @DisplayName("record时长：使用Millis：应注册计时器")
         void recordDuration_withMillis_shouldRegisterTimer() {
             businessMetrics.recordDuration("order.create", 150L);
 
@@ -160,7 +160,7 @@ class BusinessMetricsTest {
     class IncrementOrderCancelled {
 
         @Test
-        @DisplayName("should register counter with reason tag")
+        @DisplayName("递增排序Cancelled：使用Reason时应Tag")
         void incrementOrderCancelled_shouldTagWithReason() {
             businessMetrics.incrementOrderCancelled("timeout");
 
@@ -178,7 +178,7 @@ class BusinessMetricsTest {
     class IncrementInventoryDeducted {
 
         @Test
-        @DisplayName("should register counter with warehouse tag")
+        @DisplayName("递增InventoryDeducted：使用Warehouse时应Tag")
         void incrementInventoryDeducted_shouldTagWithWarehouse() {
             businessMetrics.incrementInventoryDeducted("WH-01");
 

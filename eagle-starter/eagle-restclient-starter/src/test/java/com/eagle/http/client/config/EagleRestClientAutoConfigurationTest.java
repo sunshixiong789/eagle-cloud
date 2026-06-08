@@ -5,6 +5,7 @@ import com.eagle.http.client.error.EagleResponseErrorHandler;
 import com.eagle.http.client.interceptor.PropagatingHeadersClientHttpRequestInterceptor;
 import com.eagle.http.client.support.EagleRestClientCustomizer;
 import com.eagle.http.client.support.EagleRestServiceClientFactory;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.restclient.autoconfigure.RestClientAutoConfiguration;
@@ -32,6 +33,7 @@ class EagleRestClientAutoConfigurationTest {
                     EagleRestClientAutoConfiguration.class));
 
     @Test
+    @DisplayName("应注册 REST 客户端基础设施 Bean")
     void shouldRegisterRestClientInfrastructureBeans() {
         contextRunner.run(context -> assertThat(context)
                 .hasSingleBean(HttpClientProperties.class)
@@ -46,6 +48,7 @@ class EagleRestClientAutoConfigurationTest {
     }
 
     @Test
+    @DisplayName("Servlet 环境下应注册请求头透传拦截器")
     void shouldRegisterPropagatingHeadersInterceptorInServletEnvironment() {
         servletContextRunner.run(context -> assertThat(context)
                 .hasSingleBean(PropagatingHeadersClientHttpRequestInterceptor.class)
@@ -53,6 +56,7 @@ class EagleRestClientAutoConfigurationTest {
     }
 
     @Test
+    @DisplayName("应绑定超时时长和请求头属性")
     void shouldBindDurationAndHeaderProperties() {
         contextRunner
                 .withPropertyValues(

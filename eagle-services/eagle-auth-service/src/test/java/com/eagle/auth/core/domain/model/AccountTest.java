@@ -30,7 +30,7 @@ class AccountTest {
     class Create {
 
         @Test
-        @DisplayName("should create account with all fields when arguments are valid")
+        @DisplayName("ArgumentsAre有效时应创建账号")
         void shouldCreateAccountWhenArgumentsAreValid() {
             Account account = Account.create(USERNAME, PASSWORD, PHONE, HINTS);
 
@@ -43,7 +43,7 @@ class AccountTest {
         }
 
         @Test
-        @DisplayName("should throw when username is null or blank")
+        @DisplayName("用户名缺失时应抛出")
         void shouldThrowWhenUsernameMissing() {
             AppException ex1 = assertThrows(DomainException.class,
                     () -> Account.create(null, PASSWORD, PHONE, HINTS));
@@ -55,7 +55,7 @@ class AccountTest {
         }
 
         @Test
-        @DisplayName("should throw when password is null or blank")
+        @DisplayName("密码缺失时应抛出")
         void shouldThrowWhenPasswordMissing() {
             AppException ex = assertThrows(DomainException.class,
                     () -> Account.create(USERNAME, null, PHONE, HINTS));
@@ -68,7 +68,7 @@ class AccountTest {
     class CreateFromPhone {
 
         @Test
-        @DisplayName("should create phone-only account with empty password")
+        @DisplayName("应创建手机号账号")
         void shouldCreatePhoneAccount() {
             Account account = Account.createFromPhone(PHONE);
 
@@ -80,7 +80,7 @@ class AccountTest {
         }
 
         @Test
-        @DisplayName("should throw when phone is blank")
+        @DisplayName("手机号空白时应抛出")
         void shouldThrowWhenPhoneBlank() {
             AppException ex = assertThrows(DomainException.class,
                     () -> Account.createFromPhone(""));
@@ -93,7 +93,7 @@ class AccountTest {
     class CreateFromWechat {
 
         @Test
-        @DisplayName("should derive username from sha-256 of openid (no first-16-char collision)")
+        @DisplayName("应创建MiniProgram账号")
         void shouldCreateMiniProgramAccount() {
             Account account = Account.createFromWechat(OPENID, UNIONID);
 
@@ -106,7 +106,7 @@ class AccountTest {
         }
 
         @Test
-        @DisplayName("should throw when openid is blank")
+        @DisplayName("openid空白时应抛出")
         void shouldThrowWhenOpenidBlank() {
             AppException ex = assertThrows(DomainException.class,
                     () -> Account.createFromWechat(" ", UNIONID));
@@ -119,7 +119,7 @@ class AccountTest {
     class CreateFromWechatWeb {
 
         @Test
-        @DisplayName("should set web binding and merge profile hints")
+        @DisplayName("应创建Web账号")
         void shouldCreateWebAccount() {
             Account account = Account.createFromWechatWeb(OPENID, UNIONID, "NickName", "https://a.png");
             assertEquals(16 + "wxweb_".length(), account.getUsername().length());
@@ -130,7 +130,7 @@ class AccountTest {
         }
 
         @Test
-        @DisplayName("should throw when web openid blank")
+        @DisplayName("空白时应抛出")
         void shouldThrowWhenBlank() {
             AppException ex = assertThrows(DomainException.class,
                     () -> Account.createFromWechatWeb(null, UNIONID, null, null));
@@ -143,7 +143,7 @@ class AccountTest {
     class CreateFromWechatH5 {
 
         @Test
-        @DisplayName("should set mp binding")
+        @DisplayName("应创建小时5账号")
         void shouldCreateH5Account() {
             Account account = Account.createFromWechatH5(OPENID, UNIONID, null, null);
             assertEquals(16 + "wxmp_".length(), account.getUsername().length());
@@ -152,7 +152,7 @@ class AccountTest {
         }
 
         @Test
-        @DisplayName("should throw when mp openid blank")
+        @DisplayName("空白时应抛出")
         void shouldThrowWhenBlank() {
             AppException ex = assertThrows(DomainException.class,
                     () -> Account.createFromWechatH5("", UNIONID, null, null));
@@ -165,7 +165,7 @@ class AccountTest {
     class ChangePassword {
 
         @Test
-        @DisplayName("should update password")
+        @DisplayName("应更新密码")
         void shouldUpdatePassword() {
             Account account = Account.create(USERNAME, PASSWORD, PHONE, HINTS);
             account.changePassword("{bcrypt}newhash");
@@ -173,7 +173,7 @@ class AccountTest {
         }
 
         @Test
-        @DisplayName("should throw when new password is blank")
+        @DisplayName("New密码空白时应抛出")
         void shouldThrowWhenNewPasswordBlank() {
             Account account = Account.create(USERNAME, PASSWORD, PHONE, HINTS);
             AppException ex = assertThrows(DomainException.class,
@@ -187,7 +187,7 @@ class AccountTest {
     class BindPhone {
 
         @Test
-        @DisplayName("should set phone when none present")
+        @DisplayName("应设置手机号")
         void shouldSetPhone() {
             Account account = Account.createFromWechat(OPENID, UNIONID);
             account.bindPhone(PHONE);
@@ -195,7 +195,7 @@ class AccountTest {
         }
 
         @Test
-        @DisplayName("should throw when account already bound to a phone")
+        @DisplayName("已经Bound时应抛出")
         void shouldThrowWhenAlreadyBound() {
             Account account = Account.create(USERNAME, PASSWORD, PHONE, HINTS);
             AppException ex = assertThrows(DomainException.class,
@@ -204,7 +204,7 @@ class AccountTest {
         }
 
         @Test
-        @DisplayName("should throw when input phone is blank")
+        @DisplayName("空白时应抛出")
         void shouldThrowWhenBlank() {
             Account account = Account.createFromWechat(OPENID, UNIONID);
             AppException ex = assertThrows(DomainException.class, () -> account.bindPhone(""));
@@ -217,7 +217,7 @@ class AccountTest {
     class FreezeUnfreeze {
 
         @Test
-        @DisplayName("should freeze an active account via freezeByAdmin()")
+        @DisplayName("应冻结Active")
         void shouldFreezeActive() {
             Account account = Account.create(USERNAME, PASSWORD, PHONE, HINTS);
             account.freezeByAdmin(null, "tester",
@@ -226,7 +226,7 @@ class AccountTest {
         }
 
         @Test
-        @DisplayName("should throw ACCOUNT_FROZEN when freezing an already-frozen account")
+        @DisplayName("已经已冻结时应抛出")
         void shouldThrowWhenAlreadyFrozen() {
             Account account = Account.create(USERNAME, PASSWORD, PHONE, HINTS);
             account.freezeByAdmin(null, "tester",
@@ -238,7 +238,7 @@ class AccountTest {
         }
 
         @Test
-        @DisplayName("should unfreeze a frozen account via unfreeze()")
+        @DisplayName("应解冻已冻结")
         void shouldUnfreezeFrozen() {
             Account account = Account.create(USERNAME, PASSWORD, PHONE, HINTS);
             account.freezeByAdmin(null, "tester",
@@ -248,7 +248,7 @@ class AccountTest {
         }
 
         @Test
-        @DisplayName("should throw ACCOUNT_NOT_FROZEN when unfreezing an active account")
+        @DisplayName("不已冻结时应抛出")
         void shouldThrowWhenNotFrozen() {
             Account account = Account.create(USERNAME, PASSWORD, PHONE, HINTS);
             AppException ex = assertThrows(DomainException.class, () -> account.unfreeze(null, "tester"));
@@ -261,7 +261,7 @@ class AccountTest {
     class BindWechatVariants {
 
         @Test
-        @DisplayName("bindWechat should create binding when none exists")
+        @DisplayName("绑定微信创建Binding")
         void bindWechatCreatesBinding() {
             Account account = Account.createFromPhone(PHONE);
             account.bindWechat(OPENID, UNIONID);
@@ -269,7 +269,7 @@ class AccountTest {
         }
 
         @Test
-        @DisplayName("bindWechat should throw when openid blank")
+        @DisplayName("绑定微信抛出当空白")
         void bindWechatThrowsWhenBlank() {
             Account account = Account.createFromPhone(PHONE);
             AppException ex = assertThrows(DomainException.class,
@@ -278,7 +278,7 @@ class AccountTest {
         }
 
         @Test
-        @DisplayName("bindWechatWeb should set webOpenid on existing binding")
+        @DisplayName("绑定微信WebMerges到已有Binding")
         void bindWechatWebMergesIntoExistingBinding() {
             Account account = Account.createFromWechat(OPENID, UNIONID);
             account.bindWechatWeb("web_openid_123456789012345", null);
@@ -287,7 +287,7 @@ class AccountTest {
         }
 
         @Test
-        @DisplayName("bindWechatH5 should set mpOpenid on existing binding")
+        @DisplayName("绑定微信小时5Merges到已有Binding")
         void bindWechatH5MergesIntoExistingBinding() {
             Account account = Account.createFromWechat(OPENID, UNIONID);
             account.bindWechatH5("mp_openid_123456789012345", "new_unionid");

@@ -33,14 +33,14 @@ class EsQueryBuilderTest {
     class OfFactory {
 
         @Test
-        @DisplayName("should return a non-null builder instance")
+        @DisplayName("应返回非nullInstance")
         void shouldReturnNonNullInstance() {
             EsQueryBuilder builder = EsQueryBuilder.of();
             assertNotNull(builder);
         }
 
         @Test
-        @DisplayName("should return distinct instances on each call")
+        @DisplayName("应返回DistinctInstances")
         void shouldReturnDistinctInstances() {
             EsQueryBuilder first = EsQueryBuilder.of();
             EsQueryBuilder second = EsQueryBuilder.of();
@@ -57,7 +57,7 @@ class EsQueryBuilderTest {
     class Build {
 
         @Test
-        @DisplayName("should return non-null NativeQuery for empty builder")
+        @DisplayName("应返回非null针对空Builder")
         void shouldReturnNonNullForEmptyBuilder() {
             NativeQuery query = EsQueryBuilder.of().build();
             assertNotNull(query);
@@ -65,7 +65,7 @@ class EsQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("should return non-null NativeQuery after multiMatch")
+        @DisplayName("应返回Native查询针对Multi匹配")
         void shouldReturnNativeQueryForMultiMatch() {
             NativeQuery query = EsQueryBuilder.of()
                     .multiMatch("手机", "name", "description")
@@ -76,7 +76,7 @@ class EsQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("should apply pagination: from = (page-1)*size, size = configured size")
+        @DisplayName("应应用Pagination")
         void shouldApplyPagination() {
             NativeQuery query = EsQueryBuilder.of()
                     .page(2, 10)
@@ -88,7 +88,7 @@ class EsQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("should apply default pagination: from=0, size=20 when page() is not called")
+        @DisplayName("应应用默认Pagination")
         void shouldApplyDefaultPagination() {
             NativeQuery query = EsQueryBuilder.of().build();
 
@@ -98,7 +98,7 @@ class EsQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("should apply first page correctly: from=0 for page(1, 10)")
+        @DisplayName("应应用首次分页")
         void shouldApplyFirstPage() {
             NativeQuery query = EsQueryBuilder.of()
                     .page(1, 10)
@@ -109,7 +109,7 @@ class EsQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("should reset page<1 to first page")
+        @DisplayName("应Reset无效分页到首次")
         void shouldResetInvalidPageToFirst() {
             NativeQuery query = EsQueryBuilder.of()
                     .page(0, 10)
@@ -119,7 +119,7 @@ class EsQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("should reset size<1 to default 20")
+        @DisplayName("应Reset无效大小到默认")
         void shouldResetInvalidSizeToDefault() {
             NativeQuery query = EsQueryBuilder.of()
                     .page(1, 0)
@@ -129,7 +129,7 @@ class EsQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("should not throw when chaining multiMatch + term + range + page")
+        @DisplayName("应链路多个条件")
         void shouldChainMultipleConditions() {
             assertDoesNotThrow(() -> {
                 NativeQuery query = EsQueryBuilder.of()
@@ -143,7 +143,7 @@ class EsQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("should not throw when chaining terms + prefix + wildcard + sort + highlight + page")
+        @DisplayName("应链路全部条件")
         void shouldChainAllConditions() {
             assertDoesNotThrow(() -> {
                 NativeQuery query = EsQueryBuilder.of()
@@ -160,7 +160,7 @@ class EsQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("should include highlight query when highlight fields are configured")
+        @DisplayName("配置的时应包含高亮")
         void shouldIncludeHighlightWhenConfigured() {
             NativeQuery query = EsQueryBuilder.of()
                     .highlight("name", "description")
@@ -171,7 +171,7 @@ class EsQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("should not include highlight query when no highlight fields are configured")
+        @DisplayName("不配置的时不应包含高亮")
         void shouldNotIncludeHighlightWhenNotConfigured() {
             NativeQuery query = EsQueryBuilder.of().build();
 
@@ -179,7 +179,7 @@ class EsQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("should include sort options when sort() is called")
+        @DisplayName("配置的时应包含排序")
         void shouldIncludeSortWhenConfigured() {
             NativeQuery query = EsQueryBuilder.of()
                     .sort("price", SortOrder.Desc)
@@ -191,7 +191,7 @@ class EsQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("should have empty sort options when sort() is never called")
+        @DisplayName("不配置的时应Have空排序")
         void shouldHaveEmptySortWhenNotConfigured() {
             NativeQuery query = EsQueryBuilder.of().build();
 
@@ -210,7 +210,7 @@ class EsQueryBuilderTest {
     class MultiMatch {
 
         @Test
-        @DisplayName("should skip condition when keyword is null")
+        @DisplayName("关键字Isnull时应跳过")
         void shouldSkipWhenKeywordIsNull() {
             assertDoesNotThrow(() -> {
                 NativeQuery query = EsQueryBuilder.of()
@@ -221,7 +221,7 @@ class EsQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("should skip condition when keyword is blank")
+        @DisplayName("关键字Is空白时应跳过")
         void shouldSkipWhenKeywordIsBlank() {
             assertDoesNotThrow(() -> {
                 NativeQuery query = EsQueryBuilder.of()
@@ -232,7 +232,7 @@ class EsQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("should return this for chaining when keyword is blank")
+        @DisplayName("应返回This针对Chaining")
         void shouldReturnThisForChaining() {
             EsQueryBuilder builder = EsQueryBuilder.of();
             EsQueryBuilder result = builder.multiMatch("", "title");
@@ -249,19 +249,19 @@ class EsQueryBuilderTest {
     class Term {
 
         @Test
-        @DisplayName("should skip condition when field is null")
+        @DisplayName("字段Isnull时应跳过")
         void shouldSkipWhenFieldIsNull() {
             assertDoesNotThrow(() -> EsQueryBuilder.of().term(null, "value").build());
         }
 
         @Test
-        @DisplayName("should skip condition when value is null")
+        @DisplayName("值Isnull时应跳过")
         void shouldSkipWhenValueIsNull() {
             assertDoesNotThrow(() -> EsQueryBuilder.of().term("field", null).build());
         }
 
         @Test
-        @DisplayName("should support any Object value via toString()")
+        @DisplayName("应支持Object值")
         void shouldSupportObjectValue() {
             assertDoesNotThrow(() -> {
                 NativeQuery query = EsQueryBuilder.of()
@@ -281,19 +281,19 @@ class EsQueryBuilderTest {
     class Terms {
 
         @Test
-        @DisplayName("should skip condition when values array is empty")
+        @DisplayName("值空时应跳过")
         void shouldSkipWhenValuesEmpty() {
             assertDoesNotThrow(() -> EsQueryBuilder.of().terms("field").build());
         }
 
         @Test
-        @DisplayName("should skip condition when field is blank")
+        @DisplayName("字段Is空白时应跳过")
         void shouldSkipWhenFieldIsBlank() {
             assertDoesNotThrow(() -> EsQueryBuilder.of().terms("  ", "a", "b").build());
         }
 
         @Test
-        @DisplayName("should filter out null values in the array")
+        @DisplayName("应过滤器null值")
         void shouldFilterNullValues() {
             assertDoesNotThrow(() -> {
                 NativeQuery query = EsQueryBuilder.of()
@@ -313,13 +313,13 @@ class EsQueryBuilderTest {
     class Range {
 
         @Test
-        @DisplayName("should skip condition when both min and max are null")
+        @DisplayName("同时null时应跳过")
         void shouldSkipWhenBothNull() {
             assertDoesNotThrow(() -> EsQueryBuilder.of().range("price", null, null).build());
         }
 
         @Test
-        @DisplayName("should allow only min (open-ended upper bound)")
+        @DisplayName("ly分钟时应允许")
         void shouldAllowOnlyMin() {
             assertDoesNotThrow(() -> {
                 NativeQuery query = EsQueryBuilder.of()
@@ -330,7 +330,7 @@ class EsQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("should allow only max (open-ended lower bound)")
+        @DisplayName("lyMax时应允许")
         void shouldAllowOnlyMax() {
             assertDoesNotThrow(() -> {
                 NativeQuery query = EsQueryBuilder.of()
@@ -350,19 +350,19 @@ class EsQueryBuilderTest {
     class Prefix {
 
         @Test
-        @DisplayName("should skip condition when field is blank")
+        @DisplayName("字段Is空白时应跳过")
         void shouldSkipWhenFieldIsBlank() {
             assertDoesNotThrow(() -> EsQueryBuilder.of().prefix("", "SKU-").build());
         }
 
         @Test
-        @DisplayName("should skip condition when prefix is blank")
+        @DisplayName("前缀Is空白时应跳过")
         void shouldSkipWhenPrefixIsBlank() {
             assertDoesNotThrow(() -> EsQueryBuilder.of().prefix("sku", "").build());
         }
 
         @Test
-        @DisplayName("should add prefix condition when valid")
+        @DisplayName("有效时应添加条件")
         void shouldAddConditionWhenValid() {
             assertDoesNotThrow(() -> {
                 NativeQuery query = EsQueryBuilder.of()
@@ -382,13 +382,13 @@ class EsQueryBuilderTest {
     class Wildcard {
 
         @Test
-        @DisplayName("should skip condition when pattern is blank")
+        @DisplayName("PatternIs空白时应跳过")
         void shouldSkipWhenPatternIsBlank() {
             assertDoesNotThrow(() -> EsQueryBuilder.of().wildcard("name", "  ").build());
         }
 
         @Test
-        @DisplayName("should add wildcard condition when valid")
+        @DisplayName("有效时应添加条件")
         void shouldAddConditionWhenValid() {
             assertDoesNotThrow(() -> {
                 NativeQuery query = EsQueryBuilder.of()
@@ -408,21 +408,21 @@ class EsQueryBuilderTest {
     class Sort {
 
         @Test
-        @DisplayName("should skip when field is blank")
+        @DisplayName("字段Is空白时应跳过")
         void shouldSkipWhenFieldIsBlank() {
             NativeQuery query = EsQueryBuilder.of().sort("", SortOrder.Asc).build();
             assertTrue(query.getSortOptions() == null || query.getSortOptions().isEmpty());
         }
 
         @Test
-        @DisplayName("should skip when order is null")
+        @DisplayName("排序Isnull时应跳过")
         void shouldSkipWhenOrderIsNull() {
             NativeQuery query = EsQueryBuilder.of().sort("price", null).build();
             assertTrue(query.getSortOptions() == null || query.getSortOptions().isEmpty());
         }
 
         @Test
-        @DisplayName("should accumulate multiple sorts in order")
+        @DisplayName("应累加多个Sorts")
         void shouldAccumulateMultipleSorts() {
             NativeQuery query = EsQueryBuilder.of()
                     .sort("salesCount", SortOrder.Desc)
@@ -443,14 +443,14 @@ class EsQueryBuilderTest {
     class Highlight {
 
         @Test
-        @DisplayName("should skip when fields array is empty")
+        @DisplayName("字段空时应跳过")
         void shouldSkipWhenFieldsEmpty() {
             NativeQuery query = EsQueryBuilder.of().highlight().build();
             assertTrue(query.getHighlightQuery().isEmpty(), "No highlight query when no fields are provided");
         }
 
         @Test
-        @DisplayName("should skip blank field names within array")
+        @DisplayName("应跳过空白字段Names")
         void shouldSkipBlankFieldNames() {
             // Only "title" is valid; blank strings are filtered out
             NativeQuery query = EsQueryBuilder.of()
@@ -461,7 +461,7 @@ class EsQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("should be chainable and return this")
+        @DisplayName("应BeChainable")
         void shouldBeChainable() {
             EsQueryBuilder builder = EsQueryBuilder.of();
             EsQueryBuilder result = builder.highlight("title");
@@ -478,7 +478,7 @@ class EsQueryBuilderTest {
     class Page {
 
         @Test
-        @DisplayName("should compute correct from for page 3 with size 15")
+        @DisplayName("应ComputeCorrect从")
         void shouldComputeCorrectFrom() {
             NativeQuery query = EsQueryBuilder.of().page(3, 15).build();
             assertEquals(30, query.getPageable().getOffset(), "from = (3-1)*15 = 30");
@@ -486,7 +486,7 @@ class EsQueryBuilderTest {
         }
 
         @Test
-        @DisplayName("should be chainable and return this")
+        @DisplayName("应BeChainable")
         void shouldBeChainable() {
             EsQueryBuilder builder = EsQueryBuilder.of();
             EsQueryBuilder result = builder.page(1, 10);

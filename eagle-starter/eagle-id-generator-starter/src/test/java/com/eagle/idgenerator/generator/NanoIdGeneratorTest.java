@@ -17,28 +17,28 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class NanoIdGeneratorTest {
 
     @Test
-    @DisplayName("default size should be 21")
+    @DisplayName("默认大小应Be21")
     void defaultSizeShouldBe21() {
         NanoIdGenerator gen = new NanoIdGenerator();
         assertEquals(21, gen.nextId().length());
     }
 
     @Test
-    @DisplayName("custom default size should be respected")
+    @DisplayName("自定义默认大小应生效")
     void customDefaultSizeShouldBeRespected() {
         NanoIdGenerator gen = new NanoIdGenerator(8);
         assertEquals(8, gen.nextId().length());
     }
 
     @Test
-    @DisplayName("nextId(size) should produce given length")
+    @DisplayName("应生成指定长度")
     void shouldProduceGivenLength() {
         NanoIdGenerator gen = new NanoIdGenerator();
         assertEquals(16, gen.nextId(16).length());
     }
 
     @Test
-    @DisplayName("should reject non-positive size")
+    @DisplayName("应拒绝非正数大小")
     void shouldRejectNonPositiveSize() {
         NanoIdGenerator gen = new NanoIdGenerator();
         assertThrows(IllegalArgumentException.class, () -> gen.nextId(0));
@@ -46,7 +46,7 @@ class NanoIdGeneratorTest {
     }
 
     @Test
-    @DisplayName("should generate URL-safe characters only")
+    @DisplayName("应生成URL 安全字符")
     void shouldGenerateUrlSafeChars() {
         NanoIdGenerator gen = new NanoIdGenerator();
         String id = gen.nextId();
@@ -55,7 +55,7 @@ class NanoIdGeneratorTest {
     }
 
     @Test
-    @DisplayName("should generate unique NanoIds when called 1000 times")
+    @DisplayName("应生成唯一值")
     void shouldGenerateUnique() {
         NanoIdGenerator gen = new NanoIdGenerator();
         Set<String> ids = new HashSet<>();

@@ -131,7 +131,7 @@ class SmsCodeAuthenticationProviderTest {
     }
 
     @Test
-    @DisplayName("supports SmsCodeAuthenticationToken")
+    @DisplayName("支持令牌")
     void supportsToken() {
         org.junit.jupiter.api.Assertions.assertTrue(provider.supports(SmsCodeAuthenticationToken.class));
         org.junit.jupiter.api.Assertions.assertFalse(provider.supports(WechatAppAuthenticationToken.class));
@@ -142,7 +142,7 @@ class SmsCodeAuthenticationProviderTest {
     class Authenticate {
 
         @Test
-        @DisplayName("returns access token on happy path")
+        @DisplayName("应返回Access令牌")
         @SuppressWarnings("unchecked")
         void shouldReturnAccessToken() {
             RegisteredClient client = clientWithGrants(SmsCodeAuthenticationToken.SMS_CODE);
@@ -166,7 +166,7 @@ class SmsCodeAuthenticationProviderTest {
         }
 
         @Test
-        @DisplayName("throws unauthorized_client when grant_type not registered for client")
+        @DisplayName("应拒绝授权类型不Allowed")
         void shouldRejectGrantTypeNotAllowed() {
             // 只授权 refresh_token，没有 sms_code
             RegisteredClient client = clientWithGrants(AuthorizationGrantType.REFRESH_TOKEN);
@@ -179,7 +179,7 @@ class SmsCodeAuthenticationProviderTest {
         }
 
         @Test
-        @DisplayName("throws invalid_grant when sms code is wrong")
+        @DisplayName("应拒绝无效验证码")
         void shouldRejectInvalidCode() {
             RegisteredClient client = clientWithGrants(SmsCodeAuthenticationToken.SMS_CODE);
             SmsCodeAuthenticationToken authToken = new SmsCodeAuthenticationToken(
@@ -194,7 +194,7 @@ class SmsCodeAuthenticationProviderTest {
         }
 
         @Test
-        @DisplayName("throws account_frozen when target account is frozen")
+        @DisplayName("应拒绝已冻结账号")
         void shouldRejectFrozenAccount() {
             RegisteredClient client = clientWithGrants(SmsCodeAuthenticationToken.SMS_CODE);
             SmsCodeAuthenticationToken authToken = new SmsCodeAuthenticationToken(
@@ -212,7 +212,7 @@ class SmsCodeAuthenticationProviderTest {
         }
 
         @Test
-        @DisplayName("invokes blacklist check before sms verification")
+        @DisplayName("应Check黑名单首次")
         void shouldCheckBlacklistFirst() {
             RegisteredClient client = clientWithGrants(SmsCodeAuthenticationToken.SMS_CODE);
             SmsCodeAuthenticationToken authToken = new SmsCodeAuthenticationToken(

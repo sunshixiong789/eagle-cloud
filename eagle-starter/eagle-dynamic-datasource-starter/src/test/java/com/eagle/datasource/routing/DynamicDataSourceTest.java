@@ -33,7 +33,7 @@ class DynamicDataSourceTest {
     class SingleSlave {
 
         @Test
-        @DisplayName("should return 'master' when context is MASTER")
+        @DisplayName("上下文Is主库时应返回主库key")
         void shouldReturnMasterKeyWhenContextIsMaster() {
             ExposedDynamicDataSource ds = new ExposedDynamicDataSource(1);
             DataSourceContextHolder.set(DataSourceContextHolder.MASTER);
@@ -42,7 +42,7 @@ class DynamicDataSourceTest {
         }
 
         @Test
-        @DisplayName("should return 'slave' when context is SLAVE")
+        @DisplayName("上下文Is从库时应返回从库key")
         void shouldReturnSlaveKeyWhenContextIsSlave() {
             ExposedDynamicDataSource ds = new ExposedDynamicDataSource(1);
             DataSourceContextHolder.set(DataSourceContextHolder.SLAVE);
@@ -51,7 +51,7 @@ class DynamicDataSourceTest {
         }
 
         @Test
-        @DisplayName("should return 'master' when context not set")
+        @DisplayName("上下文不设置时应返回主库")
         void shouldReturnMasterWhenContextNotSet() {
             ExposedDynamicDataSource ds = new ExposedDynamicDataSource(1);
 
@@ -64,7 +64,7 @@ class DynamicDataSourceTest {
     class MultiSlave {
 
         @Test
-        @DisplayName("should round-robin through slave-0, slave-1, slave-2 in order")
+        @DisplayName("应轮询Robin穿过从库")
         void shouldRoundRobinThroughSlaves() {
             ExposedDynamicDataSource ds = new ExposedDynamicDataSource(3);
             DataSourceContextHolder.set(DataSourceContextHolder.SLAVE);
@@ -76,7 +76,7 @@ class DynamicDataSourceTest {
         }
 
         @Test
-        @DisplayName("should still return 'master' when context is MASTER regardless of slave count")
+        @DisplayName("上下文Is主库时应返回主库")
         void shouldReturnMasterWhenContextIsMaster() {
             ExposedDynamicDataSource ds = new ExposedDynamicDataSource(3);
             DataSourceContextHolder.set(DataSourceContextHolder.MASTER);
@@ -85,7 +85,7 @@ class DynamicDataSourceTest {
         }
 
         @Test
-        @DisplayName("should handle index overflow without returning negative key")
+        @DisplayName("应HandleIndexOverflow")
         void shouldHandleIndexOverflow() {
             ExposedDynamicDataSource ds = new ExposedDynamicDataSource(2);
             DataSourceContextHolder.set(DataSourceContextHolder.SLAVE);

@@ -23,7 +23,7 @@ class RequestIpResolverTest {
     }
 
     @Test
-    @DisplayName("returns remoteAddr when client connects directly (not via trusted proxy)")
+    @DisplayName("直连时应忽略 XFF")
     void directConnectIgnoresXff() {
         MockHttpServletRequest req = new MockHttpServletRequest();
         req.setRemoteAddr("203.0.113.5");
@@ -32,7 +32,7 @@ class RequestIpResolverTest {
     }
 
     @Test
-    @DisplayName("returns rightmost-non-proxy hop when remoteAddr is trusted proxy")
+    @DisplayName("可信代理应使用 XFF")
     void trustedProxyUsesXff() {
         MockHttpServletRequest req = new MockHttpServletRequest();
         req.setRemoteAddr("10.0.0.5");
@@ -42,7 +42,7 @@ class RequestIpResolverTest {
     }
 
     @Test
-    @DisplayName("returns remoteAddr when XFF header is absent")
+    @DisplayName("无 XFF 时应使用 remoteAddr")
     void noXff() {
         MockHttpServletRequest req = new MockHttpServletRequest();
         req.setRemoteAddr("10.0.0.5");
@@ -50,7 +50,7 @@ class RequestIpResolverTest {
     }
 
     @Test
-    @DisplayName("attacker-injected XFF from untrusted IP is ignored")
+    @DisplayName("应忽略攻击者注入的 XFF")
     void attackerInjectedXff() {
         MockHttpServletRequest req = new MockHttpServletRequest();
         req.setRemoteAddr("198.51.100.1");
@@ -60,7 +60,7 @@ class RequestIpResolverTest {
     }
 
     @Test
-    @DisplayName("ipv6 loopback is treated as trusted when configured")
+    @DisplayName("应正确处理 IPv6 回环地址")
     void ipv6Loopback() {
         TrustedProxyProperties props = new TrustedProxyProperties();
         props.setTrustedProxies(List.of("::1/128"));

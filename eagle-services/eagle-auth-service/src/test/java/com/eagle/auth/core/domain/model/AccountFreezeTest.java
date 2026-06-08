@@ -30,7 +30,7 @@ class AccountFreezeTest {
     @DisplayName("freezeByAdmin")
     class Freeze {
         @Test
-        @DisplayName("should freeze active account and register event")
+        @DisplayName("应冻结Active账号")
         void shouldFreezeActiveAccount() {
             Account account = newActiveAccount();
             LocalDateTime until = LocalDateTime.now().plusHours(1);
@@ -45,7 +45,7 @@ class AccountFreezeTest {
         }
 
         @Test
-        @DisplayName("should reject when already frozen")
+        @DisplayName("已经已冻结时应拒绝")
         void shouldRejectWhenAlreadyFrozen() {
             Account account = newActiveAccount();
             account.freezeByAdmin(OPERATOR_ID, OPERATOR_NAME, FreezeReason.ADMIN, null, null);
@@ -55,7 +55,7 @@ class AccountFreezeTest {
         }
 
         @Test
-        @DisplayName("should reject when freezeUntil is in the past")
+        @DisplayName("应拒绝Past冻结Until")
         void shouldRejectPastFreezeUntil() {
             Account account = newActiveAccount();
             LocalDateTime past = LocalDateTime.now().minusMinutes(1);
@@ -69,7 +69,7 @@ class AccountFreezeTest {
     @DisplayName("unfreeze")
     class Unfreeze {
         @Test
-        @DisplayName("should unfreeze and clear freeze info")
+        @DisplayName("应解冻")
         void shouldUnfreeze() {
             Account account = newActiveAccount();
             account.freezeByAdmin(OPERATOR_ID, OPERATOR_NAME, FreezeReason.ADMIN, null, null);
@@ -81,7 +81,7 @@ class AccountFreezeTest {
         }
 
         @Test
-        @DisplayName("should reject when not frozen")
+        @DisplayName("不已冻结时应拒绝")
         void shouldRejectWhenNotFrozen() {
             Account account = newActiveAccount();
             DomainException ex = assertThrows(DomainException.class,
@@ -94,7 +94,7 @@ class AccountFreezeTest {
     @DisplayName("tryAutoUnfreezeIfExpired")
     class AutoUnfreeze {
         @Test
-        @DisplayName("should auto-unfreeze when freezeUntil expired")
+        @DisplayName("Expired时应Auto解冻")
         void shouldAutoUnfreezeWhenExpired() {
             Account account = newActiveAccount();
             account.freezeByAdmin(OPERATOR_ID, OPERATOR_NAME, FreezeReason.ADMIN,
@@ -106,7 +106,7 @@ class AccountFreezeTest {
         }
 
         @Test
-        @DisplayName("should not unfreeze when permanent")
+        @DisplayName("永久有效时不应解冻")
         void shouldNotUnfreezeWhenPermanent() {
             Account account = newActiveAccount();
             account.freezeByAdmin(OPERATOR_ID, OPERATOR_NAME, FreezeReason.ADMIN, null, null);

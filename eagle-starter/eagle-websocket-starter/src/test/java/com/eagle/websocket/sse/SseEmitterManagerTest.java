@@ -29,7 +29,7 @@ class SseEmitterManagerTest {
     class Connect {
 
         @Test
-        @DisplayName("should return a non-null SseEmitter")
+        @DisplayName("连接：应返回 Emitter")
         void connect_shouldReturnEmitter() {
             SseEmitter emitter = manager.connect("user1");
 
@@ -37,7 +37,7 @@ class SseEmitterManagerTest {
         }
 
         @Test
-        @DisplayName("should support multiple connections per user")
+        @DisplayName("连接：应支持单用户多个连接")
         void connect_shouldSupportMultipleConnectionsPerUser() {
             manager.connect("user1");
             manager.connect("user1");
@@ -46,7 +46,7 @@ class SseEmitterManagerTest {
         }
 
         @Test
-        @DisplayName("should use default timeout when no timeout is specified")
+        @DisplayName("连接：应使用默认超时")
         void connect_shouldUsePDefaultTimeout() {
             SseEmitter emitter = manager.connect("user1");
 
@@ -55,7 +55,7 @@ class SseEmitterManagerTest {
         }
 
         @Test
-        @DisplayName("should use provided timeout when specified")
+        @DisplayName("连接：应使用指定超时")
         void connect_shouldUseProvidedTimeout() {
             SseEmitter emitter = manager.connect("user1", 30_000L);
 
@@ -69,7 +69,7 @@ class SseEmitterManagerTest {
     class DisconnectUser {
 
         @Test
-        @DisplayName("should remove all emitters for user after disconnect")
+        @DisplayName("断开连接：应移除用户的全部 Emitter")
         void disconnect_shouldRemoveAllUserEmitters() {
             manager.connect("user1");
             manager.connect("user1");
@@ -81,7 +81,7 @@ class SseEmitterManagerTest {
         }
 
         @Test
-        @DisplayName("should not throw when disconnecting a user with no connections")
+        @DisplayName("断开连接：无连接时不应抛出")
         void disconnect_shouldNotThrowWhenNoConnections() {
             assertDoesNotThrow(() -> manager.disconnectUser("unknown-user"));
         }
@@ -92,13 +92,13 @@ class SseEmitterManagerTest {
     class SendToUser {
 
         @Test
-        @DisplayName("should do nothing for an offline user without throwing")
+        @DisplayName("发送到用户：离线用户应不执行操作")
         void sendToUser_shouldDoNothingForOfflineUser() {
             assertDoesNotThrow(() -> manager.sendToUser("offline-user", "order", "payload"));
         }
 
         @Test
-        @DisplayName("should remove dead emitter after send error and clean up connection")
+        @DisplayName("发送到用户：应移除失效 Emitter")
         void sendToUser_shouldRemoveDeadEmitter() {
             // Complete the emitter before sending. In a unit test (no servlet handler),
             // complete() sets the flag but does NOT fire onCompletion. The removal
@@ -118,13 +118,13 @@ class SseEmitterManagerTest {
     class Broadcast {
 
         @Test
-        @DisplayName("should do nothing when there are no connections without throwing")
+        @DisplayName("广播：无连接时应不执行操作")
         void broadcast_shouldDoNothingWhenNoConnections() {
             assertDoesNotThrow(() -> manager.broadcast("announcement", "hello everyone"));
         }
 
         @Test
-        @DisplayName("should send to all connected users")
+        @DisplayName("广播：应发送给全部已连接用户")
         void broadcast_shouldSendToAllConnectedUsers() {
             manager.connect("user1");
             manager.connect("user2");
@@ -139,13 +139,13 @@ class SseEmitterManagerTest {
     class GetConnectionCount {
 
         @Test
-        @DisplayName("should return 0 for a user with no connections")
+        @DisplayName("获取Connection计数：应返回零针对未知用户")
         void getConnectionCount_shouldReturnZeroForUnknownUser() {
             assertEquals(0, manager.getConnectionCount("nobody"));
         }
 
         @Test
-        @DisplayName("should return accurate count after connecting and disconnecting")
+        @DisplayName("获取Connection计数：应追踪Accurately")
         void getConnectionCount_shouldTrackAccurately() {
             manager.connect("user1");
             assertEquals(1, manager.getConnectionCount("user1"));

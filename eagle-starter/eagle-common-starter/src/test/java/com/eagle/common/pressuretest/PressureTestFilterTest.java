@@ -74,7 +74,7 @@ class PressureTestFilterTest {
     class HeaderPresent {
 
         @Test
-        @DisplayName("should mark PressureTestContext when X-Eagle-Gray header is 'true'")
+        @DisplayName("do过滤器：请求头存在时应标记上下文")
         void doFilter_shouldMarkContextWhenHeaderPresent() throws Exception {
             when(request.getHeader(PressureTestContext.PRESSURE_TEST_HEADER)).thenReturn("true");
             AtomicBoolean markedDuringFilter = new AtomicBoolean(false);
@@ -92,7 +92,7 @@ class PressureTestFilterTest {
         }
 
         @Test
-        @DisplayName("should mark context for case-insensitive 'TRUE' header value")
+        @DisplayName("do过滤器：应标记上下文针对大小写不敏感true")
         void doFilter_shouldMarkContextForCaseInsensitiveTrue() throws Exception {
             when(request.getHeader(PressureTestContext.PRESSURE_TEST_HEADER)).thenReturn("TRUE");
             AtomicBoolean markedDuringFilter = new AtomicBoolean(false);
@@ -113,7 +113,7 @@ class PressureTestFilterTest {
     class HeaderAbsent {
 
         @Test
-        @DisplayName("should not mark PressureTestContext when header is absent")
+        @DisplayName("do过滤器：请求头不存在时不应标记上下文")
         void doFilter_shouldNotMarkContextWhenHeaderAbsent() throws Exception {
             when(request.getHeader(PressureTestContext.PRESSURE_TEST_HEADER)).thenReturn(null);
             AtomicBoolean markedDuringFilter = new AtomicBoolean(true);
@@ -134,7 +134,7 @@ class PressureTestFilterTest {
     class FinallyClears {
 
         @Test
-        @DisplayName("should clear context after successful filter chain execution")
+        @DisplayName("do过滤器：应清理上下文后链路")
         void doFilter_shouldClearContextAfterChain() throws Exception {
             when(request.getHeader(PressureTestContext.PRESSURE_TEST_HEADER)).thenReturn("true");
 
@@ -146,7 +146,7 @@ class PressureTestFilterTest {
         }
 
         @Test
-        @DisplayName("should clear context even when filter chain throws an exception")
+        @DisplayName("do过滤器：应清理上下文后链路抛出")
         void doFilter_shouldClearContextAfterChainThrows() throws Exception {
             when(request.getHeader(PressureTestContext.PRESSURE_TEST_HEADER)).thenReturn("true");
             doThrow(new RuntimeException("downstream failure"))
@@ -164,7 +164,7 @@ class PressureTestFilterTest {
         }
 
         @Test
-        @DisplayName("should clear context when chain throws a ServletException")
+        @DisplayName("do过滤器：链路抛出Servlet异常时应清理上下文")
         void doFilter_shouldClearContextWhenChainThrowsServletException() throws Exception {
             when(request.getHeader(PressureTestContext.PRESSURE_TEST_HEADER)).thenReturn("true");
             doThrow(new ServletException("servlet error"))
@@ -185,7 +185,7 @@ class PressureTestFilterTest {
     class FilterChainDelegation {
 
         @Test
-        @DisplayName("should always call filterChain.doFilter regardless of header presence")
+        @DisplayName("do过滤器：应Always调用过滤器链路")
         void doFilter_shouldAlwaysCallFilterChain() throws Exception {
             when(request.getHeader(PressureTestContext.PRESSURE_TEST_HEADER)).thenReturn(null);
 

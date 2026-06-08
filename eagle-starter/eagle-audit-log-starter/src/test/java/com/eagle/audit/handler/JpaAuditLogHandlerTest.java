@@ -33,7 +33,7 @@ class JpaAuditLogHandlerTest {
     class Handle {
 
         @Test
-        @DisplayName("persists AuditLogRecord mapped from entry with serviceId injected")
+        @DisplayName("应持久化MappedRecord")
         void shouldPersistMappedRecord() {
             handler = new JpaAuditLogHandler(repository, "auth");
             AuditLogEntry entry = AuditLogEntry.builder()
@@ -58,7 +58,7 @@ class JpaAuditLogHandlerTest {
         }
 
         @Test
-        @DisplayName("swallows persistence failure to avoid breaking the main business flow")
+        @DisplayName("应吞掉持久化失败")
         void shouldSwallowPersistFailure() {
             handler = new JpaAuditLogHandler(repository, "system");
             AuditLogEntry entry = AuditLogEntry.builder()
@@ -71,7 +71,7 @@ class JpaAuditLogHandlerTest {
         }
 
         @Test
-        @DisplayName("defaults occurredAt to now when entry has none")
+        @DisplayName("应默认OccurredAt到Now")
         void shouldDefaultOccurredAtToNow() {
             handler = new JpaAuditLogHandler(repository, "system");
             AuditLogEntry entry = AuditLogEntry.builder()

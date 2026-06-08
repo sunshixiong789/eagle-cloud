@@ -27,7 +27,7 @@ class AbstractCachedSmsServiceTest {
     }
 
     @Test
-    @DisplayName("first send invokes provider; second within 60s throws SMS_RATE_LIMIT")
+    @DisplayName("频率限制内Window")
     void rateLimitWithinWindow() {
         sms.sendCode("13800138000");
         assertEquals(1, sms.sendCount.get());
@@ -39,7 +39,7 @@ class AbstractCachedSmsServiceTest {
     }
 
     @Test
-    @DisplayName("verifyCode returns true once and invalidates the code")
+    @DisplayName("验证Once")
     void verifyOnce() {
         sms.sendCode("13800138000");
         String code = sms.lastCode;
@@ -49,7 +49,7 @@ class AbstractCachedSmsServiceTest {
     }
 
     @Test
-    @DisplayName("verifyCode returns false for unknown phone or wrong code")
+    @DisplayName("验证未命中")
     void verifyMiss() {
         sms.sendCode("13800138000");
         assertFalse(sms.verifyCode("13800138000", "000000"));
@@ -57,7 +57,7 @@ class AbstractCachedSmsServiceTest {
     }
 
     @Test
-    @DisplayName("send on different phone is independent")
+    @DisplayName("不同PhonesAreIndependent")
     void differentPhonesAreIndependent() {
         sms.sendCode("13800138000");
         sms.sendCode("13900139000");

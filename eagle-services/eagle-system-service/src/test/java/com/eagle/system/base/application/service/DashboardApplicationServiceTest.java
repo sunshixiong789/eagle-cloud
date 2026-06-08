@@ -56,7 +56,7 @@ class DashboardApplicationServiceTest {
     @DisplayName("getStats")
     class GetStats {
         @Test
-        @DisplayName("should aggregate counts and compute today-vs-yesterday percentage")
+        @DisplayName("应Aggregate")
         void shouldAggregate() {
             when(adminProperties.getUsername()).thenReturn("admin");
             // userCount 取 auth 权威源(>=0 不走 fallback)
@@ -105,7 +105,7 @@ class DashboardApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should treat yesterday=0 as +100% growth")
+        @DisplayName("应Handle零Yesterday")
         void shouldHandleZeroYesterday() {
             when(adminProperties.getUsername()).thenReturn("admin");
             when(authClientFacade.countAccounts()).thenReturn(0L);
@@ -129,7 +129,7 @@ class DashboardApplicationServiceTest {
     @DisplayName("getLoginTrend")
     class LoginTrend {
         @Test
-        @DisplayName("should clamp negative days to 1")
+        @DisplayName("应限制负数Days")
         void shouldClampNegativeDays() {
             when(logRepository.findLoginTrendByPeriod(any(), any(), any())).thenReturn(List.of());
             List<LoginTrendItem> trend = service.getLoginTrend(-5);
@@ -137,7 +137,7 @@ class DashboardApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should clamp days above max to 90")
+        @DisplayName("应限制TooMany")
         void shouldClampTooMany() {
             when(logRepository.findLoginTrendByPeriod(any(), any(), any())).thenReturn(List.of());
             List<LoginTrendItem> trend = service.getLoginTrend(500);
@@ -145,7 +145,7 @@ class DashboardApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should fill zero-count days when no projection exists")
+        @DisplayName("应填充Zeros")
         void shouldFillZeros() {
             when(logRepository.findLoginTrendByPeriod(any(), any(), any())).thenReturn(List.of());
             List<LoginTrendItem> trend = service.getLoginTrend(3);
@@ -154,7 +154,7 @@ class DashboardApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should preserve counts from projection")
+        @DisplayName("应保留ProjectionCounts")
         void shouldPreserveProjectionCounts() {
             LocalDate today = LocalDate.now();
             LoginTrendProjection p = mock(LoginTrendProjection.class);

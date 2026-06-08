@@ -34,7 +34,7 @@ class JpaRegisteredClientRepositoryTest {
     class FindById {
 
         @Test
-        @DisplayName("should find registered client by database id when authorization references registered client id")
+        @DisplayName("AuthorizationReferencesRegistered客户端ID时应查找Registered客户端通过DatabaseID")
         void shouldFindRegisteredClientByDatabaseIdWhenAuthorizationReferencesRegisteredClientId() {
             OAuthClient client = OAuthClient.create(
                     CLIENT_ID,

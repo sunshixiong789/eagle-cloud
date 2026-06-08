@@ -5,6 +5,7 @@ import com.eagle.webclient.error.EagleWebClientErrorFilter;
 import com.eagle.webclient.interceptor.PropagatingHeadersExchangeFilterFunction;
 import com.eagle.webclient.support.EagleReactiveServiceClientFactory;
 import com.eagle.webclient.support.EagleWebClientCustomizer;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -22,6 +23,7 @@ class EagleWebClientAutoConfigurationTest {
             .withConfiguration(AutoConfigurations.of(EagleWebClientAutoConfiguration.class));
 
     @Test
+    @DisplayName("应注册响应式基础设施 Bean")
     void shouldRegisterReactiveInfrastructureBeans() {
         contextRunner.run(context -> assertThat(context)
                 .hasSingleBean(HttpClientProperties.class)
@@ -34,6 +36,7 @@ class EagleWebClientAutoConfigurationTest {
     }
 
     @Test
+    @DisplayName("应共享 HTTP 客户端属性前缀")
     void shouldShareHttpClientPropertiesPrefix() {
         contextRunner
                 .withPropertyValues(

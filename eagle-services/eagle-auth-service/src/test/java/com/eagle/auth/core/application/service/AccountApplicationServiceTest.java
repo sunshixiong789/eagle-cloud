@@ -63,7 +63,7 @@ class AccountApplicationServiceTest {
     class Register {
 
         @Test
-        @DisplayName("should save new account when username is free")
+        @DisplayName("用户名Free时应保存")
         void shouldSaveWhenUsernameFree() {
             when(accountRepository.findByUsername(USERNAME)).thenReturn(Optional.empty());
             when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
@@ -81,7 +81,7 @@ class AccountApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should throw conflict when username already exists")
+        @DisplayName("用户名Exists时应抛出")
         void shouldThrowWhenUsernameExists() {
             when(accountRepository.findByUsername(USERNAME)).thenReturn(Optional.of(existingAccount()));
 
@@ -97,7 +97,7 @@ class AccountApplicationServiceTest {
     class CreateAccount {
 
         @Test
-        @DisplayName("should throw conflict when username already exists")
+        @DisplayName("用户名Exists时应抛出")
         void shouldThrowWhenUsernameExists() {
             when(accountRepository.findByUsername(USERNAME)).thenReturn(Optional.of(existingAccount()));
             AppException ex = assertThrows(ConflictException.class,
@@ -111,7 +111,7 @@ class AccountApplicationServiceTest {
     class ChangePassword {
 
         @Test
-        @DisplayName("should update password via aggregate method and save")
+        @DisplayName("应更新密码")
         void shouldUpdatePassword() {
             Account account = existingAccount();
             when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
@@ -124,7 +124,7 @@ class AccountApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should throw NotFoundException when account not found")
+        @DisplayName("账号不Found时应抛出")
         void shouldThrowWhenAccountNotFound() {
             when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.empty());
             AppException ex = assertThrows(NotFoundException.class,
@@ -133,7 +133,7 @@ class AccountApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should reject changing configured admin account password")
+        @DisplayName("应拒绝Changing管理员密码")
         void shouldRejectChangingAdminPassword() {
             Account admin = Account.create("admin", ENCODED_PASSWORD, PHONE, null);
             when(adminProperties.getUsername()).thenReturn("admin");
@@ -152,7 +152,7 @@ class AccountApplicationServiceTest {
     @DisplayName("freezeAccount")
     class FreezeAccount {
         @Test
-        @DisplayName("should freeze account and save")
+        @DisplayName("应冻结账号")
         void shouldFreezeAccount() {
             Account account = existingAccount();
             when(adminProperties.getUsername()).thenReturn("admin");
@@ -170,7 +170,7 @@ class AccountApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should throw when account not found")
+        @DisplayName("不Found时应抛出")
         void shouldThrowWhenNotFound() {
             when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.empty());
             assertThrows(NotFoundException.class, () -> service.freezeAccount(ACCOUNT_ID,
@@ -180,7 +180,7 @@ class AccountApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should reject freezing configured admin account")
+        @DisplayName("应拒绝Freezing管理员账号")
         void shouldRejectFreezingAdminAccount() {
             Account admin = Account.create("admin", ENCODED_PASSWORD, PHONE, null);
             when(adminProperties.getUsername()).thenReturn("admin");
@@ -200,7 +200,7 @@ class AccountApplicationServiceTest {
     @DisplayName("unfreezeAccount")
     class UnfreezeAccount {
         @Test
-        @DisplayName("should unfreeze and save")
+        @DisplayName("应解冻")
         void shouldUnfreeze() {
             Account account = existingAccount();
             account.freezeByAdmin(99L, "admin",
@@ -217,7 +217,7 @@ class AccountApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should reject unfreezing configured admin account")
+        @DisplayName("应拒绝Unfreezing管理员账号")
         void shouldRejectUnfreezingAdminAccount() {
             Account admin = Account.create("admin", ENCODED_PASSWORD, PHONE, null);
             when(adminProperties.getUsername()).thenReturn("admin");
@@ -236,7 +236,7 @@ class AccountApplicationServiceTest {
     class Delete {
 
         @Test
-        @DisplayName("should register deleted event and call repository.delete")
+        @DisplayName("应注册事件并删除")
         void shouldRegisterEventAndDelete() {
             Account account = existingAccount();
             when(adminProperties.getUsername()).thenReturn("admin");
@@ -248,7 +248,7 @@ class AccountApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should reject deleting configured admin account")
+        @DisplayName("应拒绝Deleting管理员账号")
         void shouldRejectDeletingAdminAccount() {
             Account admin = Account.create("admin", ENCODED_PASSWORD, PHONE, null);
             when(adminProperties.getUsername()).thenReturn("admin");
@@ -267,7 +267,7 @@ class AccountApplicationServiceTest {
     class FindOrCreateByPhone {
 
         @Test
-        @DisplayName("should return existing account when phone present")
+        @DisplayName("应返回已有")
         void shouldReturnExisting() {
             Account existing = existingAccount();
             when(accountRepository.findByPhone(PHONE)).thenReturn(Optional.of(existing));
@@ -279,7 +279,7 @@ class AccountApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should create and save new account when phone not present")
+        @DisplayName("应创建New")
         void shouldCreateNew() {
             when(accountRepository.findByPhone(PHONE)).thenReturn(Optional.empty());
             when(accountRepository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -297,7 +297,7 @@ class AccountApplicationServiceTest {
     class AuthenticateBySmsCode {
 
         @Test
-        @DisplayName("should throw when phone format invalid")
+        @DisplayName("手机号无效时应抛出")
         void shouldThrowWhenPhoneInvalid() {
             AppException ex = assertThrows(DomainException.class,
                     () -> service.authenticateBySmsCode("123", "0000"));
@@ -306,14 +306,14 @@ class AccountApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should throw when phone is null")
+        @DisplayName("手机号null时应抛出")
         void shouldThrowWhenPhoneNull() {
             assertThrows(DomainException.class,
                     () -> service.authenticateBySmsCode(null, "0000"));
         }
 
         @Test
-        @DisplayName("should throw when sms code invalid")
+        @DisplayName("验证码无效时应抛出")
         void shouldThrowWhenCodeInvalid() {
             when(smsService.verifyCode(PHONE, "wrong")).thenReturn(false);
             AppException ex = assertThrows(DomainException.class,
@@ -323,7 +323,7 @@ class AccountApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should return found-or-created account when phone and code valid")
+        @DisplayName("应返回账号")
         void shouldReturnAccount() {
             Account existing = existingAccount();
             when(smsService.verifyCode(PHONE, "1234")).thenReturn(true);

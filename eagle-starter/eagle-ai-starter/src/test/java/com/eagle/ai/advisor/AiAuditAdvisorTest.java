@@ -53,14 +53,14 @@ class AiAuditAdvisorTest {
     }
 
     @Test
-    @DisplayName("should have correct name and order")
+    @DisplayName("应HaveCorrect名称并排序")
     void shouldHaveCorrectNameAndOrder() {
         assertEquals("AiAuditAdvisor", advisor.getName());
         assertEquals(Ordered.LOWEST_PRECEDENCE - 200, advisor.getOrder());
     }
 
     @Test
-    @DisplayName("before should return request unchanged")
+    @DisplayName("前应返回请求保持不变")
     void beforeShouldReturnRequestUnchanged() {
         assertSame(request, advisor.before(request, chain));
     }
@@ -70,7 +70,7 @@ class AiAuditAdvisorTest {
     class After {
 
         @Test
-        @DisplayName("should publish AiCallAuditEvent with token data")
+        @DisplayName("使用令牌数据时应发布审计事件")
         void shouldPublishAuditEventWithTokenData() {
             when(chatResponse.getMetadata()).thenReturn(metadata);
             when(metadata.getUsage()).thenReturn(usage);
@@ -100,7 +100,7 @@ class AiAuditAdvisorTest {
         }
 
         @Test
-        @DisplayName("should publish event with unknown model when metadata is null")
+        @DisplayName("无Metadata时应发布事件使用未知Model")
         void shouldPublishEventWithUnknownModelWhenNoMetadata() {
             ChatClientResponse response = buildResponse(Map.of());
 
@@ -118,7 +118,7 @@ class AiAuditAdvisorTest {
         }
 
         @Test
-        @DisplayName("should calculate non-negative latency after before()")
+        @DisplayName("应Calculate非负数Latency")
         void shouldCalculateNonNegativeLatency() {
             ChatClientResponse response = buildResponse(Map.of());
 
@@ -132,7 +132,7 @@ class AiAuditAdvisorTest {
         }
 
         @Test
-        @DisplayName("should report -1 latency when before() was not called")
+        @DisplayName("无前时应Report负数Latency")
         void shouldReportNegativeLatencyWhenNoBefore() {
             ChatClientResponse response = buildResponse(Map.of());
 
@@ -146,7 +146,7 @@ class AiAuditAdvisorTest {
         }
 
         @Test
-        @DisplayName("should always publish event even when chatResponse is null")
+        @DisplayName("使用null聊天响应时应发布事件Even")
         void shouldPublishEventEvenWithNullChatResponse() {
             ChatClientResponse response = ChatClientResponse.builder().build();
 
@@ -157,7 +157,7 @@ class AiAuditAdvisorTest {
         }
 
         @Test
-        @DisplayName("should return response unchanged")
+        @DisplayName("应返回响应保持不变")
         void shouldReturnResponseUnchanged() {
             ChatClientResponse response = buildResponse(Map.of());
             advisor.before(request, chain);

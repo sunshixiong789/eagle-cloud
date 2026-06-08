@@ -31,7 +31,7 @@ class ElasticSearchPropertiesTest {
     class DefaultValues {
 
         @Test
-        @DisplayName("should default uris to [http://localhost:9200]")
+        @DisplayName("应Have默认Uris")
         void shouldHaveDefaultUris() {
             ElasticSearchProperties properties = new ElasticSearchProperties();
             assertNotNull(properties.getUris());
@@ -40,35 +40,35 @@ class ElasticSearchPropertiesTest {
         }
 
         @Test
-        @DisplayName("should default username to null")
+        @DisplayName("应Havenull用户名通过默认")
         void shouldHaveNullUsernameByDefault() {
             ElasticSearchProperties properties = new ElasticSearchProperties();
             assertNull(properties.getUsername());
         }
 
         @Test
-        @DisplayName("should default password to null")
+        @DisplayName("应Havenull密码通过默认")
         void shouldHaveNullPasswordByDefault() {
             ElasticSearchProperties properties = new ElasticSearchProperties();
             assertNull(properties.getPassword());
         }
 
         @Test
-        @DisplayName("should default connectTimeout to 5000 ms")
+        @DisplayName("应Have默认连接Timeout")
         void shouldHaveDefaultConnectTimeout() {
             ElasticSearchProperties properties = new ElasticSearchProperties();
             assertEquals(5000, properties.getConnectTimeout());
         }
 
         @Test
-        @DisplayName("should default socketTimeout to 30000 ms")
+        @DisplayName("应Have默认SocketTimeout")
         void shouldHaveDefaultSocketTimeout() {
             ElasticSearchProperties properties = new ElasticSearchProperties();
             assertEquals(30000, properties.getSocketTimeout());
         }
 
         @Test
-        @DisplayName("should default sslEnabled to false")
+        @DisplayName("应HaveSsl已禁用通过默认")
         void shouldHaveSslDisabledByDefault() {
             ElasticSearchProperties properties = new ElasticSearchProperties();
             assertFalse(properties.isSslEnabled());
@@ -84,7 +84,7 @@ class ElasticSearchPropertiesTest {
     class CustomValues {
 
         @Test
-        @DisplayName("should accept custom uris")
+        @DisplayName("应Accept自定义Uris")
         void shouldAcceptCustomUris() {
             ElasticSearchProperties properties = new ElasticSearchProperties();
             List<String> uris = List.of("http://es-node1:9200", "http://es-node2:9200");
@@ -93,7 +93,7 @@ class ElasticSearchPropertiesTest {
         }
 
         @Test
-        @DisplayName("should accept custom username")
+        @DisplayName("应Accept自定义用户名")
         void shouldAcceptCustomUsername() {
             ElasticSearchProperties properties = new ElasticSearchProperties();
             properties.setUsername("eagle-user");
@@ -101,7 +101,7 @@ class ElasticSearchPropertiesTest {
         }
 
         @Test
-        @DisplayName("should accept custom password")
+        @DisplayName("应Accept自定义密码")
         void shouldAcceptCustomPassword() {
             ElasticSearchProperties properties = new ElasticSearchProperties();
             properties.setPassword("s3cr3t");
@@ -109,7 +109,7 @@ class ElasticSearchPropertiesTest {
         }
 
         @Test
-        @DisplayName("should accept custom connectTimeout")
+        @DisplayName("应Accept自定义连接Timeout")
         void shouldAcceptCustomConnectTimeout() {
             ElasticSearchProperties properties = new ElasticSearchProperties();
             properties.setConnectTimeout(3000);
@@ -117,7 +117,7 @@ class ElasticSearchPropertiesTest {
         }
 
         @Test
-        @DisplayName("should accept custom socketTimeout")
+        @DisplayName("应Accept自定义SocketTimeout")
         void shouldAcceptCustomSocketTimeout() {
             ElasticSearchProperties properties = new ElasticSearchProperties();
             properties.setSocketTimeout(60000);
@@ -125,7 +125,7 @@ class ElasticSearchPropertiesTest {
         }
 
         @Test
-        @DisplayName("should accept sslEnabled = true")
+        @DisplayName("应AcceptSslEnabled")
         void shouldAcceptSslEnabled() {
             ElasticSearchProperties properties = new ElasticSearchProperties();
             properties.setSslEnabled(true);
@@ -142,7 +142,7 @@ class ElasticSearchPropertiesTest {
     class EqualsAndHashCode {
 
         @Test
-        @DisplayName("two default instances should be equal")
+        @DisplayName("two默认Instances应Be相等")
         void twoDefaultInstancesShouldBeEqual() {
             ElasticSearchProperties a = new ElasticSearchProperties();
             ElasticSearchProperties b = new ElasticSearchProperties();
@@ -151,7 +151,7 @@ class ElasticSearchPropertiesTest {
         }
 
         @Test
-        @DisplayName("instances with different uris should not be equal")
+        @DisplayName("不同Uris应不Be相等")
         void differentUrisShouldNotBeEqual() {
             ElasticSearchProperties a = new ElasticSearchProperties();
             ElasticSearchProperties b = new ElasticSearchProperties();

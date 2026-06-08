@@ -39,7 +39,7 @@ class UserAnnouncementCursorTest {
     }
 
     @Test
-    @DisplayName("advanceTo null → false")
+    @DisplayName("null安全")
     void nullSafe() {
         UserAnnouncementCursor c = UserAnnouncementCursor.initial(1L, T1);
         assertThat(c.advanceTo(null)).isFalse();

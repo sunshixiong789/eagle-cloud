@@ -32,21 +32,21 @@ class EsSearchRequestTest {
     class DefaultValues {
 
         @Test
-        @DisplayName("should have page=1 by default")
+        @DisplayName("应Have默认分页")
         void shouldHaveDefaultPage() {
             EsSearchRequest request = EsSearchRequest.builder().build();
             assertEquals(1, request.getPage());
         }
 
         @Test
-        @DisplayName("should have size=20 by default")
+        @DisplayName("应Have默认大小")
         void shouldHaveDefaultSize() {
             EsSearchRequest request = EsSearchRequest.builder().build();
             assertEquals(20, request.getSize());
         }
 
         @Test
-        @DisplayName("should have empty searchFields list by default")
+        @DisplayName("应Have空搜索字段通过默认")
         void shouldHaveEmptySearchFieldsByDefault() {
             EsSearchRequest request = EsSearchRequest.builder().build();
             assertNotNull(request.getSearchFields());
@@ -54,7 +54,7 @@ class EsSearchRequestTest {
         }
 
         @Test
-        @DisplayName("should have empty filters map by default")
+        @DisplayName("应Have空Filters通过默认")
         void shouldHaveEmptyFiltersByDefault() {
             EsSearchRequest request = EsSearchRequest.builder().build();
             assertNotNull(request.getFilters());
@@ -62,7 +62,7 @@ class EsSearchRequestTest {
         }
 
         @Test
-        @DisplayName("should have empty rangeFilters map by default")
+        @DisplayName("应Have空RangeFilters通过默认")
         void shouldHaveEmptyRangeFiltersByDefault() {
             EsSearchRequest request = EsSearchRequest.builder().build();
             assertNotNull(request.getRangeFilters());
@@ -70,7 +70,7 @@ class EsSearchRequestTest {
         }
 
         @Test
-        @DisplayName("should have empty sorts map by default")
+        @DisplayName("应Have空Sorts通过默认")
         void shouldHaveEmptySortsByDefault() {
             EsSearchRequest request = EsSearchRequest.builder().build();
             assertNotNull(request.getSorts());
@@ -78,7 +78,7 @@ class EsSearchRequestTest {
         }
 
         @Test
-        @DisplayName("should have empty highlightFields list by default")
+        @DisplayName("应Have空高亮字段通过默认")
         void shouldHaveEmptyHighlightFieldsByDefault() {
             EsSearchRequest request = EsSearchRequest.builder().build();
             assertNotNull(request.getHighlightFields());
@@ -86,7 +86,7 @@ class EsSearchRequestTest {
         }
 
         @Test
-        @DisplayName("keyword should be null when not set")
+        @DisplayName("应Havenull关键字通过默认")
         void shouldHaveNullKeywordByDefault() {
             EsSearchRequest request = EsSearchRequest.builder().build();
             assertNull(request.getKeyword());
@@ -102,7 +102,7 @@ class EsSearchRequestTest {
     class KeywordAndSearchFields {
 
         @Test
-        @DisplayName("should store keyword correctly")
+        @DisplayName("应设置关键字")
         void shouldSetKeyword() {
             EsSearchRequest request = EsSearchRequest.builder()
                     .keyword("iPhone 15")
@@ -111,7 +111,7 @@ class EsSearchRequestTest {
         }
 
         @Test
-        @DisplayName("should store searchFields correctly")
+        @DisplayName("应设置搜索字段")
         void shouldSetSearchFields() {
             List<String> fields = List.of("title", "description");
             EsSearchRequest request = EsSearchRequest.builder()
@@ -121,7 +121,7 @@ class EsSearchRequestTest {
         }
 
         @Test
-        @DisplayName("should store both keyword and searchFields together")
+        @DisplayName("应设置关键字并搜索字段Together")
         void shouldSetKeywordAndSearchFieldsTogether() {
             EsSearchRequest request = EsSearchRequest.builder()
                     .keyword("手机")
@@ -141,7 +141,7 @@ class EsSearchRequestTest {
     class Filters {
 
         @Test
-        @DisplayName("should store filters map correctly")
+        @DisplayName("使用Filters时应构建")
         void shouldBuildWithFilters() {
             Map<String, Object> filters = Map.of("category", "electronics", "brand", "Apple");
             EsSearchRequest request = EsSearchRequest.builder()
@@ -153,7 +153,7 @@ class EsSearchRequestTest {
         }
 
         @Test
-        @DisplayName("should store rangeFilters map correctly")
+        @DisplayName("使用RangeFilters时应构建")
         void shouldBuildWithRangeFilters() {
             Object[] priceRange = {100, 5000};
             Map<String, Object[]> rangeFilters = Map.of("price", priceRange);
@@ -173,7 +173,7 @@ class EsSearchRequestTest {
     class Sorts {
 
         @Test
-        @DisplayName("should store sorts map correctly")
+        @DisplayName("应存储Sorts")
         void shouldStoreSorts() {
             EsSearchRequest request = EsSearchRequest.builder()
                     .sorts(Map.of("salesCount", "desc", "price", "asc"))
@@ -192,7 +192,7 @@ class EsSearchRequestTest {
     class HighlightFields {
 
         @Test
-        @DisplayName("should store highlightFields correctly")
+        @DisplayName("应存储高亮字段")
         void shouldStoreHighlightFields() {
             List<String> fields = List.of("title", "description");
             EsSearchRequest request = EsSearchRequest.builder()
@@ -211,7 +211,7 @@ class EsSearchRequestTest {
     class Pagination {
 
         @Test
-        @DisplayName("should store custom page and size correctly")
+        @DisplayName("应存储自定义分页并大小")
         void shouldStoreCustomPageAndSize() {
             EsSearchRequest request = EsSearchRequest.builder()
                     .page(3)
@@ -231,7 +231,7 @@ class EsSearchRequestTest {
     class FullBuilder {
 
         @Test
-        @DisplayName("should correctly populate all fields when all builder methods are called")
+        @DisplayName("应Populate全部字段")
         void shouldPopulateAllFields() {
             EsSearchRequest request = EsSearchRequest.builder()
                     .keyword("iPhone 15")

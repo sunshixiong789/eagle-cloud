@@ -37,7 +37,7 @@ class WebSocketMetricsTest {
     class OnConnect {
 
         @Test
-        @DisplayName("should increment active connections count")
+        @DisplayName("在连接：应递增Active连接")
         void onConnect_shouldIncrementActiveConnections() {
             metrics.onConnect();
 
@@ -45,7 +45,7 @@ class WebSocketMetricsTest {
         }
 
         @Test
-        @DisplayName("should accumulate on multiple connects")
+        @DisplayName("在连接：多个Connects时应累加")
         void onConnect_shouldAccumulateOnMultipleConnects() {
             metrics.onConnect();
             metrics.onConnect();
@@ -60,7 +60,7 @@ class WebSocketMetricsTest {
     class OnDisconnect {
 
         @Test
-        @DisplayName("should decrement active connections after connect then disconnect")
+        @DisplayName("在断开连接：应DecrementActive连接")
         void onDisconnect_shouldDecrementActiveConnections() {
             metrics.onConnect();
             metrics.onDisconnect();
@@ -69,7 +69,7 @@ class WebSocketMetricsTest {
         }
 
         @Test
-        @DisplayName("should not go below zero when disconnecting without a prior connect")
+        @DisplayName("在断开连接：应不GoBelow零")
         void onDisconnect_shouldNotGoBelowZero() {
             metrics.onDisconnect();
 
@@ -82,7 +82,7 @@ class WebSocketMetricsTest {
     class OnMessageSent {
 
         @Test
-        @DisplayName("should increment total messages sent counter")
+        @DisplayName("在消息Sent：应递增计数器")
         void onMessageSent_shouldIncrementCounter() {
             metrics.onMessageSent();
 
@@ -90,7 +90,7 @@ class WebSocketMetricsTest {
         }
 
         @Test
-        @DisplayName("should accumulate on multiple sends")
+        @DisplayName("在消息Sent：多个Sends时应累加")
         void onMessageSent_shouldAccumulateOnMultipleSends() {
             metrics.onMessageSent();
             metrics.onMessageSent();
@@ -105,7 +105,7 @@ class WebSocketMetricsTest {
     class Init {
 
         @Test
-        @DisplayName("should register eagle.websocket.connections.active gauge in registry")
+        @DisplayName("初始化：应注册GaugeMetric")
         void init_shouldRegisterGaugeMetric() {
             Optional<Meter> meter = registry.getMeters().stream()
                     .filter(m -> m.getId().getName().equals("eagle.websocket.connections.active"))
@@ -115,7 +115,7 @@ class WebSocketMetricsTest {
         }
 
         @Test
-        @DisplayName("gauge value should reflect live active connections count")
+        @DisplayName("初始化：gauge应ReflectActive连接")
         void init_gaugeShouldReflectActiveConnections() {
             Gauge gauge = registry.find("eagle.websocket.connections.active").gauge();
             assertNotNull(gauge);

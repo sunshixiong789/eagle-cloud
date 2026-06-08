@@ -57,14 +57,14 @@ class AiRateLimitAdvisorTest {
     }
 
     @Test
-    @DisplayName("should have correct name and order")
+    @DisplayName("应HaveCorrect名称并排序")
     void shouldHaveCorrectNameAndOrder() {
         assertEquals("AiRateLimitAdvisor", advisor.getName());
         assertEquals(Ordered.HIGHEST_PRECEDENCE + 100, advisor.getOrder());
     }
 
     @Test
-    @DisplayName("after should return response unchanged")
+    @DisplayName("后应返回响应保持不变")
     void afterShouldReturnResponseUnchanged() {
         ChatClientResponse response = ChatClientResponse.builder().build();
         assertSame(response, advisor.after(response, chain));
@@ -81,7 +81,7 @@ class AiRateLimitAdvisorTest {
         }
 
         @Test
-        @DisplayName("should pass when count is within limit")
+        @DisplayName("内限制时应通过")
         void shouldPassWhenWithinLimit() {
             when(valueOps.increment(anyString())).thenReturn(3L);
 
@@ -89,7 +89,7 @@ class AiRateLimitAdvisorTest {
         }
 
         @Test
-        @DisplayName("should set TTL on first increment")
+        @DisplayName("首次递增时应设置TTL")
         void shouldSetTtlOnFirstIncrement() {
             when(valueOps.increment(anyString())).thenReturn(1L);
 
@@ -99,7 +99,7 @@ class AiRateLimitAdvisorTest {
         }
 
         @Test
-        @DisplayName("should not set TTL on subsequent increments")
+        @DisplayName("SubsequentIncrements时不应设置TTL")
         void shouldNotSetTtlOnSubsequentIncrements() {
             when(valueOps.increment(anyString())).thenReturn(2L);
 
@@ -109,7 +109,7 @@ class AiRateLimitAdvisorTest {
         }
 
         @Test
-        @DisplayName("should throw when count exceeds limit")
+        @DisplayName("Exceeds限制时应抛出")
         void shouldThrowWhenExceedsLimit() {
             when(valueOps.increment(anyString())).thenReturn(6L);
 
@@ -117,7 +117,7 @@ class AiRateLimitAdvisorTest {
         }
 
         @Test
-        @DisplayName("should use global key when no conversationId in context")
+        @DisplayName("无会话ID时应UseGlobalkey")
         void shouldUseGlobalKeyWhenNoConversationId() {
             when(request.context()).thenReturn(Map.of());
             when(valueOps.increment(anyString())).thenReturn(1L);
@@ -144,7 +144,7 @@ class AiRateLimitAdvisorTest {
         }
 
         @Test
-        @DisplayName("should check tenant limit separately")
+        @DisplayName("应Check租户限制")
         void shouldCheckTenantLimit() {
             when(valueOps.increment(anyString())).thenReturn(1L);
 
@@ -155,7 +155,7 @@ class AiRateLimitAdvisorTest {
         }
 
         @Test
-        @DisplayName("should throw when tenant limit exceeded")
+        @DisplayName("租户限制Exceeded时应抛出")
         void shouldThrowWhenTenantLimitExceeded() {
             when(valueOps.increment(contains("conv:"))).thenReturn(1L);
             when(valueOps.increment(contains("tenant:"))).thenReturn(11L);
@@ -164,7 +164,7 @@ class AiRateLimitAdvisorTest {
         }
 
         @Test
-        @DisplayName("should skip tenant check when tenantId not in context")
+        @DisplayName("无租户ID时应跳过租户Check")
         void shouldSkipTenantCheckWhenNoTenantId() {
             when(request.context()).thenReturn(Map.of(ChatMemory.CONVERSATION_ID, "conv-1"));
             when(valueOps.increment(anyString())).thenReturn(1L);
@@ -188,7 +188,7 @@ class AiRateLimitAdvisorTest {
         }
 
         @Test
-        @DisplayName("should skip rate check when perConversation=false and perTenant=false")
+        @DisplayName("同时已禁用时应跳过")
         void shouldSkipWhenBothDisabled() {
             advisor.before(request, chain);
 

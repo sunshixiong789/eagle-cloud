@@ -30,7 +30,7 @@ class PressureTestContextTest {
     class MarkAndCheck {
 
         @Test
-        @DisplayName("should return true after mark() is called")
+        @DisplayName("标记：应设置压测测试Flag")
         void mark_shouldSetPressureTestFlag() {
             PressureTestContext.mark();
 
@@ -38,7 +38,7 @@ class PressureTestContextTest {
         }
 
         @Test
-        @DisplayName("should default to false when mark() has not been called")
+        @DisplayName("默认State：应Befalse")
         void defaultState_shouldBeFalse() {
             assertFalse(PressureTestContext.isPressureTest());
         }
@@ -49,7 +49,7 @@ class PressureTestContextTest {
     class Clear {
 
         @Test
-        @DisplayName("should return false after mark() followed by clear()")
+        @DisplayName("清理：应移除Flag")
         void clear_shouldRemoveFlag() {
             PressureTestContext.mark();
             assertTrue(PressureTestContext.isPressureTest());
@@ -60,7 +60,7 @@ class PressureTestContextTest {
         }
 
         @Test
-        @DisplayName("should be safe to call clear() without a prior mark()")
+        @DisplayName("清理：使用out标记时应Be安全")
         void clear_shouldBeSafeWithoutMark() {
             // Should not throw
             PressureTestContext.clear();
@@ -74,7 +74,7 @@ class PressureTestContextTest {
     class ThreadIsolation {
 
         @Test
-        @DisplayName("marking in main thread should not affect child thread")
+        @DisplayName("应BeIsolatedBetweenThreads")
         void shouldBeIsolatedBetweenThreads() throws InterruptedException {
             PressureTestContext.mark();
             assertTrue(PressureTestContext.isPressureTest(), "Main thread should be marked");
@@ -99,7 +99,7 @@ class PressureTestContextTest {
         }
 
         @Test
-        @DisplayName("marking in child thread should not affect main thread")
+        @DisplayName("child线程标记应不Affect主线程线程")
         void childThreadMarkShouldNotAffectMainThread() throws InterruptedException {
             CountDownLatch latch = new CountDownLatch(1);
 

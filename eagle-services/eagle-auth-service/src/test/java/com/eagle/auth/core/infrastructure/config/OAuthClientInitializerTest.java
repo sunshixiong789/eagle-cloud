@@ -103,7 +103,7 @@ class OAuthClientInitializerTest {
     class WhenMissing {
 
         @Test
-        @DisplayName("should create new client (web)")
+        @DisplayName("应创建New")
         void shouldCreateNew() {
             when(repository.findByClientId(webProperties.getClientId()))
                     .thenReturn(Optional.empty());
@@ -125,7 +125,7 @@ class OAuthClientInitializerTest {
     class WhenExists {
 
         @Test
-        @DisplayName("OVERWRITE: should sync configuration changes")
+        @DisplayName("Overwrite时应Sync")
         void shouldSyncWhenOverwrite() {
             webProperties.setSyncMode(SyncMode.OVERWRITE);
             appProperties.setEnabled(false);
@@ -144,7 +144,7 @@ class OAuthClientInitializerTest {
         }
 
         @Test
-        @DisplayName("CREATE_ONLY: should skip sync even if config diverges")
+        @DisplayName("创建仅时应跳过")
         void shouldSkipWhenCreateOnly() {
             webProperties.setSyncMode(SyncMode.CREATE_ONLY);
             webProperties.setClientName("New Name That Should NOT Apply");
@@ -168,7 +168,7 @@ class OAuthClientInitializerTest {
     class WhenDisabled {
 
         @Test
-        @DisplayName("should not touch repository at all")
+        @DisplayName("应跳过Everything")
         void shouldSkipEverything() {
             webProperties.setEnabled(false);
             appProperties.setEnabled(false);

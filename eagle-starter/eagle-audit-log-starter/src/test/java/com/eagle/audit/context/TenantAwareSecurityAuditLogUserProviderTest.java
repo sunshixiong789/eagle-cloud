@@ -26,13 +26,13 @@ class TenantAwareSecurityAuditLogUserProviderTest {
     class GetCurrentTenantId {
 
         @Test
-        @DisplayName("returns null when ThreadLocal is empty")
+        @DisplayName("空线程本地")
         void emptyThreadLocal() {
             assertThat(provider.getCurrentTenantId()).isNull();
         }
 
         @Test
-        @DisplayName("propagates tenantId from TenantContextHolder ThreadLocal")
+        @DisplayName("propagates从线程本地")
         void propagatesFromThreadLocal() {
             TenantContextHolder.setTenantId("tenant-007");
 
@@ -40,7 +40,7 @@ class TenantAwareSecurityAuditLogUserProviderTest {
         }
 
         @Test
-        @DisplayName("inherits user resolution from SecurityAuditLogUserProvider")
+        @DisplayName("inherits用户Resolution")
         void inheritsUserResolution() {
             TenantContextHolder.setTenantId("tenant-007");
             TestingAuthenticationToken auth =

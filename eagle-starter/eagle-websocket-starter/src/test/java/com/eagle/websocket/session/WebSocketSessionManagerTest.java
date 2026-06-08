@@ -31,7 +31,7 @@ class WebSocketSessionManagerTest {
     class SendToUser {
 
         @Test
-        @DisplayName("should delegate to SimpMessagingTemplate convertAndSendToUser")
+        @DisplayName("发送到用户：应委托到模板")
         void sendToUser_shouldDelegateToTemplate() {
             WebSocketSessionManager manager = new WebSocketSessionManager(messagingTemplate);
             String userId = "user1";
@@ -44,7 +44,7 @@ class WebSocketSessionManagerTest {
         }
 
         @Test
-        @DisplayName("should not throw when template throws an exception")
+        @DisplayName("发送到用户：异常时不应抛出")
         void sendToUser_shouldNotThrowOnException() {
             WebSocketSessionManager manager = new WebSocketSessionManager(messagingTemplate);
             doThrow(new RuntimeException("connection lost"))
@@ -54,7 +54,7 @@ class WebSocketSessionManagerTest {
         }
 
         @Test
-        @DisplayName("should increment metrics on success when metrics is non-null")
+        @DisplayName("发送到用户：成功时应递增指标")
         void sendToUser_shouldIncrementMetricsOnSuccess() {
             WebSocketSessionManager manager = new WebSocketSessionManager(messagingTemplate, metrics);
 
@@ -64,7 +64,7 @@ class WebSocketSessionManagerTest {
         }
 
         @Test
-        @DisplayName("should not call metrics when template throws")
+        @DisplayName("发送到用户：异常时不应调用指标")
         void sendToUser_shouldNotCallMetricsOnException() {
             WebSocketSessionManager manager = new WebSocketSessionManager(messagingTemplate, metrics);
             doThrow(new RuntimeException("send failed"))
@@ -81,7 +81,7 @@ class WebSocketSessionManagerTest {
     class Broadcast {
 
         @Test
-        @DisplayName("should delegate to SimpMessagingTemplate convertAndSend")
+        @DisplayName("广播：应委托到模板")
         void broadcast_shouldDelegateToTemplate() {
             WebSocketSessionManager manager = new WebSocketSessionManager(messagingTemplate);
             String destination = "/topic/announcement";
@@ -93,7 +93,7 @@ class WebSocketSessionManagerTest {
         }
 
         @Test
-        @DisplayName("should not throw when template throws an exception")
+        @DisplayName("广播：异常时不应抛出")
         void broadcast_shouldNotThrowOnException() {
             WebSocketSessionManager manager = new WebSocketSessionManager(messagingTemplate);
             doThrow(new RuntimeException("broker down"))

@@ -31,7 +31,7 @@ class BlacklistAwareJwtDecoderTest {
     }
 
     @Test
-    @DisplayName("returns decoded jwt when jti not blacklisted")
+    @DisplayName("不黑名单拦截时应返回JWT")
     void shouldReturnJwtWhenNotBlacklisted() {
         Jwt jwt = jwtWithJti("jti-1");
         when(delegate.decode("token")).thenReturn(jwt);
@@ -41,7 +41,7 @@ class BlacklistAwareJwtDecoderTest {
     }
 
     @Test
-    @DisplayName("throws BadJwtException when jti is blacklisted")
+    @DisplayName("黑名单拦截时应抛出")
     void shouldThrowWhenBlacklisted() {
         Jwt jwt = jwtWithJti("jti-2");
         when(delegate.decode("token")).thenReturn(jwt);
@@ -52,7 +52,7 @@ class BlacklistAwareJwtDecoderTest {
     }
 
     @Test
-    @DisplayName("returns jwt when jti claim absent (no jti = nothing to revoke)")
+    @DisplayName("JTI缺失时应返回JWT")
     void shouldReturnJwtWhenJtiMissing() {
         Jwt jwt = Jwt.withTokenValue("token")
                 .header("alg", "RS256")

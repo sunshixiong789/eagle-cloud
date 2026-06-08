@@ -50,7 +50,7 @@ class HnslsSmsProviderTest {
     class Send {
 
         @Test
-        @DisplayName("should submit form request when gateway returns success")
+        @DisplayName("网关返回成功时应提交表单请求")
         void shouldSubmitFormRequestWhenGatewayReturnsSuccess() {
             RestClient.Builder builder = RestClient.builder();
             MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
@@ -75,7 +75,7 @@ class HnslsSmsProviderTest {
         }
 
         @Test
-        @DisplayName("should throw runtime exception when gateway returns error code")
+        @DisplayName("网关返回错误时应抛出")
         void shouldThrowWhenGatewayReturnsError() {
             RestClient.Builder builder = RestClient.builder();
             MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
@@ -92,7 +92,7 @@ class HnslsSmsProviderTest {
         }
 
         @Test
-        @DisplayName("should throw when gateway returns empty response")
+        @DisplayName("网关返回空时应抛出")
         void shouldThrowWhenGatewayReturnsEmpty() {
             RestClient.Builder builder = RestClient.builder();
             MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
@@ -107,7 +107,7 @@ class HnslsSmsProviderTest {
         }
 
         @Test
-        @DisplayName("should reject when code parameter is missing")
+        @DisplayName("应拒绝缺失验证码")
         void shouldRejectMissingCode() {
             HnslsSmsProvider provider = new HnslsSmsProvider(
                     properties(), RestClient.builder(), FIXED_CLOCK);
@@ -122,7 +122,7 @@ class HnslsSmsProviderTest {
     class Name {
 
         @Test
-        @DisplayName("should return provider identifier matching configuration value")
+        @DisplayName("应返回标识")
         void shouldReturnIdentifier() {
             HnslsSmsProvider provider = new HnslsSmsProvider(
                     properties(), RestClient.builder(), FIXED_CLOCK);

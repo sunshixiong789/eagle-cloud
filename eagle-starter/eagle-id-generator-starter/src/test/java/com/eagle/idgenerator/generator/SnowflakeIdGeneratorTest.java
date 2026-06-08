@@ -42,7 +42,7 @@ class SnowflakeIdGeneratorTest {
     class NextId {
 
         @Test
-        @DisplayName("should generate unique ids when called sequentially 1000 times")
+        @DisplayName("应生成唯一 ID")
         void shouldGenerateUniqueIds() {
             Set<Long> ids = new HashSet<>();
             for (int i = 0; i < SINGLE_THREAD_COUNT; i++) {
@@ -53,7 +53,7 @@ class SnowflakeIdGeneratorTest {
         }
 
         @Test
-        @DisplayName("should generate unique ids when called concurrently from 10 threads each producing 100 ids")
+        @DisplayName("并发调用时应生成唯一 ID")
         void shouldGenerateConcurrentlyUniqueIds() throws InterruptedException {
             int totalIds = THREAD_COUNT * IDS_PER_THREAD;
             CopyOnWriteArrayList<Long> ids = new CopyOnWriteArrayList<>();
@@ -86,14 +86,14 @@ class SnowflakeIdGeneratorTest {
         }
 
         @Test
-        @DisplayName("should generate positive ids")
+        @DisplayName("应生成正数 ID")
         void shouldGeneratePositiveIds() {
             long id = generator.nextId();
             assertTrue(id > 0, "Generated ID must be positive");
         }
 
         @Test
-        @DisplayName("nextIdStr should equal String.valueOf(nextId) format (numeric)")
+        @DisplayName("应返回数字字符串")
         void shouldReturnNumericString() {
             String idStr = generator.nextIdStr();
             assertTrue(idStr.matches("\\d+"), "Snowflake string id must be numeric: " + idStr);
@@ -105,7 +105,7 @@ class SnowflakeIdGeneratorTest {
     class Constructor {
 
         @Test
-        @DisplayName("should reject workerId out of range")
+        @DisplayName("workerId 超出范围时应抛出")
         void shouldThrowWhenWorkerIdOutOfRange() {
             IdGeneratorProperties props = new IdGeneratorProperties();
             props.setWorkerId(32);
@@ -116,7 +116,7 @@ class SnowflakeIdGeneratorTest {
         }
 
         @Test
-        @DisplayName("should reject datacenterId out of range")
+        @DisplayName("datacenterId 超出范围时应抛出")
         void shouldThrowWhenDatacenterIdOutOfRange() {
             IdGeneratorProperties props = new IdGeneratorProperties();
             props.setWorkerId(1);

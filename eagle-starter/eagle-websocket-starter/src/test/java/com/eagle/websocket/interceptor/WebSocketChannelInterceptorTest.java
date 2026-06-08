@@ -56,7 +56,7 @@ class WebSocketChannelInterceptorTest {
     class ConnectFrame {
 
         @Test
-        @DisplayName("should invoke onConnect callback with extracted token for CONNECT frame")
+        @DisplayName("preSend：CONNECT 帧应调用连接回调")
         void preSend_shouldCallOnConnectForConnectFrame() {
             AtomicReference<String> capturedToken = new AtomicReference<>();
 
@@ -75,7 +75,7 @@ class WebSocketChannelInterceptorTest {
         }
 
         @Test
-        @DisplayName("should pass null token to onConnect when Authorization header is absent")
+        @DisplayName("preSend：无认证请求头时应传入 null 令牌")
         void preSend_shouldPassNullTokenWhenNoAuthHeader() {
             AtomicReference<String> capturedToken = new AtomicReference<>("sentinel");
 
@@ -99,7 +99,7 @@ class WebSocketChannelInterceptorTest {
     class NonConnectFrames {
 
         @Test
-        @DisplayName("should return original message unchanged for SUBSCRIBE frame")
+        @DisplayName("preSend：SUBSCRIBE 帧应返回原消息")
         void preSend_shouldReturnMessageUnchangedForSubscribe() {
             WebSocketChannelInterceptor interceptor = new WebSocketChannelInterceptor();
             Message<byte[]> message = buildStompMessage(StompCommand.SUBSCRIBE);
@@ -110,7 +110,7 @@ class WebSocketChannelInterceptorTest {
         }
 
         @Test
-        @DisplayName("should return original message unchanged for SEND frame")
+        @DisplayName("preSend：SEND 帧应返回原消息")
         void preSend_shouldReturnMessageUnchangedForSend() {
             WebSocketChannelInterceptor interceptor = new WebSocketChannelInterceptor();
             Message<byte[]> message = buildStompMessage(StompCommand.SEND);
@@ -121,7 +121,7 @@ class WebSocketChannelInterceptorTest {
         }
 
         @Test
-        @DisplayName("should return original message unchanged for DISCONNECT frame")
+        @DisplayName("preSend：DISCONNECT 帧应返回原消息")
         void preSend_shouldReturnMessageUnchangedForDisconnect() {
             WebSocketChannelInterceptor interceptor = new WebSocketChannelInterceptor();
             Message<byte[]> message = buildStompMessage(StompCommand.DISCONNECT);
@@ -137,7 +137,7 @@ class WebSocketChannelInterceptorTest {
     class NullAccessorGuard {
 
         @Test
-        @DisplayName("should return original message without throwing when message has no StompHeaderAccessor")
+        @DisplayName("preSend：应处理 null accessor")
         void preSend_shouldHandleNullAccessor() {
             WebSocketChannelInterceptor interceptor = new WebSocketChannelInterceptor();
             // Build a plain message — no StompHeaderAccessor attached

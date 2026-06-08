@@ -3,11 +3,12 @@ package com.eagle.auth.core.infrastructure.event;
 import com.eagle.auth.core.domain.event.AccountFrozenEvent;
 import com.eagle.auth.core.domain.model.enums.FreezeReason;
 import com.eagle.auth.core.domain.port.OnlineUserPort;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mock;
 
 import java.util.List;
 
@@ -25,6 +26,7 @@ class AccountSecurityEventHandlerTest {
     AccountSecurityEventHandler handler;
 
     @Test
+    @DisplayName("应强制登出所有 JTI")
     void shouldForceLogoutAllJtis() {
         when(onlineUserPort.listJtisByAccount(100L))
                 .thenReturn(List.of("jti-1", "jti-2", "jti-3"));

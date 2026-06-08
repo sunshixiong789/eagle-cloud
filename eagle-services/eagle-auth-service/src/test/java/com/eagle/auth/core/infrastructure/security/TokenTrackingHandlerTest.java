@@ -96,7 +96,7 @@ class TokenTrackingHandlerTest {
     class Success {
 
         @Test
-        @DisplayName("should write OAuth2 token JSON to response and track online user")
+        @DisplayName("应写入响应并追踪")
         void shouldWriteResponseAndTrack() throws Exception {
             Instant expiresAt = Instant.now().plusSeconds(3600);
             OAuth2AccessTokenAuthenticationToken tokenAuth = buildTokenAuth(
@@ -127,7 +127,7 @@ class TokenTrackingHandlerTest {
         }
 
         @Test
-        @DisplayName("should read client IP from ClientIpHolder (post-trusted-proxy resolution)")
+        @DisplayName("应Use客户端IPHolder")
         void shouldUseClientIpHolder() throws Exception {
             OAuth2AccessTokenAuthenticationToken tokenAuth = buildTokenAuth(
                     "h.p.s", "bob", Map.of("jti", "jti-2", "sub", "bob"),
@@ -144,7 +144,7 @@ class TokenTrackingHandlerTest {
         }
 
         @Test
-        @DisplayName("should skip tracking when authorization has no jti claim")
+        @DisplayName("无JTI时应跳过")
         void shouldSkipWhenNoJti() throws Exception {
             OAuth2AccessTokenAuthenticationToken tokenAuth = buildTokenAuth(
                     "h.p.s", "alice", Map.of("sub", "alice"),
@@ -155,7 +155,7 @@ class TokenTrackingHandlerTest {
         }
 
         @Test
-        @DisplayName("should be a no-op for non-OAuth2 authentication")
+        @DisplayName("应忽略非O认证2认证")
         void shouldIgnoreNonOAuth2Auth() throws Exception {
             MockHttpServletResponse response = new MockHttpServletResponse();
             handler.onAuthenticationSuccess(new MockHttpServletRequest(), response,
@@ -165,7 +165,7 @@ class TokenTrackingHandlerTest {
         }
 
         @Test
-        @DisplayName("should not propagate tracking failure to the already-written token response")
+        @DisplayName("应吞掉Tracking失败")
         void shouldSwallowTrackingFailure() throws Exception {
             OAuth2AccessTokenAuthenticationToken tokenAuth = buildTokenAuth(
                     "h.p.s", "u", Map.of("jti", "jti-x", "sub", "u"),
@@ -179,7 +179,7 @@ class TokenTrackingHandlerTest {
         }
 
         @Test
-        @DisplayName("should skip tracking when authorization not found")
+        @DisplayName("Authz缺失时应跳过")
         void shouldSkipWhenAuthzMissing() throws Exception {
             String tokenValue = "no-authz";
             OAuth2AccessToken accessToken = new OAuth2AccessToken(

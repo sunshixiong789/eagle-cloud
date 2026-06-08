@@ -70,7 +70,7 @@ class ModulithArchitectureTest {
     class BaseBoundary {
 
         @Test
-        @DisplayName("base 模块应存在")
+        @DisplayName("message 模块应存在")
         void shouldExist() {
             MODULES.getModuleByName("base")
                     .orElseThrow(() -> new AssertionError("base 模块未找到"));

@@ -42,6 +42,7 @@ class BlacklistCacheSyncHandlerTest {
     class OnAdded {
 
         @Test
+        @DisplayName("账号 ID 加入黑名单时应强制登出所有会话")
         void shouldForceLogoutAllSessionsForAccountId() {
             BlacklistAddedEvent event = new BlacklistAddedEvent(1L, BlacklistType.ACCOUNT_ID, "42", null);
             when(onlineUserPort.listJtisByAccount(42L)).thenReturn(List.of("jti-a", "jti-b"));
@@ -54,6 +55,7 @@ class BlacklistCacheSyncHandlerTest {
         }
 
         @Test
+        @DisplayName("手机号加入黑名单时应解析账号并强制登出")
         void shouldResolveAccountByPhoneAndForceLogout() {
             BlacklistAddedEvent event = new BlacklistAddedEvent(1L, BlacklistType.PHONE, "13800138000", null);
             Account account = mockAccount(99L);
@@ -67,6 +69,7 @@ class BlacklistCacheSyncHandlerTest {
         }
 
         @Test
+        @DisplayName("openid 未找到账号时应回退使用 unionid")
         void shouldFallbackToUnionidWhenOpenidNotFound() {
             BlacklistAddedEvent event = new BlacklistAddedEvent(1L, BlacklistType.OPENID, "ox", null);
             Account account = mockAccount(7L);
@@ -80,6 +83,7 @@ class BlacklistCacheSyncHandlerTest {
         }
 
         @Test
+        @DisplayName("IP 类型黑名单应跳过登出")
         void shouldSkipLogoutWhenIpType() {
             BlacklistAddedEvent event = new BlacklistAddedEvent(1L, BlacklistType.IP, "1.1.1.1", null);
 
@@ -91,6 +95,7 @@ class BlacklistCacheSyncHandlerTest {
         }
 
         @Test
+        @DisplayName("邮箱类型黑名单应跳过登出")
         void shouldSkipLogoutWhenEmailType() {
             BlacklistAddedEvent event = new BlacklistAddedEvent(1L, BlacklistType.EMAIL, "x@y.com", null);
 
@@ -102,6 +107,7 @@ class BlacklistCacheSyncHandlerTest {
         }
 
         @Test
+        @DisplayName("账号 ID 值非数字时应跳过登出")
         void shouldSkipLogoutWhenAccountIdValueNotNumeric() {
             BlacklistAddedEvent event = new BlacklistAddedEvent(1L, BlacklistType.ACCOUNT_ID, "not-a-number", null);
 
@@ -112,6 +118,7 @@ class BlacklistCacheSyncHandlerTest {
         }
 
         @Test
+        @DisplayName("手机号未映射账号时应跳过登出")
         void shouldSkipLogoutWhenPhoneNotMappedToAccount() {
             BlacklistAddedEvent event = new BlacklistAddedEvent(1L, BlacklistType.PHONE, "13900139000", null);
             when(accountRepository.findByPhone("13900139000")).thenReturn(Optional.empty());
@@ -122,6 +129,7 @@ class BlacklistCacheSyncHandlerTest {
         }
 
         @Test
+        @DisplayName("账号没有活跃会话时应跳过登出")
         void shouldSkipLogoutWhenAccountHasNoActiveSessions() {
             BlacklistAddedEvent event = new BlacklistAddedEvent(1L, BlacklistType.ACCOUNT_ID, "42", null);
             when(onlineUserPort.listJtisByAccount(42L)).thenReturn(List.of());
@@ -138,6 +146,7 @@ class BlacklistCacheSyncHandlerTest {
     class OnRemoved {
 
         @Test
+        @DisplayName("应仅清理缓存")
         void shouldEvictCacheOnly() {
             BlacklistRemovedEvent event = new BlacklistRemovedEvent(1L, BlacklistType.ACCOUNT_ID, "42");
 

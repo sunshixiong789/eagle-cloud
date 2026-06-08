@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AiPropertiesTest {
 
     @Test
-    @DisplayName("should have sensible defaults")
+    @DisplayName("应Have合理默认")
     void shouldHaveSensibleDefaults() {
         AiProperties props = new AiProperties();
 
@@ -51,7 +51,7 @@ class AiPropertiesTest {
     class BudgetDefaults {
 
         @Test
-        @DisplayName("should default to disabled with 1M token limit")
+        @DisplayName("应Have合理默认")
         void shouldHaveSensibleDefaults() {
             AiProperties.Budget budget = new AiProperties().getBudget();
 
@@ -66,7 +66,7 @@ class AiPropertiesTest {
     class SafetyDefaults {
 
         @Test
-        @DisplayName("should default to disabled with empty pattern list")
+        @DisplayName("应Have合理默认")
         void shouldHaveSensibleDefaults() {
             AiProperties.Safety safety = new AiProperties().getSafety();
 
@@ -82,7 +82,7 @@ class AiPropertiesTest {
     class ResilienceDefaults {
 
         @Test
-        @DisplayName("should default to enabled with eagle-ai-default instance name")
+        @DisplayName("应Have合理默认")
         void shouldHaveSensibleDefaults() {
             AiProperties.Resilience resilience = new AiProperties().getResilience();
 
@@ -97,7 +97,7 @@ class AiPropertiesTest {
     class EmbeddingDefaults {
 
         @Test
-        @DisplayName("should default to enabled with topK=4 and threshold=0.7")
+        @DisplayName("应Have合理默认")
         void shouldHaveSensibleDefaults() {
             AiProperties.Embedding embedding = new AiProperties().getEmbedding();
 

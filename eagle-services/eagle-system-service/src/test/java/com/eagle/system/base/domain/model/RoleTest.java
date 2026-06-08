@@ -18,7 +18,7 @@ class RoleTest {
     class Create {
 
         @Test
-        @DisplayName("should create a business role with default scope SELF and status NORMAL")
+        @DisplayName("应创建业务角色")
         void shouldCreateBusinessRole() {
             Role role = Role.create("管理员", "admin", "管理员角色", 10);
 
@@ -39,7 +39,7 @@ class RoleTest {
     class CreateSystemRole {
 
         @Test
-        @DisplayName("should mark as SYSTEM type with supplied data scope")
+        @DisplayName("应创建System角色")
         void shouldCreateSystemRole() {
             Role role = Role.createSystemRole("超级管理员", "super_admin", "系统内置", 1, DataScope.ALL);
             assertEquals(RoleType.SYSTEM, role.getRoleType());
@@ -53,7 +53,7 @@ class RoleTest {
     class UpdateInfo {
 
         @Test
-        @DisplayName("should update only non-null fields")
+        @DisplayName("应更新非null字段")
         void shouldUpdateNonNullFields() {
             Role role = Role.create("旧名", "code", "旧描述", 1);
             role.updateInfo("新名", null, 99);
@@ -68,7 +68,7 @@ class RoleTest {
     class SetDataScope {
 
         @Test
-        @DisplayName("should replace data scope")
+        @DisplayName("应替换Scope")
         void shouldReplaceScope() {
             Role role = Role.create("Op", "op", "operator", 5);
             role.setDataScope(DataScope.DEPT_AND_CHILD);
@@ -81,7 +81,7 @@ class RoleTest {
     class EnableDisable {
 
         @Test
-        @DisplayName("should toggle status with isActive reflecting state")
+        @DisplayName("应切换")
         void shouldToggle() {
             Role role = Role.create("R", "r", "x", 1);
             role.disable();

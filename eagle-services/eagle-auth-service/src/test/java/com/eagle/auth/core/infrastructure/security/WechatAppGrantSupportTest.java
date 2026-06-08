@@ -1,6 +1,7 @@
 package com.eagle.auth.core.infrastructure.security;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -16,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class WechatAppGrantSupportTest {
 
     @Test
+    @DisplayName("自定义公共客户端转换器应支持微信小程序授权")
     void customGrantPublicClientConverterSupportsWechatAppGrant() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter(OAuth2ParameterNames.GRANT_TYPE, WechatAppAuthenticationToken.WECHAT_APP.getValue());
@@ -36,6 +38,7 @@ class WechatAppGrantSupportTest {
     }
 
     @Test
+    @DisplayName("微信小程序转换器应创建认证令牌")
     void wechatAppConverterCreatesWechatAppAuthenticationToken() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter(OAuth2ParameterNames.GRANT_TYPE, WechatAppAuthenticationToken.WECHAT_APP.getValue());
@@ -59,6 +62,7 @@ class WechatAppGrantSupportTest {
     }
 
     @Test
+    @DisplayName("微信小程序转换器应忽略其他授权类型")
     void wechatAppConverterIgnoresOtherGrantTypes() {
         HttpServletRequest request = new MockHttpServletRequest();
 

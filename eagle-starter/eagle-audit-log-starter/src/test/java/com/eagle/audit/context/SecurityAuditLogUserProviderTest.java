@@ -27,14 +27,14 @@ class SecurityAuditLogUserProviderTest {
     class GetCurrentUserId {
 
         @Test
-        @DisplayName("returns null when no authentication")
+        @DisplayName("无认证")
         void noAuth() {
             assertThat(provider.getCurrentUserId()).isNull();
             assertThat(provider.getCurrentUserName()).isNull();
         }
 
         @Test
-        @DisplayName("prefers JWT user_id claim from JwtAuthenticationToken")
+        @DisplayName("JWT user_id 声明")
         void jwtUserIdClaim() {
             Jwt jwt = Jwt.withTokenValue("token").header("alg", "none")
                     .claim("user_id", 1024L)
@@ -49,7 +49,7 @@ class SecurityAuditLogUserProviderTest {
         }
 
         @Test
-        @DisplayName("falls back to JWT subject when user_id absent")
+        @DisplayName("JWT subject 声明")
         void jwtSubject() {
             Jwt jwt = Jwt.withTokenValue("token").header("alg", "none")
                     .subject("alice")
@@ -63,7 +63,7 @@ class SecurityAuditLogUserProviderTest {
         }
 
         @Test
-        @DisplayName("extracts JWT from Authentication.getCredentials when not a JwtAuthenticationToken")
+        @DisplayName("JWT 作为 credentials")
         void jwtAsCredentials() {
             Jwt jwt = Jwt.withTokenValue("token").header("alg", "none")
                     .claim("user_id", 9527L).subject("sub")
@@ -77,7 +77,7 @@ class SecurityAuditLogUserProviderTest {
         }
 
         @Test
-        @DisplayName("falls back to Authentication.getName when no JWT")
+        @DisplayName("普通认证")
         void plainAuth() {
             TestingAuthenticationToken auth =
                     new TestingAuthenticationToken("alice", "password");

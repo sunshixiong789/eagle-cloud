@@ -33,7 +33,7 @@ class MonolithAccountEventBridgeTest {
     class OnAccountRegistered {
 
         @Test
-        @DisplayName("should map auth account event to system account message")
+        @DisplayName("应映射认证账号事件到System账号消息")
         void shouldMapAuthAccountEventToSystemAccountMessage() {
             AccountRegisteredEvent event = new AccountRegisteredEvent(
                     ACCOUNT_ID,
@@ -65,7 +65,7 @@ class MonolithAccountEventBridgeTest {
     class OnAccountDeleted {
 
         @Test
-        @DisplayName("should map auth delete event to system delete message")
+        @DisplayName("应映射认证删除事件到System删除消息")
         void shouldMapAuthDeleteEventToSystemDeleteMessage() {
             bridge.onAccountDeleted(new AccountDeletedEvent(ACCOUNT_ID));
 

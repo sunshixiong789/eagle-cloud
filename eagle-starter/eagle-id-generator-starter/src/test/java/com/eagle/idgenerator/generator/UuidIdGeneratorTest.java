@@ -13,13 +13,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * {@link UuidIdGenerator} 单元测试（基于 uuid-creator 的 UUID v7）。
  */
-@DisplayName("UuidIdGenerator")
+@DisplayName("UUIDIdGenerator")
 class UuidIdGeneratorTest {
 
     private final UuidIdGenerator generator = new UuidIdGenerator();
 
     @Test
-    @DisplayName("nextIdStr should return 32-char hex without hyphens")
+    @DisplayName("应返回32 位十六进制字符串")
     void shouldReturn32CharHex() {
         String id = generator.nextIdStr();
         assertEquals(32, id.length(), "UUID v7 string should be 32 chars without hyphens");
@@ -27,14 +27,14 @@ class UuidIdGeneratorTest {
     }
 
     @Test
-    @DisplayName("nextUuid should return UUID with version 7")
+    @DisplayName("应返回Version 7")
     void shouldReturnVersion7() {
         UUID uuid = generator.nextUuid();
         assertEquals(7, uuid.version(), "Generated UUID must be version 7 (time-ordered Unix Epoch)");
     }
 
     @Test
-    @DisplayName("should generate unique uuids when called 1000 times")
+    @DisplayName("应生成唯一 UUID")
     void shouldGenerateUniqueUuids() {
         Set<String> ids = new HashSet<>();
         for (int i = 0; i < 1000; i++) {
@@ -44,7 +44,7 @@ class UuidIdGeneratorTest {
     }
 
     @Test
-    @DisplayName("nextId should return long value (high 64 bits)")
+    @DisplayName("应返回长")
     void shouldReturnLong() {
         long id1 = generator.nextId();
         long id2 = generator.nextId();

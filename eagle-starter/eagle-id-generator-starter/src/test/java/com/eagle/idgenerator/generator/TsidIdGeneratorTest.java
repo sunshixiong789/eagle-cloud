@@ -14,13 +14,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * {@link TsidIdGenerator} 单元测试（基于 tsid-creator）。
  */
-@DisplayName("TsidIdGenerator")
+@DisplayName("TSIDIdGenerator")
 class TsidIdGeneratorTest {
 
     private final TsidIdGenerator generator = new TsidIdGenerator(1, 10);
 
     @Test
-    @DisplayName("nextIdStr should return 13-char Crockford Base32")
+    @DisplayName("应返回13 位字符串")
     void shouldReturn13CharString() {
         String id = generator.nextIdStr();
         assertEquals(13, id.length(), "TSID string should be 13 chars: " + id);
@@ -28,14 +28,14 @@ class TsidIdGeneratorTest {
     }
 
     @Test
-    @DisplayName("nextId should be positive long")
+    @DisplayName("应返回正数长")
     void shouldReturnPositiveLong() {
         long id = generator.nextId();
         assertTrue(id > 0, "TSID long should be positive: " + id);
     }
 
     @Test
-    @DisplayName("should generate unique tsids when called 1000 times")
+    @DisplayName("应生成唯一 TSID")
     void shouldGenerateUniqueTsids() {
         Set<String> ids = new HashSet<>();
         for (int i = 0; i < 1000; i++) {
@@ -45,7 +45,7 @@ class TsidIdGeneratorTest {
     }
 
     @Test
-    @DisplayName("nextTsid should return Tsid object with valid instant")
+    @DisplayName("使用Instant时应返回TSID")
     void shouldReturnTsidWithInstant() {
         Tsid tsid = generator.nextTsid();
         assertNotNull(tsid);

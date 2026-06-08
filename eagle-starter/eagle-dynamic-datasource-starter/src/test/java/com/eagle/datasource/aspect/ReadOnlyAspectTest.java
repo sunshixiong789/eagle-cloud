@@ -70,7 +70,7 @@ class ReadOnlyAspectTest {
     class AroundReadOnly {
 
         @Test
-        @DisplayName("should switch context to SLAVE during proceed()")
+        @DisplayName("应切换到从库During执行")
         void shouldSwitchToSlaveDuringExecution() throws Throwable {
             AtomicReference<String> captured = new AtomicReference<>();
             when(pjp.proceed()).thenAnswer(inv -> {
@@ -84,7 +84,7 @@ class ReadOnlyAspectTest {
         }
 
         @Test
-        @DisplayName("should call clear() (not set('master')) after execution — prevents thread pool leak")
+        @DisplayName("无Prior值时应清理线程本地不设置主库")
         void shouldClearThreadLocalNotSetMasterWhenNoPriorValue() throws Throwable {
             // 关键回归：修复前 finally 会执行 set("master") 导致 ThreadLocal 永不清除
             when(pjp.proceed()).thenReturn(null);
@@ -96,7 +96,7 @@ class ReadOnlyAspectTest {
         }
 
         @Test
-        @DisplayName("should restore explicitly-set MASTER after execution")
+        @DisplayName("应恢复显式主库后执行")
         void shouldRestoreExplicitMasterAfterExecution() throws Throwable {
             DataSourceContextHolder.set(DataSourceContextHolder.MASTER);
             when(pjp.proceed()).thenReturn(null);
@@ -107,7 +107,7 @@ class ReadOnlyAspectTest {
         }
 
         @Test
-        @DisplayName("should restore SLAVE context when prior value was SLAVE")
+        @DisplayName("Prior值Was从库时应恢复从库")
         void shouldRestoreSlaveWhenPriorValueWasSlave() throws Throwable {
             DataSourceContextHolder.set(DataSourceContextHolder.SLAVE);
             when(pjp.proceed()).thenReturn(null);
@@ -118,7 +118,7 @@ class ReadOnlyAspectTest {
         }
 
         @Test
-        @DisplayName("should clear ThreadLocal even when proceed() throws")
+        @DisplayName("异常时应清理上下文")
         void shouldClearContextOnException() throws Throwable {
             when(pjp.proceed()).thenThrow(new RuntimeException("downstream failure"));
 
@@ -129,7 +129,7 @@ class ReadOnlyAspectTest {
         }
 
         @Test
-        @DisplayName("should return value propagated from proceed()")
+        @DisplayName("应返回执行结果")
         void shouldReturnProceedResult() throws Throwable {
             when(pjp.proceed()).thenReturn("expected");
 
@@ -144,7 +144,7 @@ class ReadOnlyAspectTest {
     class AroundTransactional {
 
         @Test
-        @DisplayName("should switch to SLAVE when readOnly = true")
+        @DisplayName("读取仅true时应切换到从库")
         void shouldSwitchToSlaveWhenReadOnlyTrue() throws Throwable {
             AtomicReference<String> captured = new AtomicReference<>();
             when(pjp.proceed()).thenAnswer(inv -> {
@@ -158,7 +158,7 @@ class ReadOnlyAspectTest {
         }
 
         @Test
-        @DisplayName("should NOT touch context when readOnly = false")
+        @DisplayName("读取仅false时不应切换")
         void shouldNotSwitchWhenReadOnlyFalse() throws Throwable {
             when(pjp.proceed()).thenReturn(null);
 
@@ -169,7 +169,7 @@ class ReadOnlyAspectTest {
         }
 
         @Test
-        @DisplayName("should clear ThreadLocal after readOnly=true execution")
+        @DisplayName("lyTx执行时应清理后读取")
         void shouldClearAfterReadOnlyTxExecution() throws Throwable {
             when(pjp.proceed()).thenReturn(null);
 

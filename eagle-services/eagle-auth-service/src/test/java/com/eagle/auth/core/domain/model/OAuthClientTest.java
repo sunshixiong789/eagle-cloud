@@ -30,7 +30,7 @@ class OAuthClientTest {
     class Create {
 
         @Test
-        @DisplayName("should populate all fields and set issuedAt + enabled")
+        @DisplayName("应创建")
         void shouldCreate() {
             OAuthClient client = newClient();
             assertEquals(CLIENT_ID, client.getClientId());
@@ -42,7 +42,7 @@ class OAuthClientTest {
         }
 
         @Test
-        @DisplayName("should default authentication methods to 'none' when null")
+        @DisplayName("应默认认证Method")
         void shouldDefaultAuthMethod() {
             OAuthClient client = OAuthClient.create(CLIENT_ID, null, CLIENT_NAME, null, GRANTS, null, null);
             assertEquals("none", client.getClientAuthenticationMethods());
@@ -50,7 +50,7 @@ class OAuthClientTest {
         }
 
         @Test
-        @DisplayName("should throw when clientId blank")
+        @DisplayName("客户端ID空白时应抛出")
         void shouldThrowWhenClientIdBlank() {
             AppException ex = assertThrows(DomainException.class,
                     () -> OAuthClient.create("", "s", CLIENT_NAME, "none", GRANTS, null, SCOPES));
@@ -58,7 +58,7 @@ class OAuthClientTest {
         }
 
         @Test
-        @DisplayName("should throw when clientName blank")
+        @DisplayName("客户端名称空白时应抛出")
         void shouldThrowWhenClientNameBlank() {
             AppException ex = assertThrows(DomainException.class,
                     () -> OAuthClient.create(CLIENT_ID, "s", " ", "none", GRANTS, null, SCOPES));
@@ -66,7 +66,7 @@ class OAuthClientTest {
         }
 
         @Test
-        @DisplayName("should throw when grant types blank")
+        @DisplayName("授权类型空白时应抛出")
         void shouldThrowWhenGrantTypesBlank() {
             AppException ex = assertThrows(DomainException.class,
                     () -> OAuthClient.create(CLIENT_ID, "s", CLIENT_NAME, "none", "", null, SCOPES));
@@ -79,7 +79,7 @@ class OAuthClientTest {
     class UpdateInfo {
 
         @Test
-        @DisplayName("should update only non-null fields")
+        @DisplayName("应更新非null字段")
         void shouldUpdateNonNullFields() {
             OAuthClient client = newClient();
             client.updateInfo("New Name", null, null, "client_credentials", null, "openid");
@@ -95,7 +95,7 @@ class OAuthClientTest {
     class UpdateTokenSettings {
 
         @Test
-        @DisplayName("should update positive TTLs")
+        @DisplayName("应更新正数Ttls")
         void shouldUpdatePositiveTtls() {
             OAuthClient client = newClient();
             client.updateTokenSettings(7200L, 86400L);
@@ -104,7 +104,7 @@ class OAuthClientTest {
         }
 
         @Test
-        @DisplayName("should ignore non-positive TTLs")
+        @DisplayName("应忽略非正数")
         void shouldIgnoreNonPositive() {
             OAuthClient client = newClient();
             Long originalAccess = client.getAccessTokenTtlSeconds();
@@ -120,7 +120,7 @@ class OAuthClientTest {
     class UpdateClientSettings {
 
         @Test
-        @DisplayName("should update PKCE and consent flags")
+        @DisplayName("应更新Flags")
         void shouldUpdateFlags() {
             OAuthClient client = newClient();
             client.updateClientSettings(true, true);
@@ -134,7 +134,7 @@ class OAuthClientTest {
     class EnableDisable {
 
         @Test
-        @DisplayName("should disable an enabled client")
+        @DisplayName("应禁用")
         void shouldDisable() {
             OAuthClient client = newClient();
             client.disable();
@@ -142,7 +142,7 @@ class OAuthClientTest {
         }
 
         @Test
-        @DisplayName("should throw when disabling an already disabled client")
+        @DisplayName("Double禁用时应抛出")
         void shouldThrowOnDoubleDisable() {
             OAuthClient client = newClient();
             client.disable();
@@ -151,7 +151,7 @@ class OAuthClientTest {
         }
 
         @Test
-        @DisplayName("should re-enable a disabled client")
+        @DisplayName("应Re启用")
         void shouldReEnable() {
             OAuthClient client = newClient();
             client.disable();

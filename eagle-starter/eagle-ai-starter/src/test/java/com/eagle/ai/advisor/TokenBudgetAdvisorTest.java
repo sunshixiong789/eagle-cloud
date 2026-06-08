@@ -64,7 +64,7 @@ class TokenBudgetAdvisorTest {
     }
 
     @Test
-    @DisplayName("should have correct name and order")
+    @DisplayName("应HaveCorrect名称并排序")
     void shouldHaveCorrectNameAndOrder() {
         assertEquals("TokenBudgetAdvisor", advisor.getName());
         assertEquals(Ordered.HIGHEST_PRECEDENCE + 200, advisor.getOrder());
@@ -81,7 +81,7 @@ class TokenBudgetAdvisorTest {
         }
 
         @Test
-        @DisplayName("should pass when current usage is below budget")
+        @DisplayName("Below预算时应通过")
         void shouldPassWhenBelowBudget() {
             when(valueOps.get(anyString())).thenReturn("500");
 
@@ -89,7 +89,7 @@ class TokenBudgetAdvisorTest {
         }
 
         @Test
-        @DisplayName("should pass when Redis key does not exist yet")
+        @DisplayName("key不Exists时应通过")
         void shouldPassWhenKeyNotExists() {
             when(valueOps.get(anyString())).thenReturn(null);
 
@@ -97,7 +97,7 @@ class TokenBudgetAdvisorTest {
         }
 
         @Test
-        @DisplayName("should throw when current usage equals budget")
+        @DisplayName("UsageEquals预算时应抛出")
         void shouldThrowWhenUsageEqualsBudget() {
             when(valueOps.get(anyString())).thenReturn("1000");
 
@@ -105,7 +105,7 @@ class TokenBudgetAdvisorTest {
         }
 
         @Test
-        @DisplayName("should throw when current usage exceeds budget")
+        @DisplayName("UsageExceeds预算时应抛出")
         void shouldThrowWhenUsageExceedsBudget() {
             when(valueOps.get(anyString())).thenReturn("1500");
 
@@ -113,7 +113,7 @@ class TokenBudgetAdvisorTest {
         }
 
         @Test
-        @DisplayName("should use tenantId as identifier when present")
+        @DisplayName("应Use租户ID作为标识")
         void shouldUseTenantIdAsIdentifier() {
             when(valueOps.get(anyString())).thenReturn("0");
 
@@ -123,7 +123,7 @@ class TokenBudgetAdvisorTest {
         }
 
         @Test
-        @DisplayName("should use conversationId when no tenantId in context")
+        @DisplayName("无租户时应Use会话ID")
         void shouldUseConversationIdWhenNoTenant() {
             when(request.context()).thenReturn(Map.of(ChatMemory.CONVERSATION_ID, "conv-1"));
             when(valueOps.get(anyString())).thenReturn("0");
@@ -134,7 +134,7 @@ class TokenBudgetAdvisorTest {
         }
 
         @Test
-        @DisplayName("should use default identifier when context is empty")
+        @DisplayName("空时应Use默认标识")
         void shouldUseDefaultIdentifierWhenEmpty() {
             when(request.context()).thenReturn(Map.of());
             when(valueOps.get(anyString())).thenReturn("0");
@@ -150,7 +150,7 @@ class TokenBudgetAdvisorTest {
     class After {
 
         @Test
-        @DisplayName("should increment Redis counter with total tokens")
+        @DisplayName("应递增计数器")
         void shouldIncrementCounter() {
             when(redisTemplate.opsForValue()).thenReturn(valueOps);
             when(chatResponse.getMetadata()).thenReturn(metadata);
@@ -165,7 +165,7 @@ class TokenBudgetAdvisorTest {
         }
 
         @Test
-        @DisplayName("should set 40-day TTL on first write")
+        @DisplayName("首次写入时应设置TTL")
         void shouldSetTtlOnFirstWrite() {
             when(redisTemplate.opsForValue()).thenReturn(valueOps);
             when(chatResponse.getMetadata()).thenReturn(metadata);
@@ -180,7 +180,7 @@ class TokenBudgetAdvisorTest {
         }
 
         @Test
-        @DisplayName("should not set TTL on subsequent writes")
+        @DisplayName("SubsequentWrites时不应设置TTL")
         void shouldNotSetTtlOnSubsequentWrites() {
             when(redisTemplate.opsForValue()).thenReturn(valueOps);
             when(chatResponse.getMetadata()).thenReturn(metadata);
@@ -195,7 +195,7 @@ class TokenBudgetAdvisorTest {
         }
 
         @Test
-        @DisplayName("should skip increment when totalTokens is zero")
+        @DisplayName("零Tokens时应跳过")
         void shouldSkipWhenZeroTokens() {
             when(chatResponse.getMetadata()).thenReturn(metadata);
             when(metadata.getUsage()).thenReturn(usage);
@@ -208,7 +208,7 @@ class TokenBudgetAdvisorTest {
         }
 
         @Test
-        @DisplayName("should skip increment when chatResponse is null")
+        @DisplayName("无聊天响应时应跳过")
         void shouldSkipWhenNoChatResponse() {
             ChatClientResponse response = ChatClientResponse.builder().build();
 

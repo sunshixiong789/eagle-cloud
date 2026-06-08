@@ -1,6 +1,7 @@
 package com.eagle.system;
 
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -29,6 +30,7 @@ import org.springframework.test.context.TestPropertySource;
 class SchemaExportTest {
 
     @Test
+    @DisplayName("应能导出数据库 Schema")
     void exportSchema() {
         // Schema export happens during EntityManagerFactory bootstrap;
         // 这个方法本身不需要逻辑，目的只是让 Spring 上下文加载完成。

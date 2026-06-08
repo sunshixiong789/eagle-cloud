@@ -55,7 +55,7 @@ class DictApplicationServiceTest {
     @DisplayName("createDict")
     class Create {
         @Test
-        @DisplayName("should create dict with type from request")
+        @DisplayName("应创建")
         void shouldCreate() {
             CreateDictRequest req = new CreateDictRequest();
             req.setDictType("USER_STATUS");
@@ -74,7 +74,7 @@ class DictApplicationServiceTest {
     @DisplayName("deleteDict")
     class Delete {
         @Test
-        @DisplayName("should throw when dict missing")
+        @DisplayName("缺失时应抛出")
         void shouldThrowWhenMissing() {
             when(dictRepository.existsById(DICT_ID)).thenReturn(false);
             AppException ex = assertThrows(NotFoundException.class, () -> service.deleteDict(DICT_ID));
@@ -83,7 +83,7 @@ class DictApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("should delete when exists")
+        @DisplayName("应删除")
         void shouldDelete() {
             when(dictRepository.existsById(DICT_ID)).thenReturn(true);
             service.deleteDict(DICT_ID);
@@ -95,7 +95,7 @@ class DictApplicationServiceTest {
     @DisplayName("getDictById")
     class GetById {
         @Test
-        @DisplayName("should throw when dict missing")
+        @DisplayName("缺失时应抛出")
         void shouldThrowWhenMissing() {
             when(dictRepository.findById(DICT_ID)).thenReturn(Optional.empty());
             assertThrows(NotFoundException.class, () -> service.getDictById(DICT_ID));
@@ -106,7 +106,7 @@ class DictApplicationServiceTest {
     @DisplayName("createDictItem")
     class CreateItem {
         @Test
-        @DisplayName("should add item via aggregate and persist")
+        @DisplayName("应添加Item")
         void shouldAddItem() {
             Dict dict = sampleDict();
             when(dictRepository.findById(DICT_ID)).thenReturn(Optional.of(dict));

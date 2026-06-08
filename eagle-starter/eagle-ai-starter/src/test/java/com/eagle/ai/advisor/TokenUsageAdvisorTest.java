@@ -47,14 +47,14 @@ class TokenUsageAdvisorTest {
     }
 
     @Test
-    @DisplayName("should have correct name and order")
+    @DisplayName("应HaveCorrect名称并排序")
     void shouldHaveCorrectNameAndOrder() {
         assertEquals("TokenUsageAdvisor", advisor.getName());
         assertEquals(Ordered.LOWEST_PRECEDENCE - 100, advisor.getOrder());
     }
 
     @Test
-    @DisplayName("before should return request unchanged")
+    @DisplayName("前应返回请求保持不变")
     void beforeShouldReturnRequestUnchanged() {
         ChatClientRequest request = ChatClientRequest.builder()
                 .prompt(mock(org.springframework.ai.chat.prompt.Prompt.class))
@@ -72,7 +72,7 @@ class TokenUsageAdvisorTest {
     class After {
 
         @Test
-        @DisplayName("should record token counters when usage data is available")
+        @DisplayName("应Record令牌Counters")
         void shouldRecordTokenCounters() {
             ChatClientResponse response = ChatClientResponse.builder()
                     .chatResponse(chatResponse)
@@ -91,7 +91,7 @@ class TokenUsageAdvisorTest {
         }
 
         @Test
-        @DisplayName("should skip recording when chatResponse is null")
+        @DisplayName("聊天响应null时应跳过")
         void shouldSkipWhenChatResponseNull() {
             ChatClientResponse response = ChatClientResponse.builder().build();
 
@@ -101,7 +101,7 @@ class TokenUsageAdvisorTest {
         }
 
         @Test
-        @DisplayName("should skip recording when totalTokens is zero")
+        @DisplayName("TotalTokens零时应跳过")
         void shouldSkipWhenTotalTokensZero() {
             ChatClientResponse response = ChatClientResponse.builder()
                     .chatResponse(chatResponse)

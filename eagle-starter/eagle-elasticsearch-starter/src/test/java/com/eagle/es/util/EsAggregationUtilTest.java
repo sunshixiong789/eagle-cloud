@@ -58,7 +58,7 @@ class EsAggregationUtilTest {
     class ConstructorGuard {
 
         @Test
-        @DisplayName("should throw UnsupportedOperationException when instantiated via reflection")
+        @DisplayName("Instantiation时应抛出")
         void shouldThrowOnInstantiation() throws Exception {
             var constructor = EsAggregationUtil.class.getDeclaredConstructor();
             constructor.setAccessible(true);
@@ -76,7 +76,7 @@ class EsAggregationUtilTest {
     class ExtractTermsAgg {
 
         @Test
-        @DisplayName("should return empty map when aggregations is null")
+        @DisplayName("聚合null时应返回空映射")
         void shouldReturnEmptyMapWhenAggregationsNull() {
             Map<String, Long> result = EsAggregationUtil.extractTermsAgg(null, "categories");
             assertNotNull(result);
@@ -84,7 +84,7 @@ class EsAggregationUtilTest {
         }
 
         @Test
-        @DisplayName("should return empty map when aggName is null")
+        @DisplayName("聚合名称null时应返回空映射")
         void shouldReturnEmptyMapWhenAggNameNull() {
             AggregationsContainer<?> container = new StubAggregationsContainer();
             Map<String, Long> result = EsAggregationUtil.extractTermsAgg(container, null);
@@ -93,7 +93,7 @@ class EsAggregationUtilTest {
         }
 
         @Test
-        @DisplayName("should return empty map when aggName is blank")
+        @DisplayName("聚合名称空白时应返回空映射")
         void shouldReturnEmptyMapWhenAggNameBlank() {
             AggregationsContainer<?> container = new StubAggregationsContainer();
             Map<String, Long> result = EsAggregationUtil.extractTermsAgg(container, "   ");
@@ -102,7 +102,7 @@ class EsAggregationUtilTest {
         }
 
         @Test
-        @DisplayName("should return empty map when container is not ElasticsearchAggregations (wrong type)")
+        @DisplayName("容器Is错误类型时应返回空映射")
         void shouldReturnEmptyMapWhenContainerIsWrongType() {
             // StubAggregationsContainer is not an ElasticsearchAggregations;
             // the util will log a warning and return empty map
@@ -123,7 +123,7 @@ class EsAggregationUtilTest {
     class ExtractDateHistogramAgg {
 
         @Test
-        @DisplayName("should return empty map when aggregations is null")
+        @DisplayName("聚合null时应返回空映射")
         void shouldReturnEmptyMapWhenAggregationsNull() {
             Map<String, Long> result = EsAggregationUtil.extractDateHistogramAgg(null, "daily_orders");
             assertNotNull(result);
@@ -131,7 +131,7 @@ class EsAggregationUtilTest {
         }
 
         @Test
-        @DisplayName("should return empty map when aggName is null")
+        @DisplayName("聚合名称null时应返回空映射")
         void shouldReturnEmptyMapWhenAggNameNull() {
             AggregationsContainer<?> container = new StubAggregationsContainer();
             Map<String, Long> result = EsAggregationUtil.extractDateHistogramAgg(container, null);
@@ -140,7 +140,7 @@ class EsAggregationUtilTest {
         }
 
         @Test
-        @DisplayName("should return empty map when aggName is blank")
+        @DisplayName("聚合名称空白时应返回空映射")
         void shouldReturnEmptyMapWhenAggNameBlank() {
             AggregationsContainer<?> container = new StubAggregationsContainer();
             Map<String, Long> result = EsAggregationUtil.extractDateHistogramAgg(container, "  ");
@@ -149,7 +149,7 @@ class EsAggregationUtilTest {
         }
 
         @Test
-        @DisplayName("should return empty map when container is not ElasticsearchAggregations (wrong type)")
+        @DisplayName("容器Is错误类型时应返回空映射")
         void shouldReturnEmptyMapWhenContainerIsWrongType() {
             AggregationsContainer<?> container = new StubAggregationsContainer();
             Map<String, Long> result = EsAggregationUtil.extractDateHistogramAgg(container, "daily_orders");
@@ -168,14 +168,14 @@ class EsAggregationUtilTest {
     class ExtractMetricAgg {
 
         @Test
-        @DisplayName("should return 0.0 when aggregations is null")
+        @DisplayName("聚合null时应返回零")
         void shouldReturnZeroWhenAggregationsNull() {
             double result = EsAggregationUtil.extractMetricAgg(null, "total_sales");
             assertEquals(0.0, result);
         }
 
         @Test
-        @DisplayName("should return 0.0 when aggName is null")
+        @DisplayName("聚合名称null时应返回零")
         void shouldReturnZeroWhenAggNameNull() {
             AggregationsContainer<?> container = new StubAggregationsContainer();
             double result = EsAggregationUtil.extractMetricAgg(container, null);
@@ -183,7 +183,7 @@ class EsAggregationUtilTest {
         }
 
         @Test
-        @DisplayName("should return 0.0 when aggName is blank")
+        @DisplayName("聚合名称空白时应返回零")
         void shouldReturnZeroWhenAggNameBlank() {
             AggregationsContainer<?> container = new StubAggregationsContainer();
             double result = EsAggregationUtil.extractMetricAgg(container, "   ");
@@ -191,7 +191,7 @@ class EsAggregationUtilTest {
         }
 
         @Test
-        @DisplayName("should return 0.0 when container is not ElasticsearchAggregations (wrong type)")
+        @DisplayName("容器Is错误类型时应返回零")
         void shouldReturnZeroWhenContainerIsWrongType() {
             AggregationsContainer<?> container = new StubAggregationsContainer();
             double result = EsAggregationUtil.extractMetricAgg(container, "total_sales");

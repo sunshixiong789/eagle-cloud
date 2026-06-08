@@ -56,7 +56,7 @@ class PaymentSignatureValidatorTest {
         }
 
         @Test
-        @DisplayName("shouldReturnFalseForEmptyParams — 空 params 时返回 false 而不抛异常")
+        @DisplayName("shouldReturnFalseForEmpty参数s — 空 params 时返回 false 而不抛异常")
         void shouldReturnFalseForEmptyParams() {
             boolean result = PaymentSignatureValidator.verifyAlipaySign(
                     Map.of(), "fakeKey", "RSA2");

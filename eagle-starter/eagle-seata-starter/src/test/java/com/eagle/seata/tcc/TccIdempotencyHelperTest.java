@@ -47,14 +47,14 @@ class TccIdempotencyHelperTest {
     class Confirmed {
 
         @Test
-        @DisplayName("should return false on first confirm check before marking")
+        @DisplayName("首次Confirm时应返回false")
         void shouldReturnFalseOnFirstConfirm() {
             assertFalse(helper.isConfirmed(ctx1),
                     "isConfirmed should be false before markConfirmed is called");
         }
 
         @Test
-        @DisplayName("should return true on duplicate confirm after marking")
+        @DisplayName("重复Confirm时应返回true")
         void shouldReturnTrueOnDuplicateConfirm() {
             helper.markConfirmed(ctx1);
 
@@ -63,7 +63,7 @@ class TccIdempotencyHelperTest {
         }
 
         @Test
-        @DisplayName("should not affect another branch when marking one confirmed")
+        @DisplayName("Confirmed时不应AffectOther分支")
         void shouldNotAffectOtherBranchWhenConfirmed() {
             helper.markConfirmed(ctx1);
 
@@ -77,14 +77,14 @@ class TccIdempotencyHelperTest {
     class Cancelled {
 
         @Test
-        @DisplayName("should return false on first cancel check before marking")
+        @DisplayName("首次Cancel时应返回false")
         void shouldReturnFalseOnFirstCancel() {
             assertFalse(helper.isCancelled(ctx1),
                     "isCancelled should be false before markCancelled is called");
         }
 
         @Test
-        @DisplayName("should return true on duplicate cancel after marking")
+        @DisplayName("重复Cancel时应返回true")
         void shouldReturnTrueOnDuplicateCancel() {
             helper.markCancelled(ctx1);
 
@@ -93,7 +93,7 @@ class TccIdempotencyHelperTest {
         }
 
         @Test
-        @DisplayName("should not affect another branch when marking one cancelled")
+        @DisplayName("Cancelled时不应AffectOther分支")
         void shouldNotAffectOtherBranchWhenCancelled() {
             helper.markCancelled(ctx1);
 
@@ -107,7 +107,7 @@ class TccIdempotencyHelperTest {
     class ConfirmAndCancelIsolation {
 
         @Test
-        @DisplayName("should isolate confirm and cancel states for the same branch")
+        @DisplayName("应IsolateConfirm并Cancel")
         void shouldIsolateConfirmAndCancel() {
             // Mark ctx1 as confirmed — cancel should still be false
             helper.markConfirmed(ctx1);
@@ -119,7 +119,7 @@ class TccIdempotencyHelperTest {
         }
 
         @Test
-        @DisplayName("should isolate cancel from confirm state for the same branch")
+        @DisplayName("应IsolateCancel从Confirm")
         void shouldIsolateCancelFromConfirm() {
             // Mark ctx1 as cancelled — confirm should still be false
             helper.markCancelled(ctx1);
@@ -131,7 +131,7 @@ class TccIdempotencyHelperTest {
         }
 
         @Test
-        @DisplayName("should allow independent states for two different branches")
+        @DisplayName("应允许IndependentStates针对不同Branches")
         void shouldAllowIndependentStatesForDifferentBranches() {
             helper.markConfirmed(ctx1);
             helper.markCancelled(ctx2);
@@ -147,7 +147,7 @@ class TccIdempotencyHelperTest {
         }
 
         @Test
-        @DisplayName("should overwrite confirm state with cancel when same branch is marked cancelled after confirmed")
+        @DisplayName("使用Cancel时应OverwriteConfirm")
         void shouldOverwriteConfirmWithCancel() {
             helper.markConfirmed(ctx1);
             helper.markCancelled(ctx1);
@@ -165,7 +165,7 @@ class TccIdempotencyHelperTest {
     class SameXidDifferentBranch {
 
         @Test
-        @DisplayName("should treat same xid with different branchId as separate keys")
+        @DisplayName("应视为SameXID不同分支作为Separate")
         void shouldTreatSameXidDifferentBranchAsSeparate() {
             // ctx1 has XID_1:BRANCH_ID_1; build a third context with same XID but different branchId
             BusinessActionContext ctx3 = org.mockito.Mockito.mock(BusinessActionContext.class);

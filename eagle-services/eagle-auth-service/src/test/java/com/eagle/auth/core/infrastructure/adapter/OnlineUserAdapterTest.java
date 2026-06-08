@@ -71,7 +71,7 @@ class OnlineUserAdapterTest {
     @DisplayName("trackLogin")
     class TrackLogin {
         @Test
-        @DisplayName("should set online key with token expiry as TTL")
+        @DisplayName("应设置")
         void shouldSet() {
             when(redisTemplate.opsForValue()).thenReturn(valueOps);
             adapter.trackLogin(info(1800L));
@@ -80,7 +80,7 @@ class OnlineUserAdapterTest {
         }
 
         @Test
-        @DisplayName("should swallow Redis exception so login flow continues")
+        @DisplayName("应吞掉异常")
         void shouldSwallowException() {
             when(redisTemplate.opsForValue())
                     .thenThrow(new RedisConnectionFailureException("redis down"));
@@ -92,7 +92,7 @@ class OnlineUserAdapterTest {
     @DisplayName("listOnlineUsers")
     class ListOnlineUsers {
         @Test
-        @DisplayName("should return empty list when Redis is unavailable")
+        @DisplayName("Redis失败时应返回空")
         void shouldReturnEmptyOnRedisFailure() {
             when(redisTemplate.scan(any(ScanOptions.class)))
                     .thenThrow(new RedisConnectionFailureException("redis down"));
@@ -101,7 +101,7 @@ class OnlineUserAdapterTest {
         }
 
         @Test
-        @DisplayName("should skip malformed JSON entries and return parseable ones")
+        @DisplayName("应跳过Malformed")
         @SuppressWarnings("unchecked")
         void shouldSkipMalformed() {
             // 2 keys: one good JSON, one malformed
@@ -125,7 +125,7 @@ class OnlineUserAdapterTest {
     @DisplayName("forceLogout")
     class ForceLogout {
         @Test
-        @DisplayName("should preserve remaining TTL when writing to blacklist")
+        @DisplayName("应Use已有TTL")
         void shouldUseExistingTtl() {
             when(redisTemplate.getExpire("online:users:" + JTI, TimeUnit.SECONDS)).thenReturn(120L);
             when(redisTemplate.opsForValue()).thenReturn(valueOps);
@@ -136,7 +136,7 @@ class OnlineUserAdapterTest {
         }
 
         @Test
-        @DisplayName("should fall back to default TTL (3600s) when key has no TTL")
+        @DisplayName("应Use默认TTL")
         void shouldUseDefaultTtl() {
             when(redisTemplate.getExpire("online:users:" + JTI, TimeUnit.SECONDS)).thenReturn(-1L);
             when(redisTemplate.opsForValue()).thenReturn(valueOps);
@@ -145,7 +145,7 @@ class OnlineUserAdapterTest {
         }
 
         @Test
-        @DisplayName("should swallow Redis exception so caller doesn't see 500")
+        @DisplayName("应吞掉异常")
         void shouldSwallowException() {
             when(redisTemplate.getExpire(any(), any()))
                     .thenThrow(new RedisConnectionFailureException("redis down"));
@@ -160,21 +160,21 @@ class OnlineUserAdapterTest {
     @DisplayName("isBlacklisted")
     class IsBlacklisted {
         @Test
-        @DisplayName("should return true when blacklist key exists")
+        @DisplayName("应返回true")
         void shouldReturnTrue() {
             when(redisTemplate.hasKey("token:blacklist:" + JTI)).thenReturn(true);
             assertTrue(adapter.isBlacklisted(JTI));
         }
 
         @Test
-        @DisplayName("should return false when blacklist key absent")
+        @DisplayName("应返回false")
         void shouldReturnFalse() {
             when(redisTemplate.hasKey("token:blacklist:" + JTI)).thenReturn(false);
             assertFalse(adapter.isBlacklisted(JTI));
         }
 
         @Test
-        @DisplayName("should default to not-blacklisted when Redis is unavailable")
+        @DisplayName("Redis失败时应默认false")
         void shouldDefaultFalseOnRedisFailure() {
             when(redisTemplate.hasKey(any(String.class)))
                     .thenThrow(new RedisConnectionFailureException("redis down"));

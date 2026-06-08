@@ -32,7 +32,7 @@ class UserTest {
     class Create {
 
         @Test
-        @DisplayName("should create user with profile and default empty role set")
+        @DisplayName("应创建用户")
         void shouldCreateUser() {
             User user = User.create(ACCOUNT_ID, USERNAME, EMAIL, PROFILE);
 
@@ -45,7 +45,7 @@ class UserTest {
         }
 
         @Test
-        @DisplayName("should throw when accountId is null")
+        @DisplayName("账号IDnull时应抛出")
         void shouldThrowWhenAccountIdNull() {
             AppException ex = assertThrows(DomainException.class,
                     () -> User.create(null, USERNAME, EMAIL, PROFILE));
@@ -53,7 +53,7 @@ class UserTest {
         }
 
         @Test
-        @DisplayName("should allow null email and profile")
+        @DisplayName("应允许null邮箱并资料")
         void shouldAllowNullEmailAndProfile() {
             User user = User.create(ACCOUNT_ID, USERNAME, null, null);
             assertNull(user.getEmail());
@@ -66,7 +66,7 @@ class UserTest {
     class CreateForAccount {
 
         @Test
-        @DisplayName("should create user from account event without email")
+        @DisplayName("应创建针对账号")
         void shouldCreateForAccount() {
             User user = User.createForAccount(ACCOUNT_ID, USERNAME, "13800138000", PROFILE);
             assertEquals(ACCOUNT_ID, user.getAccountId());
@@ -81,7 +81,7 @@ class UserTest {
     class UpdateProfile {
 
         @Test
-        @DisplayName("should replace profile")
+        @DisplayName("应替换资料")
         void shouldReplaceProfile() {
             User user = User.create(ACCOUNT_ID, USERNAME, EMAIL, PROFILE);
             UserProfile newProfile = new UserProfile("https://new.png", "newnick", "new name", Gender.MALE, "new bio");
@@ -95,7 +95,7 @@ class UserTest {
     class UpdateContact {
 
         @Test
-        @DisplayName("should update email when provided")
+        @DisplayName("应更新邮箱")
         void shouldUpdateEmail() {
             User user = User.create(ACCOUNT_ID, USERNAME, EMAIL, PROFILE);
             user.updateContact("new@example.com");
@@ -103,7 +103,7 @@ class UserTest {
         }
 
         @Test
-        @DisplayName("should keep current email when input is null")
+        @DisplayName("应KeepCurrent邮箱")
         void shouldKeepCurrentEmail() {
             User user = User.create(ACCOUNT_ID, USERNAME, EMAIL, PROFILE);
             user.updateContact(null);
@@ -116,7 +116,7 @@ class UserTest {
     class AssignRoles {
 
         @Test
-        @DisplayName("should set roles within the 10-role cap")
+        @DisplayName("应Assign角色UnderCap")
         void shouldAssignRolesUnderCap() {
             User user = User.create(ACCOUNT_ID, USERNAME, EMAIL, PROFILE);
             Set<Long> roles = Set.of(1L, 2L, 3L);
@@ -125,7 +125,7 @@ class UserTest {
         }
 
         @Test
-        @DisplayName("should clear roles when input is null")
+        @DisplayName("null时应清理角色")
         void shouldClearRolesWhenNull() {
             User user = User.create(ACCOUNT_ID, USERNAME, EMAIL, PROFILE);
             user.assignRoles(Set.of(1L, 2L));
@@ -134,7 +134,7 @@ class UserTest {
         }
 
         @Test
-        @DisplayName("should throw when more than 10 roles assigned")
+        @DisplayName("超过10角色时应抛出")
         void shouldThrowWhenOver10Roles() {
             User user = User.create(ACCOUNT_ID, USERNAME, EMAIL, PROFILE);
             Set<Long> elevenRoles = LongStream.rangeClosed(1, 11).boxed().collect(Collectors.toSet());
@@ -143,7 +143,7 @@ class UserTest {
         }
 
         @Test
-        @DisplayName("should accept exactly 10 roles")
+        @DisplayName("应Accept10角色")
         void shouldAccept10Roles() {
             User user = User.create(ACCOUNT_ID, USERNAME, EMAIL, PROFILE);
             Set<Long> tenRoles = LongStream.rangeClosed(1, 10).boxed().collect(Collectors.toSet());

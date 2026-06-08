@@ -1,5 +1,6 @@
 package com.eagle.http.client.support;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.service.annotation.GetExchange;
@@ -15,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class EagleRestServiceClientFactoryTest {
 
     @Test
+    @DisplayName("应创建声明式 HTTP 服务客户端")
     void shouldCreateDeclarativeHttpServiceClient() {
         EagleRestServiceClientFactory factory = new EagleRestServiceClientFactory();
 
@@ -24,6 +26,7 @@ class EagleRestServiceClientFactoryTest {
     }
 
     @Test
+    @DisplayName("应根据服务 ID 创建负载均衡客户端")
     void shouldCreateLoadBalancedClientFromServiceId() {
         EagleRestServiceClientFactory factory = new EagleRestServiceClientFactory();
 

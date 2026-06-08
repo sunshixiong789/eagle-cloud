@@ -57,7 +57,7 @@ class AuthorizationQueryServiceTest {
     class FindByAccountId {
 
         @Test
-        @DisplayName("should return empty when user not found by accountId")
+        @DisplayName("用户缺失时应返回空")
         void shouldReturnEmptyWhenUserMissing() {
             when(userRepository.findByAccountId(ACCOUNT_ID)).thenReturn(Optional.empty());
             assertTrue(service.findByAccountId(ACCOUNT_ID).isEmpty());
@@ -65,7 +65,7 @@ class AuthorizationQueryServiceTest {
         }
 
         @Test
-        @DisplayName("should return view with empty roleCodes when user has no roles")
+        @DisplayName("使用out角色时应Handle用户")
         void shouldHandleUserWithoutRoles() {
             when(userRepository.findByAccountId(ACCOUNT_ID))
                     .thenReturn(Optional.of(sampleUser(Set.of())));
@@ -78,7 +78,7 @@ class AuthorizationQueryServiceTest {
         }
 
         @Test
-        @DisplayName("should map assigned role IDs to role codes")
+        @DisplayName("应映射角色Codes")
         void shouldMapRoleCodes() {
             User user = sampleUser(Set.of(1L, 2L));
             when(userRepository.findByAccountId(ACCOUNT_ID)).thenReturn(Optional.of(user));
@@ -91,7 +91,7 @@ class AuthorizationQueryServiceTest {
         }
 
         @Test
-        @DisplayName("should leave name null when user profile absent")
+        @DisplayName("应Handlenull资料")
         void shouldHandleNullProfile() {
             User user = User.create(ACCOUNT_ID, "alice", "alice@example.com", null);
             when(userRepository.findByAccountId(ACCOUNT_ID)).thenReturn(Optional.of(user));

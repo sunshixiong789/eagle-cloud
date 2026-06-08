@@ -23,7 +23,7 @@ class EaglePageQueryTest {
     class DefaultValues {
 
         @Test
-        @DisplayName("should have pageNum=1 by default")
+        @DisplayName("应Have默认分页Num")
         void shouldHaveDefaultPageNum() {
             EaglePageQuery query = new EaglePageQuery();
 
@@ -32,7 +32,7 @@ class EaglePageQueryTest {
         }
 
         @Test
-        @DisplayName("should have pageSize=20 by default")
+        @DisplayName("应Have默认分页大小")
         void shouldHaveDefaultPageSize() {
             EaglePageQuery query = new EaglePageQuery();
 
@@ -41,7 +41,7 @@ class EaglePageQueryTest {
         }
 
         @Test
-        @DisplayName("should have orderDirection='desc' by default")
+        @DisplayName("应Have默认排序Direction")
         void shouldHaveDefaultOrderDirection() {
             EaglePageQuery query = new EaglePageQuery();
 
@@ -50,7 +50,7 @@ class EaglePageQueryTest {
         }
 
         @Test
-        @DisplayName("should have null orderBy by default")
+        @DisplayName("应Havenull排序通过通过默认")
         void shouldHaveNullOrderByByDefault() {
             EaglePageQuery query = new EaglePageQuery();
 
@@ -64,7 +64,7 @@ class EaglePageQueryTest {
     class ToPage {
 
         @Test
-        @DisplayName("should map pageNum and pageSize correctly when toPage is called")
+        @DisplayName("到分页应映射Correctly")
         void toPageShouldMapCorrectly() {
             EaglePageQuery query = new EaglePageQuery();
             query.setPageNum(2);
@@ -80,7 +80,7 @@ class EaglePageQueryTest {
         }
 
         @Test
-        @DisplayName("should return page with current=1 and size=20 when using default values")
+        @DisplayName("到分页应Use默认值")
         void toPageShouldUseDefaultValues() {
             EaglePageQuery query = new EaglePageQuery();
 
@@ -94,7 +94,7 @@ class EaglePageQueryTest {
         }
 
         @Test
-        @DisplayName("should return page with current=1 when pageNum is set to 1")
+        @DisplayName("到分页应返回首次分页")
         void toPageShouldReturnFirstPage() {
             EaglePageQuery query = new EaglePageQuery();
             query.setPageNum(1);
@@ -107,7 +107,7 @@ class EaglePageQueryTest {
         }
 
         @Test
-        @DisplayName("should respect maximum allowed page size of 200")
+        @DisplayName("到分页应RespectMax分页大小")
         void toPageShouldRespectMaxPageSize() {
             EaglePageQuery query = new EaglePageQuery();
             // EaglePageQuery's @Max(200) is enforced by Bean Validation at controller layer,
@@ -126,7 +126,7 @@ class EaglePageQueryTest {
     class Setters {
 
         @Test
-        @DisplayName("should accept custom orderBy field name")
+        @DisplayName("应Accept自定义排序通过")
         void shouldAcceptCustomOrderBy() {
             EaglePageQuery query = new EaglePageQuery();
             query.setOrderBy("createTime");
@@ -135,7 +135,7 @@ class EaglePageQueryTest {
         }
 
         @Test
-        @DisplayName("should accept asc orderDirection")
+        @DisplayName("应AcceptAsc排序Direction")
         void shouldAcceptAscOrderDirection() {
             EaglePageQuery query = new EaglePageQuery();
             query.setOrderDirection("asc");

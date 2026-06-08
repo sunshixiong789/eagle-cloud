@@ -108,7 +108,7 @@ class SentinelRuleManagerTest {
         }
 
         @Test
-        @DisplayName("shouldDoNothingWhenResourceHasNoRules — 清除不存在的资源不抛异常")
+        @DisplayName("should不执行操作WhenResourceHasNoRules — 清除不存在的资源不抛异常")
         void shouldDoNothingWhenResourceHasNoRules() {
             manager.addFlowRule("existing-resource", 100);
 
@@ -122,11 +122,11 @@ class SentinelRuleManagerTest {
     }
 
     @Nested
-    @DisplayName("addParamFlowRule")
+    @DisplayName("add参数FlowRule")
     class AddParamFlowRule {
 
         @Test
-        @DisplayName("shouldAddParamFlowRule — 添加后 ParamFlowRuleManager 包含该资源的热点规则")
+        @DisplayName("shouldAdd参数FlowRule — 添加后 参数FlowRuleManager 包含该资源的热点规则")
         void shouldAddParamFlowRule() {
             manager.addParamFlowRule("hotResource", 0, 50);
 
@@ -139,7 +139,7 @@ class SentinelRuleManagerTest {
         }
 
         @Test
-        @DisplayName("shouldAddMultipleParamRulesForSameResource — 同一资源可叠加多条热点规则")
+        @DisplayName("shouldAddMultiple参数RulesForSameResource — 同一资源可叠加多条热点规则")
         void shouldAddMultipleParamRulesForSameResource() {
             manager.addParamFlowRule("multiParamResource", 0, 100);
             manager.addParamFlowRule("multiParamResource", 1, 200);

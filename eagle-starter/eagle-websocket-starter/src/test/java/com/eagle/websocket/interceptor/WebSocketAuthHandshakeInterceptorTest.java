@@ -50,7 +50,7 @@ class WebSocketAuthHandshakeInterceptorTest {
     class TokenFromQueryString {
 
         @Test
-        @DisplayName("should extract token from URL query parameter and store in attributes")
+        @DisplayName("beforeHandshake：应从查询字符串提取令牌")
         void beforeHandshake_shouldExtractTokenFromQueryString() throws Exception {
             when(request.getURI()).thenReturn(new URI("ws://localhost/ws?token=abc123"));
             // getHeaders() is never called when token is found in query string
@@ -62,7 +62,7 @@ class WebSocketAuthHandshakeInterceptorTest {
         }
 
         @Test
-        @DisplayName("should extract token when there are multiple query parameters")
+        @DisplayName("beforeHandshake：多个参数中应提取令牌")
         void beforeHandshake_shouldExtractTokenAmongMultipleParams() throws Exception {
             when(request.getURI()).thenReturn(new URI("ws://localhost/ws?userId=42&token=mytoken&lang=zh"));
             // getHeaders() is never called when token is found in query string
@@ -79,7 +79,7 @@ class WebSocketAuthHandshakeInterceptorTest {
     class TokenFromAuthHeader {
 
         @Test
-        @DisplayName("should extract token from Authorization Bearer header when no query param")
+        @DisplayName("beforeHandshake：应从认证请求头提取令牌")
         void beforeHandshake_shouldExtractTokenFromAuthHeader() throws Exception {
             when(request.getURI()).thenReturn(new URI("ws://localhost/ws"));
             HttpHeaders headers = new HttpHeaders();
@@ -93,7 +93,7 @@ class WebSocketAuthHandshakeInterceptorTest {
         }
 
         @Test
-        @DisplayName("should not extract token when Authorization header lacks Bearer prefix")
+        @DisplayName("beforeHandshake：应忽略非Bearer 认证请求头")
         void beforeHandshake_shouldIgnoreNonBearerAuthHeader() throws Exception {
             when(request.getURI()).thenReturn(new URI("ws://localhost/ws"));
             HttpHeaders headers = new HttpHeaders();
@@ -112,7 +112,7 @@ class WebSocketAuthHandshakeInterceptorTest {
     class AnonymousConnection {
 
         @Test
-        @DisplayName("should return true and not set token when no token is provided")
+        @DisplayName("beforeHandshake：应允许匿名连接")
         void beforeHandshake_shouldAllowAnonymous() throws Exception {
             when(request.getURI()).thenReturn(new URI("ws://localhost/ws"));
             when(request.getHeaders()).thenReturn(new HttpHeaders());
@@ -130,7 +130,7 @@ class WebSocketAuthHandshakeInterceptorTest {
     class QueryParamPriority {
 
         @Test
-        @DisplayName("should prefer query param token over Authorization header")
+        @DisplayName("beforeHandshake：查询参数应优先于请求头")
         void beforeHandshake_shouldPreferQueryParamOverHeader() throws Exception {
             when(request.getURI()).thenReturn(new URI("ws://localhost/ws?token=query-token"));
             // getHeaders() is never reached when query param token is found (short-circuit)

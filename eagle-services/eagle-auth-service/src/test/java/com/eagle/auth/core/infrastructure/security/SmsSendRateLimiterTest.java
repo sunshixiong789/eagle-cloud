@@ -40,7 +40,7 @@ class SmsSendRateLimiterTest {
     }
 
     @Test
-    @DisplayName("first call sets TTL on minute key")
+    @DisplayName("首次调用SetsTTL")
     void firstCallSetsTtl() {
         when(ops.increment("auth:sms:ip-min:1.1.1.1")).thenReturn(1L);
         when(ops.increment("auth:sms:ip-hour:1.1.1.1")).thenReturn(1L);
@@ -52,7 +52,7 @@ class SmsSendRateLimiterTest {
     }
 
     @Test
-    @DisplayName("throws ServiceException when minute quota exceeded")
+    @DisplayName("分钟超过限制")
     void minuteOverLimit() {
         when(ops.increment("auth:sms:ip-min:1.1.1.1")).thenReturn(11L);
 
@@ -60,7 +60,7 @@ class SmsSendRateLimiterTest {
     }
 
     @Test
-    @DisplayName("throws ServiceException when hour quota exceeded")
+    @DisplayName("小时超过限制")
     void hourOverLimit() {
         when(ops.increment("auth:sms:ip-min:1.1.1.1")).thenReturn(1L);
         when(ops.increment("auth:sms:ip-hour:1.1.1.1")).thenReturn(51L);
@@ -69,14 +69,14 @@ class SmsSendRateLimiterTest {
     }
 
     @Test
-    @DisplayName("null IP is no-op (no redis call)")
+    @DisplayName("nullIP无操作")
     void nullIpNoOp() {
         assertDoesNotThrow(() -> limiter.checkAndIncrement(null));
         assertDoesNotThrow(() -> limiter.checkAndIncrement(""));
     }
 
     @Test
-    @DisplayName("redis failure should not block the request (fail-open)")
+    @DisplayName("Redis失败失败开放")
     void redisFailureFailsOpen() {
         when(ops.increment(any())).thenThrow(new RuntimeException("redis down"));
         assertDoesNotThrow(() -> limiter.checkAndIncrement("1.1.1.1"));

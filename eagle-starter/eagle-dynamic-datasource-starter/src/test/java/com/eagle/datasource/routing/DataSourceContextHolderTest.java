@@ -21,13 +21,13 @@ class DataSourceContextHolderTest {
     class Get {
 
         @Test
-        @DisplayName("should return MASTER when not explicitly set")
+        @DisplayName("不设置时应返回主库")
         void shouldReturnMasterWhenNotSet() {
             assertEquals(DataSourceContextHolder.MASTER, DataSourceContextHolder.get());
         }
 
         @Test
-        @DisplayName("should return SLAVE after set to SLAVE")
+        @DisplayName("应返回设置值")
         void shouldReturnSetValue() {
             DataSourceContextHolder.set(DataSourceContextHolder.SLAVE);
             assertEquals(DataSourceContextHolder.SLAVE, DataSourceContextHolder.get());
@@ -39,20 +39,20 @@ class DataSourceContextHolderTest {
     class GetRaw {
 
         @Test
-        @DisplayName("should return null when not set — distinguishes from explicit MASTER")
+        @DisplayName("不设置时应返回null")
         void shouldReturnNullWhenNotSet() {
             assertNull(DataSourceContextHolder.getRaw());
         }
 
         @Test
-        @DisplayName("should return raw value after explicit set to MASTER")
+        @DisplayName("应返回主库后显式设置")
         void shouldReturnMasterAfterExplicitSet() {
             DataSourceContextHolder.set(DataSourceContextHolder.MASTER);
             assertEquals(DataSourceContextHolder.MASTER, DataSourceContextHolder.getRaw());
         }
 
         @Test
-        @DisplayName("should return SLAVE after set to SLAVE")
+        @DisplayName("应返回从库后设置")
         void shouldReturnSlaveAfterSet() {
             DataSourceContextHolder.set(DataSourceContextHolder.SLAVE);
             assertEquals(DataSourceContextHolder.SLAVE, DataSourceContextHolder.getRaw());
@@ -64,7 +64,7 @@ class DataSourceContextHolderTest {
     class Clear {
 
         @Test
-        @DisplayName("should make getRaw() return null — ThreadLocal properly removed")
+        @DisplayName("应Make获取原始null后清理")
         void shouldMakeGetRawNullAfterClear() {
             DataSourceContextHolder.set(DataSourceContextHolder.SLAVE);
 
@@ -75,7 +75,7 @@ class DataSourceContextHolderTest {
         }
 
         @Test
-        @DisplayName("should restore get() to MASTER after clear")
+        @DisplayName("应恢复获取到主库后清理")
         void shouldRestoreGetToMasterAfterClear() {
             DataSourceContextHolder.set(DataSourceContextHolder.SLAVE);
 
