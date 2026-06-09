@@ -236,6 +236,7 @@ public class SecurityConfig {
             SecurityContextRepository securityContextRepository,
             TokenTrackingHandler tokenTrackingHandler,
             RegisteredClientRepository registeredClientRepository,
+            AuthorizationServerSettings authorizationServerSettings,
             BlacklistAwareJwtDecoder jwtDecoder) throws Exception {
 
         OAuth2AuthorizationServerConfigurer authServer = new OAuth2AuthorizationServerConfigurer();
@@ -244,7 +245,8 @@ public class SecurityConfig {
                 .securityContext(sc -> sc.securityContextRepository(securityContextRepository))
                 .with(authServer, server -> server
                         .clientAuthentication(clientAuth -> clientAuth
-                                .authenticationConverter(new CustomGrantPublicClientAuthenticationConverter())
+                                .authenticationConverter(new CustomGrantPublicClientAuthenticationConverter(
+                                        authorizationServerSettings.getTokenRevocationEndpoint()))
                                 .authenticationProvider(
                                         new CustomGrantClientAuthenticationProvider(registeredClientRepository)))
                         .tokenEndpoint(tokenEndpoint ->

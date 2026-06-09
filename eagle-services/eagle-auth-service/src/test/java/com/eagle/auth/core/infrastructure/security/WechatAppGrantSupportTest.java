@@ -24,7 +24,7 @@ class WechatAppGrantSupportTest {
         request.setParameter(OAuth2ParameterNames.CLIENT_ID, "eagleApp");
         request.setParameter("code", "wechat-app-code");
 
-        var converter = new CustomGrantPublicClientAuthenticationConverter();
+        var converter = new CustomGrantPublicClientAuthenticationConverter("/oauth2/revoke");
 
         var authentication = converter.convert(request);
 
