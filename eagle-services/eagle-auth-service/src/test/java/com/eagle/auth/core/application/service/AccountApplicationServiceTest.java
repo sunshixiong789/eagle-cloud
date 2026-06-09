@@ -133,18 +133,16 @@ class AccountApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("应拒绝Changing管理员密码")
-        void shouldRejectChangingAdminPassword() {
+        @DisplayName("管理员可修改自己的密码")
+        void shouldAllowAdminToChangeOwnPassword() {
             Account admin = Account.create("admin", ENCODED_PASSWORD, PHONE, null);
-            when(adminProperties.getUsername()).thenReturn("admin");
             when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(admin));
+            when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(ENCODED_PASSWORD);
 
-            AppException ex = assertThrows(DomainException.class,
-                    () -> service.changePassword(ACCOUNT_ID, RAW_PASSWORD));
+            service.changePassword(ACCOUNT_ID, RAW_PASSWORD);
 
-            assertEquals(AuthErrorCode.ADMIN_ACCOUNT_PROTECTED, ex.getErrorCode());
-            verify(passwordEncoder, never()).encode(any());
-            verify(accountRepository, never()).save(any());
+            assertEquals(ENCODED_PASSWORD, admin.getPassword());
+            verify(accountRepository).save(admin);
         }
     }
 

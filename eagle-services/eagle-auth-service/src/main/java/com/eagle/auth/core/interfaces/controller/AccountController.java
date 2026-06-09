@@ -91,7 +91,7 @@ public class AccountController {
     @Operation(summary = "修改密码")
     @PutMapping("/{accountId}/password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("#accountId == authentication.principal.id")
     public void changePassword(@Parameter(description = "账号ID") @PathVariable Long accountId,
                                @Valid @RequestBody ChangePasswordRequest request) {
         accountApplicationService.changePassword(accountId, request.getNewPassword());

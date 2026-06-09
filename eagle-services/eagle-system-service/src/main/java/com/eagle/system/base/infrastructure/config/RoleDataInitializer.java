@@ -48,6 +48,7 @@ public class RoleDataInitializer {
 
     private static final Logger log = LoggerFactory.getLogger(RoleDataInitializer.class);
 
+    private static final String SUPER_ADMIN_ROLE_CODE = "super_admin";
     private static final String ADMIN_ROLE_CODE = "admin";
     private static final String USER_ROLE_CODE = "user";
 
@@ -68,6 +69,8 @@ public class RoleDataInitializer {
     private void seedSystemRoles() {
         TransactionTemplate tx = new TransactionTemplate(transactionManager);
         tx.execute(status -> {
+            seedRole(SUPER_ADMIN_ROLE_CODE, "超级管理员",
+                    "系统最高权限,可执行平台级运维操作", 0, DataScope.ALL);
             seedRole(ADMIN_ROLE_CODE, "系统管理员",
                     "拥有所有系统管理权限", 1, DataScope.ALL);
             seedRole(USER_ROLE_CODE, "普通用户",
@@ -104,7 +107,7 @@ public class RoleDataInitializer {
             return;
         }
         if (userRepository.existsByAccountId(snapshot.accountId())) {
-            ensureAdminRoleAssigned(snapshot.accountId());
+            ensureAdminSystemRolesAssigned(snapshot.accountId());
             return;
         }
         AccountRegisteredMessage message = new AccountRegisteredMessage();
@@ -116,24 +119,30 @@ public class RoleDataInitializer {
                 username, snapshot.accountId());
     }
 
-    /** admin User 已存在但缺 admin 角色时补救(用户被旧版本逻辑创建过、未分配 admin 角色)。 */
-    private void ensureAdminRoleAssigned(Long accountId) {
+    /**
+     * admin User 已存在但缺 admin / super_admin 系统角色时补救
+     * (用户被旧版本逻辑创建过、或后续新增 super_admin 系统角色后老用户未自动持有)。
+     */
+    private void ensureAdminSystemRolesAssigned(Long accountId) {
         TransactionTemplate tx = new TransactionTemplate(transactionManager);
         tx.execute(status -> {
-            Long adminRoleId = roleRepository.findByRoleCode(ADMIN_ROLE_CODE)
-                    .map(Role::getId).orElse(null);
-            if (adminRoleId == null) {
+            Set<Long> missing = new HashSet<>();
+            roleRepository.findByRoleCode(SUPER_ADMIN_ROLE_CODE).map(Role::getId).ifPresent(missing::add);
+            roleRepository.findByRoleCode(ADMIN_ROLE_CODE).map(Role::getId).ifPresent(missing::add);
+            if (missing.isEmpty()) {
                 return null;
             }
             User user = userRepository.findByAccountId(accountId).orElse(null);
-            if (user == null || user.getRoleIds().contains(adminRoleId)) {
+            if (user == null) {
                 return null;
             }
             Set<Long> merged = new HashSet<>(user.getRoleIds());
-            merged.add(adminRoleId);
+            if (!merged.addAll(missing)) {
+                return null;
+            }
             user.assignRoles(merged);
             userRepository.save(user);
-            log.info("补救为现有 admin User 分配 admin 角色, accountId: {}", accountId);
+            log.info("补救为现有 admin User 分配 admin / super_admin 系统角色, accountId: {}", accountId);
             return null;
         });
     }

@@ -91,12 +91,14 @@ public class AccountApplicationService {
 
     /**
      * 修改密码。
+     *
+     * <p>仅限账号本人调用（Controller 层 {@code #accountId == authentication.principal.id} 控制），
+     * 管理员账号本人也可修改自己的密码，因此此处不再做管理员保护。
      */
     @AuditLog(module = "账号管理", action = "修改密码", logArgs = false)
     @Transactional(rollbackFor = Exception.class)
     public void changePassword(Long accountId, String rawNewPassword) {
         Account account = findAccountById(accountId);
-        ensureNotAdminAccount(account);
         account.changePassword(passwordEncoder.encode(rawNewPassword));
         accountRepository.save(account);
     }

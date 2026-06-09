@@ -50,6 +50,7 @@ public class AccountEventApplicationService {
      */
     private static final String DEFAULT_USER_ROLE_CODE = "user";
     private static final String ADMIN_ROLE_CODE = "admin";
+    private static final String SUPER_ADMIN_ROLE_CODE = "super_admin";
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -88,14 +89,14 @@ public class AccountEventApplicationService {
      * 为新创建的 User 分配初始角色:
      * <ul>
      *   <li>普通用户 → 仅 user 角色</li>
-     *   <li>管理员(username 匹配 {@code eagle.admin.username}) → user + admin 双角色,
+     *   <li>管理员(username 匹配 {@code eagle.admin.username}) → user + admin + super_admin 三角色,
      *       与 auth-service 的 {@code AdminInitializer} 通过相同环境变量
      *       {@code EAGLE_ADMIN_USERNAME} 联动。该判断把"哪个用户是 admin"的决策点
      *       下沉到事件消费现场,彻底消除启动期跨服务时序依赖。</li>
      * </ul>
      * <p>缺失角色定义时仅 {@code log.warn} 跳过,不抛异常——首次启动时角色 seed 与本消费可能并发,
      * 由 {@code RoleDataInitializer} 在 ApplicationReadyEvent 完成 seed 后,
-     * 后续注册事件即可正常匹配。
+     * 后续注册事件即可正常匹配,缺失的系统角色亦会被启动期补救逻辑追加。
      */
     private void assignInitialRoles(User user, String username) {
         Set<Long> roleIds = new LinkedHashSet<>();
@@ -108,6 +109,10 @@ public class AccountEventApplicationService {
                     roleIds::add,
                     () -> log.warn("管理员角色 [{}] 不存在, 跳过为管理员用户分配 admin 角色, username: {}",
                             ADMIN_ROLE_CODE, username));
+            roleRepository.findByRoleCode(SUPER_ADMIN_ROLE_CODE).map(Role::getId).ifPresentOrElse(
+                    roleIds::add,
+                    () -> log.warn("超级管理员角色 [{}] 不存在, 跳过为管理员用户分配 super_admin 角色, username: {}",
+                            SUPER_ADMIN_ROLE_CODE, username));
         }
         if (!roleIds.isEmpty()) {
             user.assignRoles(roleIds);

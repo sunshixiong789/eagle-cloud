@@ -1,14 +1,3 @@
-// 排除 xpp3 / xmlpull / mxparser / pull-parser(旧式 SAX 解析器,dom4j / xstream 传递引入)。
-// 它们通过 ServiceLoader 注册为默认 SAXParserFactory(org.gjt.xpp.jaxp11.SAXParserFactoryImpl),
-// 会导致 Nacos / Logback(含 RocketMQ shaded logback)加载 XML 配置时报
-// SAXNotRecognizedException: external-general-entities。
-configurations.configureEach {
-    exclude group: 'xpp3', module: 'xpp3'
-    exclude group: 'xpp3', module: 'xpp3_min'
-    exclude group: 'xmlpull', module: 'xmlpull'
-    exclude group: 'io.github.x-stream', module: 'mxparser'
-    exclude group: 'pull-parser', module: 'pull-parser'
-}
 
 dependencies {
     implementation project(':eagle-starter:eagle-data-jpa-starter')
