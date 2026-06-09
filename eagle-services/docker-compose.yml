@@ -1,4 +1,8 @@
-# -------只适用于开发环境----------
+# -------- 开发 + 生产共用 ----------
+# environment 默认值面向开发环境；生产部署通过同目录 .env 覆盖关键变量
+# (EAGLE_OAUTH_ISSUER / EAGLE_OAUTH_REDIRECT_URIS / EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS / DB 凭据等)。
+# 不再为 prod 维护独立 compose 文件;docker-compose.prod.yml 仅承担 RocketMQ 线上单机部署。
+#
 # 变量管理约定：
 #   1. environment 显式枚举所有变量，统一 ${VAR:-default} 形式 —— compose.yml 是"变量清单 + 默认值"，.env 是"差异值表"
 #   2. compose 启动时自动加载本文件同目录的 .env 用于 ${VAR} 插值，无需声明 env_file（声明反而冗余）
