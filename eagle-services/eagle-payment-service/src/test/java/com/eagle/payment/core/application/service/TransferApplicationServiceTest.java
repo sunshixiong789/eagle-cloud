@@ -43,6 +43,8 @@ class TransferApplicationServiceTest {
     @Mock
     private PaymentGatewayPort alipayGateway;
 
+    private static final Long USER_ID = 100086L;
+
     private PaymentProperties properties;
     private TransferApplicationService service;
 
@@ -85,7 +87,7 @@ class TransferApplicationServiceTest {
         @DisplayName("提现总开关关闭应抛 TRANSFER_DISABLED")
         void shouldRejectWhenDisabled() {
             properties.getTransfer().setEnabled(false);
-            assertThatThrownBy(() -> service.create(request(new BigDecimal("500.00"))))
+            assertThatThrownBy(() -> service.create(request(new BigDecimal("500.00")), USER_ID))
                     .isInstanceOf(DomainException.class);
         }
 
@@ -103,7 +105,7 @@ class TransferApplicationServiceTest {
                     .thenReturn(new GatewayTransferResult("CHAN-T-1",
                             TransferStatus.SUCCESS, LocalDateTime.now(), null));
 
-            Transfer t = service.create(request(new BigDecimal("500.00")));
+            Transfer t = service.create(request(new BigDecimal("500.00")), USER_ID);
 
             assertThat(t.getStatus()).isEqualTo(TransferStatus.SUCCESS);
             assertThat(t.getChannelTransferNo()).isEqualTo("CHAN-T-1");
@@ -112,7 +114,7 @@ class TransferApplicationServiceTest {
         @Test
         @DisplayName("超过单笔限额抛 EXCEED_SINGLE_LIMIT")
         void shouldRejectOverSingleLimit() {
-            assertThatThrownBy(() -> service.create(request(new BigDecimal("6000.00"))))
+            assertThatThrownBy(() -> service.create(request(new BigDecimal("6000.00")), USER_ID))
                     .isInstanceOf(DomainException.class);
         }
 
@@ -121,7 +123,7 @@ class TransferApplicationServiceTest {
         void shouldRejectOverDailyAmount() {
             when(transferRepository.sumAmountInPeriod(anyList(), any(), any()))
                     .thenReturn(new BigDecimal("49600.00"));
-            assertThatThrownBy(() -> service.create(request(new BigDecimal("500.00"))))
+            assertThatThrownBy(() -> service.create(request(new BigDecimal("500.00")), USER_ID))
                     .isInstanceOf(DomainException.class);
         }
 
@@ -132,7 +134,7 @@ class TransferApplicationServiceTest {
                     .thenReturn(BigDecimal.ZERO);
             when(transferRepository.countInPeriod(anyList(), any(), any()))
                     .thenReturn(20L);
-            assertThatThrownBy(() -> service.create(request(new BigDecimal("500.00"))))
+            assertThatThrownBy(() -> service.create(request(new BigDecimal("500.00")), USER_ID))
                     .isInstanceOf(DomainException.class);
         }
 
@@ -142,7 +144,7 @@ class TransferApplicationServiceTest {
             stubRiskControlOk();
             when(transferRepository.existsByBizTransferNo(eq("TRN-001")))
                     .thenReturn(true);
-            assertThatThrownBy(() -> service.create(request(new BigDecimal("500.00"))))
+            assertThatThrownBy(() -> service.create(request(new BigDecimal("500.00")), USER_ID))
                     .isInstanceOf(ConflictException.class);
             verify(transferRepository, never()).saveAndFlush(any());
         }
@@ -158,7 +160,7 @@ class TransferApplicationServiceTest {
             CreateTransferRequest req = request(new BigDecimal("500.00"));
             req.setMode(TransferMode.APPROVAL);
 
-            Transfer result = service.create(req);
+            Transfer result = service.create(req, USER_ID);
 
             assertThat(result.getStatus()).isEqualTo(TransferStatus.PENDING_APPROVAL);
             assertThat(result.getMode()).isEqualTo(TransferMode.APPROVAL);
@@ -173,7 +175,7 @@ class TransferApplicationServiceTest {
         @Test
         @DisplayName("APPROVAL 模式 PENDING_APPROVAL → 同事务调渠道并到达 SUCCESS")
         void shouldApproveAndSubmitToGateway() {
-            Transfer pending = Transfer.create("TRN-001", TransferMode.APPROVAL,
+            Transfer pending = Transfer.create(USER_ID, "TRN-001", TransferMode.APPROVAL,
                     PaymentChannel.ALIPAY, "user@example.com", "张三",
                     new BigDecimal("500.00"), "结算");
             when(transferRepository.findByIdForUpdate(eq(1L)))
@@ -203,13 +205,42 @@ class TransferApplicationServiceTest {
     }
 
     @Nested
+    @DisplayName("查询归属校验")
+    class OwnershipCheck {
+
+        @Test
+        @DisplayName("findById (用户视角): 他人 Transfer 按 NOT_FOUND 返回")
+        void shouldHideForeignTransfer() {
+            Transfer foreign = Transfer.create(999L, "TRN-001", TransferMode.IMMEDIATE,
+                    PaymentChannel.ALIPAY, "user@example.com", "张三",
+                    new BigDecimal("500.00"), null);
+            when(transferRepository.findById(1L)).thenReturn(java.util.Optional.of(foreign));
+
+            assertThatThrownBy(() -> service.findById(1L, USER_ID))
+                    .isInstanceOf(com.eagle.common.exception.NotFoundException.class);
+        }
+
+        @Test
+        @DisplayName("adminFindById: 不做归属校验,可返回任意用户 Transfer")
+        void shouldReturnAnyTransferForAdmin() {
+            Transfer foreign = Transfer.create(999L, "TRN-001", TransferMode.IMMEDIATE,
+                    PaymentChannel.ALIPAY, "user@example.com", "张三",
+                    new BigDecimal("500.00"), null);
+            when(transferRepository.findById(1L)).thenReturn(java.util.Optional.of(foreign));
+
+            Transfer t = service.adminFindById(1L);
+            assertThat(t.getUserId()).isEqualTo(999L);
+        }
+    }
+
+    @Nested
     @DisplayName("reject")
     class Reject {
 
         @Test
         @DisplayName("APPROVAL 模式 PENDING_APPROVAL → REJECTED,不调渠道")
         void shouldRejectAndNotCallGateway() {
-            Transfer pending = Transfer.create("TRN-001", TransferMode.APPROVAL,
+            Transfer pending = Transfer.create(USER_ID, "TRN-001", TransferMode.APPROVAL,
                     PaymentChannel.ALIPAY, "user@example.com", "张三",
                     new BigDecimal("500.00"), "结算");
             when(transferRepository.findByIdForUpdate(eq(1L)))

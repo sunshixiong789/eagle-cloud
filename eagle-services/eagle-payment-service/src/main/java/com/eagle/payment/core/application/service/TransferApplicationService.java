@@ -75,8 +75,12 @@ public class TransferApplicationService {
         this.gateways = map;
     }
 
+    /**
+     * 发起提现。{@code currentUserId} 来自 JWT,不允许调用方从入参指定,以避免
+     * 用户给他人提现。当日风控 (单笔 / 累计金额 / 笔数) 与归属用户绑定。
+     */
     @Transactional
-    public Transfer create(CreateTransferRequest request) {
+    public Transfer create(CreateTransferRequest request, Long currentUserId) {
         if (!properties.getTransfer().isEnabled()) {
             throw TransferErrorCode.TRANSFER_DISABLED.toDomainException();
         }
@@ -89,7 +93,7 @@ public class TransferApplicationService {
         if (gateway == null) {
             throw TransferErrorCode.CHANNEL_UNAVAILABLE.toDomainException();
         }
-        Transfer transfer = Transfer.create(request.getBizTransferNo(),
+        Transfer transfer = Transfer.create(currentUserId, request.getBizTransferNo(),
                 request.getMode(),
                 request.getChannel(), request.getRecipientAccount(),
                 request.getRecipientName(), request.getAmount(), request.getReason());
@@ -103,8 +107,8 @@ public class TransferApplicationService {
         }
 
         if (request.getMode() == TransferMode.APPROVAL) {
-            log.info("transfer created (awaiting approval), id={}, channel={}, status={}",
-                    transfer.getId(), request.getChannel(), transfer.getStatus());
+            log.info("transfer created (awaiting approval), id={}, userId={}, channel={}, status={}",
+                    transfer.getId(), currentUserId, request.getChannel(), transfer.getStatus());
             return transfer;
         }
         return submitToGateway(transfer, gateway);
@@ -174,15 +178,36 @@ public class TransferApplicationService {
         return saved;
     }
 
+    /**
+     * 用户视角:仅返回归属当前用户的 Transfer。
+     */
     @Transactional(readOnly = true)
-    public Transfer findById(Long transferId) {
-        return transferRepository.findById(transferId)
+    public Transfer findById(Long transferId, Long currentUserId) {
+        Transfer transfer = transferRepository.findById(transferId)
                 .orElseThrow(TransferErrorCode.TRANSFER_NOT_FOUND::toNotFoundException);
+        if (!transfer.getUserId().equals(currentUserId)) {
+            throw TransferErrorCode.TRANSFER_NOT_FOUND.toNotFoundException();
+        }
+        return transfer;
     }
 
     @Transactional(readOnly = true)
-    public Transfer findByBizTransferNo(String bizTransferNo) {
-        return transferRepository.findByBizTransferNo(bizTransferNo)
+    public Transfer findByBizTransferNo(String bizTransferNo, Long currentUserId) {
+        Transfer transfer = transferRepository.findByBizTransferNo(bizTransferNo)
+                .orElseThrow(TransferErrorCode.TRANSFER_NOT_FOUND::toNotFoundException);
+        if (!transfer.getUserId().equals(currentUserId)) {
+            throw TransferErrorCode.TRANSFER_NOT_FOUND.toNotFoundException();
+        }
+        return transfer;
+    }
+
+    /**
+     * Admin 视角:不做用户归属校验,审核台 / 财务列表使用。
+     * <p>权限由 Controller 层 {@code @PreAuthorize} 收口。
+     */
+    @Transactional(readOnly = true)
+    public Transfer adminFindById(Long transferId) {
+        return transferRepository.findById(transferId)
                 .orElseThrow(TransferErrorCode.TRANSFER_NOT_FOUND::toNotFoundException);
     }
 

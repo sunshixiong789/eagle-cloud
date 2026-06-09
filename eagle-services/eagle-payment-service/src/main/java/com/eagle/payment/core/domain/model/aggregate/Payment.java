@@ -78,8 +78,8 @@ public class Payment extends BaseAggregateRoot<Payment> {
             comment = "订单标题")
     private String subject;
 
-    @Column(name = "user_id", updatable = false, length = 64, comment = "下单用户 ID")
-    private String userId;
+    @Column(name = "user_id", nullable = false, updatable = false, comment = "下单用户 ID")
+    private Long userId;
 
     @Column(name = "out_trade_no", length = 64, comment = "渠道返回的交易号")
     private String outTradeNo;
@@ -102,7 +102,7 @@ public class Payment extends BaseAggregateRoot<Payment> {
     private String failReason;
 
     private Payment(String bizOrderNo, PaymentChannel channel, PaymentScene scene,
-                    BigDecimal amount, String currency, String subject, @Nullable String userId,
+                    BigDecimal amount, String currency, String subject, Long userId,
                     LocalDateTime expiresAt) {
         this.bizOrderNo = bizOrderNo;
         this.channel = channel;
@@ -122,7 +122,7 @@ public class Payment extends BaseAggregateRoot<Payment> {
      */
     public static Payment create(String bizOrderNo, PaymentChannel channel,
                                  PaymentScene scene, BigDecimal amount, String currency,
-                                 String subject, @Nullable String userId,
+                                 String subject, Long userId,
                                  LocalDateTime expiresAt) {
         if (amount == null || amount.signum() <= 0) {
             throw PaymentErrorCode.INVALID_AMOUNT.toDomainException();

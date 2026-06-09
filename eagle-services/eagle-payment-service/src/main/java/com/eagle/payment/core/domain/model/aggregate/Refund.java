@@ -41,6 +41,7 @@ import java.time.LocalDateTime;
         },
         indexes = {
                 @Index(name = "idx_refund_payment", columnList = "payment_id"),
+                @Index(name = "idx_refund_user_id", columnList = "user_id"),
                 @Index(name = "idx_refund_status_created",
                         columnList = "status, create_time"),
                 @Index(name = "idx_refund_channel_no",
@@ -51,6 +52,10 @@ public class Refund extends BaseAggregateRoot<Refund> {
     @Column(name = "payment_id", nullable = false, updatable = false,
             comment = "关联 Payment ID (跨聚合 ID 引用)")
     private Long paymentId;
+
+    @Column(name = "user_id", nullable = false, updatable = false,
+            comment = "发起退款的用户 ID (与 Payment.userId 一致;落库时由应用服务校验)")
+    private Long userId;
 
     @Column(name = "biz_refund_no", nullable = false, updatable = false, length = 64,
             comment = "业务退款号 (上游调用方提供)")
@@ -81,9 +86,10 @@ public class Refund extends BaseAggregateRoot<Refund> {
     @Column(name = "fail_reason", length = 512, comment = "失败原因")
     private String failReason;
 
-    private Refund(Long paymentId, String bizRefundNo, PaymentChannel channel,
+    private Refund(Long paymentId, Long userId, String bizRefundNo, PaymentChannel channel,
                    BigDecimal amount, @Nullable String reason) {
         this.paymentId = paymentId;
+        this.userId = userId;
         this.bizRefundNo = bizRefundNo;
         this.channel = channel;
         this.amount = amount;
@@ -96,17 +102,18 @@ public class Refund extends BaseAggregateRoot<Refund> {
      * <ul>
      *   <li>验证 Payment.status == PAID</li>
      *   <li>验证 amount &lt;= Payment.refundableAmount()</li>
+     *   <li>验证 Payment.userId == userId (避免越权退他人订单)</li>
      *   <li>(可选)部分退款开关校验</li>
      * </ul>
      * Refund 聚合根本身只校验 amount &gt; 0 与状态机一致性,跨聚合校验由应用服务承担。
      */
-    public static Refund create(Long paymentId, String bizRefundNo,
+    public static Refund create(Long paymentId, Long userId, String bizRefundNo,
                                 PaymentChannel channel, BigDecimal amount,
                                 @Nullable String reason) {
         if (amount == null || amount.signum() <= 0) {
             throw RefundErrorCode.INVALID_REFUND_AMOUNT.toDomainException();
         }
-        return new Refund(paymentId, bizRefundNo, channel, amount.setScale(2), reason);
+        return new Refund(paymentId, userId, bizRefundNo, channel, amount.setScale(2), reason);
     }
 
     /**

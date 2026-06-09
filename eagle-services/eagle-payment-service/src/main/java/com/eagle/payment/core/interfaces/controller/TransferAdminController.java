@@ -57,7 +57,7 @@ public class TransferAdminController {
     @PreAuthorize("hasAuthority('payment:transfer:approve')")
     @GetMapping("/{id}")
     public TransferResponse get(@PathVariable Long id) {
-        return mapper.toResponse(transferApplicationService.findById(id));
+        return mapper.toResponse(transferApplicationService.adminFindById(id));
     }
 
     @Operation(summary = "审核通过 (同事务调渠道)")

@@ -59,10 +59,11 @@ public class PaymentApplicationService {
     }
 
     /**
-     * 创建支付订单并提交到渠道。
+     * 创建支付订单并提交到渠道。{@code currentUserId} 来自 JWT,不允许调用方从入参指定,
+     * 以杜绝"给他人创建订单"的越权场景。
      */
     @Transactional
-    public CreatePaymentResponse create(CreatePaymentRequest request) {
+    public CreatePaymentResponse create(CreatePaymentRequest request, Long currentUserId) {
         PaymentChannel channel = request.getChannel();
         if (paymentRepository.existsByBizOrderNoAndChannel(request.getBizOrderNo(), channel)) {
             throw PaymentErrorCode.DUPLICATE_PAYMENT.toConflictException();
@@ -81,7 +82,7 @@ public class PaymentApplicationService {
                 request.getAmount(),
                 request.getCurrency() == null ? "CNY" : request.getCurrency(),
                 request.getSubject(),
-                request.getUserId(),
+                currentUserId,
                 expiresAt
         );
         try {
@@ -102,7 +103,6 @@ public class PaymentApplicationService {
                 request.getAmount(),
                 request.getCurrency() == null ? "CNY" : request.getCurrency(),
                 request.getSubject(),
-                request.getUserId(),
                 expiresAt,
                 request.getClientIp(),
                 request.getReturnUrl(),
@@ -112,39 +112,52 @@ public class PaymentApplicationService {
         GatewayPayResult result = gateway.createPayment(command);
         payment.submittedToChannel(outTradeNo);
         Payment saved = paymentRepository.save(payment);
-        log.info("payment created, id={}, channel={}, scene={}, bizOrderNo={}, outTradeNo={}",
-                saved.getId(), channel, request.getScene(), request.getBizOrderNo(), outTradeNo);
+        log.info("payment created, id={}, userId={}, channel={}, scene={}, bizOrderNo={}, outTradeNo={}",
+                saved.getId(), currentUserId, channel, request.getScene(),
+                request.getBizOrderNo(), outTradeNo);
         return new CreatePaymentResponse(saved.getId(), outTradeNo,
                 result.payload(), result.payloadType());
     }
 
     /**
-     * 主动取消支付订单 (CREATED / PAYING 允许)。
+     * 主动取消支付订单 (CREATED / PAYING 允许)。仅允许本人取消;不属于本人的订单
+     * 一律按 NOT_FOUND 返回,避免通过响应码差异泄漏订单存在性。
      */
     @Transactional
-    public void cancel(Long paymentId, String reason) {
-        Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(PaymentErrorCode.PAYMENT_NOT_FOUND::toNotFoundException);
+    public void cancel(Long paymentId, String reason, Long currentUserId) {
+        Payment payment = loadOwned(paymentId, currentUserId);
         payment.cancel(reason == null ? "user cancelled" : reason);
         paymentRepository.save(payment);
-        log.info("payment cancelled, id={}, reason={}", paymentId, reason);
+        log.info("payment cancelled, id={}, userId={}, reason={}", paymentId, currentUserId, reason);
     }
 
     /**
-     * 查询支付订单详情。
+     * 查询支付订单详情 (用户视角:仅返回归属当前用户的订单)。
      */
     @Transactional(readOnly = true)
-    public Payment findById(Long paymentId) {
-        return paymentRepository.findById(paymentId)
-                .orElseThrow(PaymentErrorCode.PAYMENT_NOT_FOUND::toNotFoundException);
+    public Payment findById(Long paymentId, Long currentUserId) {
+        return loadOwned(paymentId, currentUserId);
     }
 
     /**
-     * 按业务订单号 + 渠道查询。
+     * 按业务订单号 + 渠道查询 (用户视角)。
      */
     @Transactional(readOnly = true)
-    public Payment findByBizOrderNo(String bizOrderNo, PaymentChannel channel) {
-        return paymentRepository.findByBizOrderNoAndChannel(bizOrderNo, channel)
+    public Payment findByBizOrderNo(String bizOrderNo, PaymentChannel channel, Long currentUserId) {
+        Payment payment = paymentRepository.findByBizOrderNoAndChannel(bizOrderNo, channel)
                 .orElseThrow(PaymentErrorCode.PAYMENT_NOT_FOUND::toNotFoundException);
+        if (!payment.getUserId().equals(currentUserId)) {
+            throw PaymentErrorCode.PAYMENT_NOT_FOUND.toNotFoundException();
+        }
+        return payment;
+    }
+
+    private Payment loadOwned(Long paymentId, Long currentUserId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(PaymentErrorCode.PAYMENT_NOT_FOUND::toNotFoundException);
+        if (!payment.getUserId().equals(currentUserId)) {
+            throw PaymentErrorCode.PAYMENT_NOT_FOUND.toNotFoundException();
+        }
+        return payment;
     }
 }

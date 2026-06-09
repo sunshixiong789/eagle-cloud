@@ -46,6 +46,7 @@ import java.time.LocalDateTime;
                         columnNames = {"biz_transfer_no"})
         },
         indexes = {
+                @Index(name = "idx_transfer_user_id", columnList = "user_id"),
                 @Index(name = "idx_transfer_status_created",
                         columnList = "status, create_time"),
                 @Index(name = "idx_transfer_channel_no",
@@ -56,6 +57,10 @@ import java.time.LocalDateTime;
                         columnList = "mode, status, create_time")
         })
 public class Transfer extends BaseAggregateRoot<Transfer> {
+
+    @Column(name = "user_id", nullable = false, updatable = false,
+            comment = "发起提现的用户 ID")
+    private Long userId;
 
     @Column(name = "biz_transfer_no", nullable = false, updatable = false, length = 64,
             comment = "业务提现号 (上游调用方提供)")
@@ -115,9 +120,10 @@ public class Transfer extends BaseAggregateRoot<Transfer> {
     @Nullable
     private String rejectReason;
 
-    private Transfer(String bizTransferNo, TransferMode mode, PaymentChannel channel,
+    private Transfer(Long userId, String bizTransferNo, TransferMode mode, PaymentChannel channel,
                      String recipientAccount, @Nullable String recipientName,
                      BigDecimal amount, @Nullable String reason) {
+        this.userId = userId;
         this.bizTransferNo = bizTransferNo;
         this.mode = mode;
         this.channel = channel;
@@ -130,14 +136,14 @@ public class Transfer extends BaseAggregateRoot<Transfer> {
                 : TransferStatus.PENDING;
     }
 
-    public static Transfer create(String bizTransferNo, TransferMode mode,
+    public static Transfer create(Long userId, String bizTransferNo, TransferMode mode,
                                   PaymentChannel channel,
                                   String recipientAccount, @Nullable String recipientName,
                                   BigDecimal amount, @Nullable String reason) {
         if (amount == null || amount.signum() <= 0) {
             throw TransferErrorCode.INVALID_TRANSFER_AMOUNT.toDomainException();
         }
-        return new Transfer(bizTransferNo, mode, channel, recipientAccount, recipientName,
+        return new Transfer(userId, bizTransferNo, mode, channel, recipientAccount, recipientName,
                 amount.setScale(2), reason);
     }
 

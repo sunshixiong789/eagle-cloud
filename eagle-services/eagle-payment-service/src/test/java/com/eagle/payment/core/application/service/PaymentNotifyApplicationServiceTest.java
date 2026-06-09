@@ -43,7 +43,7 @@ class PaymentNotifyApplicationServiceTest {
 
     private Payment ofStatus(PaymentStatus initial) {
         Payment p = Payment.create("ORD-001", PaymentChannel.ALIPAY, PaymentScene.PC_WEB,
-                new BigDecimal("99.00"), "CNY", "subject", null,
+                new BigDecimal("99.00"), "CNY", "subject", 100086L,
                 LocalDateTime.now().plusMinutes(30));
         if (initial == PaymentStatus.PAYING) {
             p.submittedToChannel("OUT-001");
@@ -151,7 +151,7 @@ class PaymentNotifyApplicationServiceTest {
 
         private Payment paid() {
             Payment p = Payment.create("ORD-001", PaymentChannel.ALIPAY,
-                    PaymentScene.PC_WEB, new BigDecimal("99.00"), "CNY", "subject", null,
+                    PaymentScene.PC_WEB, new BigDecimal("99.00"), "CNY", "subject", 100086L,
                     LocalDateTime.now().plusMinutes(30));
             p.submittedToChannel("OUT-001");
             p.markPaid(LocalDateTime.now(), "OUT-001");
@@ -159,7 +159,7 @@ class PaymentNotifyApplicationServiceTest {
         }
 
         private Refund refunding() {
-            Refund r = Refund.create(1024L, "REF-001",
+            Refund r = Refund.create(1024L, 100086L, "REF-001",
                     PaymentChannel.ALIPAY, new BigDecimal("30.00"), null);
             r.submittedToChannel("CHAN-REF-1");
             return r;

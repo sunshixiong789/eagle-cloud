@@ -48,6 +48,8 @@ class RefundApplicationServiceTest {
     @Mock
     private PaymentGatewayPort alipayGateway;
 
+    private static final Long USER_ID = 100086L;
+
     private PaymentProperties properties;
     private RefundApplicationService service;
 
@@ -61,7 +63,7 @@ class RefundApplicationServiceTest {
 
     private Payment paidPayment(BigDecimal amount, BigDecimal alreadyRefunded) {
         Payment p = Payment.create("ORD-001", PaymentChannel.ALIPAY,
-                PaymentScene.PC_WEB, amount, "CNY", "subject", null,
+                PaymentScene.PC_WEB, amount, "CNY", "subject", USER_ID,
                 LocalDateTime.now().plusMinutes(30));
         p.submittedToChannel("OUT-001");
         p.markPaid(LocalDateTime.now(), "OUT-001");
@@ -97,7 +99,7 @@ class RefundApplicationServiceTest {
                     .thenReturn(new GatewayRefundResult("CHAN-REF-1",
                             RefundStatus.REFUNDED, LocalDateTime.now(), null));
 
-            Refund refund = service.create(request(new BigDecimal("30.00")));
+            Refund refund = service.create(request(new BigDecimal("30.00")), USER_ID);
 
             assertThat(refund.getStatus()).isEqualTo(RefundStatus.REFUNDED);
             assertThat(refund.getChannelRefundNo()).isEqualTo("CHAN-REF-1");
@@ -118,7 +120,7 @@ class RefundApplicationServiceTest {
                     .thenReturn(new GatewayRefundResult("CHAN-REF-1",
                             RefundStatus.REFUNDING, null, null));
 
-            Refund refund = service.create(request(new BigDecimal("30.00")));
+            Refund refund = service.create(request(new BigDecimal("30.00")), USER_ID);
 
             assertThat(refund.getStatus()).isEqualTo(RefundStatus.REFUNDING);
             assertThat(payment.getRefundedAmount()).isEqualByComparingTo("0.00");
@@ -132,7 +134,7 @@ class RefundApplicationServiceTest {
                     .thenReturn(false);
             when(paymentRepository.findById(1024L)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> service.create(request(new BigDecimal("30.00"))))
+            assertThatThrownBy(() -> service.create(request(new BigDecimal("30.00")), USER_ID))
                     .isInstanceOf(NotFoundException.class);
         }
 
@@ -142,11 +144,11 @@ class RefundApplicationServiceTest {
             when(refundRepository.existsByBizRefundNo(eq("REF-001")))
                     .thenReturn(false);
             Payment p = Payment.create("ORD-001", PaymentChannel.ALIPAY,
-                    PaymentScene.PC_WEB, new BigDecimal("99.00"), "CNY", "subj", null,
+                    PaymentScene.PC_WEB, new BigDecimal("99.00"), "CNY", "subj", USER_ID,
                     LocalDateTime.now().plusMinutes(30));
             when(paymentRepository.findById(1024L)).thenReturn(Optional.of(p));
 
-            assertThatThrownBy(() -> service.create(request(new BigDecimal("30.00"))))
+            assertThatThrownBy(() -> service.create(request(new BigDecimal("30.00")), USER_ID))
                     .isInstanceOf(DomainException.class);
         }
 
@@ -158,7 +160,7 @@ class RefundApplicationServiceTest {
             Payment payment = paidPayment(new BigDecimal("99.00"), new BigDecimal("80.00"));
             when(paymentRepository.findById(1024L)).thenReturn(Optional.of(payment));
 
-            assertThatThrownBy(() -> service.create(request(new BigDecimal("30.00"))))
+            assertThatThrownBy(() -> service.create(request(new BigDecimal("30.00")), USER_ID))
                     .isInstanceOf(DomainException.class);
         }
 
@@ -168,9 +170,27 @@ class RefundApplicationServiceTest {
             when(refundRepository.existsByBizRefundNo(eq("REF-001")))
                     .thenReturn(true);
 
-            assertThatThrownBy(() -> service.create(request(new BigDecimal("30.00"))))
+            assertThatThrownBy(() -> service.create(request(new BigDecimal("30.00")), USER_ID))
                     .isInstanceOf(ConflictException.class);
             verify(paymentRepository, never()).findById(any());
+        }
+
+        @Test
+        @DisplayName("Payment 属于他人时按 PAYMENT_NOT_FOUND 返回 (避免他人订单越权退款)")
+        void shouldRejectRefundOnForeignPayment() {
+            when(refundRepository.existsByBizRefundNo(eq("REF-001")))
+                    .thenReturn(false);
+            Payment foreign = Payment.create("ORD-001", PaymentChannel.ALIPAY,
+                    PaymentScene.PC_WEB, new BigDecimal("99.00"), "CNY", "subject", 999L,
+                    LocalDateTime.now().plusMinutes(30));
+            foreign.submittedToChannel("OUT-001");
+            foreign.markPaid(LocalDateTime.now(), "OUT-001");
+            when(paymentRepository.findById(1024L)).thenReturn(Optional.of(foreign));
+
+            assertThatThrownBy(() -> service.create(request(new BigDecimal("30.00")), USER_ID))
+                    .isInstanceOf(NotFoundException.class);
+            verify(refundRepository, never()).saveAndFlush(any());
+            verify(alipayGateway, never()).refund(any());
         }
 
         @Test
@@ -182,7 +202,7 @@ class RefundApplicationServiceTest {
             Payment payment = paidPayment(new BigDecimal("99.00"), BigDecimal.ZERO);
             when(paymentRepository.findById(1024L)).thenReturn(Optional.of(payment));
 
-            assertThatThrownBy(() -> service.create(request(new BigDecimal("30.00"))))
+            assertThatThrownBy(() -> service.create(request(new BigDecimal("30.00")), USER_ID))
                     .isInstanceOf(DomainException.class);
         }
     }

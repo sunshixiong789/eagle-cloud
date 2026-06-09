@@ -58,7 +58,7 @@ class TransferAdminControllerTest {
     }
 
     private Transfer sample() {
-        return Transfer.create("TRN-001", TransferMode.APPROVAL, PaymentChannel.ALIPAY,
+        return Transfer.create(100086L, "TRN-001", TransferMode.APPROVAL, PaymentChannel.ALIPAY,
                 "user@example.com", "张三", new BigDecimal("500.00"), "结算");
     }
 

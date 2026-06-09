@@ -55,7 +55,7 @@ class ReconcileApplicationServiceTest {
 
     private Payment paid(String outTradeNo, BigDecimal amount, LocalDateTime paidAt) {
         Payment p = Payment.create("ORD-" + outTradeNo, PaymentChannel.ALIPAY,
-                PaymentScene.PC_WEB, amount, "CNY", "subject", null,
+                PaymentScene.PC_WEB, amount, "CNY", "subject", 100086L,
                 paidAt.plusMinutes(30));
         p.submittedToChannel(outTradeNo);
         p.markPaid(paidAt, outTradeNo);

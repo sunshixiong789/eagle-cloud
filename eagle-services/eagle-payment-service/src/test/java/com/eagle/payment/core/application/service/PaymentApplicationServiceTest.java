@@ -45,6 +45,8 @@ class PaymentApplicationServiceTest {
     @Mock
     private PaymentGatewayPort alipayGateway;
 
+    private static final Long USER_ID = 100086L;
+
     private PaymentApplicationService service;
 
     @BeforeEach
@@ -81,7 +83,7 @@ class PaymentApplicationServiceTest {
             when(alipayGateway.createPayment(any(GatewayPayCommand.class)))
                     .thenReturn(new GatewayPayResult(null, "<form>...</form>", "html-form"));
 
-            CreatePaymentResponse resp = service.create(request());
+            CreatePaymentResponse resp = service.create(request(), USER_ID);
 
             assertThat(resp.outTradeNo()).isEqualTo("PAY16812340000001");
             assertThat(resp.payload()).isEqualTo("<form>...</form>");
@@ -104,7 +106,7 @@ class PaymentApplicationServiceTest {
             when(paymentRepository.existsByBizOrderNoAndChannel(
                     eq("ORD-001"), eq(PaymentChannel.ALIPAY))).thenReturn(true);
 
-            assertThatThrownBy(() -> service.create(request()))
+            assertThatThrownBy(() -> service.create(request(), USER_ID))
                     .isInstanceOf(ConflictException.class);
             verify(paymentRepository, never()).saveAndFlush(any());
             verify(alipayGateway, never()).createPayment(any());
@@ -118,8 +120,59 @@ class PaymentApplicationServiceTest {
             CreatePaymentRequest req = request();
             req.setChannel(PaymentChannel.WECHAT);
 
-            assertThatThrownBy(() -> service.create(req))
+            assertThatThrownBy(() -> service.create(req, USER_ID))
                     .isInstanceOf(DomainException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("查询归属校验")
+    class OwnershipCheck {
+
+        private Payment ownedBy(Long ownerId) {
+            return Payment.create("ORD-001", PaymentChannel.ALIPAY, PaymentScene.PC_WEB,
+                    new BigDecimal("99.00"), "CNY", "subject", ownerId,
+                    java.time.LocalDateTime.now().plusMinutes(30));
+        }
+
+        @Test
+        @DisplayName("findById: 他人订单按 NOT_FOUND 返回 (避免泄漏存在性)")
+        void shouldHidePaymentOwnedByOthers() {
+            when(paymentRepository.findById(1L)).thenReturn(java.util.Optional.of(ownedBy(999L)));
+
+            assertThatThrownBy(() -> service.findById(1L, USER_ID))
+                    .isInstanceOf(com.eagle.common.exception.NotFoundException.class);
+        }
+
+        @Test
+        @DisplayName("findByBizOrderNo: 他人订单按 NOT_FOUND 返回")
+        void shouldHidePaymentByBizOrderNoOwnedByOthers() {
+            when(paymentRepository.findByBizOrderNoAndChannel("ORD-X", PaymentChannel.ALIPAY))
+                    .thenReturn(java.util.Optional.of(ownedBy(999L)));
+
+            assertThatThrownBy(() -> service.findByBizOrderNo("ORD-X", PaymentChannel.ALIPAY, USER_ID))
+                    .isInstanceOf(com.eagle.common.exception.NotFoundException.class);
+        }
+
+        @Test
+        @DisplayName("cancel: 他人订单按 NOT_FOUND 返回,且不会发生状态迁移")
+        void shouldBlockCancelOnOthersPayment() {
+            Payment foreign = ownedBy(999L);
+            when(paymentRepository.findById(1L)).thenReturn(java.util.Optional.of(foreign));
+
+            assertThatThrownBy(() -> service.cancel(1L, "abuse", USER_ID))
+                    .isInstanceOf(com.eagle.common.exception.NotFoundException.class);
+            assertThat(foreign.getStatus()).isEqualTo(PaymentStatus.CREATED);
+            verify(paymentRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("findById: 本人订单正常返回")
+        void shouldReturnOwnedPayment() {
+            when(paymentRepository.findById(1L)).thenReturn(java.util.Optional.of(ownedBy(USER_ID)));
+
+            Payment p = service.findById(1L, USER_ID);
+            assertThat(p.getUserId()).isEqualTo(USER_ID);
         }
     }
 }

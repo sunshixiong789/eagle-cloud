@@ -62,13 +62,20 @@ public class RefundApplicationService {
         this.gateways = map;
     }
 
+    /**
+     * 发起退款。退款只能由原下单用户本人发起;若 payment.userId 与当前 JWT userId 不一致,
+     * 一律按 {@code PAYMENT_NOT_FOUND} 返回,避免通过响应码泄漏他人订单存在性。
+     */
     @Transactional
-    public Refund create(CreateRefundRequest request) {
+    public Refund create(CreateRefundRequest request, Long currentUserId) {
         if (refundRepository.existsByBizRefundNo(request.getBizRefundNo())) {
             throw RefundErrorCode.DUPLICATE_REFUND.toConflictException();
         }
         Payment payment = paymentRepository.findById(request.getPaymentId())
                 .orElseThrow(PaymentErrorCode.PAYMENT_NOT_FOUND::toNotFoundException);
+        if (!payment.getUserId().equals(currentUserId)) {
+            throw PaymentErrorCode.PAYMENT_NOT_FOUND.toNotFoundException();
+        }
         if (payment.getStatus() != PaymentStatus.PAID) {
             throw RefundErrorCode.PAYMENT_NOT_PAID.toDomainException();
         }
@@ -82,7 +89,7 @@ public class RefundApplicationService {
             throw RefundErrorCode.PARTIAL_DISABLED.toDomainException();
         }
 
-        Refund refund = Refund.create(payment.getId(), request.getBizRefundNo(),
+        Refund refund = Refund.create(payment.getId(), currentUserId, request.getBizRefundNo(),
                 payment.getChannel(), request.getAmount(), request.getReason());
         try {
             refund = refundRepository.saveAndFlush(refund);
@@ -119,20 +126,29 @@ public class RefundApplicationService {
             refund.submittedToChannel(result.channelRefundNo());
         }
         Refund saved = refundRepository.save(refund);
-        log.info("refund created, id={}, paymentId={}, status={}, channelRefundNo={}",
-                saved.getId(), payment.getId(), saved.getStatus(), saved.getChannelRefundNo());
+        log.info("refund created, id={}, paymentId={}, userId={}, status={}, channelRefundNo={}",
+                saved.getId(), payment.getId(), currentUserId, saved.getStatus(),
+                saved.getChannelRefundNo());
         return saved;
     }
 
     @Transactional(readOnly = true)
-    public Refund findById(Long refundId) {
-        return refundRepository.findById(refundId)
+    public Refund findById(Long refundId, Long currentUserId) {
+        Refund refund = refundRepository.findById(refundId)
                 .orElseThrow(RefundErrorCode.REFUND_NOT_FOUND::toNotFoundException);
+        if (!refund.getUserId().equals(currentUserId)) {
+            throw RefundErrorCode.REFUND_NOT_FOUND.toNotFoundException();
+        }
+        return refund;
     }
 
     @Transactional(readOnly = true)
-    public Refund findByBizRefundNo(String bizRefundNo) {
-        return refundRepository.findByBizRefundNo(bizRefundNo)
+    public Refund findByBizRefundNo(String bizRefundNo, Long currentUserId) {
+        Refund refund = refundRepository.findByBizRefundNo(bizRefundNo)
                 .orElseThrow(RefundErrorCode.REFUND_NOT_FOUND::toNotFoundException);
+        if (!refund.getUserId().equals(currentUserId)) {
+            throw RefundErrorCode.REFUND_NOT_FOUND.toNotFoundException();
+        }
+        return refund;
     }
 }

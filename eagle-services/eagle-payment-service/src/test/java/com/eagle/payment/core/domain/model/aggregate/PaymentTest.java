@@ -19,10 +19,11 @@ class PaymentTest {
 
     private static final String BIZ_ORDER_NO = "ORD-001";
     private static final BigDecimal AMOUNT = new BigDecimal("99.00");
+    private static final Long USER_ID = 100086L;
 
     private Payment createPayment() {
         return Payment.create(BIZ_ORDER_NO, PaymentChannel.ALIPAY, PaymentScene.PC_WEB,
-                AMOUNT, "CNY", "Subject", "u1",
+                AMOUNT, "CNY", "Subject", USER_ID,
                 LocalDateTime.now().plusMinutes(30));
     }
 
@@ -42,7 +43,7 @@ class PaymentTest {
         @DisplayName("金额 <= 0 应抛 DomainException")
         void shouldRejectInvalidAmount() {
             assertThatThrownBy(() -> Payment.create(BIZ_ORDER_NO, PaymentChannel.ALIPAY,
-                    PaymentScene.PC_WEB, BigDecimal.ZERO, "CNY", "subj", null,
+                    PaymentScene.PC_WEB, BigDecimal.ZERO, "CNY", "subj", USER_ID,
                     LocalDateTime.now().plusMinutes(30)))
                     .isInstanceOf(DomainException.class);
         }

@@ -23,7 +23,6 @@ public record GatewayPayCommand(
         BigDecimal amount,
         String currency,
         String subject,
-        @Nullable String userId,
         LocalDateTime expiresAt,
         @Nullable String clientIp,
         @Nullable String returnUrl,

@@ -54,11 +54,6 @@ public class CreatePaymentRequest {
             example = "Eagle 平台月度会员")
     private String subject;
 
-    @Size(max = 64)
-    @Schema(description = "下单用户 ID", example = "u100086")
-    @Nullable
-    private String userId;
-
     @Schema(description = "客户端 IP (微信 H5 必填)", example = "203.0.113.10")
     @Nullable
     private String clientIp;

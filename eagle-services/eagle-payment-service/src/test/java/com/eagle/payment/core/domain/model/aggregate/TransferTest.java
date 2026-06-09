@@ -17,8 +17,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayName("Transfer 聚合根状态机")
 class TransferTest {
 
+    private static final Long USER_ID = 100086L;
+
     private Transfer create() {
-        return Transfer.create("TRN-001", TransferMode.IMMEDIATE, PaymentChannel.ALIPAY,
+        return Transfer.create(USER_ID, "TRN-001", TransferMode.IMMEDIATE, PaymentChannel.ALIPAY,
                 "user@example.com", "张三", new BigDecimal("500.00"), "月度结算");
     }
 
@@ -35,7 +37,7 @@ class TransferTest {
         @Test
         @DisplayName("金额 <= 0 应抛 DomainException")
         void shouldRejectInvalidAmount() {
-            assertThatThrownBy(() -> Transfer.create("TRN-001", TransferMode.IMMEDIATE,
+            assertThatThrownBy(() -> Transfer.create(USER_ID, "TRN-001", TransferMode.IMMEDIATE,
                     PaymentChannel.ALIPAY, "user", null, BigDecimal.ZERO, null))
                     .isInstanceOf(DomainException.class);
         }
@@ -43,7 +45,7 @@ class TransferTest {
         @Test
         @DisplayName("IMMEDIATE 模式初始状态应为 PENDING")
         void shouldStartAtPendingForImmediate() {
-            Transfer t = Transfer.create("TRN-001", TransferMode.IMMEDIATE,
+            Transfer t = Transfer.create(USER_ID, "TRN-001", TransferMode.IMMEDIATE,
                     PaymentChannel.ALIPAY, "user@example.com", "张三",
                     new BigDecimal("500.00"), "月度结算");
             assertThat(t.getStatus()).isEqualTo(TransferStatus.PENDING);
@@ -53,7 +55,7 @@ class TransferTest {
         @Test
         @DisplayName("APPROVAL 模式初始状态应为 PENDING_APPROVAL")
         void shouldStartAtPendingApprovalForApproval() {
-            Transfer t = Transfer.create("TRN-001", TransferMode.APPROVAL,
+            Transfer t = Transfer.create(USER_ID, "TRN-001", TransferMode.APPROVAL,
                     PaymentChannel.ALIPAY, "user@example.com", "张三",
                     new BigDecimal("500.00"), "月度结算");
             assertThat(t.getStatus()).isEqualTo(TransferStatus.PENDING_APPROVAL);
@@ -143,7 +145,7 @@ class TransferTest {
         @Test
         @DisplayName("APPROVAL 模式 PENDING_APPROVAL → PENDING + 记录 approverId/approvedAt")
         void shouldTransitionToPendingAndRecordApprover() {
-            Transfer t = Transfer.create("TRN-001", TransferMode.APPROVAL,
+            Transfer t = Transfer.create(USER_ID, "TRN-001", TransferMode.APPROVAL,
                     PaymentChannel.ALIPAY, "user@example.com", "张三",
                     new BigDecimal("500.00"), "结算");
 
@@ -157,7 +159,7 @@ class TransferTest {
         @Test
         @DisplayName("IMMEDIATE 模式 approve 抛 NOT_APPROVAL_MODE")
         void shouldRejectApproveOnImmediate() {
-            Transfer t = Transfer.create("TRN-001", TransferMode.IMMEDIATE,
+            Transfer t = Transfer.create(USER_ID, "TRN-001", TransferMode.IMMEDIATE,
                     PaymentChannel.ALIPAY, "user@example.com", "张三",
                     new BigDecimal("500.00"), "结算");
 
@@ -168,7 +170,7 @@ class TransferTest {
         @Test
         @DisplayName("非 PENDING_APPROVAL 状态 approve 抛 APPROVAL_NOT_ALLOWED_IN_STATUS")
         void shouldRejectApproveWhenStatusNotPendingApproval() {
-            Transfer t = Transfer.create("TRN-001", TransferMode.APPROVAL,
+            Transfer t = Transfer.create(USER_ID, "TRN-001", TransferMode.APPROVAL,
                     PaymentChannel.ALIPAY, "user@example.com", "张三",
                     new BigDecimal("500.00"), "结算");
             t.approve("admin-1");
@@ -185,7 +187,7 @@ class TransferTest {
         @Test
         @DisplayName("APPROVAL 模式 PENDING_APPROVAL → REJECTED + 记录原因")
         void shouldTransitionToRejected() {
-            Transfer t = Transfer.create("TRN-001", TransferMode.APPROVAL,
+            Transfer t = Transfer.create(USER_ID, "TRN-001", TransferMode.APPROVAL,
                     PaymentChannel.ALIPAY, "user@example.com", "张三",
                     new BigDecimal("500.00"), "结算");
 
@@ -200,7 +202,7 @@ class TransferTest {
         @Test
         @DisplayName("非 PENDING_APPROVAL 状态 reject 应抛 DomainException")
         void shouldRejectRejectWhenStatusNotPendingApproval() {
-            Transfer t = Transfer.create("TRN-001", TransferMode.IMMEDIATE,
+            Transfer t = Transfer.create(USER_ID, "TRN-001", TransferMode.IMMEDIATE,
                     PaymentChannel.ALIPAY, "user@example.com", "张三",
                     new BigDecimal("500.00"), "结算");
 
