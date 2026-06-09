@@ -56,7 +56,7 @@ public class InternalPathBlockingGlobalFilter implements GlobalFilter, Ordered {
             "{\"status\":403,\"error\":\"Forbidden\",\"message\":\"internal API not exposed via gateway\"}";
 
     @Override
-    public @NonNull Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+    public @NonNull Mono<Void> filter(ServerWebExchange exchange, @NonNull GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         // 同时拿 decoded path 与 raw path:外部攻击可能用 %2Finternal%2F 形式编码,
         // 部分反代/Tomcat 配置不会自动 decode 到 path,需对原始字符串再做一次 URL 解码后比对。

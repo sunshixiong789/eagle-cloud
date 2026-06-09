@@ -57,7 +57,7 @@ public class OpenApiServersRewriteFilter implements GlobalFilter, Ordered {
     private final ObjectMapper objectMapper;
 
     @Override
-    public @NonNull Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+    public @NonNull Mono<Void> filter(ServerWebExchange exchange, @NonNull GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String alias = extractAlias(request.getPath().value());
         if (alias == null) {

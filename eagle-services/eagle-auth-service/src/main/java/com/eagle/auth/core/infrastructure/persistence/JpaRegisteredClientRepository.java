@@ -132,6 +132,13 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
                     .forEach(builder::redirectUri);
         }
 
+        // OIDC RP-Initiated Logout 回跳 URI 白名单
+        if (entity.getPostLogoutRedirectUris() != null
+                && !entity.getPostLogoutRedirectUris().isBlank()) {
+            parseCommaSeparated(entity.getPostLogoutRedirectUris())
+                    .forEach(builder::postLogoutRedirectUri);
+        }
+
         // 授权范围
         if (entity.getScopes() != null && !entity.getScopes().isBlank()) {
             parseCommaSeparated(entity.getScopes())

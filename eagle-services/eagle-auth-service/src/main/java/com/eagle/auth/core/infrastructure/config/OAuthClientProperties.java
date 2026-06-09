@@ -68,6 +68,14 @@ public class OAuthClientProperties {
     private Set<String> redirectUris = Set.of("http://localhost:8080/auth/auth0/sign-in");
 
     /**
+     * OIDC RP-Initiated Logout 完成后的回跳 URI 白名单。
+     *
+     * <p>前端调用 {@code /connect/logout} 携带的 {@code post_logout_redirect_uri}
+     * 必须命中此集合，否则 Spring Authorization Server 会拒绝请求。</p>
+     */
+    private Set<String> postLogoutRedirectUris = Set.of("http://localhost:8000/logout/callback");
+
+    /**
      * 授权范围
      */
     private Set<String> scopes = Set.of("openid", "profile", "email", "address", "phone");
