@@ -1,6 +1,6 @@
 package com.eagle.system.base.interfaces.controller;
 
-import com.eagle.common.constant.SecurityConstants;
+import com.eagle.common.dto.EagleUser;
 import com.eagle.system.base.application.service.UserApplicationService;
 import com.eagle.system.base.interfaces.dto.request.AssignRolesRequest;
 import com.eagle.system.base.interfaces.dto.request.UpdateProfileRequest;
@@ -20,7 +20,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -56,9 +55,8 @@ public class UserController {
      */
     @Operation(summary = "查询当前用户详情", description = "返回当前登录用户的档案信息")
     @GetMapping("/me")
-    public UserResponse getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
-        Long accountId = jwt.getClaim(SecurityConstants.DETAILS_USER_ID);
-        return userApplicationService.getCurrentUserByAccountId(accountId);
+    public UserResponse getCurrentUser(@AuthenticationPrincipal EagleUser principal) {
+        return userApplicationService.getCurrentUserByAccountId(principal.getId());
     }
 
     /**
@@ -66,10 +64,9 @@ public class UserController {
      */
     @Operation(summary = "更新当前用户档案", description = "更新当前登录用户的基本信息")
     @PutMapping("/me")
-    public UserResponse updateCurrentUser(@AuthenticationPrincipal Jwt jwt,
+    public UserResponse updateCurrentUser(@AuthenticationPrincipal EagleUser principal,
                                           @Valid @RequestBody UpdateProfileRequest request) {
-        Long accountId = jwt.getClaim(SecurityConstants.DETAILS_USER_ID);
-        return userApplicationService.updateCurrentUserByAccountId(accountId, request);
+        return userApplicationService.updateCurrentUserByAccountId(principal.getId(), request);
     }
 
     /**
