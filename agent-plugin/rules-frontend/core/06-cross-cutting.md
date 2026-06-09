@@ -70,14 +70,24 @@ configureHttp({
 });
 ```
 
-## 主题切换
+## 主题切换（分工）
 
-- **不双写**：组件不要既写 `className="bg-surface"` 又写 `style={{ backgroundColor: theme.surface }}`
-- **className 优先**：主题色用 className + `dark:` 配对（Web Tailwind / NativeWind 都支持）
-- **`theme.X` 只用于 RN 原生 prop**：`<Icon color={theme.X}>`、`<TextInput placeholderTextColor={theme.X}>`、`<LinearGradient colors={[...]}>` 这种没法用 className 的场景
-- **切换 API 必须用原始 mode**：`'system' | 'light' | 'dark'`，不传 resolved 后的 `'light'` / `'dark'`（否则会持久锁死 Appearance）
+| 层 | 职责 |
+|---|---|
+| **`@shared/stores/theme.store.ts`** | 保存当前 mode（`'system' \| 'light' \| 'dark'`）+ persist |
+| **`@providers/ThemeProvider.tsx`** | 订阅 store + 调用平台主题 API（UI 库 ConfigProvider / `nwColorScheme.set()` / Taro page-meta） |
+| **业务 Component** | 通过 className `dark:` 配对响应；**不直接**读 `useThemeStore` |
 
-详见 `platforms/<x>/03-styling.md`。
+通用红线：
+
+- **`mode` 必须保存原始三态**（`system / light / dark`），**禁止**保存 resolved 后的 `light / dark`——`system` 才能跟随 OS
+- **不双写**：组件不要既 className `bg-surface` 又 `style={{ backgroundColor: theme.surface }}`
+
+平台特有实现见 `platforms/<x>/03-styling.md`：
+
+- Web：UI 库 `ConfigProvider` 接 token（antd / Arco）
+- RN：`nwColorScheme.set(mode)`（NativeWind）
+- Taro：H5 端 `dark:` className；小程序原生端 `page-meta theme="dark"` 属性 + 系统暗色感知 API
 
 ## 副作用
 

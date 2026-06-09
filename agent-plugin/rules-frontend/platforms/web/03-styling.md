@@ -113,7 +113,7 @@ export function ThemeProvider({ children }: PropsWithChildren) {
 }
 ```
 
-业务 Component **不直接读 `mode`**——通过 `useStyles()` 中 `token` 已经响应主题切换。
+> 业务 Component 不读 `mode`——通过 `useStyles()` 中 `token` 自动响应（通用规则见 `core/06-cross-cutting.md` 主题切换分工）。
 
 ## 禁止清单
 

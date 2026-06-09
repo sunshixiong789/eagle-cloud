@@ -186,10 +186,23 @@ for (const file of files) {
   // const crossFeatureDeep = /from ['"]@\/features\/([^'"/]+)\/[^'"]+['"]/g;
   // ...
 
-  // 3. shared/api/http.ts 反向依赖 features
+  // 3. shared/api/http.ts 反向依赖 features / providers / app
   if (file.endsWith('shared/api/http.ts')) {
-    if (/from ['"]@\/?features\//.test(code) || /from ['"]@\/?features\//.test(code)) {
-      console.error(`${file}: shared/api/http.ts 禁止 import @features/* (依赖反转)`);
+    if (/from ['"]@\/?features\//.test(code)) {
+      console.error(`${file}: shared/api/http.ts 禁止 runtime-import @features/* (依赖反转，用 configureHttp)`);
+      errors++;
+    }
+    if (/from ['"]@\/?(providers|app)\//.test(code)) {
+      console.error(`${file}: shared/api/http.ts 禁止 import @providers/* 或 @app/* (依赖反转)`);
+      errors++;
+    }
+  }
+
+  // 4. Service / API 文件不能 import React 运行时
+  if (/\/api\/[^/]+\.api\.ts$/.test(file)) {
+    if (/^import\s+\{[^}]*\bReact\b[^}]*\}\s+from\s+['"]react['"]/m.test(code)
+        || /^import\s+React\b/m.test(code)) {
+      console.error(`${file}: API 文件禁止 runtime-import React（仅允许 import type）`);
       errors++;
     }
   }

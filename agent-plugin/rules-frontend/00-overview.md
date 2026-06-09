@@ -15,11 +15,28 @@
 
 ## 三条平台轨
 
-| 平台轨 | 适用 | 关键栈 |
-|---|---|---|
-| **Web** (`platforms/web/`) | 浏览器 SPA / 后台管理系统 | Vite 或 Webpack 5 / React / React Router (`useRoutes` + `React.lazy`) / Axios 或 fetch wrapper / Tailwind + CSS-in-JS（antd-style / Emotion）+ CSS Modules / Zustand + React Query |
-| **React Native** (`platforms/react-native/`) | 原生 iOS / Android 应用 | Expo Router 文件式路由 或 React Navigation / NativeWind / fetch wrapper + AbortController + HttpAuthBridge / Zustand persist + React Query |
-| **Taro / 小程序** (`platforms/taro/`) | 微信 / 支付宝 / 字节 / 百度 / QQ / 京东 / 鸿蒙混合 + H5 + RN 同源 | Taro 4 + React + Webpack 5 / 框架文件式路由（`app.config.ts` / `pages/<x>/index.config.ts`） / Tailwind v4 + weapp-tailwindcss / Taro.request 封装 / Zustand + React Query |
+**Web** (`platforms/web/`) —— 浏览器 SPA / 后台管理系统
+
+- 构建：Vite 或 Webpack 5
+- 路由：React Router（`useRoutes` + `React.lazy`）集中声明
+- 样式：Tailwind atoms + CSS-in-JS（antd-style / Emotion）+ CSS Modules
+- 网络：Axios 或 fetch wrapper
+- 状态：Zustand + React Query
+
+**React Native** (`platforms/react-native/`) —— 原生 iOS / Android
+
+- 路由：Expo Router 文件式 或 React Navigation
+- 样式：NativeWind + `theme.X` for native props
+- 网络：fetch wrapper + AbortController + HttpAuthBridge
+- 状态：Zustand + persist + React Query
+
+**Taro / 小程序** (`platforms/taro/`) —— 微信 / 支付宝 / 字节 / 百度 / QQ / 京东 / 鸿蒙混合 + H5 + RN 同源
+
+- 构建：Taro 4 + React + Webpack 5
+- 路由：框架文件式（`app.config.ts` + `pages/<x>/index.config.ts`）
+- 样式：Tailwind v4 + weapp-tailwindcss
+- 网络：Taro.request 封装
+- 状态：Zustand + React Query
 
 差异**只在**目录/路由/样式/原生 API 处。核心结构（feature / shared / providers）、依赖方向、状态边界、类型分层、横切模式**完全一致**——这些写在 `core/`。
 
@@ -37,9 +54,12 @@
 | `core/04-state.md`                         | 状态三分决策树 + 跨 feature invalidation        |
 | `core/05-bounded-context.md`               | 跨 feature 数据流动两条合法路径 + Barrel 策略       |
 | `core/06-cross-cutting.md`                 | 错误 / 加载 / 空态 / 401 / 主题 / 副作用           |
-| `core/07-anti-patterns.md`                 | 反例速查 12 条                               |
+| `core/07-anti-patterns.md`                 | 反例速查 16 条                               |
 | `core/08-red-lines.md`                     | 红线规则（TS / 状态管理 / HTTP-认证 / Bug 修复）     |
 | `core/09-scaling.md`                       | 扩展信号（Scaling Signals）                   |
+| `core/10-i18n.md`                          | 国际化：messages 组织、key 规则、locale 解析       |
+| `core/11-testing.md`                       | 测试金字塔、必测范围、各平台 runner、覆盖率目标       |
+| `core/12-performance.md`                   | 性能预算（bundle / FCP / LCP / 小程序包大小）+ 监控点 |
 
 ### platforms/ — 按项目栈选一套读
 

@@ -108,7 +108,7 @@ export function ThemeProvider({ children }: PropsWithChildren) {
 }
 ```
 
-业务 Component **不直接读 `useThemeStore`**——通过 `dark:` className 已经响应主题切换。
+> 业务 Component 不读 `useThemeStore`——通过 `dark:` className 自动响应（通用规则见 `core/06-cross-cutting.md` 主题切换分工）。
 
 ## 禁止清单
 

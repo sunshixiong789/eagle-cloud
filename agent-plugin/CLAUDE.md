@@ -82,6 +82,9 @@
 | `rules-frontend/core/07-anti-patterns.md`    | 反例速查 16 条                                       |
 | `rules-frontend/core/08-red-lines.md`        | TS / 状态管理 / HTTP-认证 / Bug 修复流程红线                 |
 | `rules-frontend/core/09-scaling.md`          | Scaling Signals                                  |
+| `rules-frontend/core/10-i18n.md`             | 国际化：messages 组织、key 规则、locale 解析             |
+| `rules-frontend/core/11-testing.md`          | 测试金字塔、必测范围、各平台 runner、覆盖率目标            |
+| `rules-frontend/core/12-performance.md`      | 性能预算（bundle / FCP / LCP / 小程序包大小）+ 监控点    |
 | `rules-frontend/platforms/web/*.md`          | Web SPA：目录 / 集中路由 / Tailwind+CSS-in-JS / 新增 feature / `@/*` 别名 |
 | `rules-frontend/platforms/react-native/*.md` | RN/Expo：根 `app/` 目录 / Expo Router / NativeWind / 新增 feature / 完整别名 |
 | `rules-frontend/platforms/taro/*.md`         | Taro 4 多端：`src/pages/` 框架入口 / `app.config.ts` 路由 / Tailwind v4 + weapp-tailwindcss / 新增 feature / 别名双向同步 |

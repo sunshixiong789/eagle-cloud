@@ -64,7 +64,7 @@
 ├── .env.test                         # ✅ test 环境
 ├── .env.production                   # ✅ prod 环境
 ├── project.config.json               # ✅ 小程序项目配置（开发者工具用）
-├── babel.config.js                   # ✅ compiler 必须与 config/index.ts 同步为 'webpack5'
+├── babel.config.js                   # ✅ compiler 必须与 config/index.ts 同步为 'webpack5'（示例见下）
 ├── postcss.config.js                 # ✅ @tailwindcss/postcss 注册
 ├── tailwind.config.js                # 🟡 Tailwind v4 大部分配置已迁移到 app.css
 ├── tsconfig.json                     # ✅ 路径别名（必须与 config/index.ts 双向同步）
@@ -126,6 +126,35 @@ yarn build:<platform>    # 生产构建
 ### 4. 环境变量
 
 业务变量**必须以 `TARO_APP_` 开头**，否则 Taro 不会注入到客户端 bundle。新增任何 `TARO_APP_*` 变量后**必须同步**在 `types/global.d.ts` 的 `NodeJS.ProcessEnv` 里加声明。
+
+### 5. compiler 同步铁律
+
+`config/index.ts` 的 `compiler.type` 与 `babel.config.js` 的 `presets.taro.compiler` **必须一致**——都是 `'webpack5'`。任何一处不同步都会让构建器与 babel 不在同一 transpiler 链上工作。
+
+```js
+// babel.config.js
+module.exports = {
+  presets: [
+    ['taro', {
+      framework: 'react',
+      ts: true,
+      compiler: 'webpack5',     // ← 与 config/index.ts compiler.type 同步
+    }]
+  ]
+};
+```
+
+```ts
+// config/index.ts
+export default defineConfig<'webpack5'>(async (merge, {}) => ({
+  compiler: {
+    type: 'webpack5',            // ← 与 babel.config.js 同步
+    // ...
+  },
+}));
+```
+
+新建 Taro 项目脚手架默认是 `'webpack5'`；除非确认要升级 / 降级，不要单独改一处。
 
 ## 不采用清单
 
