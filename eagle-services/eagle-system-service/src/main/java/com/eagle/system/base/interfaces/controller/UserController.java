@@ -1,7 +1,9 @@
 package com.eagle.system.base.interfaces.controller;
 
+import com.eagle.common.constant.SecurityConstants;
 import com.eagle.system.base.application.service.UserApplicationService;
 import com.eagle.system.base.interfaces.dto.request.AssignRolesRequest;
+import com.eagle.system.base.interfaces.dto.request.UpdateProfileRequest;
 import com.eagle.system.base.interfaces.dto.request.UpdateUserRequest;
 import com.eagle.system.base.interfaces.dto.request.UserQueryRequest;
 import com.eagle.system.base.interfaces.dto.response.AssignedRoleResponse;
@@ -17,6 +19,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -47,6 +51,28 @@ public class UserController {
     private final UserApplicationService userApplicationService;
 
     /**
+     * 查询当前登录用户详情
+     * <p>当前用户由 token 中的 accountId 解析，前端无需传 ID。filter chain 已强制登录。
+     */
+    @Operation(summary = "查询当前用户详情", description = "返回当前登录用户的档案信息")
+    @GetMapping("/me")
+    public UserResponse getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
+        Long accountId = jwt.getClaim(SecurityConstants.DETAILS_USER_ID);
+        return userApplicationService.getCurrentUserByAccountId(accountId);
+    }
+
+    /**
+     * 更新当前登录用户档案
+     */
+    @Operation(summary = "更新当前用户档案", description = "更新当前登录用户的基本信息")
+    @PutMapping("/me")
+    public UserResponse updateCurrentUser(@AuthenticationPrincipal Jwt jwt,
+                                          @Valid @RequestBody UpdateProfileRequest request) {
+        Long accountId = jwt.getClaim(SecurityConstants.DETAILS_USER_ID);
+        return userApplicationService.updateCurrentUserByAccountId(accountId, request);
+    }
+
+    /**
      * 更新用户档案信息
      */
     @Operation(summary = "更新用户档案", description = "更新用户基本信息")
@@ -62,7 +88,7 @@ public class UserController {
      */
     @Operation(summary = "查询用户详情", description = "根据 ID 获取用户详细信息")
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('admin')")
     public UserResponse getUserById(@Parameter(description = "用户ID") @PathVariable Long id) {
         return userApplicationService.getUserById(id);
     }
@@ -119,7 +145,7 @@ public class UserController {
      */
     @Operation(summary = "获取用户已分配角色")
     @GetMapping("/{id}/roles")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('admin')")
     public List<AssignedRoleResponse> getUserRoles(@Parameter(description = "用户ID") @PathVariable Long id) {
         return userApplicationService.getUserRoles(id);
     }
