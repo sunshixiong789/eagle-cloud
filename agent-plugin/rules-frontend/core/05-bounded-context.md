@@ -1,23 +1,22 @@
-# Bounded Context 与 Barrel 策略
+# Slice 边界与 Public API
 
-每个 feature 的 `api / queries / stores / lib / hooks / components` 默认是内部实现，其他 feature 不直接 import。
+每个 `pages / widgets / features / entities` 下的 slice 默认只暴露 public API，内部目录不可被外部深 import。
 
-## 跨 feature 协作
+## 跨 slice 协作
 
 - 可复用且无业务归属：上移 `shared/`。
-- 页面级组合：由 Page/Screen 同时调用多个 feature 的公开 hook/component。
-- 真正业务依赖：抽成明确的公开 API，并在 feature 边界文档化。
+- 页面级组合：由 Page 同时编排多个 feature/entity。
+- 稳定业务对象：下沉到 `entities/<entity>`。
+- 真正需要跨 slice 复用：通过该 slice public API 暴露，并保持 named exports。
 
-禁止为复用一个函数就深 import 对方内部文件。
+## Public API 策略
 
-## Barrel 策略
+- Web：可用 slice 顶层 barrel，跨 slice 只 import 顶层 public API。
+- React Native / Taro：默认禁用 barrel；public API 可用明确文件路径表达，避免 Metro/Taro 解析和 tree-shaking 问题。
+- 禁止 `export *`；只允许 named exports 明确公开能力。
 
-- Web：允许 feature 顶层 barrel，跨 feature 只能 import 顶层 `@/features/<name>`。
-- React Native / Taro：禁用 barrel，避免 Metro/Taro 解析和 tree-shaking 问题。
-- 即使启用 barrel，也禁止 `export *`，只能 named export 明确公开 API。
+## 禁止共享
 
-## 唯一可共享内容
-
-- 公开 component / hook / query key factory / type。
-- 无业务归属的 pure util、design token、基础 UI。
-- 不共享 feature 内部 store、service、私有 hook、私有 component。
+- feature 内部 store、service、私有 hook、私有 component。
+- 为复用一个函数深 import 其他 slice 内部文件。
+- shared 反向依赖 pages / widgets / features / entities。

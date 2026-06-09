@@ -1,81 +1,74 @@
-# 六角色与依赖矩阵（通用）
+# FSD-lite 架构与依赖矩阵
 
-> 适用所有前端项目（Web / React Native / Taro / 小程序）。平台特有的路由实现细节见 `platforms/<x>/02-routing.md`。
+适用 Web / React Native / Taro。参考 Feature-Sliced Design 的分层与 public API 思想，但不是完整照搬 FSD。
+Eagle 前端采用业务优先的 FSD-lite：统一业务边界，平台入口保留差异。
 
-## 核心 6 角色
+原则：先按业务复杂度拆分，再选择层级。不要为了“看起来像 FSD”强制创建 `entities`、`widgets` 或过细 slice。
 
-> 「Page」是统一术语；在 React Native / Taro 项目里习惯叫「Screen」，等价。
+## 统一目录层
 
-| 角色 | 职责 | 可依赖 | **不可依赖** |
-|---|---|---|---|
-| **Route** | 路由声明 + 嵌套 + Guard + URL params 解析。**路由文件 1 行薄壳**，仅 lazy / re-export 业务 Page | Page（仅通过 `React.lazy(() => import(...))` 或 `export { default } from '...'`） | Component、Hook、Query、Service、Store |
-| **Page (Screen)** | 编排 Hook / Query + 拼装 Component；处理 loading / error / empty | Component、Hook、Query、Store selector | 直接调 API/Service；跨 feature 深 import 内部 |
-| **Component** | 受 props 驱动的展示 + 受控交互 | 其他 Component、`@shared/constants/`、design token | Hook（含 `useQuery` / `useMutation`）、API/Service、Store |
-| **Hook / Query** | 数据编排（React Query / Zustand 包装）+ 业务派生计算 + DTO→ViewModel 映射 | API/Service、Store、其他 Hook | 渲染 JSX |
-| **API / Service** | HTTP / WebSocket / IO 封装 + DTO 类型定义 | `@shared/api/http`、`@shared/constants/`、纯函数 | React hook / JSX、其他 feature 内部 |
-| **Provider** | App 启动 wiring（QueryClient 实例、ThemeProvider、AuthProvider、`configureHttp` / `setTokenGetter` 注入） | 任意层（composition root） | — |
-
-## 可选第 7 角色：Infrastructure（Hexagonal Adapter）
-
-**何时启用**：当需要把"外部 IO / 平台原生能力"从业务隔离时。
-
-| 平台 | 必要性 | 典型内容 |
-|---|---|---|
-| Web | 🟡 按需 | analytics 适配、Service Worker、IndexedDB wrapper、WebRTC |
-| React Native | ✅ 推荐 | SecureStore / Keychain、原生桥、push notifications、permissions |
-| Taro / 小程序 | ✅ 推荐 | `wx.*` / `my.*` / `tt.*` 跨端兼容层、`Taro.login` / 支付 / 文件 |
-
-放在 `src/infrastructure/` 下，按用途分子目录（storage / native / analytics / permissions / notifications）。
-
-**Infrastructure 层约束**：
-
-- 只允许依赖平台运行时 API（`Platform`、`NativeModules`、`Appearance`、`window`、`document`、`Taro`、`wx`）
-- **禁止**依赖 React、业务 feature
-- 对外暴露纯函数或类实例，供 `@shared/api/http.ts` 或 feature 通过 Port 注入
-
----
-
-## 依赖方向（严禁反向）
-
-```
-Route ─→ Page ─┬─→ Component
-               ├─→ Hook ─┬─→ Service/API ──→ Infrastructure (可选)
-               └─→ Query └─→ Store ─────→ ↑
-                                          │
-Provider ─────────────────────────────────┘  (启动时注入 token getter / http config)
+```text
+src/
+├── app/                 # app bootstrap, providers, router adapter
+├── pages/               # 页面级编排；RN/Taro 文件可命名 Screen
+├── widgets/             # 可选：跨 feature 的业务 UI 块
+├── features/            # 用户动作 / 业务能力
+├── entities/            # 可选：稳定核心业务实体
+├── shared/              # ui / api / lib / config / i18n / assets
+└── infrastructure/      # 平台能力 adapter
 ```
 
-## 跨层快速校验
+- `providers/` 不作为顶层目录，放在 `src/app/providers/`。
+- `entities/` 和 `widgets/` 按复杂度引入；轻应用可以暂不创建。
+- 架构术语统一叫 Page；RN/Taro 文件名可继续用 `XxxScreen`。
 
-- **Component 顶部**不应出现带 `useQuery` / `useMutation` 的 hook import → 上移到 Page 或包成 `hooks/use-*` / `queries/use-*`
-- **Service / API 文件**顶部不应出现 `import { useXxx } from 'react'` 或带 JSX 的运行时组件
-  - 例外：`import type` 总是允许；平台运行时 API（`Platform`、`window`、`Taro`、`wx`）允许
-- **Store** 不应导入业务 Service（infrastructure-level service 如 `secure-storage` / `local-storage` 允许；type-only import 总是允许）
-- **`@shared/api/http.ts`** 不直接 import 任何 store / router / feature 内部模块。需要 token / tenant 等能力时，由 Provider 在启动期注入（`configureHttp({ getToken })` / `setTokenGetter()`）
+## 平台 Shell
 
-## 依赖反转：HTTP 与 Auth
+- Web：`src/app/router.tsx` 是路由 shell。
+- Expo / React Native：根 `app/` 是 Expo Router shell，不迁到 `src/app/`。
+- Taro：`src/pages/` + `src/app.config.ts` 是 Taro shell。
 
-```ts
-// ❌ 错误：http.ts 顶部 import store 反向依赖
-// shared/api/http.ts
-import { useAuthStore } from '@features/auth/stores/auth.store';
-const token = useAuthStore.getState().token;   // 反向依赖
+Shell 文件只挂载 `src/pages` 或 feature 页面入口，不写业务逻辑。
 
-// ✅ 正确：http.ts 暴露注入接口，Provider 在启动期注入
-// shared/api/http.ts
-interface HttpAuthBridge {
-  getToken: () => string | null;
-  getRefreshToken?: () => string | null;
-  onUnauthorized?: () => void;
-}
-let bridge: HttpAuthBridge = { getToken: () => null };
-export function configureHttp(b: HttpAuthBridge) { bridge = b; }
+## 角色矩阵
 
-// providers/AppProvider.tsx
-configureHttp({
-  getToken: () => useAuthStore.getState().token,
-  onUnauthorized: () => { logout(); router.replace('/login'); },
-});
+| 角色 | 位置 | 职责 | 不可依赖 |
+| --- | --- | --- | --- |
+| Route Shell | 平台入口 | 路由声明、layout、guard、params 透传 | feature 内部 hook/store/api |
+| Page / Screen | `pages/` 或 feature 页面入口 | 编排 query、store、component、loading/error/empty | 直接调底层 HTTP |
+| Widget | `widgets/` | 跨 feature 的业务 UI 组合 | feature 内部私有模块 |
+| Feature | `features/` | 用户动作、业务流程、feature 私有 UI/state/api | 其他 feature 内部 |
+| Entity | `entities/` | 稳定业务对象的模型、展示、基础查询 | feature 业务流程 |
+| Shared | `shared/` | 无业务归属的基础能力 | feature / entity / page |
+| Infrastructure | `infrastructure/` | 平台 IO、storage、native、analytics、payment | React UI、业务 feature |
+
+## 依赖方向
+
+```text
+app -> pages -> widgets -> features -> entities -> shared
+                         -> infrastructure
 ```
 
-**这一条是分层是否"立得住"的试金石**——只要 `shared/` 里没有反向 import `features/`，整个架构的依赖图就是有向无环的。
+- 上层可依赖下层；下层禁止反向依赖上层。
+- 同层 slice 之间不互相深 import，只能通过 public API 或上移 shared/page 编排解决。
+- `shared/api/http.ts` 不直接 import store、router、feature；token、tenant、401 handler 由 `app/providers` 启动期注入。
+
+## Feature 内部角色
+
+Feature 内可按需保留：
+
+```text
+api/ queries/ hooks/ stores/ components/ lib/ types.ts
+```
+
+- API/Service 只处理 DTO 和 IO，不 import React runtime。
+- Query/Hook 负责 DTO -> ViewModel、缓存和业务派生。
+- Component 只渲染 props，不直接请求 API、不导航、不读写 token。
+
+## Infrastructure
+
+- Web：analytics、Service Worker、IndexedDB、WebRTC 等按需启用。
+- RN：SecureStore / Keychain、permissions、push、native bridge。
+- Taro：`Taro.*`、`wx.*`、`my.*`、支付、文件、登录等跨端适配。
+
+Infrastructure 对外暴露纯函数、类实例或 adapter，供 shared/api 或 feature 通过依赖注入使用。

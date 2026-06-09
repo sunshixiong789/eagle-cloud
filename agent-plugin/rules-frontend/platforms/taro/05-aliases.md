@@ -2,9 +2,12 @@
 
 ## 推荐别名
 
+- `@app/*` -> `src/app/*`
+- `@pages/*` -> `src/pages-fsd/*` 或项目约定的业务 Page 层
+- `@widgets/*` -> `src/widgets/*`
 - `@features/*` -> `src/features/*`
+- `@entities/*` -> `src/entities/*`
 - `@shared/*` -> `src/shared/*`
-- `@providers/*` -> `src/providers/*`
 - `@infra/*` -> `src/infrastructure/*`
 
 ## 同步要求
@@ -13,12 +16,12 @@
 
 ## 使用
 
-- feature 内部用相对路径。
-- Taro 禁用 barrel，不 import `@features/order` 顶层。
-- 跨 feature 依赖先评估 shared / Screen 编排；确需依赖时显式到公开约定文件。
+- slice 内部用相对路径。
+- Taro 禁用 barrel，不 import `@features/order` 顶层 barrel。
+- 跨 slice 依赖先评估 shared / entities / Page 编排；确需依赖时显式到公开约定文件。
 
 ## 禁止清单
 
 - alias 只改 TS 不改 Taro webpack。
-- feature 内部绝对路径自引。
+- slice 内部绝对路径自引。
 - Web 式 barrel 策略套到 Taro。
