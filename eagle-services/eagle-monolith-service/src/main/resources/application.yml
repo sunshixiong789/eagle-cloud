@@ -52,7 +52,7 @@ eagle:
       client-authentication-methods: ${EAGLE_OAUTH_WEB_CLIENT_AUTH_METHODS:none}
       authorization-grant-types: ${EAGLE_OAUTH_WEB_CLIENT_GRANT_TYPES:authorization_code,refresh_token,wechat_mini_program,sms_code,phone_one_click}
       redirect-uris: ${EAGLE_OAUTH_REDIRECT_URIS:http://localhost:8080/auth/oauth2/callback,http://localhost:80/swagger-ui/oauth2-redirect.html,http://localhost:8000/auth/oauth2/callback}
-      post-logout-redirect-uris: ${EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS:http://localhost:8000/logout/callback}
+      post-logout-redirect-uris: ${EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS:http://localhost:8000/auth/oauth2/logout/callback}
       scopes: ${EAGLE_OAUTH_WEB_CLIENT_SCOPES:openid,profile,email,address,phone}
       require-proof-key: ${EAGLE_OAUTH_WEB_CLIENT_REQUIRE_PKCE:true}
       require-authorization-consent: ${EAGLE_OAUTH_WEB_CLIENT_REQUIRE_CONSENT:false}
