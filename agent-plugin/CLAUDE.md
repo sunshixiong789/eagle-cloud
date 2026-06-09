@@ -27,7 +27,11 @@
 
 或一键：`/check-arch`。
 
-## 开发规范（按场景查阅 rules/）
+## 开发规范（按场景查阅）
+
+后端项目查 `rules/`；前端项目查 `rules-frontend/`。
+
+### 后端：`rules/`（Spring Boot 4 + DDD + Modulith）
 
 | 文件                                    | 适用场景                                          |
 |---------------------------------------|-----------------------------------------------|
@@ -61,6 +65,33 @@
 | `rules/28-migration.md`               | Flyway 命名、不可变、回滚                              |
 | `rules/29-event-driven.md`            | 领域事件 vs 集成事件、Saga 编排、Event Sourcing、幂等        |
 | `rules/30-dependency.md`              | Gradle 范围、BOM、CVE                             |
+
+### 前端：`rules-frontend/`（React Web / React Native / Taro 多端）
+
+前端规则采用 **核心通用 + 平台变体** 两层结构。所有前端项目读 `core/`，按项目栈读 `platforms/<x>/`：
+
+| 文件                                           | 适用场景                                            |
+|----------------------------------------------|-------------------------------------------------|
+| `rules-frontend/00-overview.md`              | 总入口：三平台轨说明 + TL;DR + 章节索引                       |
+| `rules-frontend/core/01-architecture.md`     | 六角色与依赖矩阵（Route → Page → Component/Hook → Service）+ 可选 Infrastructure 层 |
+| `rules-frontend/core/02-naming.md`           | 文件/函数/类命名 + Feature 词根公约 + Import 顺序           |
+| `rules-frontend/core/03-types.md`            | 类型三层：DTO / View Model / Component Props        |
+| `rules-frontend/core/04-state.md`            | 状态三分（React Query / Zustand / useState）+ 跨 feature invalidation |
+| `rules-frontend/core/05-bounded-context.md`  | 跨 feature 两条合法路径 + Barrel 平台策略                  |
+| `rules-frontend/core/06-cross-cutting.md`    | 错误 / 加载 / 空态 / 401 / 主题 / 副作用                   |
+| `rules-frontend/core/07-anti-patterns.md`    | 反例速查 16 条                                       |
+| `rules-frontend/core/08-red-lines.md`        | TS / 状态管理 / HTTP-认证 / Bug 修复流程红线                 |
+| `rules-frontend/core/09-scaling.md`          | Scaling Signals                                  |
+| `rules-frontend/platforms/web/*.md`          | Web SPA：目录 / 集中路由 / Tailwind+CSS-in-JS / 新增 feature / `@/*` 别名 |
+| `rules-frontend/platforms/react-native/*.md` | RN/Expo：根 `app/` 目录 / Expo Router / NativeWind / 新增 feature / 完整别名 |
+| `rules-frontend/platforms/taro/*.md`         | Taro 4 多端：`src/pages/` 框架入口 / `app.config.ts` 路由 / Tailwind v4 + weapp-tailwindcss / 新增 feature / 别名双向同步 |
+| `rules-frontend/99-dependency-check.md`      | dependency-cruiser / feature-boundaries / tsc CI 集成（通用） |
+
+**平台轨选择速查**：
+
+- 项目根有 `vite.config.ts` / `webpack.config.js` 但**不是** Taro → 走 `platforms/web/`
+- 项目依赖含 `expo` 或 `@react-navigation` → 走 `platforms/react-native/`
+- 项目依赖含 `@tarojs/taro` → 走 `platforms/taro/`
 
 ## Starter 使用（按需 skill 加载）
 
