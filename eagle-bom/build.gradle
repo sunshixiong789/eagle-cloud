@@ -24,20 +24,20 @@ ext {
     druidVersion = '1.2.28'
 
     // Redis
-    redissonVersion = '4.3.1'
+    redissonVersion = '4.5.0'
 
     // 工具类
-    hutoolVersion = '5.8.43'
+    hutoolVersion = '5.8.46'
     guavaVersion = '33.6.0-jre'
     commonsLang3Version = '3.20.0'
     commonsCollections4Version = '4.5.0'
     commonsIoVersion = '2.21.0'
     uuidCreatorVersion = '6.1.1'
     tsidCreatorVersion = '5.2.6'
-    caffeineVersion = '3.2.3'
+    caffeineVersion = '3.2.4'
 
     // 第三方 SDK
-    wxJavaVersion = '4.8.2-20260420.104332'
+    wxJavaVersion = '4.8.4-20260609.153254'
     aliyunSmsVersion = '4.5.1'
     aliyunDypnsapiVersion = '1.2.3'
     tencentCloudSmsVersion = '3.1.1451'
@@ -46,10 +46,10 @@ ext {
     springdocVersion = '3.0.3'
 
     // 消息中间件
-    rocketMqVersion = '2.3.5'
+    rocketMqVersion = '2.3.6'
     // rocketmq-tools (4.x classic admin client,用于 starter 启动期主动建 topic;
     // 与 broker 镜像版本对齐,5.x minor 版本间 remoting 协议兼容)
-    rocketMqToolsVersion = '5.3.2'
+    rocketMqToolsVersion = '5.5.0'
 
     // 对象存储
     minioVersion = '8.5.17'
@@ -61,10 +61,10 @@ ext {
     seataVersion = '2.6.0'
 
     // 分库分表
-    shardingSphereVersion = '5.5.0'
+    shardingSphereVersion = '5.5.3'
 
     // 容错/熔断
-    resilience4jVersion = '2.2.0'
+    resilience4jVersion = '2.4.0'
 
     // ORM
     mybatisPlusVersion = '3.5.16'
@@ -74,7 +74,7 @@ ext {
     wechatpayVersion = '0.2.17'
 
     // 序列化
-    fastjson2Version = '2.0.61'
+    fastjson2Version = '2.0.62'
 
     // Reactor / Micrometer Context Propagation
     contextPropagationVersion = '1.2.1'
@@ -162,6 +162,8 @@ dependencies {
         // 容错/熔断
         add('api', "io.github.resilience4j:resilience4j-spring-boot3:${resilience4jVersion}")
         add('api', "io.github.resilience4j:resilience4j-micrometer:${resilience4jVersion}")
+        add('api', "io.github.resilience4j:resilience4j-circuitbreaker:${resilience4jVersion}")
+        add('api', "io.github.resilience4j:resilience4j-timelimiter:${resilience4jVersion}")
 
         // MyBatis-Plus
         add('api', "com.baomidou:mybatis-plus-spring-boot4-starter:${mybatisPlusVersion}")
