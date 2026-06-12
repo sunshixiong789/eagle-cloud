@@ -2,6 +2,7 @@ package com.eagle.auth.core.interfaces.controller.internal;
 
 import com.eagle.auth.core.domain.AuthErrorCode;
 import com.eagle.auth.core.domain.model.Account;
+import com.eagle.auth.core.domain.model.enums.AccountStatus;
 import com.eagle.auth.core.domain.repository.AccountRepository;
 import com.eagle.auth.core.infrastructure.config.AdminProperties;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +40,8 @@ public class AccountInternalController {
     public AccountSnapshot findByUsername(@PathVariable String username) {
         Account account = accountRepository.findByUsername(username)
                 .orElseThrow(AuthErrorCode.ACCOUNT_NOT_FOUND::toNotFoundException);
-        return new AccountSnapshot(account.getId(), account.getUsername(), account.getPhone());
+        return new AccountSnapshot(account.getId(), account.getUsername(), account.getPhone(),
+                account.getStatus() == AccountStatus.FROZEN);
     }
 
     /**
@@ -53,7 +55,7 @@ public class AccountInternalController {
         return accountRepository.countByUsernameNot(adminProperties.getUsername());
     }
 
-    /** 内部 Account 快照（仅持久化字段）。 */
-    public record AccountSnapshot(Long accountId, String username, String phone) {
+    /** 内部 Account 快照（仅持久化字段）。{@code locked} = 账号是否冻结（status=FROZEN）。 */
+    public record AccountSnapshot(Long accountId, String username, String phone, boolean locked) {
     }
 }
