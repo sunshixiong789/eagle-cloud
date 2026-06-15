@@ -97,4 +97,5 @@ public void updateProfile(...) {
 
 - **禁止**在业务代码中直接 `new Thread()` 或使用无界线程池
 - 所有 `@Async` 方法统一使用集中配置的 `TaskExecutor` Bean
-- 线程池应配置：合理的核心/最大线程数、有界队列、`CallerRunsPolicy` 拒绝策略、优雅关闭
+- 平台线程池模式应配置：合理的核心/最大线程数、有界队列、`CallerRunsPolicy` 拒绝策略、优雅关闭
+- 虚拟线程模式（`spring.threads.virtual.enabled=true`）：`@Async` 改用虚拟线程执行器，"有界队列"不适用；背压改由 `eagle.async.concurrency-limit` 提供（默认无界，下游有稀缺资源如 DB 连接池时设正数节流）

@@ -25,6 +25,7 @@
 ## 异步与阻塞 IO
 
 - `@Async` 必须使用项目定义的线程池；不要默认落到不可控 executor。
+- 平台线程池用有界队列 + 背压；虚拟线程模式（`spring.threads.virtual.enabled=true`）下 `@Async` 走虚拟线程执行器，背压改用 `eagle.async.concurrency-limit`（默认无界），并据 DB 连接池容量评估是否限流。
 - CPU 密集、阻塞 IO、定时任务、MQ 消费使用隔离线程池。
 - 异步任务必须传递必要的 trace、tenant、安全上下文。
 
