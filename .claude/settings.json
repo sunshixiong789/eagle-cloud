@@ -1,7 +1,6 @@
 {
   "enabledPlugins": {
-    "everything-claude-code@everything-claude-code": true,
-    "superpowers@claude-plugins-official": true,
-    "claude-mem@thedotmack": true
+    "context7@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true
   }
 }
