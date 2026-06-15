@@ -16,8 +16,7 @@ ext {
     springCloudVersion = '2025.1.1'
     springCloudAlibabaVersion = '2025.1.0.0'
     springModulithVersion = '2.0.5'
-    springAiVersion = '2.0.0'    // Spring AI 2.x，兼容 Spring Boot 4.0
-
+    springAiVersion = '2.0.0'
     // 数据库 / 连接池
     mysqlConnectorVersion = '9.7.0'
     postgresqlVersion = '42.7.11'
