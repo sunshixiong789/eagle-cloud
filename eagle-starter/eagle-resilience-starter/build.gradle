@@ -1,8 +1,8 @@
 dependencies {
     api project(':eagle-starter:eagle-common-starter')
 
-    // Resilience4J Spring Boot 3 starter（Spring Boot 4 向后兼容）
-    api 'io.github.resilience4j:resilience4j-spring-boot3'
+    // Resilience4J Spring Boot 4 starter
+    api 'io.github.resilience4j:resilience4j-spring-boot4'
 
     // Micrometer 指标集成（可选，消费方按需引入 micrometer-core）
     compileOnly 'io.github.resilience4j:resilience4j-micrometer'

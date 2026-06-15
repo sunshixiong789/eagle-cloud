@@ -159,7 +159,7 @@ dependencies {
         add('api', "org.apache.shardingsphere:shardingsphere-jdbc:${shardingSphereVersion}")
 
         // 容错/熔断
-        add('api', "io.github.resilience4j:resilience4j-spring-boot3:${resilience4jVersion}")
+        add('api', "io.github.resilience4j:resilience4j-spring-boot4:${resilience4jVersion}")
         add('api', "io.github.resilience4j:resilience4j-micrometer:${resilience4jVersion}")
         add('api', "io.github.resilience4j:resilience4j-circuitbreaker:${resilience4jVersion}")
         add('api', "io.github.resilience4j:resilience4j-timelimiter:${resilience4jVersion}")
