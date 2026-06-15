@@ -41,7 +41,6 @@ include 'eagle-starter:eagle-sentinel-starter'
 include 'eagle-starter:eagle-seata-starter'
 include 'eagle-starter:eagle-elasticsearch-starter'
 include 'eagle-starter:eagle-mybatis-starter'
-include 'eagle-starter:eagle-payment-starter'
 include 'eagle-starter:eagle-websocket-starter'
 
 

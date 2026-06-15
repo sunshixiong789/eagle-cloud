@@ -10,23 +10,36 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.mock.env.MockEnvironment;
 
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SystemLogRecorderTest {
 
     @Mock
     private LogRepository logRepository;
-    @InjectMocks
+
     private SystemLogRecorder recorder;
+
+    @BeforeEach
+    void setUp() {
+        MockEnvironment env = new MockEnvironment();
+        env.setProperty("spring.application.name", "eagle-system-service");
+        recorder = new SystemLogRecorder(logRepository, env);
+    }
 
     @Nested
     @DisplayName("recordAudit")
@@ -63,6 +76,7 @@ class SystemLogRecorderTest {
             assertThat(log.getParams()).isEqualTo("[\"admin\"]");
             assertThat(log.getResult()).isEqualTo("{\"ok\":true}");
             assertThat(log.getTime()).isEqualTo(42L);
+            assertThat(log.getServiceId()).isEqualTo("eagle-system-service");
         }
     }
 
@@ -95,6 +109,51 @@ class SystemLogRecorderTest {
             assertThat(log.getRequestUri()).isEqualTo("/login");
             assertThat(log.getMethod()).isEqualTo("POST");
             assertThat(log.getException()).isEqualTo("Bad credentials");
+            assertThat(log.getEventId()).isEqualTo(event.getEventId());
+            assertThat(log.getServiceId()).isEqualTo("eagle-auth-service");
+        }
+
+        @Test
+        @DisplayName("eventId 已存在时应幂等跳过")
+        void shouldSkipWhenEventAlreadyExists() {
+            AuthLoginMessage event = new AuthLoginMessage();
+            event.setUsername("bob");
+            when(logRepository.existsByEventId(event.getEventId())).thenReturn(true);
+
+            recorder.recordLogin(event);
+
+            verify(logRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("save 唯一约束冲突且 eventId 已存在时应吞掉异常")
+        void shouldSwallowConflictWhenEventIdConflict() {
+            AuthLoginMessage event = new AuthLoginMessage();
+            event.setUsername("bob");
+            when(logRepository.existsByEventId(event.getEventId()))
+                    .thenReturn(false)
+                    .thenReturn(true);
+            when(logRepository.save(any(SysLog.class)))
+                    .thenThrow(new DataIntegrityViolationException("uk_sys_log_event_id"));
+
+            recorder.recordLogin(event);
+
+            verify(logRepository).save(any());
+        }
+
+        @Test
+        @DisplayName("save 唯一约束冲突且非 eventId 冲突时应上抛")
+        void shouldRethrowConflictWhenNotEventIdConflict() {
+            AuthLoginMessage event = new AuthLoginMessage();
+            event.setUsername("bob");
+            when(logRepository.existsByEventId(event.getEventId()))
+                    .thenReturn(false)
+                    .thenReturn(false);
+            when(logRepository.save(any(SysLog.class)))
+                    .thenThrow(new DataIntegrityViolationException("other constraint"));
+
+            assertThatThrownBy(() -> recorder.recordLogin(event))
+                    .isInstanceOf(DataIntegrityViolationException.class);
         }
     }
 }

@@ -28,11 +28,16 @@ import java.util.Set;
  * 与 client 的 {@code require-proof-key} 设置无关（require-proof-key 只影响
  * {@code /oauth2/authorize} 入口的授权码颁发，不影响 {@code /oauth2/token} 客户端认证）。</p>
  *
- * <p>本 Provider 仅接管 {@code sms_code} / {@code wechat_app} / {@code wechat_mini_program} /
- * {@code phone_one_click} 三种自定义 grant_type 的客户端认证：自行校验 client_id 注册、
- * 认证方法、grant_type 白名单，校验通过直接返回已认证的 {@link OAuth2ClientAuthenticationToken}，
- * 跳过 PKCE 检查。其它 grant_type 返回 {@code null}，由内置
- * {@code PublicClientAuthenticationProvider} 继续接管（保留 web 授权码流程的 PKCE 保护）。</p>
+ * <p>本 Provider 接管两类公共客户端认证，均自行校验 client_id 注册与认证方法，校验通过直接返回
+ * 已认证的 {@link OAuth2ClientAuthenticationToken}，跳过 PKCE 检查：</p>
+ * <ul>
+ *   <li>{@code sms_code} / {@code wechat_app} / {@code wechat_mini_program} / {@code phone_one_click}
+ *       四种自定义 grant_type：额外校验 grant_type 白名单；</li>
+ *   <li>{@code /oauth2/revoke}（退出登录）：无 grant_type 但带 {@code token} 参数，不校验 grant 白名单
+ *       （revoke 不是授权类型）。introspect 不在此列。</li>
+ * </ul>
+ * <p>其它情况返回 {@code null}，由内置 {@code PublicClientAuthenticationProvider} 继续接管
+ * （保留 web 授权码流程的 PKCE 保护）。</p>
  *
  * <p>必须在 SAS DSL 中通过 {@code .clientAuthentication(c -> c.authenticationProvider(...))}
  * 注入，DSL 会把它前置到 {@code PublicClientAuthenticationProvider} 之前。</p>
@@ -68,8 +73,14 @@ public class CustomGrantClientAuthenticationProvider implements AuthenticationPr
         Object grantTypeObj = params == null ? null : params.get(OAuth2ParameterNames.GRANT_TYPE);
         String grantType = grantTypeObj == null ? null : grantTypeObj.toString();
 
-        // 非自定义 grant_type 放行给内置 PublicClientAuthenticationProvider 处理 PKCE 校验
-        if (grantType == null || !SUPPORTED_GRANT_TYPES.contains(grantType)) {
+        boolean supportedGrant = grantType != null && SUPPORTED_GRANT_TYPES.contains(grantType);
+        // revoke 端点公共客户端认证：无 grant_type 但带 token 参数
+        // （converter 已按 revocation 端点 URI 限定，introspect 不在此列）。
+        boolean publicClientRevoke = grantType == null
+                && params != null && params.get(OAuth2ParameterNames.TOKEN) != null;
+
+        // 既非自定义 grant_type、也非 revoke：放行给内置 PublicClientAuthenticationProvider 处理 PKCE 校验
+        if (!supportedGrant && !publicClientRevoke) {
             return null;
         }
 
@@ -83,7 +94,9 @@ public class CustomGrantClientAuthenticationProvider implements AuthenticationPr
             throw new OAuth2AuthenticationException(new OAuth2Error(
                     OAuth2ErrorCodes.INVALID_CLIENT, "authentication_method", null));
         }
-        if (!client.getAuthorizationGrantTypes().contains(new AuthorizationGrantType(grantType))) {
+        // grant_type 白名单只校验授权请求；revoke 不是授权类型，跳过 grant 校验。
+        if (supportedGrant
+                && !client.getAuthorizationGrantTypes().contains(new AuthorizationGrantType(grantType))) {
             throw new OAuth2AuthenticationException(new OAuth2Error(
                     OAuth2ErrorCodes.UNAUTHORIZED_CLIENT, "grant_type not allowed: " + grantType, null));
         }

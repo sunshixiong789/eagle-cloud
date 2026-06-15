@@ -75,6 +75,7 @@ public class OAuthClientInitializer implements ApplicationRunner {
                 joinSet(spec.scopes()));
         client.updateClientSettings(spec.requireProofKey(), spec.requireAuthorizationConsent());
         client.updateTokenSettings(spec.accessTokenTtlSeconds(), spec.refreshTokenTtlSeconds());
+        client.updatePostLogoutRedirectUris(joinSet(spec.postLogoutRedirectUris()));
         oAuthClientRepository.save(client);
         log.info("{}客户端初始化成功, clientId: {}", label, spec.clientId());
     }
@@ -117,6 +118,12 @@ public class OAuthClientInitializer implements ApplicationRunner {
             changed = true;
         }
 
+        String configPostLogoutUris = joinSet(spec.postLogoutRedirectUris());
+        if (!equalsNullable(configPostLogoutUris, existing.getPostLogoutRedirectUris())) {
+            existing.updatePostLogoutRedirectUris(configPostLogoutUris);
+            changed = true;
+        }
+
         if (changed) {
             oAuthClientRepository.save(existing);
             log.info("{}客户端配置已同步更新, clientId: {}", label, existing.getClientId());
@@ -148,6 +155,7 @@ public class OAuthClientInitializer implements ApplicationRunner {
             Set<String> clientAuthenticationMethods,
             Set<String> authorizationGrantTypes,
             Set<String> redirectUris,
+            Set<String> postLogoutRedirectUris,
             Set<String> scopes,
             boolean requireProofKey,
             boolean requireAuthorizationConsent,
@@ -158,16 +166,20 @@ public class OAuthClientInitializer implements ApplicationRunner {
             return new ClientSpec(p.isEnabled(), p.getSyncMode(),
                     p.getClientId(), p.getClientName(),
                     p.getClientSecret(), p.getClientAuthenticationMethods(),
-                    p.getAuthorizationGrantTypes(), p.getRedirectUris(), p.getScopes(),
+                    p.getAuthorizationGrantTypes(), p.getRedirectUris(),
+                    p.getPostLogoutRedirectUris(), p.getScopes(),
                     p.isRequireProofKey(), p.isRequireAuthorizationConsent(),
                     p.getAccessTokenTtlSeconds(), p.getRefreshTokenTtlSeconds());
         }
 
+        // App 端走自定义 grant（sms_code / wechat_*）不经过浏览器，无 SSO cookie 需要终结，
+        // 因此不配置 post_logout_redirect_uris；登出由 App 调 /oauth2/revoke + 清本地 SecureStore 完成。
         static ClientSpec ofApp(OAuthAppClientProperties p) {
             return new ClientSpec(p.isEnabled(), p.getSyncMode(),
                     p.getClientId(), p.getClientName(),
                     p.getClientSecret(), p.getClientAuthenticationMethods(),
-                    p.getAuthorizationGrantTypes(), p.getRedirectUris(), p.getScopes(),
+                    p.getAuthorizationGrantTypes(), p.getRedirectUris(),
+                    Set.of(), p.getScopes(),
                     p.isRequireProofKey(), p.isRequireAuthorizationConsent(),
                     p.getAccessTokenTtlSeconds(), p.getRefreshTokenTtlSeconds());
         }

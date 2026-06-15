@@ -2,6 +2,7 @@ package com.eagle.auth.core.infrastructure.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.jspecify.annotations.Nullable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
@@ -29,6 +30,11 @@ import java.util.Set;
  * 即构造 {@link ClientAuthenticationMethod#NONE} 的 {@link OAuth2ClientAuthenticationToken}。
  * 后续 {@code PublicClientAuthenticationProvider} 仍会校验 client_id 是否注册、
  * authentication-methods 是否包含 NONE、以及 grant_type 是否在该 client 的允许清单内。
+ * <p>
+ * 同理, {@code /oauth2/revoke}(退出登录撤销 token)请求不带 grant_type、也不带 PKCE/secret,
+ * 同样会 fallback 到 {@code invalid_client}(中台退出报「无效的 client」)。本转换器按 revocation
+ * 端点 URI + 无凭据识别后,同样构造 NONE 的认证令牌放行。<strong>不</strong>覆盖 introspect 端点,
+ * 避免扩大令牌内省的访问面。
  *
  * @author sunshixiong
  */
@@ -45,11 +51,26 @@ public final class CustomGrantPublicClientAuthenticationConverter implements Aut
             AuthorizationGrantType.REFRESH_TOKEN.getValue()
     );
 
+    /**
+     * token revocation 端点路径（取自 {@code AuthorizationServerSettings}，默认 {@code /oauth2/revoke}）。
+     * <p>revoke 请求不带 {@code grant_type}，无法走上面的 grant_type 白名单；改为按端点 URI 识别。
+     * 故意<strong>不</strong>覆盖 introspection 端点：放开公共客户端 introspection 会扩大令牌内省的访问面，
+     * 而 web 退出登录只需要 revoke。
+     */
+    private final String tokenRevocationEndpoint;
+
+    public CustomGrantPublicClientAuthenticationConverter(String tokenRevocationEndpoint) {
+        this.tokenRevocationEndpoint = tokenRevocationEndpoint;
+    }
+
     @Nullable
     @Override
     public Authentication convert(HttpServletRequest request) {
         String grantType = request.getParameter(OAuth2ParameterNames.GRANT_TYPE);
-        if (grantType == null || !SUPPORTED_GRANT_TYPES.contains(grantType)) {
+        boolean supportedGrant = grantType != null && SUPPORTED_GRANT_TYPES.contains(grantType);
+        // revoke 请求不带 grant_type，无法走 grant_type 白名单：按 revocation 端点 + 无凭据识别后放行。
+        boolean publicClientRevoke = grantType == null && isCredentiallessRevoke(request);
+        if (!supportedGrant && !publicClientRevoke) {
             return null;
         }
 
@@ -73,5 +94,24 @@ public final class CustomGrantPublicClientAuthenticationConverter implements Aut
 
         return new OAuth2ClientAuthenticationToken(clientId, ClientAuthenticationMethod.NONE, null,
                 additionalParameters);
+    }
+
+    /**
+     * 是否为「无 client 凭据的公共客户端 revoke 请求」。
+     * <p>同时满足：命中 revocation 端点、带 {@code token} 参数、且不携带任何 client 凭据
+     * （Basic 头 / {@code client_secret} / {@code client_assertion}）。携带凭据的请求一律返回 false，
+     * 交给 SAS 内置的 secret / JWT-assertion converter，避免误接管机密客户端的 revoke。
+     */
+    private boolean isCredentiallessRevoke(HttpServletRequest request) {
+        String requestUri = request.getRequestURI();
+        if (requestUri == null || !requestUri.endsWith(tokenRevocationEndpoint)) {
+            return false;
+        }
+        if (!StringUtils.hasText(request.getParameter(OAuth2ParameterNames.TOKEN))) {
+            return false;
+        }
+        return !StringUtils.hasText(request.getHeader(HttpHeaders.AUTHORIZATION))
+                && !StringUtils.hasText(request.getParameter(OAuth2ParameterNames.CLIENT_SECRET))
+                && !StringUtils.hasText(request.getParameter(OAuth2ParameterNames.CLIENT_ASSERTION));
     }
 }

@@ -4,6 +4,7 @@ import com.eagle.resource.server.config.EagleJwtAuthenticationConverter;
 import com.eagle.auth.core.infrastructure.security.BlacklistAwareJwtDecoder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -51,7 +52,7 @@ public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer
     private class JwtAuthChannelInterceptor implements ChannelInterceptor {
 
         @Override
-        public Message<?> preSend(Message<?> message, MessageChannel channel) {
+        public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
             StompHeaderAccessor accessor =
                     MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
             if (accessor == null || !StompCommand.CONNECT.equals(accessor.getCommand())) {

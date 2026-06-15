@@ -1,7 +1,10 @@
 dependencies {
     api project(':eagle-starter:eagle-common-starter')
 
-    // Spring AI 核心：ChatClient.Builder 自动配置 + ChatModel/ChatMemory 等抽象
+    // Spring AI 核心：Advisor API（BaseAdvisor/ChatClientRequest/ChatClientResponse 等）
+    // 2.0.0-RC2 中 spring-ai-autoconfigure-model-chat-client 将此声明为 optional，需显式引入
+    api 'org.springframework.ai:spring-ai-client-chat'
+    // ChatClient.Builder 自动配置
     api 'org.springframework.ai:spring-ai-autoconfigure-model-chat-client'
 
     // Micrometer：Token 用量指标（TokenUsageAdvisor 依赖）

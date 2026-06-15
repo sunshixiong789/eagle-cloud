@@ -17,6 +17,7 @@ import com.eagle.system.base.domain.service.RoleValidationService;
 import com.eagle.system.base.infrastructure.config.AdminProperties;
 import com.eagle.system.base.infrastructure.remote.AuthClientFacade;
 import com.eagle.system.base.infrastructure.remote.dto.AccountBlacklistSnapshot;
+import com.eagle.system.base.interfaces.dto.request.UpdateProfileRequest;
 import com.eagle.system.base.interfaces.dto.request.UpdateUserRequest;
 import com.eagle.system.base.interfaces.dto.request.UserQueryRequest;
 import com.eagle.system.base.interfaces.dto.response.AssignedRoleResponse;
@@ -65,23 +66,48 @@ public class UserApplicationService {
     @Transactional(rollbackFor = Exception.class)
     public UserResponse updateUser(Long id, UpdateUserRequest request) {
         User user = findUserById(id);
+        applyProfileFields(user, request.getName(), request.getNickname(),
+                request.getAvatar(), request.getEmail());
+        return userMapper.toResponse(userRepository.save(user));
+    }
 
-        if (request.getNickname() != null || request.getAvatar() != null
-                || request.getName() != null) {
+    /**
+     * 查询当前登录用户详情。
+     * <p>按 token 中的 accountId 定位 system User（个人设置自助场景），
+     * 避免前端传 ID 造成的 accountId/userId 混淆与越权。
+     */
+    @Transactional(readOnly = true)
+    public UserResponse getCurrentUserByAccountId(Long accountId) {
+        return userMapper.toResponse(findUserByAccountId(accountId));
+    }
+
+    /**
+     * 更新当前登录用户档案（按 token 中的 accountId 定位）。
+     */
+    @AuditLog(module = "用户管理", action = "更新个人档案")
+    @Transactional(rollbackFor = Exception.class)
+    public UserResponse updateCurrentUserByAccountId(Long accountId, UpdateProfileRequest request) {
+        User user = findUserByAccountId(accountId);
+        applyProfileFields(user, request.getName(), request.getNickname(),
+                request.getAvatar(), request.getEmail());
+        return userMapper.toResponse(userRepository.save(user));
+    }
+
+    /**
+     * 将档案字段（姓名 / 昵称 / 头像 / 邮箱）应用到用户聚合根；null 字段保持不变。
+     * 由 {@link #updateUser} 与 {@link #updateCurrentUserByAccountId} 共用。
+     */
+    private void applyProfileFields(User user, String name, String nickname,
+                                    String avatar, String email) {
+        if (nickname != null || avatar != null || name != null) {
             UserProfile newProfile = user.getProfile() != null
-                    ? user.getProfile().update(
-                    request.getName(), request.getNickname(), request.getAvatar())
-                    : new UserProfile(
-                    request.getAvatar(), request.getNickname(),
-                    request.getName(), null, null);
+                    ? user.getProfile().update(name, nickname, avatar)
+                    : new UserProfile(avatar, nickname, name, null, null);
             user.updateProfile(newProfile);
         }
-
-        if (request.getEmail() != null) {
-            user.updateContact(request.getEmail());
+        if (email != null) {
+            user.updateContact(email);
         }
-
-        return userMapper.toResponse(userRepository.save(user));
     }
 
     /**
@@ -205,6 +231,11 @@ public class UserApplicationService {
 
     private User findUserById(Long id) {
         return userRepository.findById(id)
+                .orElseThrow(UserErrorCode.USER_NOT_FOUND::toNotFoundException);
+    }
+
+    private User findUserByAccountId(Long accountId) {
+        return userRepository.findByAccountId(accountId)
                 .orElseThrow(UserErrorCode.USER_NOT_FOUND::toNotFoundException);
     }
 

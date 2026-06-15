@@ -15,6 +15,7 @@ import com.eagle.system.base.domain.repository.RoleRepository;
 import com.eagle.system.base.domain.repository.UserRepository;
 import com.eagle.system.base.domain.service.RoleValidationService;
 import com.eagle.system.base.infrastructure.config.AdminProperties;
+import com.eagle.system.base.interfaces.dto.request.UpdateProfileRequest;
 import com.eagle.system.base.interfaces.dto.request.UpdateUserRequest;
 import com.eagle.system.base.interfaces.dto.request.UserQueryRequest;
 import com.eagle.system.base.interfaces.dto.response.AssignedRoleResponse;
@@ -206,6 +207,64 @@ class UserApplicationServiceTest {
             assertEquals(UserErrorCode.ADMIN_USER_PROTECTED, ex.getErrorCode());
             verify(roleValidationService, org.mockito.Mockito.never()).validateRoles(any());
             verify(userRepository, org.mockito.Mockito.never()).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("getCurrentUserByAccountId")
+    class GetCurrentUser {
+        @Test
+        @DisplayName("应按 accountId 返回当前用户")
+        void shouldReturnByAccountId() {
+            User user = sampleUser();
+            UserResponse mapped = UserResponse.builder()
+                    .accountId(ACCOUNT_ID).username("alice").build();
+            when(userRepository.findByAccountId(ACCOUNT_ID)).thenReturn(Optional.of(user));
+            when(userMapper.toResponse(user)).thenReturn(mapped);
+
+            UserResponse res = service.getCurrentUserByAccountId(ACCOUNT_ID);
+
+            assertEquals(ACCOUNT_ID, res.getAccountId());
+        }
+
+        @Test
+        @DisplayName("缺失时应抛出 USER_NOT_FOUND")
+        void shouldThrowWhenMissing() {
+            when(userRepository.findByAccountId(ACCOUNT_ID)).thenReturn(Optional.empty());
+            AppException ex = assertThrows(NotFoundException.class,
+                    () -> service.getCurrentUserByAccountId(ACCOUNT_ID));
+            assertEquals(UserErrorCode.USER_NOT_FOUND, ex.getErrorCode());
+        }
+    }
+
+    @Nested
+    @DisplayName("updateCurrentUserByAccountId")
+    class UpdateCurrentUser {
+        @Test
+        @DisplayName("应按 accountId 更新当前用户档案")
+        void shouldUpdateByAccountId() {
+            User user = sampleUser();
+            when(userRepository.findByAccountId(ACCOUNT_ID)).thenReturn(Optional.of(user));
+            when(userRepository.save(user)).thenReturn(user);
+            when(userMapper.toResponse(user)).thenReturn(UserResponse.builder().build());
+
+            UpdateProfileRequest req = new UpdateProfileRequest();
+            req.setNickname("NewNick");
+            req.setEmail("new@example.com");
+
+            service.updateCurrentUserByAccountId(ACCOUNT_ID, req);
+
+            assertEquals("NewNick", user.getProfile().getNickname());
+            assertEquals("new@example.com", user.getEmail());
+        }
+
+        @Test
+        @DisplayName("缺失时应抛出 USER_NOT_FOUND")
+        void shouldThrowWhenMissing() {
+            when(userRepository.findByAccountId(ACCOUNT_ID)).thenReturn(Optional.empty());
+            AppException ex = assertThrows(NotFoundException.class,
+                    () -> service.updateCurrentUserByAccountId(ACCOUNT_ID, new UpdateProfileRequest()));
+            assertEquals(UserErrorCode.USER_NOT_FOUND, ex.getErrorCode());
         }
     }
 

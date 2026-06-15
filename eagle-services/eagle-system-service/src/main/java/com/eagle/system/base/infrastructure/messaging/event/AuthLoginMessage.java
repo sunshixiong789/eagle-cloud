@@ -13,7 +13,6 @@ import lombok.Setter;
 @NoArgsConstructor
 public class AuthLoginMessage extends BaseEvent {
 
-    private String eventVersion;
     private Long accountId;
     private String username;
     private String ip;

@@ -53,6 +53,10 @@ public class OAuthClient extends BaseAggregateRoot<OAuthClient> {
     @Column(name = "redirect_uris", length = 2000, comment = "重定向 URI，逗号分隔")
     private String redirectUris;
 
+    @Column(name = "post_logout_redirect_uris", length = 2000,
+            comment = "OIDC RP-Initiated Logout 回跳 URI 白名单，逗号分隔")
+    private String postLogoutRedirectUris;
+
     @Column(name = "scopes", nullable = false, length = 1000, comment = "授权范围，逗号分隔")
     private String scopes;
 
@@ -154,6 +158,15 @@ public class OAuthClient extends BaseAggregateRoot<OAuthClient> {
         if (scopes != null) {
             this.scopes = scopes;
         }
+    }
+
+    /**
+     * 更新 OIDC 登出回跳白名单（逗号分隔）。空字符串表示清空白名单。
+     *
+     * @param postLogoutRedirectUris 回跳 URI 白名单
+     */
+    public void updatePostLogoutRedirectUris(String postLogoutRedirectUris) {
+        this.postLogoutRedirectUris = postLogoutRedirectUris;
     }
 
     /**

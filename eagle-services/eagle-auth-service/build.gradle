@@ -43,7 +43,7 @@ dependencies {
     implementation "com.alibaba.fastjson2:fastjson2"
 
     // 本地开发：自动加载 .env 到 Spring Environment
-    runtimeOnly 'me.paulschwarz:spring-dotenv:4.0.0'
+    runtimeOnly 'me.paulschwarz:spring-dotenv:5.1.0'
 
     // Spring Modulith：@ApplicationModule / @Modulithic 注解（编译期可见即可）
     compileOnly 'org.springframework.modulith:spring-modulith-core'

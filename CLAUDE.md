@@ -56,10 +56,12 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 
 ### 可执行服务 (eagle-base-server)
 
-| 服务                     | 说明                                   | 技术栈                                                  |
-|------------------------|--------------------------------------|------------------------------------------------------|
-| `eagle-system-server`  | 系统服务：OAuth2 授权服务器、用户/角色/权限管理、微信/短信登录 | JPA, OAuth2 Auth Server, WebSocket, Nacos, Thymeleaf |
-| `eagle-gateway-server` | API 网关：路由、JWT 鉴权、限流、链路追踪             | Spring Cloud Gateway (WebFlux), Sentinel, Nacos      |
+| 服务                      | 说明                                       | 技术栈                                                  |
+|-------------------------|------------------------------------------|------------------------------------------------------|
+| `eagle-system-service`  | 系统服务：用户/角色/权限/部门/菜单管理、文件、消息、公告                  | JPA, WebSocket, Nacos                                |
+| `eagle-auth-service`    | 认证服务：OAuth2 授权服务器、JWT 签发、微信/短信/手机一键登录    | JPA, OAuth2 Auth Server, Thymeleaf                   |
+| `eagle-payment-service` | 支付服务：Payment/Refund/Transfer/Reconcile 聚合 + 支付宝/微信渠道适配 | JPA, Alipay/WeChatPay V3 SDK, Resilience4J, XXL-JOB  |
+| `eagle-gateway-service` | API 网关：路由、JWT 鉴权、限流、链路追踪                 | Spring Cloud Gateway (WebFlux), Sentinel, Nacos      |
 
 ### Starter 库模块 (eagle-starter)
 
@@ -86,7 +88,6 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 | `eagle-id-generator-starter`       | 分布式 ID 生成（雪花算法 / Leaf 等）                                                                       |
 | `eagle-idempotency-starter`        | 接口幂等性（@Idempotent，Redis SETNX + 唯一约束双重保障）                                                      |
 | `eagle-elasticsearch-starter`      | Elasticsearch 全文检索（Spring Data ES）                                                             |
-| `eagle-payment-starter`            | 支付集成（微信支付 / 支付宝）                                                                               |
 | `eagle-websocket-starter`          | WebSocket 实时通信（STOMP + SockJS）                                                                 |
 | `eagle-sharding-starter`           | 分库分表（Apache ShardingSphere 5.5.0，YAML 驱动）                                                      |
 | `eagle-excel-starter`              | Excel 导入导出（Apache POI，@ExcelColumn，大数据流式写入）                                                    |

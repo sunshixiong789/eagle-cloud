@@ -27,7 +27,8 @@ import lombok.NoArgsConstructor;
 @Table(name = "sys_log", comment = "系统日志表", indexes = {
         @Index(name = "idx_log_type", columnList = "log_type"),
         @Index(name = "idx_create_time", columnList = "create_time"),
-        @Index(name = "idx_user_id", columnList = "user_id")
+        @Index(name = "idx_user_id", columnList = "user_id"),
+        @Index(name = "uk_sys_log_event_id", columnList = "event_id", unique = true)
 })
 @NoArgsConstructor
 public class SysLog extends BaseEntity {
@@ -86,10 +87,14 @@ public class SysLog extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private LogStatus status;
 
+    @Size(max = 64, message = "事件ID长度不能超过64个字符")
+    @Column(name = "event_id", length = 64, comment = "事件ID(MQ 幂等键)")
+    private String eventId;
+
     private SysLog(LogType logType, String title, Long userId, String username,
                    String remoteAddr, String userAgent, String requestUri, String method,
                    String params, String result, Long time, String exception,
-                   String serviceId, LogStatus status) {
+                   String serviceId, LogStatus status, String eventId) {
         this.logType = logType;
         this.title = title;
         this.userId = userId;
@@ -104,32 +109,52 @@ public class SysLog extends BaseEntity {
         this.exception = exception;
         this.serviceId = serviceId;
         this.status = status;
+        this.eventId = eventId;
     }
 
     /**
-     * 创建系统日志记录。
+     * 创建业务操作日志记录(来自审计切面)。
      *
-     * @param logType    日志类型
      * @param title      日志标题
-     * @param userId     用户 ID
-     * @param username   用户名
+     * @param userId     操作员 ID
+     * @param username   操作员名
      * @param remoteAddr 客户端 IP
      * @param userAgent  User-Agent
-     * @param requestUri 请求路径
-     * @param method     请求方法
      * @param params     请求参数
      * @param result     响应结果
-     * @param time       耗时
+     * @param costMs     耗时毫秒
      * @param exception  异常信息
      * @param serviceId  服务 ID
      * @param status     日志状态
-     * @return 系统日志实体
+     * @return 操作日志实体
      */
-    public static SysLog create(LogType logType, String title, Long userId, String username,
-                                String remoteAddr, String userAgent, String requestUri,
-                                String method, String params, String result, Long time,
-                                String exception, String serviceId, LogStatus status) {
-        return new SysLog(logType, title, userId, username, remoteAddr, userAgent, requestUri,
-                method, params, result, time, exception, serviceId, status);
+    public static SysLog createOperationLog(String title, Long userId, String username,
+                                            String remoteAddr, String userAgent,
+                                            String params, String result, Long costMs,
+                                            String exception, String serviceId,
+                                            LogStatus status) {
+        return new SysLog(LogType.OPERATION, title, userId, username, remoteAddr, userAgent,
+                null, null, params, result, costMs, exception, serviceId, status, null);
+    }
+
+    /**
+     * 创建登录日志记录(来自 auth-service MQ 事件)。
+     *
+     * @param title      日志标题
+     * @param eventId    MQ 事件 ID(用于幂等去重,DB 唯一约束)
+     * @param userId     账户 ID
+     * @param username   用户名
+     * @param remoteAddr 客户端 IP
+     * @param userAgent  User-Agent
+     * @param exception  失败原因
+     * @param serviceId  事件源服务 ID
+     * @param status     日志状态
+     * @return 登录日志实体
+     */
+    public static SysLog createLoginLog(String title, String eventId, Long userId, String username,
+                                        String remoteAddr, String userAgent, String exception,
+                                        String serviceId, LogStatus status) {
+        return new SysLog(LogType.LOGIN, title, userId, username, remoteAddr, userAgent,
+                "/login", "POST", null, null, null, exception, serviceId, status, eventId);
     }
 }
