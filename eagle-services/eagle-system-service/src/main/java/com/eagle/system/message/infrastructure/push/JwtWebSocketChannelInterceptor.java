@@ -11,6 +11,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
+import org.springframework.security.oauth2.jwt.JwtValidationException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -60,6 +61,11 @@ public class JwtWebSocketChannelInterceptor extends WebSocketChannelInterceptor 
         try {
             jwt = jwtDecoder.decode(raw);
         } catch (JwtException ex) {
+            if (isExpiredJwt(ex)) {
+                log.debug("[WebSocket] STOMP CONNECT JWT 已过期, sessionId={}, reason={}",
+                        accessor.getSessionId(), ex.getMessage());
+                throw new BadCredentialsException("STOMP CONNECT JWT 已过期", ex);
+            }
             log.warn("[WebSocket] STOMP CONNECT JWT 校验失败, sessionId={}, reason={}",
                     accessor.getSessionId(), ex.getMessage());
             throw new BadCredentialsException("STOMP CONNECT JWT 校验失败", ex);
@@ -78,5 +84,17 @@ public class JwtWebSocketChannelInterceptor extends WebSocketChannelInterceptor 
 
         log.debug("[WebSocket] STOMP CONNECT 认证通过, sessionId={}, userId={}",
                 accessor.getSessionId(), userId);
+    }
+
+    private boolean isExpiredJwt(JwtException ex) {
+        if (ex instanceof JwtValidationException validationException) {
+            return validationException.getErrors().stream()
+                    .anyMatch(error -> containsExpiredMessage(error.getDescription()));
+        }
+        return containsExpiredMessage(ex.getMessage());
+    }
+
+    private boolean containsExpiredMessage(String message) {
+        return message != null && message.contains("Jwt expired");
     }
 }
