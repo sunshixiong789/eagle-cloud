@@ -108,8 +108,13 @@ public class OrderController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
     public List<OrderResponse> mine() {
-        Long userId = SecurityUtils.getCurrentUserId();
-        return orderService.findByUserId(userId);
+        EagleUser user = SecurityUtils.getCurrentUser();
+        return orderService.findByUserId(user.getId());
+    }
+
+    @GetMapping("/profile")
+    public UserProfileResponse profile(@AuthenticationPrincipal EagleUser principal) {
+        return userProfileService.findByUserId(principal.getId());
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -139,6 +144,11 @@ EagleUser user = SecurityUtils.getCurrentUser();
 String name = user.getName();
 Long deptId = user.getDeptId();
 ```
+
+> 当前用户信息统一从 `SecurityUtils.getCurrentUser()` 获取；只需要用户 ID 时可用
+> `SecurityUtils.getCurrentUserId()`。Controller 参数注入时使用
+> `@AuthenticationPrincipal EagleUser principal`。不要用 `@AuthenticationPrincipal Jwt jwt`
+> 读取 `subject` / claims 作为业务用户信息，因为 starter 的 principal 是 `EagleUser`。
 
 ## 自定义 SecurityFilterChain
 
@@ -177,6 +187,8 @@ JWT 解码走 `spring.security.oauth2.resourceserver.jwt.issuer-uri` 或 `jwk-se
 - ❌ `issuer-uri: 172.27.0.155:8081`(裸 host:port) → ✅ 必须带 scheme:`http://172.27.0.155:8081`
 - ❌ Controller 漏 `@PreAuthorize` → ✅ 必须显式声明
 - ❌ 自己 `request.getHeader("Authorization")` 解析 → ✅ `SecurityUtils.getCurrentUser()`
+- ❌ `@AuthenticationPrincipal Jwt jwt` 取当前用户 → ✅ `SecurityUtils.getCurrentUser()` 或
+  `@AuthenticationPrincipal EagleUser principal`
 - ❌ Token 放 URL → ✅ 仅 `Authorization: Bearer xxx`
 - ❌ Feign 调用 Token 不透传 → ✅ 引入 `eagle-restclient-starter`
 - ❌ 配置写 `eagle.security.oauth2.resource-server.*` → ✅ 真实是 **`eagle.resource-server.*`**
