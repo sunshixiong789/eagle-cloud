@@ -12,18 +12,33 @@
 ## JWT / Token 处理
 
 ```java
-// ✅ 从 SecurityContext 取当前用户
+// ✅ 从 SecurityContext 取当前用户对象
 @GetMapping("/me")
-public UserResponse currentUser(@AuthenticationPrincipal Jwt jwt) {
-    Long userId = jwt.getClaim("user_id");
-    return userQueryService.findById(userId);
+public UserResponse currentUser() {
+    EagleUser user = SecurityUtils.getCurrentUser();
+    return userQueryService.findById(user.getId());
+}
+
+// ✅ Controller 参数注入当前用户对象
+@GetMapping("/me")
+public UserResponse currentUser(@AuthenticationPrincipal EagleUser principal) {
+    return userQueryService.findById(principal.getId());
 }
 
 // ❌ 禁止：自己解码 Token
 String token = request.getHeader("Authorization").substring(7);
 Claims claims = Jwts.parser().parseClaimsJws(token).getBody();
+
+// ❌ 禁止：用 Jwt 作为业务用户 principal
+public UserResponse currentUser(@AuthenticationPrincipal Jwt jwt) { ... }
 ```
 
+- `eagle-resource-server-starter` 会把 JWT 转成以 `EagleUser` 为 principal 的 `EagleAuthentication`。
+  业务代码需要当前用户信息时,统一使用 `SecurityUtils.getCurrentUser()`（只要 ID 可用
+  `SecurityUtils.getCurrentUserId()`）,或在 Controller 方法参数中注入
+  `@AuthenticationPrincipal EagleUser principal`。
+- 禁止在业务 Controller 中使用 `@AuthenticationPrincipal Jwt jwt` 读取 `subject` / claims 作为当前用户信息；
+  该写法绕过了 starter 的 `EagleUser` 抽象,且在当前配置下可能拿到 `null` principal。
 - Access Token 默认 30 分钟，Refresh Token 默认 7 天，由授权服务器统一签发
 - Token 仅签名，不加密；**禁止**在 Token 中携带敏感信息（密码、身份证、手机号明文）
 - Token 失效需立即从 Redis 撤销表（`eagle:auth:revoked:{jti}`）写入
