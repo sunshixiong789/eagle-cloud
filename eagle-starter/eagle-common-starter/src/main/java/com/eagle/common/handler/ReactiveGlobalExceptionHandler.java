@@ -69,15 +69,15 @@ public class ReactiveGlobalExceptionHandler implements WebExceptionHandler, Orde
         if (ex instanceof NotFoundException notFoundException) {
             result = appError(HttpStatus.NOT_FOUND, notFoundException, path, locale);
             log.warn("Resource not found [{}]: {}", notFoundException.getErrorCode().getCode(),
-                    result.getMessage());
+                    result.getMessage(), ex);
         } else if (ex instanceof ConflictException conflictException) {
             result = appError(HttpStatus.CONFLICT, conflictException, path, locale);
             log.warn("Resource conflict [{}]: {}", conflictException.getErrorCode().getCode(),
-                    result.getMessage());
+                    result.getMessage(), ex);
         } else if (ex instanceof DomainException domainException) {
             result = appError(HttpStatus.BAD_REQUEST, domainException, path, locale);
             log.warn("Domain exception [{}]: {}", domainException.getErrorCode().getCode(),
-                    result.getMessage());
+                    result.getMessage(), ex);
         } else if (ex instanceof ServiceException serviceException) {
             result = appError(HttpStatus.INTERNAL_SERVER_ERROR, serviceException, path, locale);
             log.error("Service exception [{}]: {}", serviceException.getErrorCode().getCode(),
@@ -90,7 +90,7 @@ public class ReactiveGlobalExceptionHandler implements WebExceptionHandler, Orde
             result = ErrorResult.of(HttpStatus.BAD_REQUEST, message, path);
         } else if (ex instanceof IllegalArgumentException || ex instanceof IllegalStateException) {
             String message = resolveMessage(ex.getMessage(), locale);
-            log.warn("Bad request: {}", message);
+            log.warn("Bad request: {}", message, ex);
             result = ErrorResult.of(HttpStatus.BAD_REQUEST, message, path);
         } else if (ACCESS_DENIED_EXCEPTION.equals(ex.getClass().getName())) {
             String message = resolveMessage("error.common.forbidden", locale);

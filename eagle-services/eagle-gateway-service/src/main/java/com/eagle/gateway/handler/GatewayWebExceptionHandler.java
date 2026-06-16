@@ -51,7 +51,7 @@ public class GatewayWebExceptionHandler implements WebExceptionHandler {
         String path = exchange.getRequest().getURI().getPath();
 
         if (status.is5xxServerError()) {
-            log.error("Gateway error [{} {}]: {}", status.value(), path, ex.getMessage());
+            log.error("Gateway error [{} {}]: {}", status.value(), path, ex.getMessage(), ex);
         } else {
             log.warn("Gateway error [{} {}]: {}", status.value(), path, ex.getMessage());
         }

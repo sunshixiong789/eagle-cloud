@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
     public ErrorResult handleNotFoundException(NotFoundException e,
                                                HttpServletRequest request, Locale locale) {
         String msg = e.getLocalizedMessage(messageSource, locale);
-        log.warn("资源不存在 [{}]: {}", e.getErrorCode().getCode(), msg);
+        log.warn("资源不存在 [{}]: {}", e.getErrorCode().getCode(), msg, e);
         return ErrorResult.of(HttpStatus.NOT_FOUND, msg, e.getErrorCode().getCode(), request.getRequestURI());
     }
 
@@ -60,7 +60,7 @@ public class GlobalExceptionHandler {
     public ErrorResult handleConflictException(ConflictException e,
                                                HttpServletRequest request, Locale locale) {
         String msg = e.getLocalizedMessage(messageSource, locale);
-        log.warn("资源冲突 [{}]: {}", e.getErrorCode().getCode(), msg);
+        log.warn("资源冲突 [{}]: {}", e.getErrorCode().getCode(), msg, e);
         return ErrorResult.of(HttpStatus.CONFLICT, msg, e.getErrorCode().getCode(), request.getRequestURI());
     }
 
@@ -73,7 +73,7 @@ public class GlobalExceptionHandler {
     public ErrorResult handleDomainException(DomainException e,
                                              HttpServletRequest request, Locale locale) {
         String msg = e.getLocalizedMessage(messageSource, locale);
-        log.warn("领域异常 [{}]: {}", e.getErrorCode().getCode(), msg);
+        log.warn("领域异常 [{}]: {}", e.getErrorCode().getCode(), msg, e);
         return ErrorResult.of(HttpStatus.BAD_REQUEST, msg, e.getErrorCode().getCode(), request.getRequestURI());
     }
 
@@ -116,7 +116,7 @@ public class GlobalExceptionHandler {
     public ErrorResult handleIllegalArgument(IllegalArgumentException e,
                                              HttpServletRequest request, Locale locale) {
         String message = resolveMessage(e.getMessage(), locale);
-        log.warn("非法参数：{}", message);
+        log.warn("非法参数：{}", message, e);
         return ErrorResult.of(HttpStatus.BAD_REQUEST, message, request.getRequestURI());
     }
 
@@ -129,7 +129,7 @@ public class GlobalExceptionHandler {
     public ErrorResult handleIllegalState(IllegalStateException e,
                                           HttpServletRequest request, Locale locale) {
         String message = resolveMessage(e.getMessage(), locale);
-        log.warn("非法状态：{}", message);
+        log.warn("非法状态：{}", message, e);
         return ErrorResult.of(HttpStatus.BAD_REQUEST, message, request.getRequestURI());
     }
 
