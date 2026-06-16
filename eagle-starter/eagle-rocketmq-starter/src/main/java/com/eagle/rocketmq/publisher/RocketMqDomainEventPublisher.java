@@ -2,15 +2,16 @@ package com.eagle.rocketmq.publisher;
 
 import com.alibaba.fastjson2.JSON;
 import com.eagle.common.event.BaseEvent;
+import com.eagle.rocketmq.admin.RocketMqTopicAdmin;
 import com.eagle.rocketmq.exception.RocketMqErrorCode;
 import com.eagle.rocketmq.properties.RocketMqProperties;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
 import org.apache.rocketmq.client.apis.ClientException;
 import org.apache.rocketmq.client.apis.ClientServiceProvider;
 import org.apache.rocketmq.client.apis.message.Message;
 import org.apache.rocketmq.client.apis.producer.Producer;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 
@@ -26,13 +27,23 @@ import java.util.concurrent.CompletableFuture;
  * @author eagle
  */
 @Slf4j
-@RequiredArgsConstructor
 public class RocketMqDomainEventPublisher implements DomainEventPublisher, InitializingBean, DisposableBean {
 
     private final RocketMqProperties properties;
+    private final @Nullable RocketMqTopicAdmin topicAdmin;
 
     private ClientServiceProvider provider;
     private Producer producer;
+
+    public RocketMqDomainEventPublisher(RocketMqProperties properties) {
+        this(properties, null);
+    }
+
+    public RocketMqDomainEventPublisher(RocketMqProperties properties,
+                                        @Nullable RocketMqTopicAdmin topicAdmin) {
+        this.properties = properties;
+        this.topicAdmin = topicAdmin;
+    }
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -80,6 +91,7 @@ public class RocketMqDomainEventPublisher implements DomainEventPublisher, Initi
             log.warn("RocketMQ is disabled, event dropped: {}", event.getClass().getSimpleName());
             return;
         }
+        ensureTopic(topic);
         doSend(topic, event.getEventId(), buildMessage(topic, tag, null, null, event));
     }
 
@@ -98,6 +110,7 @@ public class RocketMqDomainEventPublisher implements DomainEventPublisher, Initi
             log.warn("RocketMQ is disabled, async event dropped: topic={}", topic);
             return CompletableFuture.completedFuture(null);
         }
+        ensureTopic(topic);
         Message message = buildMessage(topic, null, null, null, event);
         return producer.sendAsync(message)
                 .thenAccept(receipt -> log.info(
@@ -125,6 +138,7 @@ public class RocketMqDomainEventPublisher implements DomainEventPublisher, Initi
             log.warn("RocketMQ is disabled, delayed event dropped: {}", event.getClass().getSimpleName());
             return;
         }
+        ensureTopic(topic);
         long deliveryTimestamp = System.currentTimeMillis() + delay.toMillis();
         doSend(topic, event.getEventId(), buildMessage(topic, null, deliveryTimestamp, null, event));
     }
@@ -144,6 +158,7 @@ public class RocketMqDomainEventPublisher implements DomainEventPublisher, Initi
             log.warn("RocketMQ is disabled, ordered event dropped: {}", event.getClass().getSimpleName());
             return;
         }
+        ensureTopic(topic);
         doSend(topic, event.getEventId(), buildMessage(topic, null, null, messageGroup, event));
     }
 
@@ -157,6 +172,12 @@ public class RocketMqDomainEventPublisher implements DomainEventPublisher, Initi
 
     private boolean isReady() {
         return producer != null;
+    }
+
+    private void ensureTopic(String topic) {
+        if (topicAdmin != null) {
+            topicAdmin.ensureTopic(topic);
+        }
     }
 
     /**

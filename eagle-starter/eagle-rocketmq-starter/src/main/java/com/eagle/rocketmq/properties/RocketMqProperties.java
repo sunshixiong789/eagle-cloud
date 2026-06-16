@@ -29,6 +29,20 @@ public class RocketMqProperties {
     private String namesrvAddr = "rocketmq-namesrv:9876";
 
     /**
+     * 兼容历史配置键 {@code eagle.rocketmq.name-server}。
+     *
+     * <p>标准键仍是 {@code eagle.rocketmq.namesrv-addr}；业务仓库曾使用
+     * {@code name-server}，这里保留别名，避免 TopicAdmin 静默落回默认 NameServer。
+     */
+    public String getNameServer() {
+        return namesrvAddr;
+    }
+
+    public void setNameServer(String nameServer) {
+        this.namesrvAddr = nameServer;
+    }
+
+    /**
      * Topic admin 配置(启动期建 topic 行为)。
      */
     private TopicAdmin topicAdmin = new TopicAdmin();

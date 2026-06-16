@@ -57,9 +57,10 @@ public class RocketMqAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public DomainEventPublisher domainEventPublisher(RocketMqProperties properties) {
+    public DomainEventPublisher domainEventPublisher(RocketMqProperties properties,
+                                                     ObjectProvider<RocketMqTopicAdmin> topicAdminProvider) {
         log.info("Initializing RocketMQ domain event publisher, endpoints: {}", properties.getEndpoints());
-        return new RocketMqDomainEventPublisher(properties);
+        return new RocketMqDomainEventPublisher(properties, topicAdminProvider.getIfAvailable());
     }
 
     /**
