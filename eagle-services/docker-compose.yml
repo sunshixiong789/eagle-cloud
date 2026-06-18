@@ -1,14 +1,26 @@
-# -------- 开发 + 生产共用 ----------
-# environment 默认值面向开发环境；生产部署通过同目录 .env 覆盖关键变量
-# (EAGLE_OAUTH_ISSUER / EAGLE_OAUTH_REDIRECT_URIS / EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS / DB 凭据等)。
-# 不再为 prod 维护独立 compose 文件;docker-compose.prod.yml 仅承担 RocketMQ 线上单机部署。
+# -------- 开发本地最低配 ----------
+# 目标:8~16G 开发机本地全栈跑起来,总 mem_limit 约 6.5G(留给 IDE/浏览器)。
+# 生产部署请用同目录 docker-compose.prod.yml(资源/JVM/安全配置面均不同,不要互相套用)。
 #
-# 变量管理约定：
-#   1. environment 显式枚举所有变量，统一 ${VAR:-default} 形式 —— compose.yml 是"变量清单 + 默认值"，.env 是"差异值表"
-#   2. compose 启动时自动加载本文件同目录的 .env 用于 ${VAR} 插值，无需声明 env_file（声明反而冗余）
-#   3. 优先级（高 → 低）：shell 环境变量 > .env 文件 > environment 默认值
-#   4. healthcheck / command 中引用敏感字段（密码）也采用 ${VAR:-default} 插值，确保 .env 覆盖后整体一致
-#   5. 新增凭证：在 .env 写入值 + 在 environment 加 `KEY=${KEY}` 占位即可（让 compose.yml 始终是变量清单）
+# JVM 堆默认值面向"能跑起来 + 留出 GC 头部空间";不追求吞吐与延迟。
+# 业务真要压测,改 .env 覆盖各服务的 *_JAVA_OPTS / *_MEM_LIMIT。
+#
+# 变量管理约定:
+#   1. environment 显式枚举所有变量,统一 ${VAR:-default} 形式 —— compose.yml 是"变量清单 + 默认值",.env 是"差异值表"
+#   2. compose 启动时自动加载本文件同目录的 .env 用于 ${VAR} 插值,无需声明 env_file(声明反而冗余)
+#   3. 优先级(高 → 低):shell 环境变量 > .env 文件 > environment 默认值
+#   4. healthcheck / command 中引用敏感字段(密码)也采用 ${VAR:-default} 插值,确保 .env 覆盖后整体一致
+#   5. 新增凭证:在 .env 写入值 + 在 environment 加 `KEY=${KEY}` 占位即可(让 compose.yml 始终是变量清单)
+#
+# IDE 远程调试(JDWP):
+#   auth   → 127.0.0.1:5105   (容器内 *:5105)
+#   system → 127.0.0.1:5106   (容器内 *:5106)
+#   gateway→ 127.0.0.1:5107   (容器内 *:5107)
+#   端口规划:5005/5006/5007 留给 ease-mind-servers (user/product/trade),
+#           eagle-cloud 错开整段用 5105/5106/5107,后续新服务沿 51xx 递增
+#   IntelliJ IDEA: Run → Edit Configurations → + → Remote JVM Debug → Host=localhost / Port=5105|5106|5107
+#   调试参数通过 JAVA_TOOL_OPTIONS 注入(JVM 标准变量,与 JAVA_OPTS 自动合并),
+#   关闭调试:在 .env 里设 AUTH_DEBUG_OPTS="" / SYSTEM_DEBUG_OPTS="" / GATEWAY_DEBUG_OPTS=""
 networks:
   eagle-network:
     name: eagle-network
@@ -47,6 +59,9 @@ services:
       # 多库初始化：首次启动时执行 ./postgres-init/*.sh 创建 eagle_auth 等附属库
       # 仅在 postgres-data 卷为空时触发；若需要重建：docker compose down -v
       - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    # 开发本地最低配:三库(eagle_system/eagle_auth/eagle_payment)+ shared_buffers 默认 128m,512m 足够
+    mem_limit: 512m
+    mem_reservation: 256m
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME:-eagle} -d ${DB_NAME:-eagle_system}" ]
       interval: 10s
@@ -68,7 +83,10 @@ services:
       - TZ=${TZ:-Asia/Shanghai}
     volumes:
       - redis-data:/data
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123456}
+    # maxmemory 256m + LRU 淘汰,避免开发期 AOF 累积把容器吃满
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123456} --maxmemory 200mb --maxmemory-policy allkeys-lru
+    mem_limit: 256m
+    mem_reservation: 128m
     healthcheck:
       test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis123456}", "ping" ]
       interval: 10s
@@ -94,7 +112,13 @@ services:
       - NACOS_AUTH_IDENTITY_KEY=${NACOS_AUTH_IDENTITY_KEY:-serverIdentity}
       - NACOS_AUTH_IDENTITY_VALUE=${NACOS_AUTH_IDENTITY_VALUE:-security}
       - NACOS_AUTH_TOKEN=${NACOS_AUTH_TOKEN:-VGhpc0lzTXlDdXN0b21TZWNyZXRLZXkwMTIzNDU2Nzg=}
+      # Nacos v3 默认 -Xms2g -Xmx2g 偏大,开发期收紧到 512m
+      - JVM_XMS=${NACOS_JVM_XMS:-512m}
+      - JVM_XMX=${NACOS_JVM_XMX:-512m}
+      - JVM_XMN=${NACOS_JVM_XMN:-256m}
       - TZ=${TZ:-Asia/Shanghai}
+    mem_limit: 1024m
+    mem_reservation: 512m
     volumes:
       - nacos-data:/home/nacos/data
     healthcheck:
@@ -132,10 +156,10 @@ services:
       # 启动参数：固定监听 8858 + dashboard 自监控地址 + project.name 区分集群
       # 1.8.6+ 默认开启鉴权（账号/密码 sentinel/sentinel），如需自定义加：
       # -Dsentinel.dashboard.auth.username=xxx -Dsentinel.dashboard.auth.password=xxx
-      - JAVA_OPTS=${SENTINEL_JAVA_OPTS:--server -Xms256m -Xmx512m -Dserver.port=8858 -Dcsp.sentinel.dashboard.server=localhost:8858 -Dproject.name=sentinel-dashboard}
+      - JAVA_OPTS=${SENTINEL_JAVA_OPTS:--server -Xms128m -Xmx256m -Dserver.port=8858 -Dcsp.sentinel.dashboard.server=localhost:8858 -Dproject.name=sentinel-dashboard}
       - TZ=${TZ:-Asia/Shanghai}
-    mem_limit: 768m
-    mem_reservation: 256m
+    mem_limit: 384m
+    mem_reservation: 192m
     healthcheck:
       # Sentinel Dashboard 是 Spring Boot 应用，根路径返回 200 即视为就绪
       test: [ "CMD-SHELL", "wget -qO- http://127.0.0.1:8858/ > /dev/null 2>&1 || exit 1" ]
@@ -159,8 +183,8 @@ services:
     networks:
       - eagle-network
     environment:
-      # NameServer 资源消耗低，限制内存避免占用过多开发机资源
-      - JAVA_OPT_EXT=${ROCKETMQ_NAMESRV_JAVA_OPT_EXT:--server -Xms512m -Xmx512m -Xmn256m}
+      # NameServer 仅做路由查询,开发期 256m 完全够
+      - JAVA_OPT_EXT=${ROCKETMQ_NAMESRV_JAVA_OPT_EXT:--server -Xms256m -Xmx256m -Xmn128m}
       - TZ=${TZ:-Asia/Shanghai}
     # 启动前确保 logback FileAppender 写日志的子目录存在
     command:
@@ -170,8 +194,8 @@ services:
         set -e
         mkdir -p /home/rocketmq/logs/rocketmqlogs
         exec sh mqnamesrv
-    mem_limit: 768m
-    mem_reservation: 384m
+    mem_limit: 384m
+    mem_reservation: 192m
     volumes:
       - rocketmq-namesrv-logs:/home/rocketmq/logs
 
@@ -195,8 +219,8 @@ services:
       - rocketmq-namesrv
     environment:
       - NAMESRV_ADDR=${ROCKETMQ_NAMESRV_ADDR:-rocketmq-namesrv:9876}
-      # Broker 默认堆 8g 太大；开发机收紧到 1g
-      - JAVA_OPT_EXT=${ROCKETMQ_BROKER_JAVA_OPT_EXT:--server -Xms1g -Xmx1g -Xmn512m}
+      # Broker 默认堆 8g 太大;开发机收紧到 512m(消息吞吐很小时够用,容量不够再调)
+      - JAVA_OPT_EXT=${ROCKETMQ_BROKER_JAVA_OPT_EXT:--server -Xms512m -Xmx512m -Xmn256m}
       - TZ=${TZ:-Asia/Shanghai}
     # broker.conf 用 YAML `|` 字面块 + bash heredoc 在容器启动时写出
     # 不挂 bind mount(macOS Docker Desktop 单文件 bind 有缓存怪问题,会被当目录)
@@ -222,8 +246,8 @@ services:
         autoCreateSubscriptionGroup=true
         EOF
         exec sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/broker.conf
-    mem_limit: 1536m
-    mem_reservation: 768m
+    mem_limit: 768m
+    mem_reservation: 384m
     volumes:
       - rocketmq-broker-logs:/home/rocketmq/logs
       - rocketmq-broker-store:/home/rocketmq/store
@@ -248,7 +272,7 @@ services:
       - rocketmq-broker
     environment:
       - NAMESRV_ADDR=${ROCKETMQ_NAMESRV_ADDR:-rocketmq-namesrv:9876}
-      - JAVA_OPT_EXT=${ROCKETMQ_PROXY_JAVA_OPT_EXT:--server -Xms512m -Xmx512m -Xmn256m}
+      - JAVA_OPT_EXT=${ROCKETMQ_PROXY_JAVA_OPT_EXT:--server -Xms256m -Xmx256m -Xmn128m}
       - TZ=${TZ:-Asia/Shanghai}
     # Cluster 模式（proxy 独立进程）；通过 NAMESRV_ADDR 发现 broker
     # logs 子目录预创建逻辑与 namesrv/broker 一致
@@ -259,8 +283,8 @@ services:
         set -e
         mkdir -p /home/rocketmq/logs/rocketmqlogs
         exec sh mqproxy -n rocketmq-namesrv:9876
-    mem_limit: 768m
-    mem_reservation: 384m
+    mem_limit: 384m
+    mem_reservation: 192m
 
   # RocketMQ Dashboard（开发环境可视化控制台，浏览器访问 http://localhost:8180）
   # 通过容器名 rocketmq-namesrv:9876 连 NameServer；关闭 VIP channel 避免与 broker 端口冲突
@@ -276,10 +300,10 @@ services:
       - rocketmq-namesrv
       - rocketmq-broker
     environment:
-      - JAVA_OPTS=${ROCKETMQ_DASHBOARD_JAVA_OPTS:--server -Xms256m -Xmx512m -Drocketmq.namesrv.addr=rocketmq-namesrv:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false}
+      - JAVA_OPTS=${ROCKETMQ_DASHBOARD_JAVA_OPTS:--server -Xms128m -Xmx256m -Drocketmq.namesrv.addr=rocketmq-namesrv:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false}
       - TZ=${TZ:-Asia/Shanghai}
-    mem_limit: 768m
-    mem_reservation: 256m
+    mem_limit: 384m
+    mem_reservation: 192m
 
   # 认证服务（OAuth2 Authorization Server + 微信/短信登录）
   # 独立库 eagle_auth（由 postgres-init/01-create-auth-db.sh 首次启动时创建）
@@ -293,11 +317,13 @@ services:
     restart: always
     ports:
       - "9090:9090"
+      # JDWP 调试端口,只绑 127.0.0.1,IDEA Remote JVM Debug 连 localhost:5105
+      - "127.0.0.1:5105:5105"
     networks:
       - eagle-network
-    # 单机 8G 部署基线：auth 承载 OAuth2/JPA/Hibernate，与 system 同档
-    mem_limit: 2048m
-    mem_reservation: 1024m
+    # 开发本地最低配:auth 承载 OAuth2/JPA/Hibernate,堆 768m 可跑(压测请用 prod compose)
+    mem_limit: 1024m
+    mem_reservation: 512m
     # environment 显式枚举所有关键变量，统一 ${VAR:-default} 插值
     # 注意：DB_NAME 单独走 AUTH_DB_NAME 变量（默认 eagle_auth），与 system 的 DB_NAME 区分
     environment:
@@ -372,7 +398,9 @@ services:
       - HNSLS_SMS_CONTENT_TEMPLATE=${HNSLS_SMS_CONTENT_TEMPLATE:-您的验证码是{code}，5分钟内有效。}
       - HNSLS_SMS_SEND_URL=${HNSLS_SMS_SEND_URL:-https://xapi.hnsls.com.cn/eums/sms/utf8/send.do}
       - HNSLS_SMS_CHARSET=${HNSLS_SMS_CHARSET:-UTF-8}
-      - JAVA_OPTS=${AUTH_JAVA_OPTS:--server -XX:+UseG1GC -Xms768m -Xmx1536m -XX:MaxMetaspaceSize=320m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
+      - JAVA_OPTS=${AUTH_JAVA_OPTS:--server -XX:+UseG1GC -Xms384m -Xmx640m -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
+      # JDWP 调试参数:JVM 标准变量,启动时自动与 JAVA_OPTS 合并,设空字符串即可关闭调试
+      - JAVA_TOOL_OPTIONS=${AUTH_DEBUG_OPTS:--agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5105}
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/actuator/health" ]
       interval: 30s
@@ -402,11 +430,13 @@ services:
     restart: always
     ports:
       - "8082:8082"
+      # JDWP 调试端口,只绑 127.0.0.1,IDEA Remote JVM Debug 连 localhost:5106
+      - "127.0.0.1:5106:5106"
     networks:
       - eagle-network
-    # 单机 8G 部署基线：system 承载 OAuth2/JPA/Hibernate，堆提升到 2g
-    mem_limit: 3072m
-    mem_reservation: 1536m
+    # 开发本地最低配:system 模块多(base+auth-event+config),堆 1g 保守起步,真不够再上调
+    mem_limit: 1536m
+    mem_reservation: 768m
     # environment 显式枚举所有关键变量，统一 ${VAR:-default} 插值
     # 默认值已包含容器网络约束（postgres:5432 / redis:6379 / nacos:8848 / SERVER_PORT=8082），.env 可整体覆盖
     # 注意：.env 文件中的变量仅用于 compose.yml 的 ${VAR} 插值，必须在此 environment 段显式声明才会注入容器
@@ -482,7 +512,9 @@ services:
       - HNSLS_SMS_CONTENT_TEMPLATE=${HNSLS_SMS_CONTENT_TEMPLATE:-您的验证码是{code}，5分钟内有效。}
       - HNSLS_SMS_SEND_URL=${HNSLS_SMS_SEND_URL:-https://xapi.hnsls.com.cn/eums/sms/utf8/send.do}
       - HNSLS_SMS_CHARSET=${HNSLS_SMS_CHARSET:-UTF-8}
-      - JAVA_OPTS=${SYSTEM_JAVA_OPTS:--server -XX:+UseG1GC -Xms1g -Xmx2g -XX:MaxMetaspaceSize=384m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
+      - JAVA_OPTS=${SYSTEM_JAVA_OPTS:--server -XX:+UseG1GC -Xms512m -Xmx1024m -XX:MaxMetaspaceSize=320m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
+      # JDWP 调试参数:JVM 标准变量,启动时自动与 JAVA_OPTS 合并,设空字符串即可关闭调试
+      - JAVA_TOOL_OPTIONS=${SYSTEM_DEBUG_OPTS:--agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5106}
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8082/actuator/health" ]
       interval: 30s
@@ -512,11 +544,13 @@ services:
     restart: always
     ports:
       - "8080:8080"
+      # JDWP 调试端口,只绑 127.0.0.1,IDEA Remote JVM Debug 连 localhost:5107
+      - "127.0.0.1:5107:5107"
     networks:
       - eagle-network
-    # 单机 8G 部署基线：堆 768m + 元空间 256m + 直接内存/线程栈
-    mem_limit: 1280m
-    mem_reservation: 512m
+    # 开发本地最低配:gateway 是 WebFlux 反应式,堆需求小;512m 上限够路由 + Sentinel
+    mem_limit: 512m
+    mem_reservation: 256m
     # environment 显式枚举所有关键变量，统一 ${VAR:-default} 插值
     # 默认值已包含容器网络约束（nacos:8848 / auth:9090 / system:8082 / sentinel-dashboard:8858），.env 可整体覆盖
     environment:
@@ -541,7 +575,9 @@ services:
       - EAGLE_SENTINEL_SMS_BURST=${EAGLE_SENTINEL_SMS_BURST:-20}
       - ROCKETMQ_NAME_SERVER=${ROCKETMQ_NAME_SERVER:-rocketmq-namesrv:9876}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-}
-      - JAVA_OPTS=${GATEWAY_JAVA_OPTS:--server -XX:+UseG1GC -Xms512m -Xmx768m -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
+      - JAVA_OPTS=${GATEWAY_JAVA_OPTS:--server -XX:+UseG1GC -Xms192m -Xmx320m -XX:MaxMetaspaceSize=192m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
+      # JDWP 调试参数:JVM 标准变量,启动时自动与 JAVA_OPTS 合并,设空字符串即可关闭调试
+      - JAVA_TOOL_OPTIONS=${GATEWAY_DEBUG_OPTS:--agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5107}
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health" ]
       interval: 30s

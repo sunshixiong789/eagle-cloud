@@ -1,39 +1,65 @@
-# 线上级 RocketMQ 5.3.2 部署(单机版,对齐官方 quickstart 三服务模型)
-# https://rocketmq.apache.org/docs/quickStart/03quickstartWithDockercompose
+# -------- 线上部署:应用层 (auth / system / gateway / sentinel-dashboard) ----------
 #
-# 与开发版(docker-compose.yml)的差异:
-#   - 资源限制按线上规格(broker 6G,namesrv/proxy 3G,dashboard 1.5G)
-#   - JVM 参数固定堆 + G1GC + OOM dump,日志/数据全部持久化到 named volume
-#   - broker 关闭 autoCreate*(topic / 订阅组由运维预创建)
-#   - 启用 healthcheck + depends_on condition,确保启动顺序正确
-#   - restart: unless-stopped(手动 stop 后不自动拉起,便于运维介入)
-#   - 容器日志 json-file driver 限制单文件大小 + 滚动数量,防止磁盘打满
-#   - Dashboard 强制登录(loginRequired=true),首次启动后必须修改默认 admin/admin
+# 本文件**只部署无状态 / 轻状态应用**;有状态基础设施(PG / Redis / Nacos / RocketMQ)
+# **不**在本文件,理由见下方"为什么不用 docker 跑基础设施"。
 #
-# 跨主机访问 / 客户端在 docker 网络外:
-#   需把 ROCKETMQ_BROKER_IP 设为宿主机或外部 LB 可达的地址,
-#   否则 client 拿到 brokerIP1=rocketmq-broker 后无法路由。
+# 配套外部基础设施清单(必须在启动前准备好,通过 .env.prod 把端点 / 凭据写进对应 *_HOST / *_PASSWORD):
+#   ┌──────────────┬──────────────────────────────────────────────────────────────┐
+#   │ PostgreSQL16+│ 阿里云 RDS for PostgreSQL / 腾讯云 TDSQL-PG / 自建 Patroni    │
+#   │ Redis 7+     │ 阿里云 Tair / 腾讯云 Redis / 自建 Sentinel 或 Cluster        │
+#   │ Nacos 3.x    │ 阿里云 MSE Nacos / 3 节点集群 + MySQL 后端 (config 持久化)     │
+#   │ RocketMQ 5.x │ 阿里云 MQ / 腾讯云 TDMQ-RocketMQ / K8s + RocketMQ Operator   │
+#   │ MinIO / OSS  │ 阿里云 OSS / 腾讯云 COS / 自建 MinIO 集群(4+ 节点 EC 模式)    │
+#   └──────────────┴──────────────────────────────────────────────────────────────┘
 #
-# 高可用集群:
-#   单机版只适合单节点线上 / staging,真正多副本部署请用 K8s + RocketMQ Operator,
-#   或扩展为 DLedger / Master-Slave 模式(需增加 broker-b、broker-c 实例)。
+# ── 为什么不建议用单机 docker 跑这些基础设施(避免下次又被加回来)──
 #
-# 启动:
-#   docker compose -f docker-compose.prod.yml up -d
+#   1. 数据持久化:named volume 绑定在宿主机磁盘;宿主机盘故障 = 数据全丢。
+#      托管服务: 多副本 + PITR + 跨可用区备份,RPO 通常 ≤ 5 分钟。
+#
+#   2. 高可用:PG streaming replication / Redis Sentinel / Nacos raft / RocketMQ DLedger
+#      都要多节点协同;单机 docker 跑等于"高可用协议假装在运行",真宕机就完蛋。
+#
+#   3. 性能:大页内存 / 网络栈 / IO scheduler / NUMA 绑核等 OS 级调优在容器化场景损失 5~20%,
+#      对吞吐 / 延迟敏感的有状态服务尤其明显。
+#
+#   4. 备份恢复:托管自带 PITR / 快照 / 跨区域备份;docker 自建要自己维护 wal-g / restic /
+#      RocketMQ 异地灾备,出事时回滚链路极长。
+#
+#   5. 升级:托管支持小版本滑动升级 + 跨大版本迁移工具;docker 自建大概率要停机 + 手工迁数据。
+#
+#   6. 监控:托管自带控制台 / 慢日志 / 自动告警;docker 自建要自搭 Prometheus + Grafana +
+#      Alertmanager,且容易和应用监控混在一起。
+#
+#   ★ 唯一例外:Sentinel Dashboard。它只是"规则管理 UI",规则真存在 Nacos 里,
+#     容器挂了重启 / 重建数据卷都不影响业务,所以留在本文件内。
+#
+# ── 启动 ──
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+#
+# ── 灰度 / 滚动单服务 ──
+#   docker compose -f docker-compose.prod.yml up -d --no-deps --build auth
+#   docker compose -f docker-compose.prod.yml up -d --no-deps --build system
+#   docker compose -f docker-compose.prod.yml up -d --no-deps --build gateway
+#
+# ── staging / PoC 想在单机自建基础设施 ──
+#   不要改本文件;直接复用 docker-compose.yml(开发本地配置),把 mem_limit / JVM 拉大即可。
+#   但**仍不建议**对其打线上流量。
 
-name: eagle-rocketmq-prod
+name: eagle-prod
 
 networks:
-  eagle-rocketmq:
-    name: eagle-rocketmq
+  # external: true → 期望基础设施侧已经创建好同名网络,应用层加入即可;
+  # 若基础设施也在本机 docker(不推荐),启动时改成 driver: bridge 即可。
+  eagle-network:
+    name: eagle-network
     driver: bridge
 
 volumes:
-  rocketmq-namesrv-logs:
-  rocketmq-broker-logs:
-  rocketmq-broker-store:
-  rocketmq-proxy-logs:
-  rocketmq-dashboard-data:
+  sentinel-data:
+  auth-logs:
+  system-logs:
+  gateway-logs:
 
 x-logging: &default-logging
   driver: json-file
@@ -42,199 +68,271 @@ x-logging: &default-logging
     max-file: "10"
 
 services:
-  # NameServer — 路由注册中心
-  rocketmq-namesrv:
-    image: apache/rocketmq:5.3.2
-    container_name: eagle-rocketmq-namesrv
+  # Sentinel Dashboard — 规则管理 UI(规则源在 Nacos,容器无状态)
+  # 首次启动后必须改默认 sentinel/sentinel:.env.prod 里覆盖 SENTINEL_JAVA_OPTS,
+  # 追加 -Dsentinel.dashboard.auth.username=xxx -Dsentinel.dashboard.auth.password=xxx
+  sentinel-dashboard:
+    build:
+      context: ./sentinel-dashboard
+      args:
+        SENTINEL_VERSION: 1.8.9
+    image: eagle-sentinel-dashboard:1.8.9
+    pull_policy: build
+    container_name: eagle-sentinel
     restart: unless-stopped
-    # named volume 首次挂载属主 root,镜像内 rocketmq 用户(uid=3000)无写权限
-    # 真正生产建议预先在宿主机创建目录并 chown 3000:3000 后用 bind mount + user rocketmq
-    user: root
     ports:
-      - "9876:9876"
+      - "127.0.0.1:8858:8858"
     networks:
-      - eagle-rocketmq
+      - eagle-network
     environment:
-      - JAVA_OPT_EXT=${ROCKETMQ_NAMESRV_JAVA_OPT_EXT:--server -Xms2g -Xmx2g -Xmn1g -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=320m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/rocketmq/logs/heapdump}
+      - JAVA_OPTS=${SENTINEL_JAVA_OPTS:--server -XX:+UseG1GC -Xms512m -Xmx768m -Dserver.port=8858 -Dcsp.sentinel.dashboard.server=localhost:8858 -Dproject.name=sentinel-dashboard}
       - TZ=${TZ:-Asia/Shanghai}
-    command:
-      - sh
-      - -c
-      - |
-        set -e
-        mkdir -p /home/rocketmq/logs/rocketmqlogs /home/rocketmq/logs/heapdump
-        exec sh mqnamesrv
     volumes:
-      - rocketmq-namesrv-logs:/home/rocketmq/logs
-    mem_limit: 3g
-    mem_reservation: 2g
+      - sentinel-data:/sentinel-dashboard
+    mem_limit: 1024m
+    mem_reservation: 512m
     logging: *default-logging
     healthcheck:
-      test: ["CMD-SHELL", "sh mqadmin clusterList -n 127.0.0.1:9876 >/dev/null 2>&1 || exit 1"]
+      test: [ "CMD-SHELL", "wget -qO- http://127.0.0.1:8858/ > /dev/null 2>&1 || exit 1" ]
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       retries: 5
       start_period: 60s
 
-  # Broker — 消息存储与转发(单机 ASYNC_MASTER,无 slave)
-  rocketmq-broker:
-    image: apache/rocketmq:5.3.2
-    container_name: eagle-rocketmq-broker
+  # 认证服务 (OAuth2 Authorization Server)
+  # 基础设施依赖: PG (eagle_auth 库) / Redis / Nacos / RocketMQ 全部走 .env.prod 配置的外部端点
+  auth:
+    build:
+      context: ./eagle-auth-service
+      dockerfile: Dockerfile
+    image: eagle-auth:${EAGLE_IMAGE_TAG:-1.0.0}
+    pull_policy: build
+    container_name: eagle-auth
     restart: unless-stopped
-    user: root
     ports:
-      - "10909:10909"   # VIP channel
-      - "10911:10911"   # Broker 主端口(客户端读写)
-      - "10912:10912"   # HA 同步端口(扩主从时使用)
+      - "127.0.0.1:9090:9090"
     networks:
-      - eagle-rocketmq
-    depends_on:
-      rocketmq-namesrv:
-        condition: service_healthy
+      - eagle-network
+    mem_limit: 2560m
+    mem_reservation: 1536m
     environment:
-      - NAMESRV_ADDR=${ROCKETMQ_NAMESRV_ADDR:-rocketmq-namesrv:9876}
-      - JAVA_OPT_EXT=${ROCKETMQ_BROKER_JAVA_OPT_EXT:--server -Xms4g -Xmx4g -Xmn2g -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=320m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/rocketmq/logs/heapdump}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - SERVER_PORT=${AUTH_SERVER_PORT:-9090}
+      # Nacos (外部集群端点,无默认值 → fail-fast)
+      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:?NACOS_SERVER_ADDR must be set in .env.prod}
+      - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
+      - NACOS_GROUP=${NACOS_GROUP:-DEFAULT_GROUP}
+      - NACOS_USERNAME=${NACOS_USERNAME:?NACOS_USERNAME must be set in .env.prod}
+      - NACOS_PASSWORD=${NACOS_PASSWORD:?NACOS_PASSWORD must be set in .env.prod}
+      - NACOS_REGISTER_IP=${NACOS_REGISTER_IP:-}
+      # PostgreSQL (外部 RDS,auth 用独立库 eagle_auth)
+      - DB_HOST=${DB_HOST:?DB_HOST must be set in .env.prod}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${AUTH_DB_NAME:-eagle_auth}
+      - DB_USERNAME=${DB_USERNAME:?DB_USERNAME must be set in .env.prod}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be set in .env.prod}
+      - DB_POOL_MAX=${DB_POOL_MAX:-80}
+      - DB_POOL_MIN=${DB_POOL_MIN:-20}
+      # Redis (外部托管)
+      - REDIS_HOST=${REDIS_HOST:?REDIS_HOST must be set in .env.prod}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?REDIS_PASSWORD must be set in .env.prod}
+      - REDIS_DATABASE=${REDIS_DATABASE:-0}
+      - REDIS_POOL_MAX_ACTIVE=${REDIS_POOL_MAX_ACTIVE:-96}
+      - REDIS_POOL_MAX_IDLE=${REDIS_POOL_MAX_IDLE:-32}
+      - REDIS_POOL_MIN_IDLE=${REDIS_POOL_MIN_IDLE:-8}
+      - REDIS_POOL_MAX_WAIT=${REDIS_POOL_MAX_WAIT:-2000ms}
+      # RocketMQ 5.x gRPC → Proxy:8081 (外部托管)
+      - ROCKETMQ_ENDPOINTS=${ROCKETMQ_ENDPOINTS:?ROCKETMQ_ENDPOINTS must be set in .env.prod}
+      - ROCKETMQ_TOPIC_ENV_PREFIX=${ROCKETMQ_TOPIC_ENV_PREFIX:-prod_}
+      # 初始管理员
+      - EAGLE_ADMIN_USERNAME=${EAGLE_ADMIN_USERNAME:-admin}
+      - EAGLE_ADMIN_PASSWORD=${EAGLE_ADMIN_PASSWORD:?EAGLE_ADMIN_PASSWORD must be set in .env.prod}
+      - EAGLE_ADMIN_NAME=${EAGLE_ADMIN_NAME:-系统管理员}
+      - EAGLE_ADMIN_EMAIL=${EAGLE_ADMIN_EMAIL:-admin@eagle.com}
+      # JWT keystore
+      - EAGLE_JWT_KEYSTORE_LOCATION=${EAGLE_JWT_KEYSTORE_LOCATION:-classpath:jwt-keystore.p12}
+      - EAGLE_JWT_KEYSTORE_PASSWORD=${EAGLE_JWT_KEYSTORE_PASSWORD:?EAGLE_JWT_KEYSTORE_PASSWORD must be set in .env.prod}
+      # OAuth2: iss claim + 回调白名单 + RP-Initiated Logout 白名单
+      - EAGLE_OAUTH_ISSUER=${EAGLE_OAUTH_ISSUER:?EAGLE_OAUTH_ISSUER must be set in .env.prod}
+      - EAGLE_OAUTH_REDIRECT_URIS=${EAGLE_OAUTH_REDIRECT_URIS:?EAGLE_OAUTH_REDIRECT_URIS must be set in .env.prod}
+      - EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS=${EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS:?EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS must be set in .env.prod}
+      # 第三方登录 (留空 = 禁用)
+      - WECHAT_APP_APP_ID=${WECHAT_APP_APP_ID:-}
+      - WECHAT_APP_APP_SECRET=${WECHAT_APP_APP_SECRET:-}
+      - WECHAT_MINI_APP_ID=${WECHAT_MINI_APP_ID:-}
+      - WECHAT_MINI_APP_SECRET=${WECHAT_MINI_APP_SECRET:-}
+      - WECHAT_WEB_APP_ID=${WECHAT_WEB_APP_ID:-}
+      - WECHAT_WEB_APP_SECRET=${WECHAT_WEB_APP_SECRET:-}
+      - WECHAT_WEB_REDIRECT_URI=${WECHAT_WEB_REDIRECT_URI:-}
+      - WECHAT_MP_APP_ID=${WECHAT_MP_APP_ID:-}
+      - WECHAT_MP_APP_SECRET=${WECHAT_MP_APP_SECRET:-}
+      - WECHAT_MP_REDIRECT_URI=${WECHAT_MP_REDIRECT_URI:-}
+      # 短信
+      - SMS_PROVIDER=${SMS_PROVIDER:-hnsls}
+      - SMS_ACCESS_KEY_ID=${SMS_ACCESS_KEY_ID:-}
+      - SMS_ACCESS_KEY_SECRET=${SMS_ACCESS_KEY_SECRET:-}
+      - SMS_SIGN_NAME=${SMS_SIGN_NAME:-}
+      - SMS_TEMPLATE_ID=${SMS_TEMPLATE_ID:-}
+      - TENCENT_SMS_SDK_APP_ID=${TENCENT_SMS_SDK_APP_ID:-}
+      - TENCENT_SMS_REGION=${TENCENT_SMS_REGION:-ap-guangzhou}
+      - HNSLS_SMS_USERNAME=${HNSLS_SMS_USERNAME:-}
+      - HNSLS_SMS_PASSWORD=${HNSLS_SMS_PASSWORD:-}
+      - HNSLS_SMS_CONTENT_TEMPLATE=${HNSLS_SMS_CONTENT_TEMPLATE:-您的验证码是{code}，5分钟内有效。}
+      - HNSLS_SMS_SEND_URL=${HNSLS_SMS_SEND_URL:-https://xapi.hnsls.com.cn/eums/sms/utf8/send.do}
+      - HNSLS_SMS_CHARSET=${HNSLS_SMS_CHARSET:-UTF-8}
+      - JAVA_OPTS=${AUTH_JAVA_OPTS:--server -XX:+UseG1GC -Xms1g -Xmx2g -XX:MaxMetaspaceSize=384m -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
       - TZ=${TZ:-Asia/Shanghai}
-      # 客户端访问 broker 的可达地址;docker 网络内用容器名,跨主机改宿主机 IP / LB
-      - BROKER_IP=${ROCKETMQ_BROKER_IP:-rocketmq-broker}
-    command:
-      - sh
-      - -c
-      - |
-        set -e
-        mkdir -p /home/rocketmq/store /home/rocketmq/logs/rocketmqlogs /home/rocketmq/logs/heapdump
-        # $$ 让 compose 输出字面 $,容器内 shell 再展开 BROKER_IP(由 environment 注入)
-        cat > /home/rocketmq/broker.conf <<EOF
-        # === 集群标识 ===
-        brokerClusterName=DefaultCluster
-        brokerName=broker-a
-        brokerId=0
-        brokerRole=ASYNC_MASTER
-
-        # === 网络 ===
-        brokerIP1=$${BROKER_IP}
-        listenPort=10911
-        namesrvAddr=rocketmq-namesrv:9876
-
-        # === 存储路径 ===
-        storePathRootDir=/home/rocketmq/store
-        storePathCommitLog=/home/rocketmq/store/commitlog
-        storePathConsumeQueue=/home/rocketmq/store/consumequeue
-        storePathIndex=/home/rocketmq/store/index
-        storeCheckpoint=/home/rocketmq/store/checkpoint
-        abortFile=/home/rocketmq/store/abort
-
-        # === 刷盘策略 ===
-        # 吞吐优先;金融级强一致改 SYNC_FLUSH(性能下降约 30%)
-        flushDiskType=ASYNC_FLUSH
-
-        # === 生产安全 ===
-        # 关闭自动建 topic / 订阅组,所有 topic 由运维预创建
-        autoCreateTopicEnable=false
-        autoCreateSubscriptionGroup=false
-
-        # === 保留策略 ===
-        fileReservedTime=72
-        deleteWhen=04
-
-        # === 性能调优 ===
-        sendMessageThreadPoolNums=16
-        pullMessageThreadPoolNums=32
-        useReentrantLockWhenPutMessage=true
-        transientStorePoolEnable=false
-
-        # === ACL 鉴权(默认关闭)===
-        # 开启步骤:
-        #   1. 解开下行注释
-        #   2. 把宿主机 plain_acl.yml 挂载到 /home/rocketmq/conf/plain_acl.yml
-        # aclEnable=true
-        EOF
-        exec sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/broker.conf
     volumes:
-      - rocketmq-broker-logs:/home/rocketmq/logs
-      - rocketmq-broker-store:/home/rocketmq/store
-      # 启用 ACL 时取消注释:
-      # - ./rocketmq/plain_acl.yml:/home/rocketmq/conf/plain_acl.yml:ro
-    mem_limit: 6g
-    mem_reservation: 4g
+      - auth-logs:/app/logs
     logging: *default-logging
     healthcheck:
-      test: ["CMD-SHELL", "sh mqadmin brokerStatus -n rocketmq-namesrv:9876 -b 127.0.0.1:10911 >/dev/null 2>&1 || exit 1"]
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/actuator/health" ]
       interval: 30s
-      timeout: 15s
-      retries: 5
+      timeout: 10s
+      retries: 3
       start_period: 90s
 
-  # Proxy — 5.x gRPC 接入层(business client 走 8081)
-  rocketmq-proxy:
-    image: apache/rocketmq:5.3.2
-    container_name: eagle-rocketmq-proxy
+  # 系统服务
+  # 基础设施依赖: PG (eagle_system 库) / Redis / Nacos / RocketMQ 走 .env.prod 配置的外部端点
+  system:
+    build:
+      context: ./eagle-system-service
+      dockerfile: Dockerfile
+    image: eagle-system:${EAGLE_IMAGE_TAG:-1.0.0}
+    pull_policy: build
+    container_name: eagle-system
     restart: unless-stopped
-    user: root
     ports:
-      - "8080:8080"   # remoting 兼容端口(4.x client)
-      - "8081:8081"   # gRPC 端口(5.x client,业务首选)
+      - "127.0.0.1:8082:8082"
     networks:
-      - eagle-rocketmq
-    depends_on:
-      rocketmq-namesrv:
-        condition: service_healthy
-      rocketmq-broker:
-        condition: service_healthy
+      - eagle-network
+    mem_limit: 4096m
+    mem_reservation: 2048m
     environment:
-      - NAMESRV_ADDR=${ROCKETMQ_NAMESRV_ADDR:-rocketmq-namesrv:9876}
-      - JAVA_OPT_EXT=${ROCKETMQ_PROXY_JAVA_OPT_EXT:--server -Xms2g -Xmx2g -Xmn1g -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=320m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/rocketmq/logs/heapdump}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - SERVER_PORT=${SERVER_PORT:-8082}
+      # Nacos
+      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:?NACOS_SERVER_ADDR must be set in .env.prod}
+      - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
+      - NACOS_GROUP=${NACOS_GROUP:-DEFAULT_GROUP}
+      - NACOS_USERNAME=${NACOS_USERNAME:?NACOS_USERNAME must be set in .env.prod}
+      - NACOS_PASSWORD=${NACOS_PASSWORD:?NACOS_PASSWORD must be set in .env.prod}
+      - NACOS_REGISTER_IP=${NACOS_REGISTER_IP:-}
+      # PostgreSQL
+      - DB_HOST=${DB_HOST:?DB_HOST must be set in .env.prod}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-eagle_system}
+      - DB_USERNAME=${DB_USERNAME:?DB_USERNAME must be set in .env.prod}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be set in .env.prod}
+      - DB_POOL_MAX=${DB_POOL_MAX:-80}
+      - DB_POOL_MIN=${DB_POOL_MIN:-20}
+      # Redis
+      - REDIS_HOST=${REDIS_HOST:?REDIS_HOST must be set in .env.prod}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?REDIS_PASSWORD must be set in .env.prod}
+      - REDIS_DATABASE=${REDIS_DATABASE:-0}
+      - REDIS_POOL_MAX_ACTIVE=${REDIS_POOL_MAX_ACTIVE:-96}
+      - REDIS_POOL_MAX_IDLE=${REDIS_POOL_MAX_IDLE:-32}
+      - REDIS_POOL_MIN_IDLE=${REDIS_POOL_MIN_IDLE:-8}
+      - REDIS_POOL_MAX_WAIT=${REDIS_POOL_MAX_WAIT:-2000ms}
+      # RocketMQ
+      - ROCKETMQ_ENDPOINTS=${ROCKETMQ_ENDPOINTS:?ROCKETMQ_ENDPOINTS must be set in .env.prod}
+      - ROCKETMQ_TOPIC_ENV_PREFIX=${ROCKETMQ_TOPIC_ENV_PREFIX:-prod_}
+      # 初始管理员 username (与 auth 共用同一值)
+      - EAGLE_ADMIN_USERNAME=${EAGLE_ADMIN_USERNAME:-admin}
+      # JWT keystore
+      - EAGLE_JWT_KEYSTORE_LOCATION=${EAGLE_JWT_KEYSTORE_LOCATION:-classpath:jwt-keystore.p12}
+      - EAGLE_JWT_KEYSTORE_PASSWORD=${EAGLE_JWT_KEYSTORE_PASSWORD:?EAGLE_JWT_KEYSTORE_PASSWORD must be set in .env.prod}
+      # OAuth2
+      - EAGLE_OAUTH_ISSUER=${EAGLE_OAUTH_ISSUER:?EAGLE_OAUTH_ISSUER must be set in .env.prod}
+      - EAGLE_OAUTH_REDIRECT_URIS=${EAGLE_OAUTH_REDIRECT_URIS:?EAGLE_OAUTH_REDIRECT_URIS must be set in .env.prod}
+      - EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS=${EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS:?EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS must be set in .env.prod}
+      # JWKS 直连 auth-service,绕过 OIDC discovery
+      - EAGLE_OAUTH_JWK_SET_URI=${EAGLE_OAUTH_JWK_SET_URI:-http://auth:9090/oauth2/jwks}
+      # 第三方登录
+      - WECHAT_MINI_APP_ID=${WECHAT_MINI_APP_ID:-}
+      - WECHAT_MINI_APP_SECRET=${WECHAT_MINI_APP_SECRET:-}
+      - WECHAT_WEB_APP_ID=${WECHAT_WEB_APP_ID:-}
+      - WECHAT_WEB_APP_SECRET=${WECHAT_WEB_APP_SECRET:-}
+      - WECHAT_WEB_REDIRECT_URI=${WECHAT_WEB_REDIRECT_URI:-}
+      - WECHAT_MP_APP_ID=${WECHAT_MP_APP_ID:-}
+      - WECHAT_MP_APP_SECRET=${WECHAT_MP_APP_SECRET:-}
+      - WECHAT_MP_REDIRECT_URI=${WECHAT_MP_REDIRECT_URI:-}
+      # 短信
+      - SMS_PROVIDER=${SMS_PROVIDER:-hnsls}
+      - SMS_ACCESS_KEY_ID=${SMS_ACCESS_KEY_ID:-}
+      - SMS_ACCESS_KEY_SECRET=${SMS_ACCESS_KEY_SECRET:-}
+      - SMS_SIGN_NAME=${SMS_SIGN_NAME:-}
+      - SMS_TEMPLATE_ID=${SMS_TEMPLATE_ID:-}
+      - HNSLS_SMS_USERNAME=${HNSLS_SMS_USERNAME:-}
+      - HNSLS_SMS_PASSWORD=${HNSLS_SMS_PASSWORD:-}
+      - HNSLS_SMS_CONTENT_TEMPLATE=${HNSLS_SMS_CONTENT_TEMPLATE:-您的验证码是{code}，5分钟内有效。}
+      - HNSLS_SMS_SEND_URL=${HNSLS_SMS_SEND_URL:-https://xapi.hnsls.com.cn/eums/sms/utf8/send.do}
+      - HNSLS_SMS_CHARSET=${HNSLS_SMS_CHARSET:-UTF-8}
+      - JAVA_OPTS=${SYSTEM_JAVA_OPTS:--server -XX:+UseG1GC -Xms2g -Xmx3g -XX:MaxMetaspaceSize=512m -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
       - TZ=${TZ:-Asia/Shanghai}
-    command:
-      - sh
-      - -c
-      - |
-        set -e
-        mkdir -p /home/rocketmq/logs/rocketmqlogs /home/rocketmq/logs/heapdump
-        exec sh mqproxy -n rocketmq-namesrv:9876
     volumes:
-      - rocketmq-proxy-logs:/home/rocketmq/logs
-    mem_limit: 3g
-    mem_reservation: 2g
+      - system-logs:/app/logs
     logging: *default-logging
     healthcheck:
-      test: ["CMD-SHELL", "ps -ef | grep -v grep | grep -q ProxyStartup || exit 1"]
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8082/actuator/health" ]
       interval: 30s
       timeout: 10s
-      retries: 5
-      start_period: 60s
+      retries: 3
+      start_period: 90s
+    depends_on:
+      auth:
+        condition: service_healthy
 
-  # Dashboard — 运维可视化控制台
-  # 强制开启登录,首次启动后必须改默认账号密码:
-  #   1. docker exec -it eagle-rocketmq-dashboard cat /tmp/rocketmq-console/data/users.properties
-  #   2. 改 admin / 其他账号密码后,把文件 cp 到宿主机
-  #   3. 取消下方 users.properties 卷挂载并 docker compose up -d 让其生效
-  rocketmq-dashboard:
-    image: apacherocketmq/rocketmq-dashboard:1.0.0
-    container_name: eagle-rocketmq-dashboard
+  # 网关 — 唯一公网入口 0.0.0.0:8080,前面应该再叠一层 nginx / SLB / WAF
+  gateway:
+    build:
+      context: ./eagle-gateway-service
+      dockerfile: Dockerfile
+    image: eagle-gateway:${EAGLE_IMAGE_TAG:-1.0.0}
+    pull_policy: build
+    container_name: eagle-gateway
     restart: unless-stopped
     ports:
-      - "8180:8080"
+      - "8080:8080"
     networks:
-      - eagle-rocketmq
-    depends_on:
-      rocketmq-namesrv:
-        condition: service_healthy
-      rocketmq-broker:
-        condition: service_healthy
-    environment:
-      - JAVA_OPTS=${ROCKETMQ_DASHBOARD_JAVA_OPTS:--server -Xms512m -Xmx1g -XX:+UseG1GC -Drocketmq.namesrv.addr=rocketmq-namesrv:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false -Drocketmq.config.loginRequired=true -Drocketmq.config.dataPath=/tmp/rocketmq-console/data}
-      - TZ=${TZ:-Asia/Shanghai}
-    volumes:
-      - rocketmq-dashboard-data:/tmp/rocketmq-console
-      # 首次启动取出 users.properties 修改后挂回:
-      # - ./rocketmq/users.properties:/tmp/rocketmq-console/data/users.properties:ro
+      - eagle-network
     mem_limit: 1536m
     mem_reservation: 768m
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:?NACOS_SERVER_ADDR must be set in .env.prod}
+      - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
+      - NACOS_GROUP=${NACOS_GROUP:-DEFAULT_GROUP}
+      - NACOS_USERNAME=${NACOS_USERNAME:?NACOS_USERNAME must be set in .env.prod}
+      - NACOS_PASSWORD=${NACOS_PASSWORD:?NACOS_PASSWORD must be set in .env.prod}
+      - NACOS_REGISTER_IP=${NACOS_REGISTER_IP:-}
+      - AUTH_SERVER_URL=${AUTH_SERVER_URL:-http://auth:9090}
+      - SENTINEL_DASHBOARD=${SENTINEL_DASHBOARD:-sentinel-dashboard:8858}
+      - EAGLE_GATEWAY_SENTINEL_ENABLED=${EAGLE_GATEWAY_SENTINEL_ENABLED:-true}
+      - EAGLE_SENTINEL_GLOBAL_QPS=${EAGLE_SENTINEL_GLOBAL_QPS:-3600}
+      - EAGLE_SENTINEL_GLOBAL_BURST=${EAGLE_SENTINEL_GLOBAL_BURST:-600}
+      - EAGLE_SENTINEL_AUTH_QPS=${EAGLE_SENTINEL_AUTH_QPS:-1200}
+      - EAGLE_SENTINEL_AUTH_BURST=${EAGLE_SENTINEL_AUTH_BURST:-200}
+      - EAGLE_SENTINEL_SMS_QPS=${EAGLE_SENTINEL_SMS_QPS:-120}
+      - EAGLE_SENTINEL_SMS_BURST=${EAGLE_SENTINEL_SMS_BURST:-30}
+      - ROCKETMQ_NAME_SERVER=${ROCKETMQ_NAME_SERVER:?ROCKETMQ_NAME_SERVER must be set in .env.prod}
+      # 生产 CORS 不允许通配符:必须显式列出业务前端域名
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS must be set in .env.prod (no wildcard allowed)}
+      - JAVA_OPTS=${GATEWAY_JAVA_OPTS:--server -XX:+UseG1GC -Xms768m -Xmx1g -XX:MaxMetaspaceSize=320m -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
+      - TZ=${TZ:-Asia/Shanghai}
+    volumes:
+      - gateway-logs:/app/logs
     logging: *default-logging
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/ >/dev/null 2>&1 || exit 1"]
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health" ]
       interval: 30s
       timeout: 10s
-      retries: 5
+      retries: 3
       start_period: 60s
+    depends_on:
+      auth:
+        condition: service_healthy
+      system:
+        condition: service_healthy
