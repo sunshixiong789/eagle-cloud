@@ -45,6 +45,22 @@ public class AccountInternalController {
     }
 
     /**
+     * 按 accountId 查 Account 快照。下游读模型（如 member-stats）持有的 userId 实为 auth
+     * accountId，经此端点解析 username / phone / 冻结态。Account 不存在时返回 404（client 端
+     * RestClient 错误处理器会自动转为 {@code NotFoundException}，调用方据此走 fallback 流程）。
+     *
+     * <p>仅暴露持久化字段——nickname / avatar / email 在 Account 上是
+     * {@code @Transient ProfileHints}，注册事件已发出即被清除，此处取不到。
+     */
+    @GetMapping("/{accountId}")
+    public AccountSnapshot findById(@PathVariable Long accountId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(AuthErrorCode.ACCOUNT_NOT_FOUND::toNotFoundException);
+        return new AccountSnapshot(account.getId(), account.getUsername(), account.getPhone(),
+                account.getStatus() == AccountStatus.FROZEN);
+    }
+
+    /**
      * 全量账号数（权威源，不包含初始化管理员）。
      *
      * <p>主用途：system-service Dashboard 统计"总用户数"——auth_account 是注册的事实来源,
