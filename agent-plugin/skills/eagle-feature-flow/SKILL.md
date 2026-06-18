@@ -1,6 +1,6 @@
 ---
 name: eagle-feature-flow
-description: Use when starting any non-trivial feature, refactor, or cross-module change in eagle-cloud projects — orchestrates Superpowers (brainstorming/plan/TDD/verification/code-review/finishing-branch) as the main backbone, and pulls in agent-plugin's Eagle knowledge (rules/* + slash commands like /new-module, /new-aggregate, /new-starter, /add-error-code, /check-arch + per-starter skills) at the planning and coding phases. Triggers on phrases like "新功能"/"加一个模块"/"新增聚合根"/"重构 X"/"build feature"/"refactor"/"add aggregate".
+description: Manual-trigger only. Activate ONLY when the user explicitly invokes `/eagle-flow` or says phrases like "按 eagle flow 走" / "启动 eagle flow" / "走 eagle flow"。Do NOT auto-activate from phrases like "新功能"/"加一个模块"/"重构 X" — those describe normal feature work and should be handled directly without entering this orchestration. Once explicitly invoked, this skill orchestrates Superpowers (brainstorming/plan/TDD/verification/code-review/finishing-branch) as the main backbone, and pulls in agent-plugin's Eagle knowledge (rules/* + slash commands like /new-module, /new-aggregate, /new-starter, /add-error-code, /check-arch + per-starter skills) at the planning and coding phases.
 ---
 
 # eagle-feature-flow — Superpowers 主干 + Eagle plugin 知识库
@@ -11,17 +11,24 @@ description: Use when starting any non-trivial feature, refactor, or cross-modul
 
 ## 何时使用
 
-**适用场景(满足任一即触发)**:
+**仅手动触发,不自动激活**。仅当用户**显式**说出以下任一时启动:
 
-- 用户表达"新做一个功能 / 加一个模块 / 新增聚合根 / 重构 X"
+- 使用 slash command `/eagle-flow [可选功能描述]`
+- 自然语言显式短语:"按 eagle flow 走"、"启动 eagle flow"、"走 eagle flow"、"用 eagle-feature-flow"
+- "继续 eagle flow" / "/eagle-flow continue"(跨 session 恢复)
+
+**绝不**因为用户说"做一个新功能 / 加一个模块 / 新增聚合根 / 重构 X"等普通需求描述就激活本 flow ——
+那些是普通开发请求,按常规方式直接处理即可,**不要**强制套用 6 阶段流程。
+
+**显式触发后的典型适用场景**(用户已明确要走 flow):
+
 - 跨多模块 / 多聚合根 / 多服务的非 trivial 变更
 - 涉及新增 starter、新增 ErrorCode、新增领域事件契约
-- PR 前希望确保走完完整规范流程
+- 团队规范要求 PR 前走完整规范流程
 
-**不适用场景**:
+**不适用场景**(即使用户提到也不进入 flow):
 
 - 单文件改一行 typo / 注释 / 文档微调
-- 已经在某阶段中,被中断后回来续接
 - 临时探索 / 验证 / 调试,不打算合并到主干
 
 ## 执行约束(rigid skill,不可跳步)

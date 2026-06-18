@@ -176,7 +176,7 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 
 | 命令                | 作用                                                                              |
 |-------------------|---------------------------------------------------------------------------------|
-| `/eagle-flow`     | **启动 6 阶段端到端流程**（自然语言"做一个新功能"等价触发；详见 `eagle-feature-flow` skill）                |
+| `/eagle-flow`     | **启动 6 阶段端到端流程**（仅手动触发；详见 `eagle-feature-flow` skill）                            |
 | `/check-arch`     | Modulith 架构验证 + 模块测试 + 全量构建一键检查                                                 |
 | `/new-module`     | 按 DDD 模板创建新业务模块（含 `package-info.java` + 四层骨架）                                   |
 | `/new-aggregate`  | 创建聚合根全栈骨架（聚合根 + Repository + ErrorCode + ApplicationService + Controller + DTO） |
@@ -200,5 +200,6 @@ OpenSpec）：
 **设计哲学**：Superpowers 提供工程纪律（brainstorm → plan → TDD → verify → review → finish），
 本仓库的 `agent-plugin` 提供 Eagle 平台的"约束"（rules）和"工具箱"（commands + per-starter skills），后者在主流程的关键节点被嵌入式调用。
 
-详见 `agent-plugin/skills/eagle-feature-flow/SKILL.md`。模型在识别到"做一个新功能 / 加一个模块 / 重构 X"
-等触发短语时自动激活；手动触发可直接说"按 eagle flow 走"。
+详见 `agent-plugin/skills/eagle-feature-flow/SKILL.md`。**仅手动触发**：使用 `/eagle-flow [可选功能描述]` 或显式说
+"按 eagle flow 走" / "启动 eagle flow"。普通需求描述（"做一个新功能 / 加一个模块 / 重构 X"）不会自动进入 flow，
+按常规方式处理即可。

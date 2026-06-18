@@ -69,13 +69,22 @@ codex plugin install superpowers@superpowers
 
 ### 第 4 步:试用一次完整流程
 
-直接对 Claude 说:
+`eagle-feature-flow` 改为**仅手动触发**,只能由 slash command 或显式短语启动。直接对 Claude 说:
 
 ```
-我要给系统加一个用户积分功能
+/eagle-flow 用户积分功能
 ```
 
-模型识别"加功能" → 自动激活 `eagle-feature-flow` → 按 6 阶段走完(Brainstorm → Plan → TDD → Verify → Review → Finish)。
+或:
+
+```
+按 eagle flow 走,做一个用户积分功能
+```
+
+模型会启动 `eagle-feature-flow` → 按 6 阶段走完(Brainstorm → Plan → TDD → Verify → Review → Finish)。
+
+> 仅说"我要给系统加一个用户积分功能"**不会**进入 6 阶段流程,模型会按常规方式处理;
+> 如果希望走完整流程,**必须**显式触发。
 
 **就这样,你就能用了。**
 
@@ -92,9 +101,9 @@ codex plugin install superpowers@superpowers
 **它们的关系**:
 
 ```
-你说"做一个新功能"
+你显式触发(/eagle-flow 或 "按 eagle flow 走")
     ↓
-eagle-feature-flow 激活(本 plugin)
+eagle-feature-flow 激活(本 plugin) ← 仅手动触发,不识别普通需求短语
     ↓
 按 6 阶段调用 Superpowers,每个阶段嵌入 Eagle 知识
     ├─ Phase 1 Brainstorm → superpowers:brainstorming
@@ -178,12 +187,14 @@ eagle-feature-flow 激活(本 plugin)
 
 ### 层次 3:eagle-feature-flow 编排(最强约束,推荐团队)
 
-**装 plugin + Superpowers**,触发短语自动激活 6 阶段固定流程。
+**装 plugin + Superpowers**,通过 `/eagle-flow` 或显式短语**手动**启动 6 阶段固定流程
+(不再因为"我要做新功能"等普通描述自动激活)。
 
 **典型 session**:
 
 ```
-> 我要做一个用户积分系统
+> /eagle-flow 用户积分系统
+  # 或: 按 eagle flow 走,做一个用户积分系统
 
 [Eagle Flow] 启动 6 阶段流程
 
@@ -235,10 +246,12 @@ eagle-feature-flow 激活(本 plugin)
 ### 场景 A:做新功能(用 L3)
 
 ```
-> 我要在订单系统加一个发票申请功能,用户支付后可以申请开发票
+> /eagle-flow 在订单系统加一个发票申请功能,用户支付后可以申请开发票
 ```
 
-模型自动走 6 阶段。Phase 2 会读:
+(或先说需求再追加"按 eagle flow 走"。注意:仅描述需求不会自动激活 flow,必须显式触发。)
+
+模型按 6 阶段走。Phase 2 会读:
 
 - `rules/03-architecture.md`(发票算独立聚合根还是订单子实体?)
 - `rules/05-api.md`(URL 设计)
@@ -252,10 +265,10 @@ Phase 3 会触发:`/new-aggregate order Invoice` 或 `/new-module invoice`(取�
 ### 场景 B:重构(用 L3)
 
 ```
-> 把 OrderService 里的支付逻辑抽出来,做成支付适配器
+> /eagle-flow 把 OrderService 里的支付逻辑抽出来,做成支付适配器
 ```
 
-Phase 1 澄清:是否改外部行为?是否引入新 starter?
+(显式触发后)Phase 1 澄清:是否改外部行为?是否引入新 starter?
 
 Phase 2 plan 重点:
 
@@ -291,28 +304,28 @@ L1 模式即可:模型读 CLAUDE.md → 知道 Eagle 用乐观锁(`@Version`)→
 
 ## 触发短语速查
 
-**两种触发方式,等价**:
+**`eagle-feature-flow` 仅手动触发,不自动激活**。普通需求描述(如"做一个新功能 / 加一个模块 / 重构 X")
+**不会**进入 6 阶段流程,按常规方式处理即可。
 
-| 方式                    | 例子                   | 适合                     |
-|-----------------------|----------------------|------------------------|
-| **Slash command(显式)** | `/eagle-flow 用户积分系统` | 新人 / 需要审计 / 不确定短语是否能激活 |
-| **自然语言(隐式)**          | `我要做一个用户积分系统`        | 老成员 / 对话流自然延续          |
+**仅以下显式入口可启动 flow**:
 
-模型识别这些**自然语言短语**会自动激活 `eagle-feature-flow`:
+| 方式                  | 例子                                                       | 适合                                |
+|---------------------|----------------------------------------------------------|-----------------------------------|
+| **Slash command**   | `/eagle-flow 用户积分系统` / `/eagle-flow`(空参)                 | 任何人,推荐统一入口                        |
+| **自然语言显式短语**        | `按 eagle flow 走` / `启动 eagle flow` / `走 eagle flow`     | 对话流中自然延续                          |
+| **跨 session 恢复**    | `/eagle-flow continue` / `继续 eagle flow`                 | 上次未走完想接着走                         |
 
-| 短语                                         | 激活原因           |
-|--------------------------------------------|----------------|
-| "新功能 / 加一个 X / 加一个模块"                      | 新增非 trivial 变更 |
-| "新增聚合根 / 新增实体"                             | 涉及 DDD 骨架      |
-| "重构 X / 抽取 / 拆分"                           | 跨模块结构变更        |
-| "build feature / refactor / add aggregate" | 英文同义触发         |
-| "按 eagle flow 走" / "启动 eagle flow"         | 显式手动触发         |
+**绝不会自动激活的场景**(必须自己显式触发,否则按常规方式处理):
 
-**不会**激活的(用 L1 / L2 即可):
-
-- "改一下日志 / 调整配置 / 改个名字"
-- "为什么 X 报错" (Bug 调试)
-- "解释一下 OrderService" (代码理解)
+| 短语                                         | 处理方式                       |
+|--------------------------------------------|----------------------------|
+| "新功能 / 加一个 X / 加一个模块"                      | 常规开发请求;想走 flow → 加一句"按 eagle flow 走" |
+| "新增聚合根 / 新增实体"                             | 直接 `/new-aggregate` 或常规实现  |
+| "重构 X / 抽取 / 拆分"                           | 常规重构;想走 flow → 显式触发        |
+| "build feature / refactor / add aggregate" | 同上,英文不再作为自动触发短语            |
+| "改一下日志 / 调整配置 / 改个名字"                      | 直接改,与 flow 无关               |
+| "为什么 X 报错"                                 | Bug 调试,与 flow 无关            |
+| "解释一下 OrderService"                        | 代码理解,与 flow 无关              |
 
 ---
 
@@ -322,7 +335,7 @@ L1 模式即可:模型读 CLAUDE.md → 知道 Eagle 用乐观锁(`@Version`)→
 
 | 命令                | 参数                               | 作用                                                                     |
 |-------------------|----------------------------------|------------------------------------------------------------------------|
-| `/eagle-flow`     | `[功能描述,可选]`                      | **启动 6 阶段端到端流程**(等价于自然语言"我要做 X")                                       |
+| `/eagle-flow`     | `[功能描述,可选]`                      | **启动 6 阶段端到端流程**(仅手动触发;等价短语:"按 eagle flow 走")                          |
 | `/check-arch`     | `[模块路径,可选]`                      | Modulith 架构验证 + 模块测试 + 全量构建                                            |
 | `/new-module`     | `<module-name>`                  | 按 DDD 模板创建新业务模块                                                        |
 | `/new-aggregate`  | `<module> <aggregate-name>`      | 创建聚合根 + Repository + ErrorCode + ApplicationService + Controller + DTO |
@@ -504,13 +517,14 @@ codex plugin install eagle-cloud@eagle-cloud
 
 ### eagle-feature-flow 不触发
 
-**可能原因**:
+**先确认**:flow 已改为**仅手动触发**,普通需求描述("做一个新功能 / 加一个模块 / 重构 X")不会自动激活,
+这是预期行为。如果你确实想启动 flow:
 
-| 原因                 | 处理                              |
-|--------------------|---------------------------------|
-| 触发短语不够明确           | 改用"按 eagle flow 走"              |
-| Superpowers 没装     | flow 依赖 superpowers 的 skill,必须装 |
-| 短语命中其他 skill 优先级更高 | 显式说"用 eagle-feature-flow"       |
+| 原因                 | 处理                                                          |
+|--------------------|-------------------------------------------------------------|
+| 只描述了需求,没显式触发       | 使用 `/eagle-flow` 或追加"按 eagle flow 走" / "启动 eagle flow"      |
+| Superpowers 没装     | flow 依赖 superpowers 的 skill,必须装                             |
+| 显式短语后仍未进入 flow     | 显式说"用 eagle-feature-flow skill 启动 6 阶段流程"                   |
 
 ---
 

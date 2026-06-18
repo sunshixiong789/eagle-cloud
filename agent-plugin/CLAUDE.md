@@ -137,7 +137,7 @@
 
 | 命令                | 作用                                 |
 |-------------------|------------------------------------|
-| `/eagle-flow`     | **启动 6 阶段端到端流程**(自然语言"做一个新功能"等价触发) |
+| `/eagle-flow`     | **启动 6 阶段端到端流程**(仅手动触发,不自动激活)     |
 | `/check-arch`     | Modulith 架构验证 + 模块测试 + 全量构建一键检查    |
 | `/new-module`     | 按 DDD 模板创建新业务模块                    |
 | `/new-aggregate`  | 创建聚合根全栈骨架                          |
@@ -160,7 +160,9 @@
 **设计哲学**:Superpowers 提供工程纪律(brainstorm → plan → TDD → verify → review → finish),
 本 plugin 提供 Eagle 平台的"约束"(rules)和"工具箱"(commands + per-starter skills),后者在主流程的关键节点被嵌入式调用。
 
-详见 `skills/eagle-feature-flow/SKILL.md`。手动触发:在对话中说"按 eagle flow 走"或描述一个非 trivial 的功能需求即可。
+详见 `skills/eagle-feature-flow/SKILL.md`。**仅手动触发**:使用 `/eagle-flow [可选功能描述]`,
+或在对话中显式说"按 eagle flow 走" / "启动 eagle flow"。普通需求描述(如"做一个新功能 / 加一个模块 / 重构 X")
+不会自动进入 flow,按常规方式处理即可。
 
 ## 重要约定（高频陷阱）
 
