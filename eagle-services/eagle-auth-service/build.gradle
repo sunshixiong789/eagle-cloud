@@ -42,6 +42,11 @@ dependencies {
     // auth 内的 LoginRateLimitFilter / TokenTrackingHandler / OnlineUserAdapter 直接用 fastjson2
     implementation "com.alibaba.fastjson2:fastjson2"
 
+    // 淘宝官方 TOP SDK（本地 jar，无 Nexus/Maven 坐标；与 ease-mind-servers 的
+    // zhetaoke-starter/libs 下同一份 jar 一致）：TaobaoServiceImpl 调
+    // taobao.top.auth.token.create 解析淘宝登录 openUid。
+    implementation files('libs/taobao-sdk-java-auto_1532595500163-20260430.jar')
+
     // 本地开发：自动加载 .env 到 Spring Environment
     runtimeOnly 'me.paulschwarz:spring-dotenv:5.1.0'
 
