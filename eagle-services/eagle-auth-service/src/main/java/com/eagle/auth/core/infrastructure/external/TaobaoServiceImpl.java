@@ -14,6 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * {@link TaobaoService} 的 TOP SDK 实现。
  *
@@ -78,13 +81,26 @@ public class TaobaoServiceImpl implements TaobaoService {
                 openUid = node.path("taobao_user_id").asText(null);
             }
             if (openUid == null || openUid.isBlank()) {
-                log.warn("token_result 未含 taobao_open_uid/taobao_user_id: {}", tokenResult);
+                // token_result 含明文 access_token / refresh_token，禁止整体落日志（13-logging.md）；
+                // 仅输出字段名用于排查。
+                log.warn("token_result 未含 taobao_open_uid/taobao_user_id, fields={}",
+                        fieldNames(node));
                 throw AuthErrorCode.TAOBAO_UPSTREAM.toServiceException();
             }
             return openUid;
         } catch (JsonProcessingException ex) {
-            log.warn("解析 token_result 失败: {}", tokenResult, ex);
+            // 不输出原始 tokenResult（可能含明文 token）；仅记录长度与异常。
+            log.warn("解析 token_result 失败, length={}", tokenResult == null ? 0 : tokenResult.length(), ex);
             throw AuthErrorCode.TAOBAO_UPSTREAM.toServiceException(ex);
         }
+    }
+
+    /**
+     * 提取 JSON 字段名列表（不含值），用于安全排查——避免把含明文 token 的值写进日志。
+     */
+    private static String fieldNames(JsonNode node) {
+        List<String> names = new ArrayList<>();
+        node.fieldNames().forEachRemaining(names::add);
+        return String.join(",", names);
     }
 }
