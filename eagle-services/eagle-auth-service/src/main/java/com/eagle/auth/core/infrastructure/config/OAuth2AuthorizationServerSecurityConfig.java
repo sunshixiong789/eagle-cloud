@@ -7,6 +7,8 @@ import com.eagle.auth.core.infrastructure.security.PhoneOneClickAuthenticationCo
 import com.eagle.auth.core.infrastructure.security.PhoneOneClickAuthenticationProvider;
 import com.eagle.auth.core.infrastructure.security.SmsCodeAuthenticationConverter;
 import com.eagle.auth.core.infrastructure.security.SmsCodeAuthenticationProvider;
+import com.eagle.auth.core.infrastructure.security.TaobaoAppAuthenticationConverter;
+import com.eagle.auth.core.infrastructure.security.TaobaoAppAuthenticationProvider;
 import com.eagle.auth.core.infrastructure.security.TokenTrackingHandler;
 import com.eagle.auth.core.infrastructure.security.WechatAppAuthenticationConverter;
 import com.eagle.auth.core.infrastructure.security.WechatAppAuthenticationProvider;
@@ -57,6 +59,7 @@ public class OAuth2AuthorizationServerSecurityConfig {
             WechatMiniProgramAuthenticationProvider wechatProvider,
             SmsCodeAuthenticationProvider smsProvider,
             PhoneOneClickAuthenticationProvider phoneOneClickProvider,
+            TaobaoAppAuthenticationProvider taobaoAppProvider,
             SecurityContextRepository securityContextRepository,
             TokenTrackingHandler tokenTrackingHandler,
             RegisteredClientRepository registeredClientRepository,
@@ -75,7 +78,7 @@ public class OAuth2AuthorizationServerSecurityConfig {
                                         new CustomGrantClientAuthenticationProvider(registeredClientRepository)))
                         .tokenEndpoint(tokenEndpoint ->
                                 registerCustomGrants(tokenEndpoint, wechatAppProvider, wechatProvider,
-                                        smsProvider, phoneOneClickProvider, tokenTrackingHandler))
+                                        smsProvider, phoneOneClickProvider, taobaoAppProvider, tokenTrackingHandler))
                         .oidc(oidc -> oidc.userInfoEndpoint(userInfo -> userInfo
                                 .userInfoMapper(OAuth2AuthorizationServerSecurityConfig::mapUserInfoFromIdToken))))
                 .authorizeHttpRequests(authorize -> authorize
@@ -135,6 +138,7 @@ public class OAuth2AuthorizationServerSecurityConfig {
                                       WechatMiniProgramAuthenticationProvider wechatProvider,
                                       SmsCodeAuthenticationProvider smsProvider,
                                       PhoneOneClickAuthenticationProvider phoneOneClickProvider,
+                                      TaobaoAppAuthenticationProvider taobaoAppProvider,
                                       TokenTrackingHandler tokenTrackingHandler) {
         tokenEndpoint
                 .accessTokenRequestConverter(new WechatAppAuthenticationConverter())
@@ -145,6 +149,8 @@ public class OAuth2AuthorizationServerSecurityConfig {
                 .authenticationProvider(smsProvider)
                 .accessTokenRequestConverter(new PhoneOneClickAuthenticationConverter())
                 .authenticationProvider(phoneOneClickProvider)
+                .accessTokenRequestConverter(new TaobaoAppAuthenticationConverter())
+                .authenticationProvider(taobaoAppProvider)
                 .accessTokenResponseHandler(tokenTrackingHandler);
     }
 }

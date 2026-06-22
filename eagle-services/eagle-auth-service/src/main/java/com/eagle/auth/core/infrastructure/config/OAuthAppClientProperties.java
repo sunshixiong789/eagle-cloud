@@ -42,7 +42,7 @@ public class OAuthAppClientProperties {
     private Set<String> clientAuthenticationMethods = Set.of("none");
 
     private Set<String> authorizationGrantTypes = Set.of(
-            "refresh_token", "wechat_app", "wechat_mini_program", "sms_code", "phone_one_click");
+            "refresh_token", "wechat_app", "wechat_mini_program", "sms_code", "phone_one_click", "taobao_app");
 
     private Set<String> redirectUris = Set.of();
 
