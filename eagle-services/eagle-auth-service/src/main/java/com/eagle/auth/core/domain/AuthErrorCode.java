@@ -3,7 +3,7 @@ package com.eagle.auth.core.domain;
 import com.eagle.common.exception.ErrorCode;
 
 /**
- * 认证领域错误码（11001–11045）
+ * 认证领域错误码（11001–11049）
  */
 public enum AuthErrorCode implements ErrorCode {
 
@@ -71,7 +71,14 @@ public enum AuthErrorCode implements ErrorCode {
     IP_BLACKLISTED(11042, "error.auth.ip_blacklisted", "当前 IP 已被禁止访问"),
     BLACKLIST_DUPLICATE(11043, "error.blacklist.duplicate", "该黑名单条目已存在"),
     BLACKLIST_NOT_FOUND(11044, "error.blacklist.not_found", "黑名单条目不存在"),
-    ADMIN_ACCOUNT_PROTECTED(11045, "error.account.admin_protected", "初始化管理员账号不允许执行该操作");
+    ADMIN_ACCOUNT_PROTECTED(11045, "error.account.admin_protected", "初始化管理员账号不允许执行该操作"),
+
+    // ==================== 淘宝登录（11046–11049）====================
+
+    TAOBAO_AUTH_REQUIRED(11046, "error.auth.taobao_auth_required", "淘宝授权信息不能为空"),
+    PHONE_BINDING_REQUIRED(11047, "error.auth.phone_binding_required", "请绑定手机号完成登录"),
+    TAOBAO_ALREADY_BOUND(11048, "error.auth.taobao_already_bound", "该淘宝账号已绑定其他用户"),
+    TAOBAO_UPSTREAM(11049, "error.auth.taobao_upstream", "淘宝授权服务暂时不可用");
 
     private final ErrorCode.Meta meta;
 
