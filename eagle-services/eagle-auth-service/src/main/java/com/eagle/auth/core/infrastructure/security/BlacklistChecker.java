@@ -79,4 +79,17 @@ public class BlacklistChecker {
             throw AuthErrorCode.IDENTITY_BLACKLISTED.toServiceException();
         }
     }
+
+    /**
+     * 淘宝登录前置校验
+     */
+    public void checkTaobao(String openUid, String ip) {
+        if (ip != null && blacklist.isBlacklisted(BlacklistType.IP, ip)) {
+            throw AuthErrorCode.IP_BLACKLISTED.toServiceException();
+        }
+        if (openUid != null && !openUid.isBlank()
+                && blacklist.isBlacklisted(BlacklistType.TAOBAO_OPENID, openUid)) {
+            throw AuthErrorCode.IDENTITY_BLACKLISTED.toServiceException();
+        }
+    }
 }

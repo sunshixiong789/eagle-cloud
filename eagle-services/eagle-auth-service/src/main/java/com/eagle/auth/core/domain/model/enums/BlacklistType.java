@@ -25,5 +25,9 @@ public enum BlacklistType {
     /**
      * 微信 openid
      */
-    OPENID
+    OPENID,
+    /**
+     * 淘宝 openUid
+     */
+    TAOBAO_OPENID
 }

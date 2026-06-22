@@ -83,6 +83,8 @@ public class BlacklistCacheSyncHandler {
                     .or(() -> accountRepository.findByWechatBindingWebOpenid(value))
                     .or(() -> accountRepository.findByWechatBindingMpOpenid(value))
                     .map(Account::getId).orElse(null);
+            case TAOBAO_OPENID -> accountRepository.findByTaobaoBindingOpenUid(value)
+                    .map(Account::getId).orElse(null);
             case EMAIL, IP -> null;
         };
     }
