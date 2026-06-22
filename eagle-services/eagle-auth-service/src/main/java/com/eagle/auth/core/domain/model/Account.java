@@ -10,6 +10,7 @@ import com.eagle.auth.core.domain.model.enums.AccountStatus;
 import com.eagle.auth.core.domain.model.enums.FreezeReason;
 import com.eagle.auth.core.domain.model.valueobject.AccountFreeze;
 import com.eagle.auth.core.domain.model.valueobject.ProfileHints;
+import com.eagle.auth.core.domain.model.valueobject.TaobaoBinding;
 import com.eagle.auth.core.domain.model.valueobject.WechatBinding;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
@@ -47,7 +48,8 @@ import java.util.HexFormat;
         @Index(name = "idx_account_openid", columnList = "openid"),
         @Index(name = "idx_account_unionid", columnList = "unionid"),
         @Index(name = "idx_account_web_openid", columnList = "web_openid"),
-        @Index(name = "idx_account_mp_openid", columnList = "mp_openid")
+        @Index(name = "idx_account_mp_openid", columnList = "mp_openid"),
+        @Index(name = "idx_account_taobao_open_uid", columnList = "taobao_open_uid")
 })
 public class Account extends BaseAggregateRoot<Account> {
 
@@ -97,6 +99,12 @@ public class Account extends BaseAggregateRoot<Account> {
      */
     @Embedded
     private WechatBinding wechatBinding;
+
+    /**
+     * 淘宝绑定信息
+     */
+    @Embedded
+    private TaobaoBinding taobaoBinding;
 
     /**
      * 注册时的 profile 提示信息（瞬态，不持久化）。
@@ -374,5 +382,23 @@ public class Account extends BaseAggregateRoot<Account> {
                 this.wechatBinding = this.wechatBinding.withUnionid(unionid);
             }
         }
+    }
+
+    // ==================== 淘宝绑定 ====================
+
+    /**
+     * 绑定淘宝账号（淘宝登录补绑手机号后挂接）。
+     *
+     * <p>已绑相同 openUid 幂等返回；绑不同 openUid 抛 {@code TAOBAO_ALREADY_BOUND}。
+     */
+    public void bindTaobao(String openUid) {
+        if (openUid == null || openUid.isBlank()) {
+            throw AuthErrorCode.TAOBAO_AUTH_REQUIRED.toDomainException();
+        }
+        if (this.taobaoBinding != null && this.taobaoBinding.getOpenUid() != null
+                && !this.taobaoBinding.getOpenUid().equals(openUid)) {
+            throw AuthErrorCode.TAOBAO_ALREADY_BOUND.toDomainException();
+        }
+        this.taobaoBinding = TaobaoBinding.create(openUid);
     }
 }
