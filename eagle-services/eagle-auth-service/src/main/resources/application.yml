@@ -173,7 +173,7 @@ eagle:
       client-id: eagleApp
       client-name: Eagle App 移动端
       client-authentication-methods: none
-      authorization-grant-types: refresh_token,sms_code,wechat_app,wechat_mini_program,phone_one_click
+      authorization-grant-types: refresh_token,sms_code,wechat_app,wechat_mini_program,phone_one_click,taobao_app
       redirect-uris: ""
       scopes: openid,profile,email,address,phone
       require-proof-key: false
@@ -196,6 +196,12 @@ eagle:
         app-id: ${WECHAT_MP_APP_ID:}
         app-secret: ${WECHAT_MP_APP_SECRET:}
         redirect-uri: ${WECHAT_MP_REDIRECT_URI:http://localhost/login/wechat/h5/callback}
+  taobao:
+    app:
+      enabled: ${TAOBAO_APP_ENABLED:false}
+      app-key: ${TAOBAO_APP_KEY:}
+      app-secret: ${TAOBAO_APP_SECRET:}
+      sign-method: ${TAOBAO_APP_SIGN_METHOD:md5}
   message:
     sms:
       provider: ${SMS_PROVIDER:hnsls}

@@ -22,7 +22,7 @@ import java.util.Set;
  * <p>
  * Spring Authorization Server 内置的 {@code PublicClientAuthenticationConverter} 仅识别
  * {@code grant_type=authorization_code} + PKCE {@code code_verifier} 的请求。
- * 对于本项目自定义的 sms_code / wechat_app / wechat_mini_program / phone_one_click 等 grant_type,
+ * 对于本项目自定义的 sms_code / wechat_app / wechat_mini_program / phone_one_click / taobao_app 等 grant_type,
  * 内置 converter 全部返回 null,导致 public client(无 secret)无法通过 client 认证,
  * token endpoint 抛 {@code invalid_client}。
  * <p>
@@ -45,6 +45,7 @@ public final class CustomGrantPublicClientAuthenticationConverter implements Aut
             WechatAppAuthenticationToken.WECHAT_APP.getValue(),
             WechatMiniProgramAuthenticationToken.WECHAT_MINI_PROGRAM.getValue(),
             PhoneOneClickAuthenticationToken.PHONE_ONE_CLICK.getValue(),
+            TaobaoAppAuthenticationToken.TAOBAO_APP.getValue(),
             // 公共客户端（无 secret）刷新 token：SAS 内置 4 个 client auth converter 都不识别
             // grant_type=refresh_token + 无 secret + 无 PKCE 的组合，因此 fallback 到 invalid_client。
             // 这里把 refresh_token 也放进自定义 public client 链路。

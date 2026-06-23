@@ -51,4 +51,9 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
      * 通过微信公众号 H5 openid 查找账号
      */
     Optional<Account> findByWechatBindingMpOpenid(String mpOpenid);
+
+    /**
+     * 按淘宝 openUid 查找账号（淘宝登录直登捷径）。
+     */
+    Optional<Account> findByTaobaoBindingOpenUid(String openUid);
 }
