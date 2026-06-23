@@ -277,3 +277,8 @@ logging:
     com.eagle: INFO
     org.hibernate.SQL: WARN
     org.hibernate.orm.jdbc.bind: WARN
+    # 排查 /oauth2/token 400：SAS 框架过滤器把 OAuth2 错误直接写成 JSON 响应，
+    # 默认不在 INFO/ERROR 打日志，调到 DEBUG/TRACE 才能看到是哪个 converter / client-auth 抛的 OAuth2Error。
+    # prod 已在 application-prod.yml 覆盖 org.springframework.security=WARN，此处不影响生产。
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2.server.authorization: TRACE

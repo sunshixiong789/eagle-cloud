@@ -14,6 +14,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Eagle Sentinel 自动配置。
@@ -41,13 +42,14 @@ public class SentinelAutoConfiguration {
      * <p>将 {@link com.alibaba.csp.sentinel.slots.block.BlockException} 各子类型
      * 映射为标准 JSON 错误响应，使用方可通过声明自定义 {@link BlockExceptionHandler} Bean 覆盖。
      *
+     * @param objectMapper Boot 托管的 ObjectMapper，用于序列化错误响应
      * @return Eagle Sentinel 流控异常处理器实例
      */
     @Bean
     @ConditionalOnMissingBean(BlockExceptionHandler.class)
-    public BlockExceptionHandler blockExceptionHandler() {
+    public BlockExceptionHandler blockExceptionHandler(ObjectMapper objectMapper) {
         log.info("[Eagle Sentinel] BlockExceptionHandler registered: EagleSentinelBlockExceptionHandler");
-        return new EagleSentinelBlockExceptionHandler();
+        return new EagleSentinelBlockExceptionHandler(objectMapper);
     }
 
     /**

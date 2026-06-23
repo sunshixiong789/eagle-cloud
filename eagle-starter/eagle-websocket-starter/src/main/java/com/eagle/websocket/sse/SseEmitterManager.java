@@ -2,6 +2,7 @@ package com.eagle.websocket.sse;
 
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -28,6 +29,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author eagle
  */
 @Slf4j
+@RequiredArgsConstructor
 public class SseEmitterManager {
 
     private static final long DEFAULT_TIMEOUT_MS = 60_000L;
@@ -38,7 +40,7 @@ public class SseEmitterManager {
     private final ConcurrentHashMap<String, CopyOnWriteArrayList<SseEmitter>> emitters =
             new ConcurrentHashMap<>();
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     /**
      * 为指定用户建立 SSE 连接。

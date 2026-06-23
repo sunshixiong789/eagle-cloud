@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * WebSocket + SSE 实时推送自动配置。
@@ -78,8 +79,8 @@ public class WebSocketAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public SseEmitterManager sseEmitterManager() {
-        return new SseEmitterManager();
+    public SseEmitterManager sseEmitterManager(ObjectMapper objectMapper) {
+        return new SseEmitterManager(objectMapper);
     }
 
     /**

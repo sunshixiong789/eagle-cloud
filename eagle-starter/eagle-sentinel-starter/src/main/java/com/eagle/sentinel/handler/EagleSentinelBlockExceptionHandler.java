@@ -9,6 +9,7 @@ import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
@@ -30,6 +31,7 @@ import java.util.Map;
  * @author eagle
  */
 @Slf4j
+@RequiredArgsConstructor
 public class EagleSentinelBlockExceptionHandler implements BlockExceptionHandler {
 
     /**
@@ -38,9 +40,9 @@ public class EagleSentinelBlockExceptionHandler implements BlockExceptionHandler
     private static final String CONTENT_TYPE_JSON = "application/json;charset=UTF-8";
 
     /**
-     * Jackson ObjectMapper，线程安全，可安全共享。
+     * Spring 注入的 Boot 托管 ObjectMapper（遵循全局 spring.jackson.* 配置，线程安全可共享）。
      */
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     /**
      * 处理 Sentinel 流控异常，向客户端返回标准 JSON 错误响应。
@@ -87,6 +89,6 @@ public class EagleSentinelBlockExceptionHandler implements BlockExceptionHandler
 
         response.setStatus(status);
         response.setContentType(CONTENT_TYPE_JSON);
-        OBJECT_MAPPER.writeValue(response.getWriter(), body);
+        objectMapper.writeValue(response.getWriter(), body);
     }
 }
