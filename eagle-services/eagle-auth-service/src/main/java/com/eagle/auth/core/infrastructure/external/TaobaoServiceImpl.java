@@ -2,9 +2,6 @@ package com.eagle.auth.core.infrastructure.external;
 
 import com.eagle.auth.core.domain.AuthErrorCode;
 import com.eagle.auth.core.domain.service.TaobaoService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taobao.api.ApiException;
 import com.taobao.api.TaobaoClient;
 import com.taobao.api.request.TopAuthTokenCreateRequest;
@@ -13,9 +10,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * {@link TaobaoService} 的 TOP SDK 实现。
@@ -75,10 +72,10 @@ public class TaobaoServiceImpl implements TaobaoService {
     private String parseOpenUid(String tokenResult) {
         try {
             JsonNode node = objectMapper.readTree(tokenResult);
-            String openUid = node.path("taobao_open_uid").asText(null);
+            String openUid = node.path("taobao_open_uid").asString(null);
             if (openUid == null || openUid.isBlank()) {
                 // 部分应用资质无 open_uid，退回 taobao_user_id 作为标识
-                openUid = node.path("taobao_user_id").asText(null);
+                openUid = node.path("taobao_user_id").asString(null);
             }
             if (openUid == null || openUid.isBlank()) {
                 // token_result 含明文 access_token / refresh_token，禁止整体落日志（13-logging.md）；
@@ -88,7 +85,7 @@ public class TaobaoServiceImpl implements TaobaoService {
                 throw AuthErrorCode.TAOBAO_UPSTREAM.toServiceException();
             }
             return openUid;
-        } catch (JsonProcessingException ex) {
+        } catch (JacksonException ex) {
             // 不输出原始 tokenResult（可能含明文 token）；仅记录长度与异常。
             log.warn("解析 token_result 失败, length={}", tokenResult == null ? 0 : tokenResult.length(), ex);
             throw AuthErrorCode.TAOBAO_UPSTREAM.toServiceException(ex);
@@ -99,8 +96,6 @@ public class TaobaoServiceImpl implements TaobaoService {
      * 提取 JSON 字段名列表（不含值），用于安全排查——避免把含明文 token 的值写进日志。
      */
     private static String fieldNames(JsonNode node) {
-        List<String> names = new ArrayList<>();
-        node.fieldNames().forEachRemaining(names::add);
-        return String.join(",", names);
+        return String.join(",", node.propertyNames());
     }
 }
