@@ -4,7 +4,9 @@ import com.eagle.auth.core.domain.AuthErrorCode;
 import com.eagle.auth.core.domain.service.TaobaoService;
 import com.taobao.api.ApiException;
 import com.taobao.api.TaobaoClient;
+import com.taobao.api.request.OpenuidGetRequest;
 import com.taobao.api.request.TopAuthTokenCreateRequest;
+import com.taobao.api.response.OpenuidGetResponse;
 import com.taobao.api.response.TopAuthTokenCreateResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,8 +19,9 @@ import tools.jackson.databind.ObjectMapper;
 /**
  * {@link TaobaoService} 的 TOP SDK 实现。
  *
- * <p>调 {@code taobao.top.auth.token.create} 用授权码换 {@code token_result}（JSON），
- * 从中取 {@code taobao_open_uid} 作为稳定身份标识。
+ * <p>主路径（百川 native 一键授权）：access token 作为 TOP session 调 {@code taobao.openuid.get}
+ * 直取 {@code open_uid}。兜底路径（授权码）：调 {@code taobao.top.auth.token.create} 用授权码换
+ * {@code token_result}（JSON），从中取 {@code taobao_open_uid}。两者都得到稳定身份标识。
  *
  * <p>{@code eagle.taobao.app.enabled=false} 时 {@link TaobaoClient} 未装配，
  * 用 {@link ObjectProvider} 延迟解析，缺失即抛 {@code TAOBAO_UPSTREAM}。
@@ -40,8 +43,10 @@ public class TaobaoServiceImpl implements TaobaoService {
     private final ObjectMapper objectMapper;
 
     @Override
-    public String resolveOpenUid(String topAuthCode) {
-        if (topAuthCode == null || topAuthCode.isBlank()) {
+    public String resolveOpenUid(String tbAccessToken, String tbAuthCode) {
+        boolean hasToken = tbAccessToken != null && !tbAccessToken.isBlank();
+        boolean hasCode = tbAuthCode != null && !tbAuthCode.isBlank();
+        if (!hasToken && !hasCode) {
             throw AuthErrorCode.TAOBAO_AUTH_REQUIRED.toDomainException();
         }
         TaobaoClient client = taobaoClientProvider.getIfAvailable();
@@ -49,6 +54,41 @@ public class TaobaoServiceImpl implements TaobaoService {
             log.warn("TaobaoClient 未装配（eagle.taobao.app.enabled=false?）");
             throw AuthErrorCode.TAOBAO_UPSTREAM.toServiceException();
         }
+        // 百川 native SDK 授权返回的是 access token（非授权码），优先用它凭 session 直取 openUid；
+        // tb_auth_code 路径保留作兜底（将来 Web/H5 授权码流可复用）。
+        return hasToken
+                ? resolveByAccessToken(client, tbAccessToken)
+                : resolveByAuthCode(client, tbAuthCode);
+    }
+
+    /**
+     * 主路径：access token 作为 TOP session 调 {@code taobao.openuid.get} 直取 openUid。
+     */
+    private String resolveByAccessToken(TaobaoClient client, String accessToken) {
+        OpenuidGetRequest req = new OpenuidGetRequest();
+        OpenuidGetResponse resp;
+        try {
+            resp = client.execute(req, accessToken);
+        } catch (ApiException ex) {
+            log.warn("TOP openuid.get 调用异常", ex);
+            throw AuthErrorCode.TAOBAO_UPSTREAM.toServiceException(ex);
+        }
+        if (resp == null || !resp.isSuccess()
+                || resp.getOpenUid() == null || resp.getOpenUid().isBlank()) {
+            log.warn("TOP openuid.get 失败: code={}, subCode={}, subMsg={}",
+                    resp != null ? resp.getErrorCode() : null,
+                    resp != null ? resp.getSubCode() : null,
+                    resp != null ? resp.getSubMsg() : "null response");
+            throw AuthErrorCode.TAOBAO_UPSTREAM.toServiceException();
+        }
+        return resp.getOpenUid();
+    }
+
+    /**
+     * 兜底路径：用 TOP 授权码调 {@code taobao.top.auth.token.create} 换 token_result，
+     * 从中取 taobao_open_uid。
+     */
+    private String resolveByAuthCode(TaobaoClient client, String topAuthCode) {
         TopAuthTokenCreateRequest req = new TopAuthTokenCreateRequest();
         req.setCode(topAuthCode);
 

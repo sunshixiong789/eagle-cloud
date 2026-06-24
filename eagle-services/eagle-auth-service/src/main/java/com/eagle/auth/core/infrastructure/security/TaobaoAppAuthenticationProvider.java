@@ -65,7 +65,7 @@ public class TaobaoAppAuthenticationProvider extends AbstractCustomGrantAuthenti
     @Override
     protected Account authenticateGrant(Authentication authentication) {
         TaobaoAppAuthenticationToken token = (TaobaoAppAuthenticationToken) authentication;
-        String openUid = taobaoService.resolveOpenUid(token.getTbAuthCode());
+        String openUid = taobaoService.resolveOpenUid(token.getTbAccessToken(), token.getTbAuthCode());
         blacklistChecker.checkTaobao(openUid, ClientIpHolder.get());
 
         Optional<Account> bound = accountRepository.findByTaobaoBindingOpenUid(openUid);

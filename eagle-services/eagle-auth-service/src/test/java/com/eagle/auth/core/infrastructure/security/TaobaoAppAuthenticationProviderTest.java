@@ -61,7 +61,7 @@ class TaobaoAppAuthenticationProviderTest {
     @DisplayName("openUid 已绑账号 → 直接返回该账号（老用户直登）")
     void returningUserLogsInWithoutPhone() {
         Account existing = Account.createFromPhone("13800138000");
-        when(taobaoService.resolveOpenUid("authcode")).thenReturn("uid-1");
+        when(taobaoService.resolveOpenUid("acc", "authcode")).thenReturn("uid-1");
         when(accountRepository.findByTaobaoBindingOpenUid("uid-1")).thenReturn(Optional.of(existing));
 
         Account result = provider.authenticateGrant(token(null, null));
@@ -72,7 +72,7 @@ class TaobaoAppAuthenticationProviderTest {
     @Test
     @DisplayName("新 openUid 且无手机号 → 抛 PHONE_BINDING_REQUIRED")
     void newUserWithoutPhoneRequiresBinding() {
-        when(taobaoService.resolveOpenUid("authcode")).thenReturn("uid-2");
+        when(taobaoService.resolveOpenUid("acc", "authcode")).thenReturn("uid-2");
         when(accountRepository.findByTaobaoBindingOpenUid("uid-2")).thenReturn(Optional.empty());
 
         OAuth2AuthenticationException ex = assertThrows(OAuth2AuthenticationException.class,
@@ -83,7 +83,7 @@ class TaobaoAppAuthenticationProviderTest {
     @Test
     @DisplayName("新 openUid + 验证码错 → 抛 invalid_grant")
     void newUserWrongSmsCodeRejected() {
-        when(taobaoService.resolveOpenUid("authcode")).thenReturn("uid-3");
+        when(taobaoService.resolveOpenUid("acc", "authcode")).thenReturn("uid-3");
         when(accountRepository.findByTaobaoBindingOpenUid("uid-3")).thenReturn(Optional.empty());
         when(smsService.verifyCode("13800138000", "000000")).thenReturn(false);
 
@@ -95,7 +95,7 @@ class TaobaoAppAuthenticationProviderTest {
     @DisplayName("新 openUid + 验证码对 → 按手机号合并并绑定淘宝")
     void newUserBindsPhoneAndTaobao() {
         Account merged = Account.createFromPhone("13800138000");
-        when(taobaoService.resolveOpenUid("authcode")).thenReturn("uid-4");
+        when(taobaoService.resolveOpenUid("acc", "authcode")).thenReturn("uid-4");
         when(accountRepository.findByTaobaoBindingOpenUid("uid-4")).thenReturn(Optional.empty());
         when(smsService.verifyCode("13800138000", "123456")).thenReturn(true);
         when(accountApplicationService.findOrCreateByPhone("13800138000")).thenReturn(merged);

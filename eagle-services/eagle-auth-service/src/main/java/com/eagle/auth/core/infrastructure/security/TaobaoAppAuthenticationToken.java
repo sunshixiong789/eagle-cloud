@@ -5,6 +5,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationGrantAuthenticationToken;
 
+import java.io.Serial;
 import java.util.Map;
 
 /**
@@ -15,8 +16,8 @@ import java.util.Map;
 @Getter
 public class TaobaoAppAuthenticationToken extends OAuth2AuthorizationGrantAuthenticationToken {
 
-    public static final AuthorizationGrantType TAOBAO_APP =
-            new AuthorizationGrantType("taobao_app");
+    public static final AuthorizationGrantType TAOBAO_APP = new AuthorizationGrantType("taobao_app");
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private final String tbAccessToken;
