@@ -168,6 +168,11 @@ services:
       - WECHAT_MP_APP_ID=${WECHAT_MP_APP_ID:-}
       - WECHAT_MP_APP_SECRET=${WECHAT_MP_APP_SECRET:-}
       - WECHAT_MP_REDIRECT_URI=${WECHAT_MP_REDIRECT_URI:-}
+      # 淘宝登录（taobao_app grant）：enabled=true 才装配 TaobaoClient，用 access token 调 taobao.openuid.get 取 openUid
+      - TAOBAO_APP_ENABLED=${TAOBAO_APP_ENABLED:-false}
+      - TAOBAO_APP_KEY=${TAOBAO_APP_KEY:-}
+      - TAOBAO_APP_SECRET=${TAOBAO_APP_SECRET:-}
+      - TAOBAO_APP_SIGN_METHOD=${TAOBAO_APP_SIGN_METHOD:-md5}
       # 短信
       - SMS_PROVIDER=${SMS_PROVIDER:-hnsls}
       - SMS_ACCESS_KEY_ID=${SMS_ACCESS_KEY_ID:-}
