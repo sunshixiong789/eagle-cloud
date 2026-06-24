@@ -23,16 +23,13 @@ import java.util.Set;
  * 自定义 grant_type 的 public client 认证 Provider。
  *
  * <p>用于 SAS 7.0 中绕过 {@code PublicClientAuthenticationProvider} 对 public client
- * 的强制 PKCE 校验：SAS 7.0 内置的 {@code CodeVerifierAuthenticator.authenticateRequired}
- * 对所有 NONE 认证方法的 client 强制要求 {@code code_verifier} 参数，
- * 与 client 的 {@code require-proof-key} 设置无关（require-proof-key 只影响
- * {@code /oauth2/authorize} 入口的授权码颁发，不影响 {@code /oauth2/token} 客户端认证）。</p>
+ * 的强制 PKCE 校验。</p>
  *
  * <p>本 Provider 接管两类公共客户端认证，均自行校验 client_id 注册与认证方法，校验通过直接返回
  * 已认证的 {@link OAuth2ClientAuthenticationToken}，跳过 PKCE 检查：</p>
  * <ul>
- *   <li>{@code sms_code} / {@code wechat_app} / {@code wechat_mini_program} / {@code phone_one_click}
- *       四种自定义 grant_type：额外校验 grant_type 白名单；</li>
+ *   <li>{@code sms_code} / {@code wechat_app} / {@code wechat_mini_program} / {@code phone_one_click} /
+ *       {@code taobao_app} 等自定义 grant_type：额外校验 grant_type 白名单；</li>
  *   <li>{@code /oauth2/revoke}（退出登录）：无 grant_type 但带 {@code token} 参数，不校验 grant 白名单
  *       （revoke 不是授权类型）。introspect 不在此列。</li>
  * </ul>
@@ -53,6 +50,7 @@ public class CustomGrantClientAuthenticationProvider implements AuthenticationPr
             WechatAppAuthenticationToken.WECHAT_APP.getValue(),
             WechatMiniProgramAuthenticationToken.WECHAT_MINI_PROGRAM.getValue(),
             PhoneOneClickAuthenticationToken.PHONE_ONE_CLICK.getValue(),
+            TaobaoAppAuthenticationToken.TAOBAO_APP.getValue(),
             // 与 CustomGrantPublicClientAuthenticationConverter 对齐：放行公共客户端 refresh_token，
             // 跳过 PKCE 校验；后续 SAS 标准 RefreshTokenAuthenticationProvider 仍会校验 refresh_token 有效性。
             AuthorizationGrantType.REFRESH_TOKEN.getValue()
