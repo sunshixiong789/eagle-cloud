@@ -56,8 +56,8 @@ services:
       # 多库初始化脚本（仅 postgres-data 卷为空时触发）
       - ./postgres-init:/docker-entrypoint-initdb.d:ro
     # prod 默认给 2g，按数据量 / 并发调整（dev 全栈文件里是 512m）
-    mem_limit: ${PG_MEM_LIMIT:-2048m}
-    mem_reservation: ${PG_MEM_RESERVATION:-1024m}
+    mem_limit: 2048m
+    mem_reservation: 1024m
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME:-eagle} -d ${DB_NAME:-eagle_system}" ]
       interval: 10s
