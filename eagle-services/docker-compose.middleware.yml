@@ -1,0 +1,222 @@
+# -------- 自托管中间件：Redis + Nacos + RocketMQ（单独部署）----------
+#
+# 用途：在 prod 单机 / 内网机器上，用 docker 跑 Redis + Nacos + RocketMQ 这几个中间件，
+#       仅 PostgreSQL 走托管（资金类数据本体优先用 RDS：PITR + 多副本 + 自动备份）。
+#       应用层用 docker-compose.prod.yml 部署，两者共用同一个 eagle-network。
+#
+# 典型组合：
+#   docker-compose.middleware.yml → Redis + Nacos + RocketMQ(namesrv/broker/proxy/dashboard)
+#   docker-compose.prod.yml       → auth / system / gateway（应用）
+#   外部托管                        → PostgreSQL
+#   对应 .env.prod：REDIS_HOST=redis / NACOS_SERVER_ADDR=nacos:8848 /
+#                   ROCKETMQ_ENDPOINTS=rocketmq-proxy:8081 / ROCKETMQ_NAME_SERVER=rocketmq-namesrv:9876，
+#                   仅 DB_HOST 填托管 PostgreSQL 端点
+#
+# ── 启动（先起中间件，等健康后再起应用）──
+#   docker compose -f docker-compose.middleware.yml --env-file .env.prod up -d
+#   docker compose -f docker-compose.prod.yml       --env-file .env.prod up -d
+#
+# ── 端口说明 ──
+#   默认只绑 127.0.0.1（本机调试用）；同 docker 网络内的应用走服务名直连，不需要主机端口映射。
+#   RocketMQ 尤其如此：broker 的 brokerIP1=rocketmq-broker，只有同网络容器能用，主机映射对外部客户端无意义。
+#
+# ⚠️ 持久化 / 生产注意：
+#   - Nacos standalone 默认内嵌 Derby，配置存卷，卷丢=配置全丢；生产建议接外部 MySQL（见 nacos 注释）或定期导出配置。
+#   - RocketMQ store 在本地卷，磁盘坏=消息丢；务必定期备份 store + 消费端保持幂等（项目规则已要求）。
+#   - autoCreateTopicEnable 默认 true（开箱即用）；生产建议 .env.prod 设 ROCKETMQ_AUTO_CREATE_TOPIC=false 并预创建 topic。
+
+networks:
+  eagle-network:
+    name: eagle-network
+    driver: bridge
+
+volumes:
+  redis-data:
+  nacos-data:
+  rocketmq-namesrv-logs:
+  rocketmq-broker-logs:
+  rocketmq-broker-store:
+
+services:
+  # ─────────────────────────────── Redis ───────────────────────────────
+  redis:
+    image: redis:8.6.1
+    container_name: eagle-redis
+    restart: always
+    ports:
+      - "127.0.0.1:6379:6379"
+    networks:
+      - eagle-network
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis123456}
+      - TZ=${TZ:-Asia/Shanghai}
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123456} --maxmemory ${REDIS_MAXMEMORY:-512mb} --maxmemory-policy allkeys-lru
+    mem_limit: ${REDIS_MEM_LIMIT:-768m}
+    mem_reservation: ${REDIS_MEM_RESERVATION:-256m}
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis123456}", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ─────────────────────────────── Nacos ───────────────────────────────
+  nacos:
+    image: nacos/nacos-server:v3.2.1
+    container_name: eagle-nacos
+    restart: always
+    ports:
+      # 8090=控制台(容器内 8080) / 8848=OpenAPI / 9848=gRPC
+      - "127.0.0.1:8090:8080"
+      - "127.0.0.1:8848:8848"
+      - "127.0.0.1:9848:9848"
+    networks:
+      - eagle-network
+    environment:
+      - PREFER_HOST_MODE=${NACOS_PREFER_HOST_MODE:-hostname}
+      - MODE=${NACOS_MODE:-standalone}
+      - NACOS_AUTH_IDENTITY_KEY=${NACOS_AUTH_IDENTITY_KEY:-serverIdentity}
+      - NACOS_AUTH_IDENTITY_VALUE=${NACOS_AUTH_IDENTITY_VALUE:-security}
+      - NACOS_AUTH_TOKEN=${NACOS_AUTH_TOKEN:-VGhpc0lzTXlDdXN0b21TZWNyZXRLZXkwMTIzNDU2Nzg=}
+      - JVM_XMS=${NACOS_JVM_XMS:-512m}
+      - JVM_XMX=${NACOS_JVM_XMX:-512m}
+      - JVM_XMN=${NACOS_JVM_XMN:-256m}
+      - TZ=${TZ:-Asia/Shanghai}
+      # ── 可选：外部 MySQL 持久化（生产强烈建议；替代易丢的内嵌 Derby）──
+      # MySQL 需预建 nacos 库 + 导入官方 nacos-mysql.sql，再取消下面注释并在 .env.prod 填值
+      # - SPRING_DATASOURCE_PLATFORM=mysql
+      # - MYSQL_SERVICE_HOST=${NACOS_MYSQL_HOST}
+      # - MYSQL_SERVICE_PORT=${NACOS_MYSQL_PORT:-3306}
+      # - MYSQL_SERVICE_DB_NAME=${NACOS_MYSQL_DB:-nacos}
+      # - MYSQL_SERVICE_USER=${NACOS_MYSQL_USER}
+      # - MYSQL_SERVICE_PASSWORD=${NACOS_MYSQL_PASSWORD}
+      # - MYSQL_SERVICE_DB_PARAM=characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false&serverTimezone=Asia/Shanghai
+    mem_limit: ${NACOS_MEM_LIMIT:-1024m}
+    mem_reservation: ${NACOS_MEM_RESERVATION:-512m}
+    volumes:
+      - nacos-data:/home/nacos/data
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fsS -o /dev/null -m 3 http://127.0.0.1:8080/ || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  # ────────────────────────── RocketMQ NameServer ──────────────────────────
+  # 仅做路由注册；broker 向它汇报，客户端通过它发现 broker。user: root 解决 named volume 属主写权限
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.3.2
+    container_name: eagle-rocketmq-namesrv
+    restart: always
+    user: root
+    ports:
+      - "127.0.0.1:9876:9876"
+    networks:
+      - eagle-network
+    environment:
+      - JAVA_OPT_EXT=${ROCKETMQ_NAMESRV_JAVA_OPT_EXT:--server -Xms256m -Xmx256m -Xmn128m}
+      - TZ=${TZ:-Asia/Shanghai}
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        mkdir -p /home/rocketmq/logs/rocketmqlogs
+        exec sh mqnamesrv
+    mem_limit: ${ROCKETMQ_NAMESRV_MEM_LIMIT:-384m}
+    mem_reservation: 192m
+    volumes:
+      - rocketmq-namesrv-logs:/home/rocketmq/logs
+
+  # ──────────────────────────── RocketMQ Broker ────────────────────────────
+  # 单机 master（无 slave）。brokerIP1 必须=容器服务名，否则其他容器拿到宿主 IP 连不上。
+  rocketmq-broker:
+    image: apache/rocketmq:5.3.2
+    container_name: eagle-rocketmq-broker
+    restart: always
+    user: root
+    ports:
+      - "127.0.0.1:10909:10909"   # VIP channel
+      - "127.0.0.1:10911:10911"   # 主端口（读写）
+      - "127.0.0.1:10912:10912"   # HA 同步端口
+    networks:
+      - eagle-network
+    depends_on:
+      - rocketmq-namesrv
+    environment:
+      - NAMESRV_ADDR=${ROCKETMQ_NAMESRV_ADDR:-rocketmq-namesrv:9876}
+      - JAVA_OPT_EXT=${ROCKETMQ_BROKER_JAVA_OPT_EXT:--server -Xms512m -Xmx512m -Xmn256m}
+      - TZ=${TZ:-Asia/Shanghai}
+    # broker.conf 用 heredoc 在启动时写出；autoCreateTopicEnable 由 compose 在 YAML 层插值
+    # 生产建议 .env.prod 设 ROCKETMQ_AUTO_CREATE_TOPIC=false 并预创建 topic
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        mkdir -p /home/rocketmq/store /home/rocketmq/logs/rocketmqlogs
+        cat > /home/rocketmq/broker.conf <<'EOF'
+        brokerIP1=rocketmq-broker
+        brokerName=broker-a
+        brokerId=0
+        brokerClusterName=DefaultCluster
+        namesrvAddr=rocketmq-namesrv:9876
+        storePathRootDir=/home/rocketmq/store
+        autoCreateTopicEnable=${ROCKETMQ_AUTO_CREATE_TOPIC:-true}
+        autoCreateSubscriptionGroup=true
+        EOF
+        exec sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/broker.conf
+    mem_limit: ${ROCKETMQ_BROKER_MEM_LIMIT:-768m}
+    mem_reservation: 384m
+    volumes:
+      - rocketmq-broker-logs:/home/rocketmq/logs
+      - rocketmq-broker-store:/home/rocketmq/store
+
+  # ───────────────────────────── RocketMQ Proxy ─────────────────────────────
+  # 5.x gRPC 接入层（必装）：业务客户端连 Proxy:8081，不直连 broker/namesrv
+  rocketmq-proxy:
+    image: apache/rocketmq:5.3.2
+    container_name: eagle-rocketmq-proxy
+    restart: always
+    user: root
+    ports:
+      - "127.0.0.1:8081:8081"
+    networks:
+      - eagle-network
+    depends_on:
+      - rocketmq-namesrv
+      - rocketmq-broker
+    environment:
+      - NAMESRV_ADDR=${ROCKETMQ_NAMESRV_ADDR:-rocketmq-namesrv:9876}
+      - JAVA_OPT_EXT=${ROCKETMQ_PROXY_JAVA_OPT_EXT:--server -Xms256m -Xmx256m -Xmn128m}
+      - TZ=${TZ:-Asia/Shanghai}
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        mkdir -p /home/rocketmq/logs/rocketmqlogs
+        exec sh mqproxy -n rocketmq-namesrv:9876
+    mem_limit: ${ROCKETMQ_PROXY_MEM_LIMIT:-384m}
+    mem_reservation: 192m
+
+  # ─────────────────────────── RocketMQ Dashboard ───────────────────────────
+  # 可视化控制台（可选）；浏览器访问 http://宿主机:8180。不需要可整段删除
+  rocketmq-dashboard:
+    image: apacherocketmq/rocketmq-dashboard:1.0.0
+    container_name: eagle-rocketmq-dashboard
+    restart: always
+    ports:
+      - "127.0.0.1:8180:8080"
+    networks:
+      - eagle-network
+    depends_on:
+      - rocketmq-namesrv
+      - rocketmq-broker
+    environment:
+      - JAVA_OPTS=${ROCKETMQ_DASHBOARD_JAVA_OPTS:--server -Xms128m -Xmx256m -Drocketmq.namesrv.addr=rocketmq-namesrv:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false}
+      - TZ=${TZ:-Asia/Shanghai}
+    mem_limit: ${ROCKETMQ_DASHBOARD_MEM_LIMIT:-384m}
+    mem_reservation: 192m

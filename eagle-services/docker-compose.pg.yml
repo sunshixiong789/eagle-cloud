@@ -1,0 +1,66 @@
+# -------- 自托管 PostgreSQL（单独部署）----------
+#
+# 用途：把 PostgreSQL 单独拆成一份 compose，便于独立管理生命周期 / 备份 / 资源，
+#       与中间件（docker-compose.middleware.yml）和应用（docker-compose.prod.yml）解耦。
+#       三者共用同一个 eagle-network，应用走服务名 postgres:5432 直连。
+#
+# ⚠️ 这是整套里最关键的有状态服务（业务 + 资金数据本体）。单机 docker = 单点：
+#    宿主机磁盘坏 / 误删卷 = 数据全丢。务必做好下面任一兜底，否则强烈建议用托管 RDS：
+#      - 每天 pg_dump 异地备份（最低要求）
+#      - 宿主机磁盘 / 云盘自动快照
+#      - 有条件上 streaming replication（本文件是单实例，不含主从）
+#
+# ── 启动（PG 先起，等健康后再起中间件 / 应用）──
+#   docker compose -f docker-compose.pg.yml         --env-file .env.prod up -d
+#   docker compose -f docker-compose.middleware.yml --env-file .env.prod up -d
+#   docker compose -f docker-compose.prod.yml       --env-file .env.prod up -d
+#
+# ── 多库初始化 ──
+#   首次启动（postgres-data 卷为空）时执行 ./postgres-init/*.sh：
+#     01-create-auth-db.sh → 建 eagle_auth 库（主库 eagle_system 由 POSTGRES_DB 自动建）
+#   需要 payment 等附属库时，在 postgres-init/ 加对应脚本（读 PAYMENT_DB_NAME 等变量）。
+#   重建库：docker compose -f docker-compose.pg.yml down -v（⚠️ 删卷=删数据，慎用）
+#
+# ── 端口 ──
+#   默认只绑 127.0.0.1；同 docker 网络的应用走 postgres:5432 直连，不需要该映射。
+#   需要本机用客户端连（DBeaver / psql）时保留；绝不要绑 0.0.0.0 暴露公网。
+
+networks:
+  eagle-network:
+    name: eagle-network
+    driver: bridge
+
+volumes:
+  postgres-data:
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: eagle-postgres
+    restart: always
+    ports:
+      - "127.0.0.1:5432:5432"
+    networks:
+      - eagle-network
+    environment:
+      # 主库；与应用的 DB_NAME / DB_USERNAME / DB_PASSWORD 同源驱动，新卷上自动一致
+      - POSTGRES_DB=${DB_NAME:-eagle_system}
+      - POSTGRES_USER=${DB_USERNAME:-eagle}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-eagle123456}
+      # 由 postgres-init/01-create-auth-db.sh 读取，建附属库
+      - AUTH_DB_NAME=${AUTH_DB_NAME:-eagle_auth}
+      - PAYMENT_DB_NAME=${PAYMENT_DB_NAME:-eagle_payment}
+      - TZ=${TZ:-Asia/Shanghai}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # 多库初始化脚本（仅 postgres-data 卷为空时触发）
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    # prod 默认给 2g，按数据量 / 并发调整（dev 全栈文件里是 512m）
+    mem_limit: ${PG_MEM_LIMIT:-2048m}
+    mem_reservation: ${PG_MEM_RESERVATION:-1024m}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME:-eagle} -d ${DB_NAME:-eagle_system}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
