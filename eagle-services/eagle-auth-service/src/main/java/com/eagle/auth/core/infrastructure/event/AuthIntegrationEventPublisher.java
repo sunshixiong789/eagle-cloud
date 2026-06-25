@@ -1,8 +1,10 @@
 package com.eagle.auth.core.infrastructure.event;
 
 import com.eagle.auth.core.domain.event.AccountDeletedEvent;
+import com.eagle.auth.core.domain.event.AccountPhoneChangedEvent;
 import com.eagle.auth.core.domain.event.AccountRegisteredEvent;
 import com.eagle.auth.core.infrastructure.event.integration.AccountDeletedIntegrationEvent;
+import com.eagle.auth.core.infrastructure.event.integration.AccountPhoneChangedIntegrationEvent;
 import com.eagle.auth.core.infrastructure.event.integration.AccountRegisteredIntegrationEvent;
 import com.eagle.auth.core.infrastructure.remote.SystemUserSyncClient;
 import com.eagle.rocketmq.publisher.DomainEventPublisher;
@@ -27,6 +29,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
  * <ul>
  *   <li>{@code account.registered} — system-service 据此创建 User 镜像</li>
  *   <li>{@code account.deleted}    — system-service 据此清理 User 镜像</li>
+ *   <li>{@code account.phone-changed} — 手机号变更广播(当前无消费方,预留)</li>
  * </ul>
  *
  * <p>其余 auth 内部领域事件（{@link com.eagle.auth.core.domain.event.AccountFrozenEvent}、
@@ -92,5 +95,13 @@ public class AuthIntegrationEventPublisher {
         publisher.publish(TOPIC, "account.deleted",
                 new AccountDeletedIntegrationEvent(event.accountId()));
         log.debug("published account.deleted, accountId={}", event.accountId());
+    }
+
+    @Async("taskExecutor")
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onAccountPhoneChanged(AccountPhoneChangedEvent event) {
+        publisher.publish(TOPIC, "account.phone-changed",
+                new AccountPhoneChangedIntegrationEvent(event.accountId(), event.phone()));
+        log.debug("published account.phone-changed, accountId={}", event.accountId());
     }
 }
