@@ -5,6 +5,7 @@ import com.eagle.auth.core.application.command.FreezeAccountCommand;
 import com.eagle.auth.core.application.service.AccountApplicationService;
 import com.eagle.auth.core.interfaces.dto.request.BindPhoneRequest;
 import com.eagle.auth.core.interfaces.dto.request.ChangePasswordRequest;
+import com.eagle.auth.core.interfaces.dto.request.ChangePhoneRequest;
 import com.eagle.auth.core.interfaces.dto.request.CreateAccountRequest;
 import com.eagle.auth.core.interfaces.dto.request.FreezeAccountRequest;
 import com.eagle.auth.core.interfaces.dto.request.RegisterAccountRequest;
@@ -86,6 +87,15 @@ public class AccountController {
                           @Valid @RequestBody BindPhoneRequest request) {
         accountApplicationService.bindPhone(
                 accountId, request.getPhone(), request.getCode());
+    }
+
+    @Operation(summary = "修改手机号")
+    @PutMapping("/{accountId}/phone")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("#accountId == authentication.principal.id")
+    public void changePhone(@Parameter(description = "账号ID") @PathVariable Long accountId,
+                            @Valid @RequestBody ChangePhoneRequest request) {
+        accountApplicationService.changePhone(accountId, request.getPhone(), request.getCode());
     }
 
     @Operation(summary = "修改密码")
