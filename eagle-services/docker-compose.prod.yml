@@ -34,13 +34,19 @@
 #   ★ 唯一例外:Sentinel Dashboard。它只是"规则管理 UI",规则真存在 Nacos 里,
 #     容器挂了重启 / 重建数据卷都不影响业务,所以留在本文件内。
 #
-# ── 启动 ──
-#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+# ── env 文件(prod 自包含,与 dev 完全独立)──
+#   .env.prod —— prod 全套值 + 机密(外部端点/凭据/对外 URL),gitignore
+#   首次部署:cp .env.prod.example .env.prod,把外部基础设施端点 / 凭据填进去
 #
-# ── 灰度 / 滚动单服务 ──
-#   docker compose -f docker-compose.prod.yml up -d --no-deps --build auth
-#   docker compose -f docker-compose.prod.yml up -d --no-deps --build system
-#   docker compose -f docker-compose.prod.yml up -d --no-deps --build gateway
+# ── 启动(命令行)──
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+#   IDEA 一键:Docker Compose 运行配置里 Compose files=docker-compose.prod.yml,
+#             Environment variables file=.env.prod,点绿三角即部署
+#
+# ── 灰度 / 滚动单服务(env 文件照样要带)──
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --no-deps --build auth
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --no-deps --build system
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --no-deps --build gateway
 #
 # ── staging / PoC 想在单机自建基础设施 ──
 #   不要改本文件;直接复用 docker-compose.yml(开发本地配置),把 mem_limit / JVM 拉大即可。

@@ -45,11 +45,14 @@ bin/
 *.jks
 /eagle-services/eagle-system-service/db/
 
-# 环境变量文件：禁止任何 .env 进 git；.env.example 模板可提交
+# 环境变量文件：含机密的实值文件禁止进 git；模板（*.example）可提交
 .env
 .env.local
 .env.*.local
+.env.dev
+.env.prod
 !.env.example
+!.env.*.example
 
 # 含 Nexus 凭证，禁止入库
 gradle.properties

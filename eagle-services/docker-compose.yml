@@ -6,11 +6,17 @@
 # 业务真要压测,改 .env 覆盖各服务的 *_JAVA_OPTS / *_MEM_LIMIT。
 #
 # 变量管理约定:
-#   1. environment 显式枚举所有变量,统一 ${VAR:-default} 形式 —— compose.yml 是"变量清单 + 默认值",.env 是"差异值表"
-#   2. compose 启动时自动加载本文件同目录的 .env 用于 ${VAR} 插值,无需声明 env_file(声明反而冗余)
-#   3. 优先级(高 → 低):shell 环境变量 > .env 文件 > environment 默认值
-#   4. healthcheck / command 中引用敏感字段(密码)也采用 ${VAR:-default} 插值,确保 .env 覆盖后整体一致
-#   5. 新增凭证:在 .env 写入值 + 在 environment 加 `KEY=${KEY}` 占位即可(让 compose.yml 始终是变量清单)
+#   1. environment 显式枚举所有变量,统一 ${VAR:-default} 形式 —— compose.yml 是"变量清单 + 默认值"
+#   2. dev / prod 各自一个自包含 env 文件(均在本目录),互不依赖:
+#        本文件(docker-compose.yml) 配 .env.dev      —— dev 全套值 + 机密,gitignore
+#        docker-compose.prod.yml    配 .env.prod     —— prod 全套值 + 机密,gitignore
+#        模板见 .env.dev.example / .env.prod.example;首次 cp 出对应实文件后填机密
+#   3. 启动(命令行):docker compose --env-file .env.dev up -d
+#      IDEA 一键:Docker Compose 运行配置里 Environment variables file=.env.dev,点绿三角即部署
+#      注意:传了 --env-file 后 compose 不再自动加载裸 .env,口径以 .env.dev 为准
+#   4. 优先级(高 → 低):shell 环境变量 > --env-file(.env.dev) > environment 默认值
+#   5. healthcheck / command 中引用敏感字段(密码)也采用 ${VAR:-default} 插值,确保 env 覆盖后整体一致
+#   6. 新增凭证:在 .env.dev / .env.prod 各自写值 + 在 environment 加 `KEY=${KEY}` 占位(让 compose.yml 始终是变量清单)
 #
 # IDE 远程调试(JDWP):
 #   auth   → 127.0.0.1:5105   (容器内 *:5105)
