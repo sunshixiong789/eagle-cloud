@@ -40,7 +40,12 @@ import java.util.Set;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "eagle.gateway.openapi.discovery-enabled", havingValue = "true", matchIfMissing = true)
+// 同时要求 swagger-ui 开启：prod 关闭 swagger 时 springdoc 不注册 SwaggerUiConfigProperties，
+// 本聚合配置（依赖该 bean 填充 UI 下拉项）此时无事可做，必须一并不加载，否则构造器注入失败启动崩溃。
+// 多个 name 为 AND 语义：两者均为 true 或缺省（matchIfMissing）才装配。
+@ConditionalOnProperty(
+        name = {"eagle.gateway.openapi.discovery-enabled", "springdoc.swagger-ui.enabled"},
+        havingValue = "true", matchIfMissing = true)
 public class GatewayOpenApiConfig implements InitializingBean, ApplicationListener<ApplicationReadyEvent> {
 
     /**
