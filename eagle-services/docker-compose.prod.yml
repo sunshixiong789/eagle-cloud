@@ -84,7 +84,7 @@ services:
     container_name: eagle-auth
     restart: unless-stopped
     ports:
-      - "127.0.0.1:9090:9090"
+      - "9090:9090"
     networks:
       - eagle-network
     mem_limit: 2560m
@@ -183,7 +183,7 @@ services:
     container_name: eagle-system
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8082:8082"
+      - "8082:8082"
     networks:
       - eagle-network
     mem_limit: 4096m

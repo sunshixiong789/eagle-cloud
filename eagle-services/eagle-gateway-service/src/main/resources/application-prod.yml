@@ -29,6 +29,11 @@ spring:
 # 实际写入响应头由 GatewayCorsConfig 注册的 CorsWebFilter 统一处理。
 eagle:
   gateway:
+    # 生产关闭 OpenAPI 服务发现聚合：一并停掉 GatewayOpenApiConfig（UI 下拉聚合）、
+    # OpenApiRouteLocator（/v3/api-docs/{alias} 代理路由）、OpenApiServersRewriteFilter
+    # （servers 改写）三个组件，与上面 springdoc 全关保持一致，避免下游 OpenAPI JSON 经网关暴露公网。
+    openapi:
+      discovery-enabled: false
     cors:
       allowed-origin-patterns: ${CORS_ALLOWED_ORIGINS}
       exposed-headers: Authorization,X-Request-Id,X-Trace-Id

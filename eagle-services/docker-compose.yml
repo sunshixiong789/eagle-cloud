@@ -324,7 +324,7 @@ services:
     ports:
       - "9090:9090"
       # JDWP 调试端口,只绑 127.0.0.1,IDEA Remote JVM Debug 连 localhost:5105
-      - "127.0.0.1:5105:5105"
+      - "5105:5105"
     networks:
       - eagle-network
     # 开发本地最低配:auth 承载 OAuth2/JPA/Hibernate,堆 768m 可跑(压测请用 prod compose)
@@ -442,7 +442,7 @@ services:
     ports:
       - "8082:8082"
       # JDWP 调试端口,只绑 127.0.0.1,IDEA Remote JVM Debug 连 localhost:5106
-      - "127.0.0.1:5106:5106"
+      - "5106:5106"
     networks:
       - eagle-network
     # 开发本地最低配:system 模块多(base+auth-event+config),堆 1g 保守起步,真不够再上调
@@ -556,7 +556,7 @@ services:
     ports:
       - "8080:8080"
       # JDWP 调试端口,只绑 127.0.0.1,IDEA Remote JVM Debug 连 localhost:5107
-      - "127.0.0.1:5107:5107"
+      - "5107:5107"
     networks:
       - eagle-network
     # 开发本地最低配:gateway 是 WebFlux 反应式,堆需求小;512m 上限够路由 + Sentinel
