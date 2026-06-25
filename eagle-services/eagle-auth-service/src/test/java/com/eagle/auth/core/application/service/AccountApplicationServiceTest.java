@@ -291,6 +291,81 @@ class AccountApplicationServiceTest {
     }
 
     @Nested
+    @DisplayName("changePhone")
+    class ChangePhone {
+
+        private static final String NEW_PHONE = "13900139000";
+        private static final String CODE = "123456";
+
+        @Test
+        @DisplayName("校验通过时应替换并保存")
+        void shouldChangePhone() {
+            when(smsService.verifyCode(NEW_PHONE, CODE)).thenReturn(true);
+            when(accountRepository.findByPhone(NEW_PHONE)).thenReturn(Optional.empty());
+            Account account = existingAccount();
+            when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
+
+            service.changePhone(ACCOUNT_ID, NEW_PHONE, CODE);
+
+            assertEquals(NEW_PHONE, account.getPhone());
+            verify(accountRepository).save(account);
+        }
+
+        @Test
+        @DisplayName("验证码错误时应抛 SMS_CODE_INVALID")
+        void shouldThrowWhenCodeInvalid() {
+            when(smsService.verifyCode(NEW_PHONE, CODE)).thenReturn(false);
+
+            AppException ex = assertThrows(DomainException.class,
+                    () -> service.changePhone(ACCOUNT_ID, NEW_PHONE, CODE));
+            assertEquals(AuthErrorCode.SMS_CODE_INVALID, ex.getErrorCode());
+            verify(accountRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("新号已绑其他账号时应抛 PHONE_ALREADY_BOUND")
+        void shouldThrowWhenBoundToOther() {
+            when(smsService.verifyCode(NEW_PHONE, CODE)).thenReturn(true);
+            Account other = existingAccount();
+            org.springframework.test.util.ReflectionTestUtils.setField(other, "id", 999L);
+            when(accountRepository.findByPhone(NEW_PHONE)).thenReturn(Optional.of(other));
+
+            AppException ex = assertThrows(ConflictException.class,
+                    () -> service.changePhone(ACCOUNT_ID, NEW_PHONE, CODE));
+            assertEquals(AuthErrorCode.PHONE_ALREADY_BOUND, ex.getErrorCode());
+        }
+
+        @Test
+        @DisplayName("新号与当前号相同时应抛 PHONE_NOT_CHANGED")
+        void shouldThrowWhenUnchanged() {
+            when(smsService.verifyCode(PHONE, CODE)).thenReturn(true);
+            Account account = existingAccount();   // 当前 phone == PHONE
+            org.springframework.test.util.ReflectionTestUtils.setField(account, "id", ACCOUNT_ID);
+            when(accountRepository.findByPhone(PHONE)).thenReturn(Optional.of(account));
+            when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
+
+            AppException ex = assertThrows(DomainException.class,
+                    () -> service.changePhone(ACCOUNT_ID, PHONE, CODE));
+            assertEquals(AuthErrorCode.PHONE_NOT_CHANGED, ex.getErrorCode());
+        }
+
+        @Test
+        @DisplayName("账号冻结时应抛 ACCOUNT_FROZEN")
+        void shouldThrowWhenFrozen() {
+            when(smsService.verifyCode(NEW_PHONE, CODE)).thenReturn(true);
+            when(accountRepository.findByPhone(NEW_PHONE)).thenReturn(Optional.empty());
+            Account account = existingAccount();
+            account.freezeByAdmin(1L, "admin",
+                    com.eagle.auth.core.domain.model.enums.FreezeReason.OTHER, null, "test");
+            when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
+
+            AppException ex = assertThrows(DomainException.class,
+                    () -> service.changePhone(ACCOUNT_ID, NEW_PHONE, CODE));
+            assertEquals(AuthErrorCode.ACCOUNT_FROZEN, ex.getErrorCode());
+        }
+    }
+
+    @Nested
     @DisplayName("authenticateBySmsCode")
     class AuthenticateBySmsCode {
 

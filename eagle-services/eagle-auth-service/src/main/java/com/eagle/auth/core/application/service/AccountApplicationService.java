@@ -216,6 +216,34 @@ public class AccountApplicationService {
     }
 
     /**
+     * 修改手机号（App 用户自助改号，已认证）。
+     *
+     * <p>校验顺序：新号验证码 → 新号唯一性 → 账号状态 → 与当前号是否不同。
+     * 成功后由聚合根注册 {@code AccountPhoneChangedEvent}，AFTER_COMMIT 异步广播。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @AuditLog(module = "账号管理", action = "修改手机号", logArgs = false)
+    public void changePhone(Long accountId, String phone, String code) {
+        if (!smsService.verifyCode(phone, code)) {
+            throw AuthErrorCode.SMS_CODE_INVALID.toDomainException();
+        }
+        accountRepository.findByPhone(phone).ifPresent(existing -> {
+            if (!existing.getId().equals(accountId)) {
+                throw AuthErrorCode.PHONE_ALREADY_BOUND.toConflictException();
+            }
+        });
+        Account account = findAccountById(accountId);
+        if (account.getStatus() == AccountStatus.FROZEN) {
+            throw AuthErrorCode.ACCOUNT_FROZEN.toDomainException();
+        }
+        if (phone.equals(account.getPhone())) {
+            throw AuthErrorCode.PHONE_NOT_CHANGED.toDomainException();
+        }
+        account.changePhone(phone);
+        accountRepository.save(account);
+    }
+
+    /**
      * 发送找回密码验证码（验证手机号已绑定账号后发送）。
      */
     @Transactional(readOnly = true)
