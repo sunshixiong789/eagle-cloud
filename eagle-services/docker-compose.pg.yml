@@ -46,18 +46,48 @@ services:
       # 主库；与应用的 DB_NAME / DB_USERNAME / DB_PASSWORD 同源驱动，新卷上自动一致
       - POSTGRES_DB=${DB_NAME:-eagle_system}
       - POSTGRES_USER=${DB_USERNAME:-eagle}
-      - POSTGRES_PASSWORD=${DB_PASSWORD:-eagle123456}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-W2#kL9@mZ5$sQ8&nR4*bJ6^y}
       # 由 postgres-init/01-create-auth-db.sh 读取，建附属库
       - AUTH_DB_NAME=${AUTH_DB_NAME:-eagle_auth}
       - PAYMENT_DB_NAME=${PAYMENT_DB_NAME:-eagle_payment}
       - TZ=${TZ:-Asia/Shanghai}
+    # ── PostgreSQL 调优（8G 独占机基线）──
+    # 换 16G 机：shared_buffers=4GB / effective_cache_size=12GB / maintenance_work_mem=1GB /
+    #            work_mem=16MB / max_connections=300，并把下方 mem_limit 调到 14g
+    # ⚠️ max_connections=200 是为覆盖应用连接池：auth + system 各 DB_POOL_MAX=80，合计可达 160，
+    #    若 max_connections < 应用总连接数 → 连接耗尽报错。也建议在 .env.prod 把 DB_POOL_MAX 降到 30~40。
+    # random_page_cost / effective_io_concurrency 按 SSD 设；机械盘改 4 / 2
+    command:
+      - postgres
+      - -c
+      - max_connections=200
+      - -c
+      - shared_buffers=2GB
+      - -c
+      - effective_cache_size=6GB
+      - -c
+      - maintenance_work_mem=512MB
+      - -c
+      - work_mem=12MB
+      - -c
+      - wal_buffers=16MB
+      - -c
+      - min_wal_size=1GB
+      - -c
+      - max_wal_size=4GB
+      - -c
+      - checkpoint_completion_target=0.9
+      - -c
+      - random_page_cost=1.1
+      - -c
+      - effective_io_concurrency=200
     volumes:
       - postgres-data:/var/lib/postgresql/data
       # 多库初始化脚本（仅 postgres-data 卷为空时触发）
       - ./postgres-init:/docker-entrypoint-initdb.d:ro
-    # prod 默认给 2g，按数据量 / 并发调整（dev 全栈文件里是 512m）
-    mem_limit: 2048m
-    mem_reservation: 1024m
+    # 8G 独占机：mem_limit 7g（留 ~1g 给 OS）；16G 机改 14g
+    mem_limit: 7168m
+    mem_reservation: 3072m
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME:-eagle} -d ${DB_NAME:-eagle_system}" ]
       interval: 10s
