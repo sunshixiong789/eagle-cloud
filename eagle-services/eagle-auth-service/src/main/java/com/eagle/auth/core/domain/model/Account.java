@@ -4,6 +4,7 @@ import com.eagle.datajpa.base.BaseAggregateRoot;
 import com.eagle.auth.core.domain.AuthErrorCode;
 import com.eagle.auth.core.domain.event.AccountDeletedEvent;
 import com.eagle.auth.core.domain.event.AccountFrozenEvent;
+import com.eagle.auth.core.domain.event.AccountPhoneChangedEvent;
 import com.eagle.auth.core.domain.event.AccountRegisteredEvent;
 import com.eagle.auth.core.domain.event.AccountUnfrozenEvent;
 import com.eagle.auth.core.domain.model.enums.AccountStatus;
@@ -285,6 +286,22 @@ public class Account extends BaseAggregateRoot<Account> {
             throw AuthErrorCode.ACCOUNT_PHONE_ALREADY_SET.toDomainException();
         }
         this.phone = phone;
+    }
+
+    /**
+     * 修改手机号（替换已绑定的手机号，App 用户自助改号场景）。
+     *
+     * <p>与 {@link #bindPhone(String)} 区别：允许覆盖已有手机号，并注册
+     * {@link AccountPhoneChangedEvent} 供下游同步。新号与旧号是否相同的判定在应用服务层。
+     *
+     * @param phone 新手机号
+     */
+    public void changePhone(String phone) {
+        if (phone == null || phone.isBlank()) {
+            throw AuthErrorCode.PHONE_REQUIRED.toDomainException();
+        }
+        this.phone = phone;
+        registerEvent(new AccountPhoneChangedEvent(getId(), phone));
     }
 
     // ==================== 冻结 / 解冻 ====================

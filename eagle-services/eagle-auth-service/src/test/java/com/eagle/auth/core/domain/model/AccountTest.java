@@ -295,4 +295,28 @@ class AccountTest {
             assertEquals("new_unionid", account.getWechatBinding().getUnionid());
         }
     }
+
+    @Nested
+    @DisplayName("changePhone")
+    class ChangePhone {
+
+        @Test
+        @DisplayName("替换为新号时应更新 phone")
+        void shouldReplacePhone() {
+            Account account = Account.create(USERNAME, PASSWORD, PHONE, HINTS);
+
+            account.changePhone("13900139000");
+
+            assertEquals("13900139000", account.getPhone());
+        }
+
+        @Test
+        @DisplayName("空号时应抛 PHONE_REQUIRED")
+        void shouldThrowWhenBlank() {
+            Account account = Account.create(USERNAME, PASSWORD, PHONE, HINTS);
+
+            AppException ex = assertThrows(DomainException.class, () -> account.changePhone("  "));
+            assertEquals(AuthErrorCode.PHONE_REQUIRED, ex.getErrorCode());
+        }
+    }
 }
