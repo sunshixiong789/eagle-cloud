@@ -39,14 +39,14 @@ services:
     container_name: eagle-postgres
     restart: always
     ports:
-      - "127.0.0.1:5432:5432"
+      - "5432:5432"
     networks:
       - eagle-network
     environment:
       # 主库；与应用的 DB_NAME / DB_USERNAME / DB_PASSWORD 同源驱动，新卷上自动一致
       - POSTGRES_DB=${DB_NAME:-eagle_system}
       - POSTGRES_USER=${DB_USERNAME:-eagle}
-      - POSTGRES_PASSWORD=${DB_PASSWORD:-W2#kL9@mZ5$sQ8&nR4*bJ6^y}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-W2kL9@mZ5&nR4*bJ6^y}
       # 由 postgres-init/01-create-auth-db.sh 读取，建附属库
       - AUTH_DB_NAME=${AUTH_DB_NAME:-eagle_auth}
       - PAYMENT_DB_NAME=${PAYMENT_DB_NAME:-eagle_payment}

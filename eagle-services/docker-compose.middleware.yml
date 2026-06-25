@@ -1,4 +1,4 @@
-# -------- 自托管中间件：Redis + Nacos + RocketMQ（正式环境，独立 16G 机器）----------
+# -------- 自托管中间件：Redis + Nacos + RocketMQ + Sentinel（正式环境，独立 16G 机器）----------
 #
 # 用途：在 prod 独立中间件机器（约 16G 内存）上，用 docker 跑 Redis + Nacos + RocketMQ，
 #       仅 PostgreSQL 走托管（资金类数据本体优先用 RDS：PITR + 多副本 + 自动备份）。
@@ -10,8 +10,9 @@
 #   namesrv    limit 1g    / -Xmx768m
 #   proxy      limit 1.5g  / -Xmx1g
 #   redis      limit 3g    / maxmemory 2g
-#   dashboard  limit 512m  / -Xmx384m
-#   合计 ≈ 14g
+#   rmq-dash   limit 512m  / -Xmx384m
+#   sentinel   limit 768m  / -Xmx512m
+#   合计 ≈ 14.8g（留 ~1.2g 给 OS；嫌紧可删 rmq dashboard 省 512m）
 #   ⚠️ 改内存时务必「mem_limit 和 JVM 堆 / maxmemory 一起改」，只改一个没用。
 #
 # ── 跨机连接（应用在别的机器）──
@@ -42,6 +43,7 @@ volumes:
   rocketmq-namesrv-logs:
   rocketmq-broker-logs:
   rocketmq-broker-store:
+  sentinel-data:
 
 services:
   # ─────────────────────────────── Redis ───────────────────────────────
@@ -231,3 +233,36 @@ services:
       - TZ=${TZ:-Asia/Shanghai}
     mem_limit: 512m
     mem_reservation: 256m
+
+  # ─────────────────────────── Sentinel Dashboard ───────────────────────────
+  # 限流规则管理 UI（规则源在 Nacos，容器本身无状态，挂了重启不影响业务）。
+  # gateway 通过 SENTINEL_DASHBOARD=<本机内网IP>:8858 上报心跳 + 拉规则（跨机时 .env.prod 填本机内网 IP）。
+  # ⚠️ 1.8.6+ 默认登录 sentinel/sentinel，务必在 .env.prod 的 SENTINEL_JAVA_OPTS 追加：
+  #    -Dsentinel.dashboard.auth.username=xxx -Dsentinel.dashboard.auth.password=xxx
+  # 镜像本地构建（拉官方 fat jar），需要本目录下有 ./sentinel-dashboard/Dockerfile
+  sentinel-dashboard:
+    build:
+      context: ./sentinel-dashboard
+      args:
+        SENTINEL_VERSION: 1.8.9
+    image: eagle-sentinel-dashboard:1.8.9
+    pull_policy: build
+    container_name: eagle-sentinel
+    restart: always
+    ports:
+      - "8858:8858"
+    networks:
+      - eagle-network
+    environment:
+      - JAVA_OPTS=${SENTINEL_JAVA_OPTS:--server -XX:+UseG1GC -Xms256m -Xmx512m -Dserver.port=8858 -Dcsp.sentinel.dashboard.server=localhost:8858 -Dproject.name=sentinel-dashboard}
+      - TZ=${TZ:-Asia/Shanghai}
+    volumes:
+      - sentinel-data:/sentinel-dashboard
+    mem_limit: 768m
+    mem_reservation: 384m
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://127.0.0.1:8858/ > /dev/null 2>&1 || exit 1" ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s

@@ -1,4 +1,4 @@
-# -------- 线上部署:应用层 (auth / system / gateway / sentinel-dashboard) ----------
+# -------- 线上部署:应用层 (auth / system / gateway) ----------
 #
 # 本文件**只部署无状态 / 轻状态应用**;有状态基础设施(PG / Redis / Nacos / RocketMQ)
 # **不**在本文件,理由见下方"为什么不用 docker 跑基础设施"。
@@ -31,8 +31,8 @@
 #   6. 监控:托管自带控制台 / 慢日志 / 自动告警;docker 自建要自搭 Prometheus + Grafana +
 #      Alertmanager,且容易和应用监控混在一起。
 #
-#   ★ 唯一例外:Sentinel Dashboard。它只是"规则管理 UI",规则真存在 Nacos 里,
-#     容器挂了重启 / 重建数据卷都不影响业务,所以留在本文件内。
+#   Sentinel Dashboard 已移至 docker-compose.middleware.yml(与 Redis/Nacos/RocketMQ 同机),
+#   本文件不再包含它;gateway 通过 SENTINEL_DASHBOARD 环境变量指向其地址即可。
 #
 # ── env 文件(prod 自包含,与 dev 完全独立)──
 #   .env.prod —— prod 全套值 + 机密(外部端点/凭据/对外 URL),gitignore
@@ -62,7 +62,6 @@ networks:
     driver: bridge
 
 volumes:
-  sentinel-data:
   auth-logs:
   system-logs:
   gateway-logs:
@@ -74,37 +73,6 @@ x-logging: &default-logging
     max-file: "10"
 
 services:
-  # Sentinel Dashboard — 规则管理 UI(规则源在 Nacos,容器无状态)
-  # 首次启动后必须改默认 sentinel/sentinel:.env.prod 里覆盖 SENTINEL_JAVA_OPTS,
-  # 追加 -Dsentinel.dashboard.auth.username=xxx -Dsentinel.dashboard.auth.password=xxx
-  sentinel-dashboard:
-    build:
-      context: ./sentinel-dashboard
-      args:
-        SENTINEL_VERSION: 1.8.9
-    image: eagle-sentinel-dashboard:1.8.9
-    pull_policy: build
-    container_name: eagle-sentinel
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:8858:8858"
-    networks:
-      - eagle-network
-    environment:
-      - JAVA_OPTS=${SENTINEL_JAVA_OPTS:--server -XX:+UseG1GC -Xms512m -Xmx768m -Dserver.port=8858 -Dcsp.sentinel.dashboard.server=localhost:8858 -Dproject.name=sentinel-dashboard}
-      - TZ=${TZ:-Asia/Shanghai}
-    volumes:
-      - sentinel-data:/sentinel-dashboard
-    mem_limit: 1024m
-    mem_reservation: 512m
-    logging: *default-logging
-    healthcheck:
-      test: [ "CMD-SHELL", "wget -qO- http://127.0.0.1:8858/ > /dev/null 2>&1 || exit 1" ]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-      start_period: 60s
-
   # 认证服务 (OAuth2 Authorization Server)
   # 基础设施依赖: PG (eagle_auth 库) / Redis / Nacos / RocketMQ 全部走 .env.prod 配置的外部端点
   auth:
