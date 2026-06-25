@@ -11,6 +11,8 @@ import com.eagle.auth.core.domain.repository.AccountRepository;
 import com.eagle.auth.core.domain.service.SmsService;
 import com.eagle.auth.core.infrastructure.config.AdminProperties;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +27,7 @@ import java.util.regex.Pattern;
  *
  * @author sunshixiong
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AccountApplicationService {
@@ -212,7 +215,7 @@ public class AccountApplicationService {
             throw AuthErrorCode.ACCOUNT_FROZEN.toDomainException();
         }
         account.bindPhone(phone);
-        accountRepository.save(account);
+        savePhoneWithUniquenessGuard(account);
     }
 
     /**
@@ -240,7 +243,25 @@ public class AccountApplicationService {
             throw AuthErrorCode.PHONE_NOT_CHANGED.toDomainException();
         }
         account.changePhone(phone);
-        accountRepository.save(account);
+        savePhoneWithUniquenessGuard(account);
+    }
+
+    /**
+     * 保存账号并把手机号唯一约束冲突翻译为业务异常。
+     *
+     * <p>{@code findByPhone} 预检与 {@code save} 之间存在 TOCTOU 竞态：并发把不同账号改/绑到
+     * 同一手机号时两个请求可能都通过预检。最终一致性由数据库唯一索引 {@code idx_account_phone}
+     * 兜底，这里把底层 {@link DataIntegrityViolationException} 翻译成
+     * {@link AuthErrorCode#PHONE_ALREADY_BOUND}（409），避免裸 500。
+     */
+    private void savePhoneWithUniquenessGuard(Account account) {
+        try {
+            accountRepository.save(account);
+        } catch (DataIntegrityViolationException ex) {
+            // 唯一约束冲突属可预期的并发结果，仅记录 accountId（不记手机号），翻译为冲突异常。
+            log.warn("phone uniqueness violation on save, accountId={}", account.getId(), ex);
+            throw AuthErrorCode.PHONE_ALREADY_BOUND.toConflictException();
+        }
     }
 
     /**

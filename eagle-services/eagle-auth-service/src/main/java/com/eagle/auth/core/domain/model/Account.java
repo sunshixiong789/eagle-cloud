@@ -45,7 +45,7 @@ import java.util.HexFormat;
 @NoArgsConstructor
 @Table(name = "auth_account", indexes = {
         @Index(name = "idx_account_username", columnList = "username", unique = true),
-        @Index(name = "idx_account_phone", columnList = "phone"),
+        @Index(name = "idx_account_phone", columnList = "phone", unique = true),
         @Index(name = "idx_account_openid", columnList = "openid"),
         @Index(name = "idx_account_unionid", columnList = "unionid"),
         @Index(name = "idx_account_web_openid", columnList = "web_openid"),

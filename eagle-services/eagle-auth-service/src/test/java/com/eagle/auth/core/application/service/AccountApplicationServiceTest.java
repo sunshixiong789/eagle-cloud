@@ -363,6 +363,22 @@ class AccountApplicationServiceTest {
                     () -> service.changePhone(ACCOUNT_ID, NEW_PHONE, CODE));
             assertEquals(AuthErrorCode.ACCOUNT_FROZEN, ex.getErrorCode());
         }
+
+        @Test
+        @DisplayName("并发触发唯一约束冲突时应翻译为 PHONE_ALREADY_BOUND")
+        void shouldTranslateUniqueViolationToConflict() {
+            when(smsService.verifyCode(NEW_PHONE, CODE)).thenReturn(true);
+            when(accountRepository.findByPhone(NEW_PHONE)).thenReturn(Optional.empty());
+            Account account = existingAccount();
+            org.springframework.test.util.ReflectionTestUtils.setField(account, "id", ACCOUNT_ID);
+            when(accountRepository.findById(ACCOUNT_ID)).thenReturn(Optional.of(account));
+            when(accountRepository.save(account)).thenThrow(
+                    new org.springframework.dao.DataIntegrityViolationException("uk_account_phone"));
+
+            AppException ex = assertThrows(ConflictException.class,
+                    () -> service.changePhone(ACCOUNT_ID, NEW_PHONE, CODE));
+            assertEquals(AuthErrorCode.PHONE_ALREADY_BOUND, ex.getErrorCode());
+        }
     }
 
     @Nested
