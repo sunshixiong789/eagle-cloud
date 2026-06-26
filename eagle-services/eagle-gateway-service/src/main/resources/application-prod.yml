@@ -22,7 +22,7 @@ spring:
           # 的 hostString。生产应在部署侧注入 GATEWAY_TRUSTED_PROXIES 收窄到真实反代
           # （CDN 节点 / Ingress IP）覆盖此默认；切勿改成 .* 或空串（空串=谁都不信任，
           # 会导致网关不再注入 X-Forwarded-*，下游退回用内网 host:port 拼 302）。
-          trusted-proxies: '${GATEWAY_TRUSTED_PROXIES:10\..*|172\.(1[6-9]|2[0-9]|3[01])\..*|192\.168\..*}'
+          trusted-proxies: ${GATEWAY_TRUSTED_PROXIES:.*}
 
 # CORS：覆盖基线 ${CORS_ALLOWED_ORIGINS:*} 默认值，缺失环境变量即 fail-fast；
 # 额外向前端暴露 Authorization / X-Request-Id / X-Trace-Id 三个响应头。
