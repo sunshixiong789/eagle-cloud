@@ -367,7 +367,7 @@ docker compose up -d
 1. 复制环境变量模板：
 
 ```bash
-cp .env.example .env
+cp .env.prod.example .env.prod
 ```
 
 2. 编辑 `.env` 填入实际配置（`.env` 已在 `.gitignore` 中，不会提交）：
@@ -442,7 +442,7 @@ gradle :eagle-base-server:eagle-gateway-server:bootRun
 **初始化步骤：**
 
 ```bash
-cp .env.example .env   # 首次克隆后执行一次
+cp .env.prod.example .env.prod   # 首次克隆后执行一次
 ```
 
 **完整变量列表：**

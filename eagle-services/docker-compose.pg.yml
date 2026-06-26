@@ -11,9 +11,9 @@
 #      - 有条件上 streaming replication（本文件是单实例，不含主从）
 #
 # ── 启动（PG 先起，等健康后再起中间件 / 应用）──
-#   docker compose -f docker-compose.pg.yml         --env-file .env.prod up -d
-#   docker compose -f docker-compose.middleware.yml --env-file .env.prod up -d
-#   docker compose -f docker-compose.prod.yml       --env-file .env.prod up -d
+#   docker compose -f docker-compose.pg.yml         --env-file .env.prod.prod up -d
+#   docker compose -f docker-compose.middleware.yml --env-file .env.prod.prod up -d
+#   docker compose -f docker-compose.prod.yml       --env-file .env.prod.prod up -d
 #
 # ── 多库初始化 ──
 #   首次启动（postgres-data 卷为空）时执行 ./postgres-init/*.sh：
@@ -55,7 +55,7 @@ services:
     # 换 16G 机：shared_buffers=4GB / effective_cache_size=12GB / maintenance_work_mem=1GB /
     #            work_mem=16MB / max_connections=300，并把下方 mem_limit 调到 14g
     # ⚠️ max_connections=200 是为覆盖应用连接池：auth + system 各 DB_POOL_MAX=80，合计可达 160，
-    #    若 max_connections < 应用总连接数 → 连接耗尽报错。也建议在 .env.prod 把 DB_POOL_MAX 降到 30~40。
+    #    若 max_connections < 应用总连接数 → 连接耗尽报错。也建议在 .env.prod.prod 把 DB_POOL_MAX 降到 30~40。
     # random_page_cost / effective_io_concurrency 按 SSD 设；机械盘改 4 / 2
     command:
       - postgres

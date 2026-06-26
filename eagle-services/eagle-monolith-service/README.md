@@ -38,7 +38,7 @@ Eagle 平台单体启动模块。它在一个 Spring Boot 进程内复用 `eagle
 
 ```bash
 cd eagle-services/eagle-monolith-service
-cp .env.example .env
+cp .env.prod.example .env.prod
 ```
 
 `.env` 不要提交到 Git。生产环境必须替换密码、JWT keystore 密码、OAuth issuer、数据库和 Redis 参数。

@@ -47,7 +47,7 @@ dependencies {
     // taobao.top.auth.token.create 解析淘宝登录 openUid。
     implementation files('libs/taobao-sdk-java-auto_1532595500163-20260430.jar')
 
-    // 本地开发：自动加载 .env 到 Spring Environment
+    // 本地开发：自动加载 .env.prod 到 Spring Environment
     runtimeOnly 'me.paulschwarz:spring-dotenv:5.1.0'
 
     // Spring Modulith：@ApplicationModule / @Modulithic 注解（编译期可见即可）

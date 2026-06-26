@@ -25,7 +25,7 @@ dependencies {
     // message 模块的 AnnouncementCache / TargetFilter 直接用 fastjson2 做 JSON 序列化
     implementation "com.alibaba.fastjson2:fastjson2"
 
-    // 本地开发:自动加载项目根目录的 .env 文件到 Spring Environment
+    // 本地开发:自动加载项目根目录的 .env.prod 文件到 Spring Environment
     runtimeOnly 'me.paulschwarz:spring-dotenv:5.1.0'
 
 

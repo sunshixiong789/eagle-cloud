@@ -3,7 +3,7 @@
 # 本文件**只部署无状态 / 轻状态应用**;有状态基础设施(PG / Redis / Nacos / RocketMQ)
 # **不**在本文件,理由见下方"为什么不用 docker 跑基础设施"。
 #
-# 配套外部基础设施清单(必须在启动前准备好,通过 .env.prod 把端点 / 凭据写进对应 *_HOST / *_PASSWORD):
+# 配套外部基础设施清单(必须在启动前准备好,通过 .env.prod.prod 把端点 / 凭据写进对应 *_HOST / *_PASSWORD):
 #   ┌──────────────┬──────────────────────────────────────────────────────────────┐
 #   │ PostgreSQL16+│ 阿里云 RDS for PostgreSQL / 腾讯云 TDSQL-PG / 自建 Patroni    │
 #   │ Redis 7+     │ 阿里云 Tair / 腾讯云 Redis / 自建 Sentinel 或 Cluster        │
@@ -35,18 +35,18 @@
 #   本文件不再包含它;gateway 通过 SENTINEL_DASHBOARD 环境变量指向其地址即可。
 #
 # ── env 文件(prod 自包含,与 dev 完全独立)──
-#   .env.prod —— prod 全套值 + 机密(外部端点/凭据/对外 URL),gitignore
-#   首次部署:cp .env.prod.example .env.prod,把外部基础设施端点 / 凭据填进去
+#   .env.prod.prod —— prod 全套值 + 机密(外部端点/凭据/对外 URL),gitignore
+#   首次部署:cp .env.prod.prod.example .env.prod.prod,把外部基础设施端点 / 凭据填进去
 #
 # ── 启动(命令行)──
-#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod.prod up -d
 #   IDEA 一键:Docker Compose 运行配置里 Compose files=docker-compose.prod.yml,
-#             Environment variables file=.env.prod,点绿三角即部署
+#             Environment variables file=.env.prod.prod,点绿三角即部署
 #
 # ── 灰度 / 滚动单服务(env 文件照样要带)──
-#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --no-deps --build auth
-#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --no-deps --build system
-#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --no-deps --build gateway
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod.prod up -d --no-deps --build auth
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod.prod up -d --no-deps --build system
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod.prod up -d --no-deps --build gateway
 #
 # ── staging / PoC 想在单机自建基础设施 ──
 #   不要改本文件;直接复用 docker-compose.yml(开发本地配置),把 mem_limit / JVM 拉大即可。
@@ -74,7 +74,7 @@ x-logging: &default-logging
 
 services:
   # 认证服务 (OAuth2 Authorization Server)
-  # 基础设施依赖: PG (eagle_auth 库) / Redis / Nacos / RocketMQ 全部走 .env.prod 配置的外部端点
+  # 基础设施依赖: PG (eagle_auth 库) / Redis / Nacos / RocketMQ 全部走 .env.prod.prod 配置的外部端点
   auth:
     build:
       context: ./eagle-auth-service
@@ -93,44 +93,44 @@ services:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - SERVER_PORT=${AUTH_SERVER_PORT:-9090}
       # Nacos (外部集群端点,无默认值 → fail-fast)
-      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:?NACOS_SERVER_ADDR must be set in .env.prod}
+      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:?NACOS_SERVER_ADDR must be set in .env.prod.prod}
       - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
       - NACOS_GROUP=${NACOS_GROUP:-DEFAULT_GROUP}
-      - NACOS_USERNAME=${NACOS_USERNAME:?NACOS_USERNAME must be set in .env.prod}
-      - NACOS_PASSWORD=${NACOS_PASSWORD:?NACOS_PASSWORD must be set in .env.prod}
+      - NACOS_USERNAME=${NACOS_USERNAME:?NACOS_USERNAME must be set in .env.prod.prod}
+      - NACOS_PASSWORD=${NACOS_PASSWORD:?NACOS_PASSWORD must be set in .env.prod.prod}
       - NACOS_REGISTER_IP=${NACOS_REGISTER_IP:-}
       # PostgreSQL (外部 RDS,auth 用独立库 eagle_auth)
-      - DB_HOST=${DB_HOST:?DB_HOST must be set in .env.prod}
+      - DB_HOST=${DB_HOST:?DB_HOST must be set in .env.prod.prod}
       - DB_PORT=${DB_PORT:-5432}
       - DB_NAME=${AUTH_DB_NAME:-eagle_auth}
-      - DB_USERNAME=${DB_USERNAME:?DB_USERNAME must be set in .env.prod}
-      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be set in .env.prod}
+      - DB_USERNAME=${DB_USERNAME:?DB_USERNAME must be set in .env.prod.prod}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be set in .env.prod.prod}
       - DB_POOL_MAX=${DB_POOL_MAX:-80}
       - DB_POOL_MIN=${DB_POOL_MIN:-20}
       # Redis (外部托管)
-      - REDIS_HOST=${REDIS_HOST:?REDIS_HOST must be set in .env.prod}
+      - REDIS_HOST=${REDIS_HOST:?REDIS_HOST must be set in .env.prod.prod}
       - REDIS_PORT=${REDIS_PORT:-6379}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:?REDIS_PASSWORD must be set in .env.prod}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?REDIS_PASSWORD must be set in .env.prod.prod}
       - REDIS_DATABASE=${REDIS_DATABASE:-0}
       - REDIS_POOL_MAX_ACTIVE=${REDIS_POOL_MAX_ACTIVE:-96}
       - REDIS_POOL_MAX_IDLE=${REDIS_POOL_MAX_IDLE:-32}
       - REDIS_POOL_MIN_IDLE=${REDIS_POOL_MIN_IDLE:-8}
       - REDIS_POOL_MAX_WAIT=${REDIS_POOL_MAX_WAIT:-2000ms}
       # RocketMQ 5.x gRPC → Proxy:8081 (外部托管)
-      - ROCKETMQ_ENDPOINTS=${ROCKETMQ_ENDPOINTS:?ROCKETMQ_ENDPOINTS must be set in .env.prod}
+      - ROCKETMQ_ENDPOINTS=${ROCKETMQ_ENDPOINTS:?ROCKETMQ_ENDPOINTS must be set in .env.prod.prod}
       - ROCKETMQ_TOPIC_ENV_PREFIX=${ROCKETMQ_TOPIC_ENV_PREFIX:-prod_}
       # 初始管理员
       - EAGLE_ADMIN_USERNAME=${EAGLE_ADMIN_USERNAME:-admin}
-      - EAGLE_ADMIN_PASSWORD=${EAGLE_ADMIN_PASSWORD:?EAGLE_ADMIN_PASSWORD must be set in .env.prod}
+      - EAGLE_ADMIN_PASSWORD=${EAGLE_ADMIN_PASSWORD:?EAGLE_ADMIN_PASSWORD must be set in .env.prod.prod}
       - EAGLE_ADMIN_NAME=${EAGLE_ADMIN_NAME:-系统管理员}
       - EAGLE_ADMIN_EMAIL=${EAGLE_ADMIN_EMAIL:-admin@eagle.com}
       # JWT keystore
       - EAGLE_JWT_KEYSTORE_LOCATION=${EAGLE_JWT_KEYSTORE_LOCATION:-classpath:jwt-keystore.p12}
-      - EAGLE_JWT_KEYSTORE_PASSWORD=${EAGLE_JWT_KEYSTORE_PASSWORD:?EAGLE_JWT_KEYSTORE_PASSWORD must be set in .env.prod}
+      - EAGLE_JWT_KEYSTORE_PASSWORD=${EAGLE_JWT_KEYSTORE_PASSWORD:?EAGLE_JWT_KEYSTORE_PASSWORD must be set in .env.prod.prod}
       # OAuth2: iss claim + 回调白名单 + RP-Initiated Logout 白名单
-      - EAGLE_OAUTH_ISSUER=${EAGLE_OAUTH_ISSUER:?EAGLE_OAUTH_ISSUER must be set in .env.prod}
-      - EAGLE_OAUTH_REDIRECT_URIS=${EAGLE_OAUTH_REDIRECT_URIS:?EAGLE_OAUTH_REDIRECT_URIS must be set in .env.prod}
-      - EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS=${EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS:?EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS must be set in .env.prod}
+      - EAGLE_OAUTH_ISSUER=${EAGLE_OAUTH_ISSUER:?EAGLE_OAUTH_ISSUER must be set in .env.prod.prod}
+      - EAGLE_OAUTH_REDIRECT_URIS=${EAGLE_OAUTH_REDIRECT_URIS:?EAGLE_OAUTH_REDIRECT_URIS must be set in .env.prod.prod}
+      - EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS=${EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS:?EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS must be set in .env.prod.prod}
       # 第三方登录 (留空 = 禁用)
       - WECHAT_APP_APP_ID=${WECHAT_APP_APP_ID:-}
       - WECHAT_APP_APP_SECRET=${WECHAT_APP_APP_SECRET:-}
@@ -173,7 +173,7 @@ services:
       start_period: 90s
 
   # 系统服务
-  # 基础设施依赖: PG (eagle_system 库) / Redis / Nacos / RocketMQ 走 .env.prod 配置的外部端点
+  # 基础设施依赖: PG (eagle_system 库) / Redis / Nacos / RocketMQ 走 .env.prod.prod 配置的外部端点
   system:
     build:
       context: ./eagle-system-service
@@ -192,41 +192,41 @@ services:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - SERVER_PORT=${SERVER_PORT:-8082}
       # Nacos
-      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:?NACOS_SERVER_ADDR must be set in .env.prod}
+      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:?NACOS_SERVER_ADDR must be set in .env.prod.prod}
       - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
       - NACOS_GROUP=${NACOS_GROUP:-DEFAULT_GROUP}
-      - NACOS_USERNAME=${NACOS_USERNAME:?NACOS_USERNAME must be set in .env.prod}
-      - NACOS_PASSWORD=${NACOS_PASSWORD:?NACOS_PASSWORD must be set in .env.prod}
+      - NACOS_USERNAME=${NACOS_USERNAME:?NACOS_USERNAME must be set in .env.prod.prod}
+      - NACOS_PASSWORD=${NACOS_PASSWORD:?NACOS_PASSWORD must be set in .env.prod.prod}
       - NACOS_REGISTER_IP=${NACOS_REGISTER_IP:-}
       # PostgreSQL
-      - DB_HOST=${DB_HOST:?DB_HOST must be set in .env.prod}
+      - DB_HOST=${DB_HOST:?DB_HOST must be set in .env.prod.prod}
       - DB_PORT=${DB_PORT:-5432}
       - DB_NAME=${DB_NAME:-eagle_system}
-      - DB_USERNAME=${DB_USERNAME:?DB_USERNAME must be set in .env.prod}
-      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be set in .env.prod}
+      - DB_USERNAME=${DB_USERNAME:?DB_USERNAME must be set in .env.prod.prod}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be set in .env.prod.prod}
       - DB_POOL_MAX=${DB_POOL_MAX:-80}
       - DB_POOL_MIN=${DB_POOL_MIN:-20}
       # Redis
-      - REDIS_HOST=${REDIS_HOST:?REDIS_HOST must be set in .env.prod}
+      - REDIS_HOST=${REDIS_HOST:?REDIS_HOST must be set in .env.prod.prod}
       - REDIS_PORT=${REDIS_PORT:-6379}
-      - REDIS_PASSWORD=${REDIS_PASSWORD:?REDIS_PASSWORD must be set in .env.prod}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?REDIS_PASSWORD must be set in .env.prod.prod}
       - REDIS_DATABASE=${REDIS_DATABASE:-0}
       - REDIS_POOL_MAX_ACTIVE=${REDIS_POOL_MAX_ACTIVE:-96}
       - REDIS_POOL_MAX_IDLE=${REDIS_POOL_MAX_IDLE:-32}
       - REDIS_POOL_MIN_IDLE=${REDIS_POOL_MIN_IDLE:-8}
       - REDIS_POOL_MAX_WAIT=${REDIS_POOL_MAX_WAIT:-2000ms}
       # RocketMQ
-      - ROCKETMQ_ENDPOINTS=${ROCKETMQ_ENDPOINTS:?ROCKETMQ_ENDPOINTS must be set in .env.prod}
+      - ROCKETMQ_ENDPOINTS=${ROCKETMQ_ENDPOINTS:?ROCKETMQ_ENDPOINTS must be set in .env.prod.prod}
       - ROCKETMQ_TOPIC_ENV_PREFIX=${ROCKETMQ_TOPIC_ENV_PREFIX:-prod_}
       # 初始管理员 username (与 auth 共用同一值)
       - EAGLE_ADMIN_USERNAME=${EAGLE_ADMIN_USERNAME:-admin}
       # JWT keystore
       - EAGLE_JWT_KEYSTORE_LOCATION=${EAGLE_JWT_KEYSTORE_LOCATION:-classpath:jwt-keystore.p12}
-      - EAGLE_JWT_KEYSTORE_PASSWORD=${EAGLE_JWT_KEYSTORE_PASSWORD:?EAGLE_JWT_KEYSTORE_PASSWORD must be set in .env.prod}
+      - EAGLE_JWT_KEYSTORE_PASSWORD=${EAGLE_JWT_KEYSTORE_PASSWORD:?EAGLE_JWT_KEYSTORE_PASSWORD must be set in .env.prod.prod}
       # OAuth2
-      - EAGLE_OAUTH_ISSUER=${EAGLE_OAUTH_ISSUER:?EAGLE_OAUTH_ISSUER must be set in .env.prod}
-      - EAGLE_OAUTH_REDIRECT_URIS=${EAGLE_OAUTH_REDIRECT_URIS:?EAGLE_OAUTH_REDIRECT_URIS must be set in .env.prod}
-      - EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS=${EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS:?EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS must be set in .env.prod}
+      - EAGLE_OAUTH_ISSUER=${EAGLE_OAUTH_ISSUER:?EAGLE_OAUTH_ISSUER must be set in .env.prod.prod}
+      - EAGLE_OAUTH_REDIRECT_URIS=${EAGLE_OAUTH_REDIRECT_URIS:?EAGLE_OAUTH_REDIRECT_URIS must be set in .env.prod.prod}
+      - EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS=${EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS:?EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS must be set in .env.prod.prod}
       # JWKS 直连 auth-service,绕过 OIDC discovery
       - EAGLE_OAUTH_JWK_SET_URI=${EAGLE_OAUTH_JWK_SET_URI:-http://auth:9090/oauth2/jwks}
       # 第三方登录
@@ -278,11 +278,11 @@ services:
     mem_reservation: 768m
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
-      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:?NACOS_SERVER_ADDR must be set in .env.prod}
+      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:?NACOS_SERVER_ADDR must be set in .env.prod.prod}
       - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
       - NACOS_GROUP=${NACOS_GROUP:-DEFAULT_GROUP}
-      - NACOS_USERNAME=${NACOS_USERNAME:?NACOS_USERNAME must be set in .env.prod}
-      - NACOS_PASSWORD=${NACOS_PASSWORD:?NACOS_PASSWORD must be set in .env.prod}
+      - NACOS_USERNAME=${NACOS_USERNAME:?NACOS_USERNAME must be set in .env.prod.prod}
+      - NACOS_PASSWORD=${NACOS_PASSWORD:?NACOS_PASSWORD must be set in .env.prod.prod}
       - NACOS_REGISTER_IP=${NACOS_REGISTER_IP:-}
       - AUTH_SERVER_URL=${AUTH_SERVER_URL:-http://auth:9090}
       - SENTINEL_DASHBOARD=${SENTINEL_DASHBOARD:-sentinel-dashboard:8858}
@@ -293,9 +293,9 @@ services:
       - EAGLE_SENTINEL_AUTH_BURST=${EAGLE_SENTINEL_AUTH_BURST:-200}
       - EAGLE_SENTINEL_SMS_QPS=${EAGLE_SENTINEL_SMS_QPS:-120}
       - EAGLE_SENTINEL_SMS_BURST=${EAGLE_SENTINEL_SMS_BURST:-30}
-      - ROCKETMQ_NAME_SERVER=${ROCKETMQ_NAME_SERVER:?ROCKETMQ_NAME_SERVER must be set in .env.prod}
+      - ROCKETMQ_NAME_SERVER=${ROCKETMQ_NAME_SERVER:?ROCKETMQ_NAME_SERVER must be set in .env.prod.prod}
       # 生产 CORS 不允许通配符:必须显式列出业务前端域名
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS must be set in .env.prod (no wildcard allowed)}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS must be set in .env.prod.prod (no wildcard allowed)}
       - JAVA_OPTS=${GATEWAY_JAVA_OPTS:--server -XX:+UseG1GC -Xms768m -Xmx1g -XX:MaxMetaspaceSize=320m -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
       - TZ=${TZ:-Asia/Shanghai}
     volumes:

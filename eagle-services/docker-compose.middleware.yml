@@ -16,7 +16,7 @@
 #   ⚠️ 改内存时务必「mem_limit 和 JVM 堆 / maxmemory 一起改」，只改一个没用。
 #
 # ── 跨机连接（应用在别的机器）──
-#   端口已绑 0.0.0.0 对外暴露，应用机的 .env.prod 里把 host 填本机内网 IP：
+#   端口已绑 0.0.0.0 对外暴露，应用机的 .env.prod.prod 里把 host 填本机内网 IP：
 #     REDIS_HOST=<中间件机内网IP>
 #     NACOS_SERVER_ADDR=<中间件机内网IP>:8848
 #     ROCKETMQ_ENDPOINTS=<中间件机内网IP>:8081
@@ -25,12 +25,12 @@
 #   ⚠️ 这些端口绝不能暴露公网，务必用安全组 / 防火墙只放行应用机内网 IP。
 #
 # ── 启动 ──
-#   docker compose -f docker-compose.middleware.yml --env-file .env.prod up -d
+#   docker compose -f docker-compose.middleware.yml --env-file .env.prod.prod up -d
 #
 # ⚠️ 持久化：
 #   - Nacos standalone 内嵌 Derby，配置存卷，卷丢=配置全丢；生产建议接外部 MySQL（见 nacos 注释）或定期导出。
 #   - RocketMQ store 在本地卷，磁盘坏=消息丢；定期备份 store + 消费端幂等（项目规则已要求）。
-#   - autoCreateTopicEnable 默认 true；生产建议 .env.prod 设 ROCKETMQ_AUTO_CREATE_TOPIC=false 并预创建 topic。
+#   - autoCreateTopicEnable 默认 true；生产建议 .env.prod.prod 设 ROCKETMQ_AUTO_CREATE_TOPIC=false 并预创建 topic。
 
 networks:
   eagle-network:
@@ -96,7 +96,7 @@ services:
       - JVM_XMN=${NACOS_JVM_XMN:-768m}
       - TZ=${TZ:-Asia/Shanghai}
       # ── 可选：外部 MySQL 持久化（生产强烈建议；替代易丢的内嵌 Derby）──
-      # MySQL 需预建 nacos 库 + 导入官方 nacos-mysql.sql，再取消下面注释并在 .env.prod 填值
+      # MySQL 需预建 nacos 库 + 导入官方 nacos-mysql.sql，再取消下面注释并在 .env.prod.prod 填值
       # - SPRING_DATASOURCE_PLATFORM=mysql
       # - MYSQL_SERVICE_HOST=${NACOS_MYSQL_HOST}
       # - MYSQL_SERVICE_PORT=${NACOS_MYSQL_PORT:-3306}
@@ -143,7 +143,7 @@ services:
   # ──────────────────────────── RocketMQ Broker ────────────────────────────
   # 单机 master（无 slave）。
   # ⚠️ 跨机部署：brokerIP1 必须改成本机内网 IP（应用在别的机器，靠这个 IP 回连 broker）。
-  #    在 .env.prod 里设 ROCKETMQ_BROKER_IP=<中间件机内网IP>，下方 broker.conf 会用它。
+  #    在 .env.prod.prod 里设 ROCKETMQ_BROKER_IP=<中间件机内网IP>，下方 broker.conf 会用它。
   rocketmq-broker:
     image: apache/rocketmq:5.3.2
     container_name: eagle-rocketmq-broker
@@ -163,8 +163,8 @@ services:
       - JAVA_OPT_EXT=${ROCKETMQ_BROKER_JAVA_OPT_EXT:--server -Xms4g -Xmx4g -Xmn2g}
       - TZ=${TZ:-Asia/Shanghai}
     # brokerIP1 用 ${ROCKETMQ_BROKER_IP:-rocketmq-broker}：单机同网络默认服务名即可；
-    # 跨机（应用在别的机器）必须在 .env.prod 设 ROCKETMQ_BROKER_IP=<本机内网IP>
-    # autoCreateTopicEnable 生产建议 .env.prod 设 ROCKETMQ_AUTO_CREATE_TOPIC=false 并预创建 topic
+    # 跨机（应用在别的机器）必须在 .env.prod.prod 设 ROCKETMQ_BROKER_IP=<本机内网IP>
+    # autoCreateTopicEnable 生产建议 .env.prod.prod 设 ROCKETMQ_AUTO_CREATE_TOPIC=false 并预创建 topic
     command:
       - sh
       - -c
@@ -236,8 +236,8 @@ services:
 
   # ─────────────────────────── Sentinel Dashboard ───────────────────────────
   # 限流规则管理 UI（规则源在 Nacos，容器本身无状态，挂了重启不影响业务）。
-  # gateway 通过 SENTINEL_DASHBOARD=<本机内网IP>:8858 上报心跳 + 拉规则（跨机时 .env.prod 填本机内网 IP）。
-  # ⚠️ 1.8.6+ 默认登录 sentinel/sentinel，务必在 .env.prod 的 SENTINEL_JAVA_OPTS 追加：
+  # gateway 通过 SENTINEL_DASHBOARD=<本机内网IP>:8858 上报心跳 + 拉规则（跨机时 .env.prod.prod 填本机内网 IP）。
+  # ⚠️ 1.8.6+ 默认登录 sentinel/sentinel，务必在 .env.prod.prod 的 SENTINEL_JAVA_OPTS 追加：
   #    -Dsentinel.dashboard.auth.username=xxx -Dsentinel.dashboard.auth.password=xxx
   # 镜像本地构建（拉官方 fat jar），需要本目录下有 ./sentinel-dashboard/Dockerfile
   sentinel-dashboard:

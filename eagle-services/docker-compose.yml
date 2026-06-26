@@ -3,20 +3,20 @@
 # 生产部署请用同目录 docker-compose.prod.yml(资源/JVM/安全配置面均不同,不要互相套用)。
 #
 # JVM 堆默认值面向"能跑起来 + 留出 GC 头部空间";不追求吞吐与延迟。
-# 业务真要压测,改 .env 覆盖各服务的 *_JAVA_OPTS / *_MEM_LIMIT。
+# 业务真要压测,改 .env.prod 覆盖各服务的 *_JAVA_OPTS / *_MEM_LIMIT。
 #
 # 变量管理约定:
 #   1. environment 显式枚举所有变量,统一 ${VAR:-default} 形式 —— compose.yml 是"变量清单 + 默认值"
 #   2. dev / prod 各自一个自包含 env 文件(均在本目录),互不依赖:
-#        本文件(docker-compose.yml) 配 .env.dev      —— dev 全套值 + 机密,gitignore
-#        docker-compose.prod.yml    配 .env.prod     —— prod 全套值 + 机密,gitignore
-#        模板见 .env.dev.example / .env.prod.example;首次 cp 出对应实文件后填机密
-#   3. 启动(命令行):docker compose --env-file .env.dev up -d
-#      IDEA 一键:Docker Compose 运行配置里 Environment variables file=.env.dev,点绿三角即部署
-#      注意:传了 --env-file 后 compose 不再自动加载裸 .env,口径以 .env.dev 为准
-#   4. 优先级(高 → 低):shell 环境变量 > --env-file(.env.dev) > environment 默认值
+#        本文件(docker-compose.yml) 配 .env.prod.dev      —— dev 全套值 + 机密,gitignore
+#        docker-compose.prod.yml    配 .env.prod.prod     —— prod 全套值 + 机密,gitignore
+#        模板见 .env.prod.dev.example / .env.prod.prod.example;首次 cp 出对应实文件后填机密
+#   3. 启动(命令行):docker compose --env-file .env.prod.dev up -d
+#      IDEA 一键:Docker Compose 运行配置里 Environment variables file=.env.prod.dev,点绿三角即部署
+#      注意:传了 --env-file 后 compose 不再自动加载裸 .env.prod,口径以 .env.prod.dev 为准
+#   4. 优先级(高 → 低):shell 环境变量 > --env-file(.env.prod.dev) > environment 默认值
 #   5. healthcheck / command 中引用敏感字段(密码)也采用 ${VAR:-default} 插值,确保 env 覆盖后整体一致
-#   6. 新增凭证:在 .env.dev / .env.prod 各自写值 + 在 environment 加 `KEY=${KEY}` 占位(让 compose.yml 始终是变量清单)
+#   6. 新增凭证:在 .env.prod.dev / .env.prod.prod 各自写值 + 在 environment 加 `KEY=${KEY}` 占位(让 compose.yml 始终是变量清单)
 #
 # IDE 远程调试(JDWP):
 #   auth   → 127.0.0.1:5105   (容器内 *:5105)
@@ -26,7 +26,7 @@
 #           eagle-cloud 错开整段用 5105/5106/5107,后续新服务沿 51xx 递增
 #   IntelliJ IDEA: Run → Edit Configurations → + → Remote JVM Debug → Host=localhost / Port=5105|5106|5107
 #   调试参数通过 JAVA_TOOL_OPTIONS 注入(JVM 标准变量,与 JAVA_OPTS 自动合并),
-#   关闭调试:在 .env 里设 AUTH_DEBUG_OPTS="" / SYSTEM_DEBUG_OPTS="" / GATEWAY_DEBUG_OPTS=""
+#   关闭调试:在 .env.prod 里设 AUTH_DEBUG_OPTS="" / SYSTEM_DEBUG_OPTS="" / GATEWAY_DEBUG_OPTS=""
 networks:
   eagle-network:
     name: eagle-network
@@ -42,7 +42,7 @@ volumes:
   rocketmq-broker-store:
 
 services:
-  # PostgreSQL 数据库 — compose 内唯一数据源；DB_USERNAME/DB_PASSWORD/DB_NAME 与 system 服务共用同一组 .env 变量
+  # PostgreSQL 数据库 — compose 内唯一数据源；DB_USERNAME/DB_PASSWORD/DB_NAME 与 system 服务共用同一组 .env.prod 变量
   postgres:
     image: postgres:16
     container_name: eagle-postgres
@@ -374,7 +374,7 @@ services:
       - EAGLE_JWT_KEYSTORE_PASSWORD=${EAGLE_JWT_KEYSTORE_PASSWORD:-eagle-jwt-dev-2026}
       # OAuth2 issuer: JWT iss claim 与资源服务器校验保持一致；集群部署必填稳定对外 URL
       - EAGLE_OAUTH_ISSUER=${EAGLE_OAUTH_ISSUER:-http://localhost:8080}
-      # OAuth2 回调白名单: 逗号分隔，前端联调 / 多环境部署时在 .env 覆盖
+      # OAuth2 回调白名单: 逗号分隔，前端联调 / 多环境部署时在 .env.prod 覆盖
       - EAGLE_OAUTH_REDIRECT_URIS=${EAGLE_OAUTH_REDIRECT_URIS:-http://localhost:8080/auth/oauth2/callback}
       # OIDC RP-Initiated Logout 回跳白名单: 逗号分隔，前端整页跳 /connect/logout 时 post_logout_redirect_uri 必须命中
       - EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS=${EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS:-http://localhost:8000/auth/oauth2/logout/callback}
@@ -449,8 +449,8 @@ services:
     mem_limit: 1536m
     mem_reservation: 768m
     # environment 显式枚举所有关键变量，统一 ${VAR:-default} 插值
-    # 默认值已包含容器网络约束（postgres:5432 / redis:6379 / nacos:8848 / SERVER_PORT=8082），.env 可整体覆盖
-    # 注意：.env 文件中的变量仅用于 compose.yml 的 ${VAR} 插值，必须在此 environment 段显式声明才会注入容器
+    # 默认值已包含容器网络约束（postgres:5432 / redis:6379 / nacos:8848 / SERVER_PORT=8082），.env.prod 可整体覆盖
+    # 注意：.env.prod 文件中的变量仅用于 compose.yml 的 ${VAR} 插值，必须在此 environment 段显式声明才会注入容器
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - SERVER_PORT=${SERVER_PORT:-8082}
@@ -495,7 +495,7 @@ services:
       # OAuth2 issuer: 集群部署必填,所有 system 实例共用同一个对外稳定 URL(LB / 网关)
       - EAGLE_OAUTH_ISSUER=${EAGLE_OAUTH_ISSUER:-http://localhost:8080}
       # OAuth2 回调白名单: 逗号分隔,与 application.yml 默认值保持一致;
-      # 前端联调 / 多环境部署时在 .env 覆盖,补上额外的回调地址
+      # 前端联调 / 多环境部署时在 .env.prod 覆盖,补上额外的回调地址
       - EAGLE_OAUTH_REDIRECT_URIS=${EAGLE_OAUTH_REDIRECT_URIS:-http://localhost:8080/auth/oauth2/callback}
       # OIDC RP-Initiated Logout 回跳白名单: 与 auth-service 块对仗;system 自身不消费,但保持配置面一致
       - EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS=${EAGLE_OAUTH_POST_LOGOUT_REDIRECT_URIS:-http://localhost:8000/auth/oauth2/logout/callback}
@@ -563,7 +563,7 @@ services:
     mem_limit: 512m
     mem_reservation: 256m
     # environment 显式枚举所有关键变量，统一 ${VAR:-default} 插值
-    # 默认值已包含容器网络约束（nacos:8848 / auth:9090 / system:8082 / sentinel-dashboard:8858），.env 可整体覆盖
+    # 默认值已包含容器网络约束（nacos:8848 / auth:9090 / system:8082 / sentinel-dashboard:8858），.env.prod 可整体覆盖
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
