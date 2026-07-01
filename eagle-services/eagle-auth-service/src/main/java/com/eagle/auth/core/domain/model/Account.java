@@ -176,6 +176,25 @@ public class Account extends BaseAggregateRoot<Account> {
     }
 
     /**
+     * 通过淘宝 openUid 创建账号（淘宝一键登录，新用户直登，无需手机号）。
+     *
+     * <p>username 用 openUid 的 SHA-256 哈希前 16 字符（小写 hex），与 {@link #createFromWechat} 同规则。
+     * 密码占位为 {@link #DISABLED_PASSWORD}，不可通过表单密码登录。
+     */
+    public static Account createFromTaobao(String openUid) {
+        if (openUid == null || openUid.isBlank()) {
+            throw AuthErrorCode.TAOBAO_AUTH_REQUIRED.toDomainException();
+        }
+        Account account = new Account();
+        account.username = "tb_" + shortHash(openUid);
+        account.password = DISABLED_PASSWORD;
+        account.status = AccountStatus.ACTIVE;
+        account.taobaoBinding = TaobaoBinding.create(openUid);
+        account.profileHints = ProfileHints.EMPTY;
+        return account;
+    }
+
+    /**
      * 通过微信网页（PC 扫码）登录创建账号。
      */
     public static Account createFromWechatWeb(String webOpenid, String unionid,

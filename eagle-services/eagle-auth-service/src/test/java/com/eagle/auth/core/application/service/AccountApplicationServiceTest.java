@@ -40,6 +40,7 @@ class AccountApplicationServiceTest {
     private static final String RAW_PASSWORD = "Pa$$w0rd!";
     private static final String ENCODED_PASSWORD = "{bcrypt}encoded";
     private static final String PHONE = "13800138000";
+    private static final String TAOBAO_OPEN_UID = "tb_open_uid_abcdef0123456789";
     private static final Long ACCOUNT_ID = 100L;
 
     @Mock
@@ -286,6 +287,38 @@ class AccountApplicationServiceTest {
 
             assertNotNull(result);
             assertEquals(PHONE, result.getPhone());
+            verify(accountRepository, times(1)).save(any(Account.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("findOrCreateByTaobao")
+    class FindOrCreateByTaobao {
+
+        @Test
+        @DisplayName("应返回已有")
+        void shouldReturnExisting() {
+            Account existing = existingAccount();
+            when(accountRepository.findByTaobaoBindingOpenUid(TAOBAO_OPEN_UID))
+                    .thenReturn(Optional.of(existing));
+
+            Account result = service.findOrCreateByTaobao(TAOBAO_OPEN_UID);
+
+            assertSame(existing, result);
+            verify(accountRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("应创建New，无需手机号")
+        void shouldCreateNewWithoutPhone() {
+            when(accountRepository.findByTaobaoBindingOpenUid(TAOBAO_OPEN_UID))
+                    .thenReturn(Optional.empty());
+            when(accountRepository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            Account result = service.findOrCreateByTaobao(TAOBAO_OPEN_UID);
+
+            assertNotNull(result);
+            assertEquals(TAOBAO_OPEN_UID, result.getTaobaoBinding().getOpenUid());
             verify(accountRepository, times(1)).save(any(Account.class));
         }
     }

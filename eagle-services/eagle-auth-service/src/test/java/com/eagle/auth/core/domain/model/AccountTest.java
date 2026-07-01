@@ -23,6 +23,7 @@ class AccountTest {
     private static final String PHONE = "13800138000";
     private static final String OPENID = "wx_openid_abcdef0123456789longer";
     private static final String UNIONID = "wx_unionid_xyz";
+    private static final String TAOBAO_OPEN_UID = "tb_open_uid_abcdef0123456789";
     private static final ProfileHints HINTS = new ProfileHints("Alice", "https://avatar.example/a.png", "alice@example.com");
 
     @Nested
@@ -111,6 +112,35 @@ class AccountTest {
             AppException ex = assertThrows(DomainException.class,
                     () -> Account.createFromWechat(" ", UNIONID));
             assertEquals(AuthErrorCode.OPENID_REQUIRED, ex.getErrorCode());
+        }
+    }
+
+    @Nested
+    @DisplayName("createFromTaobao")
+    class CreateFromTaobao {
+
+        @Test
+        @DisplayName("应创建淘宝账号，无需手机号")
+        void shouldCreateTaobaoAccount() {
+            Account account = Account.createFromTaobao(TAOBAO_OPEN_UID);
+
+            // SHA-256 短哈希前 16 hex 字符，与 createFromWechat 同规则
+            assertEquals(16 + "tb_".length(), account.getUsername().length());
+            assertTrue(account.getUsername().startsWith("tb_"));
+            assertEquals(Account.DISABLED_PASSWORD, account.getPassword());
+            assertEquals(AccountStatus.ACTIVE, account.getStatus());
+            assertNull(account.getPhone());
+            assertNotNull(account.getTaobaoBinding());
+            assertEquals(TAOBAO_OPEN_UID, account.getTaobaoBinding().getOpenUid());
+            assertSame(ProfileHints.EMPTY, account.getProfileHints());
+        }
+
+        @Test
+        @DisplayName("openUid空白时应抛出")
+        void shouldThrowWhenOpenUidBlank() {
+            AppException ex = assertThrows(DomainException.class,
+                    () -> Account.createFromTaobao(" "));
+            assertEquals(AuthErrorCode.TAOBAO_AUTH_REQUIRED, ex.getErrorCode());
         }
     }
 

@@ -76,7 +76,6 @@ public enum AuthErrorCode implements ErrorCode {
     // ==================== 淘宝登录（11046–11049）====================
 
     TAOBAO_AUTH_REQUIRED(11046, "error.auth.taobao_auth_required", "淘宝授权信息不能为空"),
-    PHONE_BINDING_REQUIRED(11047, "error.auth.phone_binding_required", "请绑定手机号完成登录"),
     TAOBAO_ALREADY_BOUND(11048, "error.auth.taobao_already_bound", "该淘宝账号已绑定其他用户"),
     TAOBAO_UPSTREAM(11049, "error.auth.taobao_upstream", "淘宝授权服务暂时不可用"),
 

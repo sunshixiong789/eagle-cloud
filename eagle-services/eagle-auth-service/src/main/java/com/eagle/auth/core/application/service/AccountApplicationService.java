@@ -178,6 +178,21 @@ public class AccountApplicationService {
     }
 
     /**
+     * 按淘宝 openUid 查找或自动创建账号（淘宝一键登录场景，无需手机号）。
+     *
+     * @param openUid 淘宝 openUid
+     * @return Account 实例
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Account findOrCreateByTaobao(String openUid) {
+        return accountRepository.findByTaobaoBindingOpenUid(openUid)
+                .orElseGet(() -> {
+                    Account newAccount = Account.createFromTaobao(openUid);
+                    return accountRepository.save(newAccount);
+                });
+    }
+
+    /**
      * 通过短信验证码重置密码（忘记密码场景，未认证）。
      */
     @Transactional(rollbackFor = Exception.class)
