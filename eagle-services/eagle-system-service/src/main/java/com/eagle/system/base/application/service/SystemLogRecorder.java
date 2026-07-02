@@ -26,6 +26,7 @@ public class SystemLogRecorder {
     private static final int SERVICE_ID_MAX_LENGTH = 64;
 
     private static final String AUTH_SERVICE_ID = "eagle-auth-service";
+    private static final String EVENT_ID_UNIQUE_CONSTRAINT = "uk_sys_log_event_id";
 
     private final LogRepository logRepository;
     private final String serviceId;
@@ -67,8 +68,8 @@ public class SystemLogRecorder {
      * 将 auth-service 登录集成事件写入系统登录日志。
      *
      * <p>幂等保障(Mode A):{@code sys_log.event_id} 唯一约束兜底 RocketMQ 至少一次重投递。
-     * 唯一约束冲突时,二次 {@link LogRepository#existsByEventId(String)} 校验是事件 ID 冲突而非
-     * 其他并发场景,匹配则跳过;不匹配则上抛由 RocketMQ 重试。
+     * 唯一约束冲突时只跳过明确命中 {@code uk_sys_log_event_id} 的重复事件;其他约束冲突上抛,
+     * 由 RocketMQ 重试 / DLQ 暴露真实故障。
      *
      * @param event 登录日志事件
      */
@@ -95,7 +96,7 @@ public class SystemLogRecorder {
         try {
             logRepository.save(loginLog);
         } catch (DataIntegrityViolationException ex) {
-            if (eventId != null && logRepository.existsByEventId(eventId)) {
+            if (eventId != null && isEventIdUniqueConstraintViolation(ex)) {
                 log.info("idempotent skip login log on conflict, eventId={}", eventId);
                 return;
             }
@@ -130,5 +131,17 @@ public class SystemLogRecorder {
             return value;
         }
         return value.substring(0, maxLength);
+    }
+
+    private boolean isEventIdUniqueConstraintViolation(Throwable ex) {
+        Throwable current = ex;
+        while (current != null) {
+            String message = current.getMessage();
+            if (message != null && message.contains(EVENT_ID_UNIQUE_CONSTRAINT)) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 }

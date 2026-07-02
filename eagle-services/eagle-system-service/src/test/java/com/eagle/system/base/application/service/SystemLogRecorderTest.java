@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -126,34 +127,34 @@ class SystemLogRecorderTest {
         }
 
         @Test
-        @DisplayName("save 唯一约束冲突且 eventId 已存在时应吞掉异常")
-        void shouldSwallowConflictWhenEventIdConflict() {
+        @DisplayName("save 触发 eventId 唯一约束冲突时应吞掉异常")
+        void shouldSwallowConflictWhenEventIdUniqueConstraintViolated() {
             AuthLoginMessage event = new AuthLoginMessage();
             event.setUsername("bob");
-            when(logRepository.existsByEventId(event.getEventId()))
-                    .thenReturn(false)
-                    .thenReturn(true);
+            when(logRepository.existsByEventId(event.getEventId())).thenReturn(false);
             when(logRepository.save(any(SysLog.class)))
-                    .thenThrow(new DataIntegrityViolationException("uk_sys_log_event_id"));
+                    .thenThrow(new DataIntegrityViolationException(
+                            "ERROR: duplicate key value violates unique constraint \"uk_sys_log_event_id\""));
 
             recorder.recordLogin(event);
 
+            verify(logRepository, times(1)).existsByEventId(event.getEventId());
             verify(logRepository).save(any());
         }
 
         @Test
-        @DisplayName("save 唯一约束冲突且非 eventId 冲突时应上抛")
+        @DisplayName("save 触发非 eventId 约束冲突时应上抛且不再查库")
         void shouldRethrowConflictWhenNotEventIdConflict() {
             AuthLoginMessage event = new AuthLoginMessage();
             event.setUsername("bob");
-            when(logRepository.existsByEventId(event.getEventId()))
-                    .thenReturn(false)
-                    .thenReturn(false);
+            when(logRepository.existsByEventId(event.getEventId())).thenReturn(false);
             when(logRepository.save(any(SysLog.class)))
-                    .thenThrow(new DataIntegrityViolationException("other constraint"));
+                    .thenThrow(new DataIntegrityViolationException(
+                            "ERROR: duplicate key value violates unique constraint \"sys_log_pkey\""));
 
             assertThatThrownBy(() -> recorder.recordLogin(event))
                     .isInstanceOf(DataIntegrityViolationException.class);
+            verify(logRepository, times(1)).existsByEventId(event.getEventId());
         }
     }
 }
