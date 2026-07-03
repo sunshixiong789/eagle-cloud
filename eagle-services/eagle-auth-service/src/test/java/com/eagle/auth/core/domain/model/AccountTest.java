@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -73,7 +74,9 @@ class AccountTest {
         void shouldCreatePhoneAccount() {
             Account account = Account.createFromPhone(PHONE);
 
-            assertEquals(PHONE, account.getUsername());
+            assertNotEquals(PHONE, account.getUsername());
+            assertEquals(16 + "phone_".length(), account.getUsername().length());
+            assertTrue(account.getUsername().startsWith("phone_"));
             assertEquals(PHONE, account.getPhone());
             assertEquals(Account.DISABLED_PASSWORD, account.getPassword());
             assertEquals(AccountStatus.ACTIVE, account.getStatus());

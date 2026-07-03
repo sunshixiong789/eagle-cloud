@@ -160,14 +160,15 @@ public class Account extends BaseAggregateRoot<Account> {
     /**
      * 通过手机号创建账号（短信验证码登录）。
      *
-     * <p>username 直接取手机号；密码占位 {@link #DISABLED_PASSWORD}。
+     * <p>username 使用手机号的稳定哈希，避免换绑后旧手机号仍被 username 唯一索引占用。
+     * 手机登录的账号识别以 {@code phone} 字段为准；密码占位 {@link #DISABLED_PASSWORD}。
      */
     public static Account createFromPhone(String phone) {
         if (phone == null || phone.isBlank()) {
             throw AuthErrorCode.PHONE_REQUIRED.toDomainException();
         }
         Account account = new Account();
-        account.username = phone;
+        account.username = "phone_" + shortHash(phone);
         account.password = DISABLED_PASSWORD;
         account.phone = phone;
         account.status = AccountStatus.ACTIVE;

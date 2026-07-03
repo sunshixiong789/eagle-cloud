@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -278,16 +279,16 @@ class AccountApplicationServiceTest {
         }
 
         @Test
-        @DisplayName("手机号字段缺失但用户名为手机号时应返回已有")
-        void shouldReturnExistingWhenUsernameMatchesPhone() {
-            Account existing = Account.create(PHONE, ENCODED_PASSWORD, null, ProfileHints.EMPTY);
+        @DisplayName("应创建不占用裸手机号用户名的新账号")
+        void shouldCreateNewWithoutUsingRawPhoneAsUsername() {
             when(accountRepository.findByPhone(PHONE)).thenReturn(Optional.empty());
-            when(accountRepository.findByUsername(PHONE)).thenReturn(Optional.of(existing));
+            when(accountRepository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
 
             Account result = service.findOrCreateByPhone(PHONE);
 
-            assertSame(existing, result);
-            verify(accountRepository, never()).save(any());
+            assertEquals(PHONE, result.getPhone());
+            assertNotEquals(PHONE, result.getUsername());
+            verify(accountRepository, never()).findByUsername(PHONE);
         }
 
         @Test
