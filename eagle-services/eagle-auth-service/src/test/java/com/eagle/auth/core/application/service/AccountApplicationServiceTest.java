@@ -278,6 +278,19 @@ class AccountApplicationServiceTest {
         }
 
         @Test
+        @DisplayName("手机号字段缺失但用户名为手机号时应返回已有")
+        void shouldReturnExistingWhenUsernameMatchesPhone() {
+            Account existing = Account.create(PHONE, ENCODED_PASSWORD, null, ProfileHints.EMPTY);
+            when(accountRepository.findByPhone(PHONE)).thenReturn(Optional.empty());
+            when(accountRepository.findByUsername(PHONE)).thenReturn(Optional.of(existing));
+
+            Account result = service.findOrCreateByPhone(PHONE);
+
+            assertSame(existing, result);
+            verify(accountRepository, never()).save(any());
+        }
+
+        @Test
         @DisplayName("应创建New")
         void shouldCreateNew() {
             when(accountRepository.findByPhone(PHONE)).thenReturn(Optional.empty());
