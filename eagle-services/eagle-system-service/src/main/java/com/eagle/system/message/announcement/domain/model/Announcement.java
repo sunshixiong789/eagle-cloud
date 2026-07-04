@@ -7,7 +7,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Index;
-import jakarta.persistence.Lob;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -43,7 +42,6 @@ public class Announcement extends BaseAggregateRoot<Announcement> {
     @Column(name = "title", nullable = false, length = 200, comment = "标题")
     private String title;
 
-    @Lob
     @Column(name = "content", nullable = false, columnDefinition = "TEXT", comment = "正文")
     private String content;
 
