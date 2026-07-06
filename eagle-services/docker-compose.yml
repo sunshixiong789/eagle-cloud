@@ -40,6 +40,9 @@ volumes:
   rocketmq-namesrv-logs:
   rocketmq-broker-logs:
   rocketmq-broker-store:
+  # system-service 本地上传文件落盘目录(对应 Dockerfile 的 /data/eagle/storage)。
+  # 命名卷首次创建继承镜像内该目录的 spring:spring owner,非 root 用户可写。
+  system-storage:
 
 services:
   # PostgreSQL 数据库 — compose 内唯一数据源；DB_USERNAME/DB_PASSWORD/DB_NAME 与 system 服务共用同一组 .env.prod 变量
@@ -526,6 +529,8 @@ services:
       - JAVA_OPTS=${SYSTEM_JAVA_OPTS:--server -XX:+UseG1GC -Xms512m -Xmx1024m -XX:MaxMetaspaceSize=320m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
       # JDWP 调试参数:JVM 标准变量,启动时自动与 JAVA_OPTS 合并,设空字符串即可关闭调试
       - JAVA_TOOL_OPTIONS=${SYSTEM_DEBUG_OPTS:--agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5106}
+    volumes:
+      - system-storage:/data/eagle/storage
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8082/actuator/health" ]
       interval: 30s
