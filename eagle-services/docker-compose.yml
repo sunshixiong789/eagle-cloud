@@ -421,17 +421,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      nacos:
-        condition: service_healthy
-      rocketmq-broker:
-        condition: service_started
-      rocketmq-proxy:
-        condition: service_started
 
   # 系统服务
   system:
@@ -537,18 +526,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-    # system-service 数据源为 PostgreSQL；compose 已移除 MySQL
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      nacos:
-        condition: service_healthy
-      rocketmq-broker:
-        condition: service_started
-      rocketmq-proxy:
-        condition: service_started
   # 网关服务（放在最后：依赖 auth + system 注册到 Nacos 后才能完成路由 lb）
   gateway:
     build:
