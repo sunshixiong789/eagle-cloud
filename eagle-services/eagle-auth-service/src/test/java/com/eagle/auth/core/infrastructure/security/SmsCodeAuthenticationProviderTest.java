@@ -11,10 +11,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
@@ -38,8 +41,10 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -163,6 +168,34 @@ class SmsCodeAuthenticationProviderTest {
             assertEquals(OAuth2AccessToken.TokenType.BEARER, result.getAccessToken().getTokenType());
             verify(authorizationService).save(any());
             verify(blacklistChecker).checkLogin(null, "13800138000", null, null);
+        }
+
+        @Test
+        @DisplayName("登录成功应发布 AuthenticationSuccessEvent 供登录日志/防护计数使用")
+        @SuppressWarnings("unchecked")
+        void shouldPublishAuthenticationSuccessEventOnLogin() {
+            RegisteredClient client = clientWithGrants(SmsCodeAuthenticationToken.SMS_CODE);
+            OAuth2ClientAuthenticationToken clientAuth = authedClient(client);
+            SmsCodeAuthenticationToken authToken =
+                    new SmsCodeAuthenticationToken("13800138000", "123456", clientAuth, Map.of());
+
+            when(smsService.verifyCode("13800138000", "123456")).thenReturn(true);
+            Account account = activeAccount();
+            when(accountApplicationService.findOrCreateByPhone("13800138000")).thenReturn(account);
+            EagleUser user = eagleUser();
+            when(userDetailsService.loadUserByUsername(account.getUsername())).thenReturn(user);
+            when(tokenGenerator.generate(any())).thenReturn(stubJwt());
+
+            ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+            provider.setApplicationEventPublisher(eventPublisher);
+
+            provider.authenticate(authToken);
+
+            ArgumentCaptor<AuthenticationSuccessEvent> captor =
+                    ArgumentCaptor.forClass(AuthenticationSuccessEvent.class);
+            verify(eventPublisher).publishEvent(captor.capture());
+            // principal 必须是 EagleUser，登录日志监听器才能解析 accountId/username
+            assertSame(user, captor.getValue().getAuthentication().getPrincipal());
         }
 
         @Test

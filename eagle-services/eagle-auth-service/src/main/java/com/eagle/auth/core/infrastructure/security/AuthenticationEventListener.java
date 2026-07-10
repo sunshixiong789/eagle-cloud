@@ -7,6 +7,7 @@ import com.eagle.rocketmq.publisher.DomainEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.event.AuthenticationFailureBadCredentialsEvent;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.core.Authentication;
@@ -51,20 +52,29 @@ public class AuthenticationEventListener {
     }
 
     /**
-     * 登录成功时重置失败计数
+     * 用户登录成功时重置失败计数并记录登录日志（限缩到 UsernamePasswordAuthenticationToken）。
      * <p>
-     * 监听 Spring Security 的 AuthenticationSuccessEvent,
-     * 认证成功时清除该 IP 的失败记录,防止误封。
+     * {@code AuthenticationSuccessEvent} 对服务内<b>所有</b>认证成功都会发布：JWT bearer
+     * （每个携带 access token 的 API 请求）、OAuth2 客户端认证、授权码兑换、refresh_token
+     * 续期等。这些技术性认证不是"用户登录"，历史上全部记录导致一次登录产生大量登录日志。
+     * <p>
+     * 约定：所有代表"用户完成一次登录"的入口统一以 {@link UsernamePasswordAuthenticationToken}
+     * 发布成功事件 —— 表单登录（DaoAuthenticationProvider）、Web 短信登录
+     * （{@code LoginController#smsLogin} 手工发布）、custom grant App 登录
+     * （{@code AbstractCustomGrantAuthenticationProvider#generateTokens} 手工发布）。
      *
      * @param event 认证成功事件
      */
     @EventListener
     public void onAuthSuccess(AuthenticationSuccessEvent event) {
+        if (!(event.getAuthentication() instanceof UsernamePasswordAuthenticationToken authentication)) {
+            return;
+        }
         String ip = ClientIpHolder.get();
         if (ip != null) {
             loginAttemptService.registerSuccess(ip);
         }
-        publishLoginLog(event.getAuthentication(), ip, true, null);
+        publishLoginLog(authentication, ip, true, null);
     }
 
     private void publishLoginLog(Authentication authentication, String ip,

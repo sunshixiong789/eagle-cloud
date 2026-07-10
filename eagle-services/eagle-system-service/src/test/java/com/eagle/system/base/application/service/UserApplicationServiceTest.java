@@ -26,6 +26,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,6 +34,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
@@ -174,6 +177,23 @@ class UserApplicationServiceTest {
             verify(userRepository, org.mockito.Mockito.times(2))
                     .findAll(any(org.springframework.data.jpa.domain.Specification.class),
                             any(PageRequest.class));
+        }
+
+        @Test
+        @DisplayName("无排序参数时应按最新创建时间倒序")
+        void shouldApplyNewestFirstSortWhenUnsorted() {
+            when(adminProperties.getUsername()).thenReturn("admin");
+            when(userRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class),
+                    any(PageRequest.class))).thenReturn(Page.empty());
+
+            service.queryUsers(new UserQueryRequest(), PageRequest.of(0, 10));
+
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+            verify(userRepository).findAll(any(org.springframework.data.jpa.domain.Specification.class),
+                    pageableCaptor.capture());
+            Sort sort = pageableCaptor.getValue().getSort();
+            assertEquals(Sort.Direction.DESC, sort.getOrderFor("createTime").getDirection());
+            assertEquals(Sort.Direction.DESC, sort.getOrderFor("id").getDirection());
         }
     }
 

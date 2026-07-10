@@ -2,6 +2,7 @@ package com.eagle.auth.core.infrastructure.security;
 
 import com.eagle.auth.core.domain.port.OnlineUserInfo;
 import com.eagle.auth.core.domain.port.OnlineUserPort;
+import com.eagle.common.constant.SecurityConstants;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -101,7 +102,7 @@ class TokenTrackingHandlerTest {
             Instant expiresAt = Instant.now().plusSeconds(3600);
             OAuth2AccessTokenAuthenticationToken tokenAuth = buildTokenAuth(
                     "header.payload.sig", "alice",
-                    Map.of("jti", "jti-1", "sub", "alice"), expiresAt);
+                    Map.of("jti", "jti-1", "sub", "alice", SecurityConstants.DETAILS_USER_ID, 200L), expiresAt);
 
             MockHttpServletRequest request = new MockHttpServletRequest();
             request.setRemoteAddr("10.0.0.1");
@@ -120,6 +121,7 @@ class TokenTrackingHandlerTest {
             verify(onlineUserPort).trackLogin(captor.capture());
             OnlineUserInfo info = captor.getValue();
             assertEquals("jti-1", info.tokenId());
+            assertEquals(200L, info.userId());
             assertEquals("alice", info.username());
             assertEquals("10.0.0.1", info.ip());
             assertEquals("Chrome", info.browser());

@@ -6,8 +6,11 @@ import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.model.enums.AccountStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -54,11 +57,14 @@ import java.util.Map;
  * @author sunshixiong
  */
 @Slf4j
-public abstract class AbstractCustomGrantAuthenticationProvider implements AuthenticationProvider {
+public abstract class AbstractCustomGrantAuthenticationProvider
+        implements AuthenticationProvider, ApplicationEventPublisherAware {
 
     protected final OAuth2AuthorizationService authorizationService;
     protected final OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator;
     protected final UserDetailsService userDetailsService;
+
+    private ApplicationEventPublisher eventPublisher;
 
     protected AbstractCustomGrantAuthenticationProvider(
             OAuth2AuthorizationService authorizationService,
@@ -67,6 +73,11 @@ public abstract class AbstractCustomGrantAuthenticationProvider implements Authe
         this.authorizationService = authorizationService;
         this.tokenGenerator = tokenGenerator;
         this.userDetailsService = userDetailsService;
+    }
+
+    @Override
+    public void setApplicationEventPublisher(@NonNull ApplicationEventPublisher applicationEventPublisher) {
+        this.eventPublisher = applicationEventPublisher;
     }
 
     /**
@@ -193,6 +204,17 @@ public abstract class AbstractCustomGrantAuthenticationProvider implements Authe
 
         log.info("custom grant issued: grant={}, accountId={}, username={}",
                 grantType.getValue(), eagleUser.getId(), eagleUser.getUsername());
+
+        // ProviderManager 对 token 端点发布的成功事件类型是 OAuth2AccessTokenAuthenticationToken，
+        // 与授权码兑换 / refresh_token 续期无法区分，登录日志监听器不消费它。
+        // custom grant 是真实的用户登录，此处以约定的 UsernamePasswordAuthenticationToken
+        // （principal=EagleUser）显式发布，由 AuthenticationEventListener 统一记录登录日志
+        // 并重置 IP 失败计数。
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(new AuthenticationSuccessEvent(
+                    new UsernamePasswordAuthenticationToken(
+                            eagleUser, null, eagleUser.getAuthorities())));
+        }
 
         return new OAuth2AccessTokenAuthenticationToken(
                 registeredClient, clientPrincipal, accessToken, refreshToken,
