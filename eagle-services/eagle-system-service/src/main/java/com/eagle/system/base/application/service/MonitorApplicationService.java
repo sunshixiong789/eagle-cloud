@@ -20,7 +20,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -46,6 +48,10 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class MonitorApplicationService {
+
+    private static final Sort DEFAULT_LOGIN_LOG_SORT = Sort.by(
+            Sort.Order.desc("createTime"),
+            Sort.Order.desc("id"));
 
     private final AuthClientFacade authClientFacade;
     private final LogApplicationService logApplicationService;
@@ -175,8 +181,16 @@ public class MonitorApplicationService {
                 .todayTotal(todayTotal)
                 .todayFail(todayFail)
                 .todayUniqueUsers(todayUniqueUsers)
-                .page(logApplicationService.queryLogs(logRequest, pageable).map(this::toLoginLogItem))
+                .page(logApplicationService.queryLogs(logRequest, withDefaultLoginLogSort(pageable))
+                        .map(this::toLoginLogItem))
                 .build();
+    }
+
+    private static Pageable withDefaultLoginLogSort(Pageable pageable) {
+        if (pageable.getSort().isSorted()) {
+            return pageable;
+        }
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), DEFAULT_LOGIN_LOG_SORT);
     }
 
     /**

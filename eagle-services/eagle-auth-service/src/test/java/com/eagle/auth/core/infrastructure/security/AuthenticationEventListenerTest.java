@@ -94,6 +94,7 @@ class AuthenticationEventListenerTest {
             RegisteredClient client = RegisteredClient.withId("c-1")
                     .clientId("eagle-web")
                     .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                    .redirectUri("https://client.example.test/callback")
                     .build();
             OAuth2ClientAuthenticationToken clientAuth =
                     new OAuth2ClientAuthenticationToken(client, ClientAuthenticationMethod.NONE, null);

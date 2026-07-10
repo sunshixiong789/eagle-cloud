@@ -17,7 +17,8 @@ import org.springframework.data.jpa.domain.Specification;
  * <pre>
  * Specification&lt;User&gt; spec = Specification
  *     .where(UserSpecification.usernameLike("admin"))
- *     .and(UserSpecification.emailLike("@example.com"));
+ *     .and(UserSpecification.emailLike("@example.com"))
+ *     .and(UserSpecification.nameLike("张三"));
  * List&lt;User&gt; users = userRepository.findAll(spec);
  * </pre>
  * <p>
@@ -52,6 +53,19 @@ public class UserSpecification {
      */
     public static Specification<User> emailLike(String email) {
         return (root, query, cb) -> email == null ? null : cb.like(root.get("email"), "%" + email + "%");
+    }
+
+    /**
+     * 姓名模糊查询
+     * <p>
+     * 使用 LIKE '%name%' 匹配用户档案中的真实姓名
+     *
+     * @param name 姓名（null 或空白时返回 null，该条件会被忽略）
+     * @return JPA Specification
+     */
+    public static Specification<User> nameLike(String name) {
+        return (root, query, cb) -> name == null || name.isBlank()
+                ? null : cb.like(root.get("profile").get("name"), "%" + name + "%");
     }
 
     /**

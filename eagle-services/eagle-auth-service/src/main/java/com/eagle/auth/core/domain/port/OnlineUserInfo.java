@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
  * 在线用户信息（用于 Redis 存储和跨模块传递）。
  *
  * @param tokenId        JWT JTI，唯一标识一次 token
- * @param userId         用户 ID（system.User 的主键，可能为 null）
+ * @param userId         认证账号 ID（历史字段名为 userId，实际用于 accountId 在线索引，可能为 null）
  * @param username       登录用户名
  * @param ip             客户端 IP 地址
  * @param loginTime      登录时间

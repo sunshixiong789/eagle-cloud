@@ -19,6 +19,9 @@ public class UserQueryRequest {
     @Schema(description = "邮箱", example = "zhangsan@example.com")
     private String email;
 
+    @Schema(description = "姓名", example = "张三")
+    private String name;
+
     @Schema(description = "页码", example = "1")
     private Integer page = 1;
 

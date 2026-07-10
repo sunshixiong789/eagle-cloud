@@ -2,6 +2,7 @@ package com.eagle.auth.core.infrastructure.security;
 
 import com.eagle.auth.core.domain.port.OnlineUserInfo;
 import com.eagle.auth.core.domain.port.OnlineUserPort;
+import com.eagle.common.constant.SecurityConstants;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -103,6 +104,7 @@ public class TokenTrackingHandler implements AuthenticationSuccessHandler {
         }
 
         String jti = jtiObj.toString();
+        Long accountId = resolveAccountId(claims.get(SecurityConstants.DETAILS_USER_ID));
         String sub = authorization.getPrincipalName();
         Instant expiresAt = accessToken.getExpiresAt();
         long expiresIn = expiresAt != null
@@ -111,7 +113,7 @@ public class TokenTrackingHandler implements AuthenticationSuccessHandler {
 
         String userAgent = request.getHeader("User-Agent");
         OnlineUserInfo info = new OnlineUserInfo(
-                jti, null,
+                jti, accountId,
                 sub != null ? sub : "unknown",
                 getClientIp(request),
                 LocalDateTime.now(), LocalDateTime.now(),
@@ -121,6 +123,20 @@ public class TokenTrackingHandler implements AuthenticationSuccessHandler {
         );
         onlineUserPort.trackLogin(info);
         log.debug("Tracked online user: {}, jti: {}", sub, jti);
+    }
+
+    private Long resolveAccountId(Object accountIdClaim) {
+        if (accountIdClaim instanceof Number number) {
+            return number.longValue();
+        }
+        if (accountIdClaim instanceof String value && !value.isBlank()) {
+            try {
+                return Long.valueOf(value);
+            } catch (NumberFormatException e) {
+                log.debug("invalid account id claim for token tracking, skipping account index: {}", value);
+            }
+        }
+        return null;
     }
 
     private String getClientIp(HttpServletRequest request) {

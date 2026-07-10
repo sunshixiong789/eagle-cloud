@@ -6,15 +6,21 @@ import com.eagle.common.exception.codes.OperationErrorCode;
 import com.eagle.system.base.domain.repository.LogRepository;
 import com.eagle.system.base.infrastructure.remote.AuthClientFacade;
 import com.eagle.system.base.infrastructure.remote.dto.OnlineUserSnapshot;
+import com.eagle.system.base.interfaces.dto.request.LoginLogQueryRequest;
 import com.eagle.system.base.interfaces.dto.response.OnlineUserListResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -25,6 +31,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -44,6 +51,29 @@ class MonitorApplicationServiceTest {
     @AfterEach
     void clearSecurityContext() {
         SecurityContextHolder.clearContext();
+    }
+
+    @Nested
+    @DisplayName("queryLoginLogs")
+    class QueryLoginLogs {
+
+        @Test
+        @DisplayName("无显式排序时应按创建时间和ID倒序查询")
+        void shouldApplyDefaultSortWhenQueryLoginLogsWithoutSort() {
+            when(logRepository.countByLogTypeAndPeriod(any(), any(), any())).thenReturn(0L);
+            when(logRepository.countByLogTypeAndStatusAndPeriod(any(), any(), any(), any())).thenReturn(0L);
+            when(logRepository.countDistinctUsernameByLogTypeAndPeriod(any(), any(), any())).thenReturn(0L);
+            when(logApplicationService.queryLogs(any(), any(Pageable.class))).thenReturn(Page.empty());
+
+            service.queryLoginLogs(new LoginLogQueryRequest(), PageRequest.of(0, 20));
+
+            ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+            verify(logApplicationService).queryLogs(any(), pageableCaptor.capture());
+
+            Sort sort = pageableCaptor.getValue().getSort();
+            assertEquals(Sort.Direction.DESC, sort.getOrderFor("createTime").getDirection());
+            assertEquals(Sort.Direction.DESC, sort.getOrderFor("id").getDirection());
+        }
     }
 
     @Nested

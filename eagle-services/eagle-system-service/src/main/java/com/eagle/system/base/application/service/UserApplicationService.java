@@ -24,10 +24,12 @@ import com.eagle.system.base.interfaces.dto.response.AssignedRoleResponse;
 import com.eagle.system.base.interfaces.dto.response.UserResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,6 +52,9 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class UserApplicationService {
+
+    private static final Sort DEFAULT_USER_SORT = Sort.by(Sort.Direction.DESC, "createTime")
+            .and(Sort.by(Sort.Direction.DESC, "id"));
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
@@ -123,7 +128,7 @@ public class UserApplicationService {
      */
     @Transactional(readOnly = true)
     public Page<UserResponse> queryUsers(Pageable pageable) {
-        return userRepository.findAll(visibleUserSpec(), pageable).map(this::toListResponse);
+        return userRepository.findAll(visibleUserSpec(), withDefaultUserSort(pageable)).map(this::toListResponse);
     }
 
     /**
@@ -134,8 +139,9 @@ public class UserApplicationService {
         Specification<User> spec = Specification
                 .where(UserSpecification.usernameLike(request.getUsername()))
                 .and(UserSpecification.emailLike(request.getEmail()))
+                .and(UserSpecification.nameLike(request.getName()))
                 .and(visibleUserSpec());
-        return userRepository.findAll(spec, pageable).map(this::toListResponse);
+        return userRepository.findAll(spec, withDefaultUserSort(pageable)).map(this::toListResponse);
     }
 
     /**
@@ -241,6 +247,13 @@ public class UserApplicationService {
 
     private Specification<User> visibleUserSpec() {
         return UserSpecification.usernameNotEqual(adminProperties.getUsername());
+    }
+
+    private Pageable withDefaultUserSort(Pageable pageable) {
+        if (pageable.isUnpaged() || pageable.getSort().isSorted()) {
+            return pageable;
+        }
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), DEFAULT_USER_SORT);
     }
 
     private void ensureNotAdminUser(User user) {
