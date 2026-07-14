@@ -1,5 +1,7 @@
 package com.eagle.auth.core.infrastructure.config;
 
+import com.eagle.auth.core.infrastructure.security.AppleAppAuthenticationConverter;
+import com.eagle.auth.core.infrastructure.security.AppleAppAuthenticationProvider;
 import com.eagle.auth.core.infrastructure.security.BlacklistAwareJwtDecoder;
 import com.eagle.auth.core.infrastructure.security.CustomGrantClientAuthenticationProvider;
 import com.eagle.auth.core.infrastructure.security.CustomGrantPublicClientAuthenticationConverter;
@@ -60,6 +62,7 @@ public class OAuth2AuthorizationServerSecurityConfig {
             SmsCodeAuthenticationProvider smsProvider,
             PhoneOneClickAuthenticationProvider phoneOneClickProvider,
             TaobaoAppAuthenticationProvider taobaoAppProvider,
+            AppleAppAuthenticationProvider appleAppProvider,
             SecurityContextRepository securityContextRepository,
             TokenTrackingHandler tokenTrackingHandler,
             RegisteredClientRepository registeredClientRepository,
@@ -78,7 +81,8 @@ public class OAuth2AuthorizationServerSecurityConfig {
                                         new CustomGrantClientAuthenticationProvider(registeredClientRepository)))
                         .tokenEndpoint(tokenEndpoint ->
                                 registerCustomGrants(tokenEndpoint, wechatAppProvider, wechatProvider,
-                                        smsProvider, phoneOneClickProvider, taobaoAppProvider, tokenTrackingHandler))
+                                        smsProvider, phoneOneClickProvider, taobaoAppProvider,
+                                        appleAppProvider, tokenTrackingHandler))
                         .oidc(oidc -> oidc.userInfoEndpoint(userInfo -> userInfo
                                 .userInfoMapper(OAuth2AuthorizationServerSecurityConfig::mapUserInfoFromIdToken))))
                 .authorizeHttpRequests(authorize -> authorize
@@ -139,6 +143,7 @@ public class OAuth2AuthorizationServerSecurityConfig {
                                       SmsCodeAuthenticationProvider smsProvider,
                                       PhoneOneClickAuthenticationProvider phoneOneClickProvider,
                                       TaobaoAppAuthenticationProvider taobaoAppProvider,
+                                      AppleAppAuthenticationProvider appleAppProvider,
                                       TokenTrackingHandler tokenTrackingHandler) {
         tokenEndpoint
                 .accessTokenRequestConverter(new WechatAppAuthenticationConverter())
@@ -151,6 +156,8 @@ public class OAuth2AuthorizationServerSecurityConfig {
                 .authenticationProvider(phoneOneClickProvider)
                 .accessTokenRequestConverter(new TaobaoAppAuthenticationConverter())
                 .authenticationProvider(taobaoAppProvider)
+                .accessTokenRequestConverter(new AppleAppAuthenticationConverter())
+                .authenticationProvider(appleAppProvider)
                 .accessTokenResponseHandler(tokenTrackingHandler);
     }
 }

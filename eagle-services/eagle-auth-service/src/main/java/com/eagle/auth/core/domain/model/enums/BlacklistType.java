@@ -29,5 +29,9 @@ public enum BlacklistType {
     /**
      * 淘宝 openUid
      */
-    TAOBAO_OPENID
+    TAOBAO_OPENID,
+    /**
+     * Apple identity token subject
+     */
+    APPLE_SUBJECT
 }

@@ -10,6 +10,7 @@ import com.eagle.auth.core.domain.event.AccountUnfrozenEvent;
 import com.eagle.auth.core.domain.model.enums.AccountStatus;
 import com.eagle.auth.core.domain.model.enums.FreezeReason;
 import com.eagle.auth.core.domain.model.valueobject.AccountFreeze;
+import com.eagle.auth.core.domain.model.valueobject.AppleBinding;
 import com.eagle.auth.core.domain.model.valueobject.ProfileHints;
 import com.eagle.auth.core.domain.model.valueobject.TaobaoBinding;
 import com.eagle.auth.core.domain.model.valueobject.WechatBinding;
@@ -50,7 +51,8 @@ import java.util.HexFormat;
         @Index(name = "idx_account_unionid", columnList = "unionid"),
         @Index(name = "idx_account_web_openid", columnList = "web_openid"),
         @Index(name = "idx_account_mp_openid", columnList = "mp_openid"),
-        @Index(name = "idx_account_taobao_open_uid", columnList = "taobao_open_uid")
+        @Index(name = "idx_account_taobao_open_uid", columnList = "taobao_open_uid"),
+        @Index(name = "idx_account_apple_subject", columnList = "apple_subject", unique = true)
 })
 public class Account extends BaseAggregateRoot<Account> {
 
@@ -106,6 +108,10 @@ public class Account extends BaseAggregateRoot<Account> {
      */
     @Embedded
     private TaobaoBinding taobaoBinding;
+
+    /** Apple Sign In 绑定信息。 */
+    @Embedded
+    private AppleBinding appleBinding;
 
     /**
      * 注册时的 profile 提示信息（瞬态，不持久化）。
@@ -192,6 +198,22 @@ public class Account extends BaseAggregateRoot<Account> {
         account.status = AccountStatus.ACTIVE;
         account.taobaoBinding = TaobaoBinding.create(openUid);
         account.profileHints = ProfileHints.EMPTY;
+        return account;
+    }
+
+    /**
+     * 通过服务端验签后的 Apple subject 创建账号。
+     */
+    public static Account createFromApple(String subject, String email, String fullName) {
+        if (subject == null || subject.isBlank()) {
+            throw AuthErrorCode.APPLE_SUBJECT_REQUIRED.toDomainException();
+        }
+        Account account = new Account();
+        account.username = "apple_" + shortHash(subject);
+        account.password = DISABLED_PASSWORD;
+        account.status = AccountStatus.ACTIVE;
+        account.appleBinding = AppleBinding.create(subject);
+        account.profileHints = new ProfileHints(fullName, null, email);
         return account;
     }
 

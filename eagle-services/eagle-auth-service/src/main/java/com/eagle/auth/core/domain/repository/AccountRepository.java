@@ -56,4 +56,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
      * 按淘宝 openUid 查找账号（淘宝登录直登捷径）。
      */
     Optional<Account> findByTaobaoBindingOpenUid(String openUid);
+
+    /** 按服务端验签后的 Apple subject 查找账号。 */
+    Optional<Account> findByAppleBindingSubject(String subject);
 }

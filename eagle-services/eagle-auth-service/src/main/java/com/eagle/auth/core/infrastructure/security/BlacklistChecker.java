@@ -92,4 +92,15 @@ public class BlacklistChecker {
             throw AuthErrorCode.IDENTITY_BLACKLISTED.toServiceException();
         }
     }
+
+    /** Apple 登录前置校验。 */
+    public void checkApple(String subject, String ip) {
+        if (ip != null && blacklist.isBlacklisted(BlacklistType.IP, ip)) {
+            throw AuthErrorCode.IP_BLACKLISTED.toServiceException();
+        }
+        if (subject != null && !subject.isBlank()
+                && blacklist.isBlacklisted(BlacklistType.APPLE_SUBJECT, subject)) {
+            throw AuthErrorCode.IDENTITY_BLACKLISTED.toServiceException();
+        }
+    }
 }

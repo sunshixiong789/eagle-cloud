@@ -51,6 +51,7 @@ public class CustomGrantClientAuthenticationProvider implements AuthenticationPr
             WechatMiniProgramAuthenticationToken.WECHAT_MINI_PROGRAM.getValue(),
             PhoneOneClickAuthenticationToken.PHONE_ONE_CLICK.getValue(),
             TaobaoAppAuthenticationToken.TAOBAO_APP.getValue(),
+            AppleAppAuthenticationToken.APPLE_APP.getValue(),
             // 与 CustomGrantPublicClientAuthenticationConverter 对齐：放行公共客户端 refresh_token，
             // 跳过 PKCE 校验；后续 SAS 标准 RefreshTokenAuthenticationProvider 仍会校验 refresh_token 有效性。
             AuthorizationGrantType.REFRESH_TOKEN.getValue()

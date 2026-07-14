@@ -81,7 +81,15 @@ public enum AuthErrorCode implements ErrorCode {
 
     // ==================== 修改手机号（11050）====================
 
-    PHONE_NOT_CHANGED(11050, "error.account.phone_not_changed", "新手机号与当前手机号相同");
+    PHONE_NOT_CHANGED(11050, "error.account.phone_not_changed", "新手机号与当前手机号相同"),
+
+    // ==================== Apple 登录（11051–11054）====================
+
+    APPLE_IDENTITY_TOKEN_REQUIRED(11051, "error.auth.apple_identity_token_required",
+            "Apple identity token 不能为空"),
+    APPLE_NONCE_REQUIRED(11052, "error.auth.apple_nonce_required", "Apple nonce 不能为空"),
+    APPLE_IDENTITY_INVALID(11053, "error.auth.apple_identity_invalid", "Apple 登录凭证无效"),
+    APPLE_SUBJECT_REQUIRED(11054, "error.auth.apple_subject_required", "Apple subject 不能为空");
 
     private final ErrorCode.Meta meta;
 

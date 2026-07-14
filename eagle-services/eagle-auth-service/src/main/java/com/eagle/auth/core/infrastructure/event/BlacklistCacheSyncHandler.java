@@ -85,6 +85,8 @@ public class BlacklistCacheSyncHandler {
                     .map(Account::getId).orElse(null);
             case TAOBAO_OPENID -> accountRepository.findByTaobaoBindingOpenUid(value)
                     .map(Account::getId).orElse(null);
+            case APPLE_SUBJECT -> accountRepository.findByAppleBindingSubject(value)
+                    .map(Account::getId).orElse(null);
             case EMAIL, IP -> null;
         };
     }

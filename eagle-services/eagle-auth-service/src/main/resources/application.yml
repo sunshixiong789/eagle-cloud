@@ -173,7 +173,7 @@ eagle:
       client-id: eagleApp
       client-name: Eagle App 移动端
       client-authentication-methods: none
-      authorization-grant-types: refresh_token,sms_code,wechat_app,wechat_mini_program,phone_one_click,taobao_app
+      authorization-grant-types: refresh_token,sms_code,wechat_app,wechat_mini_program,phone_one_click,taobao_app,apple_app
       redirect-uris: ""
       scopes: openid,profile,email,address,phone
       require-proof-key: false
@@ -202,6 +202,10 @@ eagle:
       app-key: ${TAOBAO_APP_KEY:}
       app-secret: ${TAOBAO_APP_SECRET:}
       sign-method: ${TAOBAO_APP_SIGN_METHOD:md5}
+  apple-authentication:
+    issuer: https://appleid.apple.com
+    jwk-set-uri: https://appleid.apple.com/auth/keys
+    client-id: ${APPLE_CLIENT_ID:com.shengxinfast.app}
   message:
     sms:
       provider: ${SMS_PROVIDER:hnsls}

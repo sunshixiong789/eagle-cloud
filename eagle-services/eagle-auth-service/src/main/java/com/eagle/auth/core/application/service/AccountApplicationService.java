@@ -193,6 +193,20 @@ public class AccountApplicationService {
     }
 
     /**
+     * 按 Apple subject 查找或自动创建账号。
+     *
+     * @param subject 服务端验签后的 Apple identity token subject
+     * @param email 服务端验签且 Apple 标记为已验证的邮箱
+     * @param fullName Apple 首次授权时客户端返回的展示名提示
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Account findOrCreateByApple(String subject, String email, String fullName) {
+        return accountRepository.findByAppleBindingSubject(subject)
+                .orElseGet(() -> accountRepository.save(
+                        Account.createFromApple(subject, email, fullName)));
+    }
+
+    /**
      * 通过短信验证码重置密码（忘记密码场景，未认证）。
      */
     @Transactional(rollbackFor = Exception.class)
