@@ -27,15 +27,31 @@ public class AppleBinding {
     @Column(name = "apple_bind_time", comment = "Apple 绑定时间")
     private LocalDateTime bindTime;
 
-    private AppleBinding(String subject, LocalDateTime bindTime) {
+    @Column(name = "apple_refresh_token_ciphertext", length = 2048,
+            comment = "Apple refresh token 密文")
+    private String refreshTokenCiphertext;
+
+    private AppleBinding(
+            String subject, LocalDateTime bindTime, String refreshTokenCiphertext) {
         this.subject = subject;
         this.bindTime = bindTime;
+        this.refreshTokenCiphertext = refreshTokenCiphertext;
     }
 
-    public static AppleBinding create(String subject) {
+    public static AppleBinding create(String subject, String refreshTokenCiphertext) {
         if (subject == null || subject.isBlank()) {
             throw AuthErrorCode.APPLE_SUBJECT_REQUIRED.toDomainException();
         }
-        return new AppleBinding(subject, LocalDateTime.now());
+        if (refreshTokenCiphertext == null || refreshTokenCiphertext.isBlank()) {
+            throw AuthErrorCode.APPLE_TOKEN_EXCHANGE_FAILED.toDomainException();
+        }
+        return new AppleBinding(subject, LocalDateTime.now(), refreshTokenCiphertext);
+    }
+
+    public AppleBinding rotateRefreshToken(String newRefreshTokenCiphertext) {
+        if (newRefreshTokenCiphertext == null || newRefreshTokenCiphertext.isBlank()) {
+            throw AuthErrorCode.APPLE_TOKEN_EXCHANGE_FAILED.toDomainException();
+        }
+        return new AppleBinding(subject, bindTime, newRefreshTokenCiphertext);
     }
 }

@@ -2,6 +2,7 @@ package com.eagle.auth.core.interfaces.controller;
 
 import com.eagle.common.dto.EagleUser;
 import com.eagle.auth.core.application.command.FreezeAccountCommand;
+import com.eagle.auth.core.application.service.AccountDeletionApplicationService;
 import com.eagle.auth.core.application.service.AccountApplicationService;
 import com.eagle.auth.core.interfaces.dto.request.BindPhoneRequest;
 import com.eagle.auth.core.interfaces.dto.request.ChangePasswordRequest;
@@ -44,6 +45,7 @@ import java.util.Map;
 public class AccountController {
 
     private final AccountApplicationService accountApplicationService;
+    private final AccountDeletionApplicationService accountDeletionApplicationService;
     private final com.eagle.auth.core.infrastructure.security.BlacklistChecker blacklistChecker;
 
     @Operation(summary = "用户自主注册")
@@ -135,8 +137,8 @@ public class AccountController {
     @Operation(summary = "删除账号")
     @DeleteMapping("/{accountId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('admin') or #accountId == authentication.principal.id")
     public void deleteAccount(@Parameter(description = "账号ID") @PathVariable Long accountId) {
-        accountApplicationService.deleteAccount(accountId);
+        accountDeletionApplicationService.deleteAccount(accountId);
     }
 }

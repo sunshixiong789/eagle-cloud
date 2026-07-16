@@ -2,10 +2,12 @@
 
 ## 背景
 
-Apple 登录在 `auth_account` 增加两个可空字段：
+Apple 登录在 `auth_account` 增加三个可空字段：
 
 - `apple_subject`：服务端验签后的 Apple identity token `sub`，全局唯一；
 - `apple_bind_time`：首次绑定时间。
+- `apple_refresh_token_ciphertext`：服务端 authorization-code 换票得到的 refresh token 密文，
+  用于用户注销账号时调用 Apple `/auth/revoke`。
 
 auth-service 尚未接入 Flyway，dev 使用 `ddl-auto=update`，prod 使用
 `ddl-auto=validate`。因此存量生产库必须在发布新应用代码前手动执行本页 DDL，
@@ -18,10 +20,12 @@ auth-service 尚未接入 Flyway，dev 使用 `ddl-auto=update`，prod 使用
 ```sql
 ALTER TABLE auth_account
     ADD COLUMN IF NOT EXISTS apple_subject VARCHAR(255),
-    ADD COLUMN IF NOT EXISTS apple_bind_time TIMESTAMP;
+    ADD COLUMN IF NOT EXISTS apple_bind_time TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS apple_refresh_token_ciphertext VARCHAR(2048);
 
 COMMENT ON COLUMN auth_account.apple_subject IS 'Apple Sign In subject';
 COMMENT ON COLUMN auth_account.apple_bind_time IS 'Apple 绑定时间';
+COMMENT ON COLUMN auth_account.apple_refresh_token_ciphertext IS 'Apple refresh token 密文';
 ```
 
 可空列对旧版本应用保持向后兼容，可先于应用代码发布。
@@ -42,7 +46,9 @@ PostgreSQL 唯一索引允许多行 `NULL`，已有手机号、微信、淘宝�
 SELECT column_name, data_type, character_maximum_length
 FROM information_schema.columns
 WHERE table_name = 'auth_account'
-  AND column_name IN ('apple_subject', 'apple_bind_time');
+  AND column_name IN (
+      'apple_subject', 'apple_bind_time', 'apple_refresh_token_ciphertext'
+  );
 
 SELECT indexname, indexdef
 FROM pg_indexes
@@ -50,7 +56,7 @@ WHERE tablename = 'auth_account'
   AND indexname = 'idx_account_apple_subject';
 ```
 
-确认两列存在，且索引定义包含 `CREATE UNIQUE INDEX` 后再发布 auth-service。
+确认三个字段存在，且索引定义包含 `CREATE UNIQUE INDEX` 后再发布 auth-service。
 
 ## 回滚
 
@@ -61,6 +67,7 @@ WHERE tablename = 'auth_account'
 DROP INDEX IF EXISTS idx_account_apple_subject;
 ALTER TABLE auth_account
     DROP COLUMN IF EXISTS apple_bind_time,
+    DROP COLUMN IF EXISTS apple_refresh_token_ciphertext,
     DROP COLUMN IF EXISTS apple_subject;
 ```
 

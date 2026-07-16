@@ -3,7 +3,7 @@ package com.eagle.auth.core.infrastructure.security;
 import com.eagle.auth.core.application.service.AccountApplicationService;
 import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.service.AppleIdentityService;
-import com.eagle.auth.core.domain.service.AppleIdentityService.AppleIdentity;
+import com.eagle.auth.core.domain.service.AppleIdentityService.AppleAuthorization;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -30,15 +30,17 @@ class AppleAppAuthenticationProviderTest {
                 mock(UserDetailsService.class),
                 identityService, accountService, blacklistChecker);
         AppleAppAuthenticationToken token = new AppleAppAuthenticationToken(
-                "signed-jwt", "nonce-1", "小明",
+                "signed-jwt", "apple-auth-code", "nonce-1", "小明",
                 new TestingAuthenticationToken("eagleApp", null), Map.of());
-        AppleIdentity identity = new AppleIdentity(
-                "apple-subject-1", "relay@privaterelay.appleid.com");
+        AppleAuthorization authorization = new AppleAuthorization(
+                "apple-subject-1", "relay@privaterelay.appleid.com", "encrypted-token");
         Account account = Account.createFromApple(
-                identity.subject(), identity.email(), "小明");
-        when(identityService.verify("signed-jwt", "nonce-1")).thenReturn(identity);
+                authorization.subject(), authorization.email(), "小明", "encrypted-token");
+        when(identityService.authorize(
+                "signed-jwt", "apple-auth-code", "nonce-1")).thenReturn(authorization);
         when(accountService.findOrCreateByApple(
-                identity.subject(), identity.email(), "小明")).thenReturn(account);
+                authorization.subject(), authorization.email(), "小明", "encrypted-token"))
+                .thenReturn(account);
 
         Account result = provider.authenticateGrant(token);
 

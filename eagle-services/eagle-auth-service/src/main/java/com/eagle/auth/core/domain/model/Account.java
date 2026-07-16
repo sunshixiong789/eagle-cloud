@@ -204,7 +204,9 @@ public class Account extends BaseAggregateRoot<Account> {
     /**
      * 通过服务端验签后的 Apple subject 创建账号。
      */
-    public static Account createFromApple(String subject, String email, String fullName) {
+    public static Account createFromApple(
+            String subject, String email, String fullName,
+            String encryptedRefreshToken) {
         if (subject == null || subject.isBlank()) {
             throw AuthErrorCode.APPLE_SUBJECT_REQUIRED.toDomainException();
         }
@@ -212,9 +214,19 @@ public class Account extends BaseAggregateRoot<Account> {
         account.username = "apple_" + shortHash(subject);
         account.password = DISABLED_PASSWORD;
         account.status = AccountStatus.ACTIVE;
-        account.appleBinding = AppleBinding.create(subject);
+        account.appleBinding = AppleBinding.create(subject, encryptedRefreshToken);
         account.profileHints = new ProfileHints(fullName, null, email);
         return account;
+    }
+
+    /** 同一 Apple 身份再次登录时轮换服务端保存的 refresh token 密文。 */
+    public void rotateAppleRefreshToken(String subject, String encryptedRefreshToken) {
+        if (appleBinding == null || !MessageDigest.isEqual(
+                appleBinding.getSubject().getBytes(StandardCharsets.UTF_8),
+                subject.getBytes(StandardCharsets.UTF_8))) {
+            throw AuthErrorCode.APPLE_IDENTITY_INVALID.toDomainException();
+        }
+        appleBinding = appleBinding.rotateRefreshToken(encryptedRefreshToken);
     }
 
     /**

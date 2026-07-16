@@ -61,6 +61,29 @@ class AccountApplicationServiceTest {
     }
 
     @Nested
+    @DisplayName("findOrCreateByApple")
+    class FindOrCreateByApple {
+
+        @Test
+        @DisplayName("已有账号应轮换 refresh token 密文")
+        void shouldRotateEncryptedRefreshTokenForExistingAccount() {
+            Account existing = Account.createFromApple(
+                    "apple-subject", null, "Apple 用户", "old-ciphertext");
+            when(accountRepository.findByAppleBindingSubject("apple-subject"))
+                    .thenReturn(Optional.of(existing));
+            when(accountRepository.save(existing)).thenReturn(existing);
+
+            Account result = service.findOrCreateByApple(
+                    "apple-subject", null, null, "new-ciphertext");
+
+            assertSame(existing, result);
+            assertEquals("new-ciphertext",
+                    result.getAppleBinding().getRefreshTokenCiphertext());
+            verify(accountRepository).save(existing);
+        }
+    }
+
+    @Nested
     @DisplayName("register")
     class Register {
 

@@ -17,14 +17,18 @@ public class AppleAppAuthenticationToken extends OAuth2AuthorizationGrantAuthent
     private static final long serialVersionUID = 1L;
 
     private final String identityToken;
+    private final String authorizationCode;
     private final String nonce;
     private final String fullName;
 
-    public AppleAppAuthenticationToken(String identityToken, String nonce, String fullName,
+    public AppleAppAuthenticationToken(
+                                       String identityToken, String authorizationCode,
+                                       String nonce, String fullName,
                                        Authentication clientPrincipal,
                                        Map<String, Object> additionalParameters) {
         super(APPLE_APP, clientPrincipal, additionalParameters);
         this.identityToken = identityToken;
+        this.authorizationCode = authorizationCode;
         this.nonce = nonce;
         this.fullName = fullName;
     }

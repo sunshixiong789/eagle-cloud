@@ -24,6 +24,10 @@ public class AppleAppAuthenticationConverter implements AuthenticationConverter 
         if (identityToken == null || identityToken.isBlank()) {
             throw AuthErrorCode.APPLE_IDENTITY_TOKEN_REQUIRED.toDomainException();
         }
+        String authorizationCode = request.getParameter("authorization_code");
+        if (authorizationCode == null || authorizationCode.isBlank()) {
+            throw AuthErrorCode.APPLE_AUTHORIZATION_CODE_REQUIRED.toDomainException();
+        }
         String nonce = request.getParameter("nonce");
         if (nonce == null || nonce.isBlank()) {
             throw AuthErrorCode.APPLE_NONCE_REQUIRED.toDomainException();
@@ -32,10 +36,9 @@ public class AppleAppAuthenticationConverter implements AuthenticationConverter 
         Authentication clientPrincipal = SecurityContextHolder.getContext().getAuthentication();
 
         Map<String, Object> additionalParameters = new HashMap<>();
-        additionalParameters.put("identity_token", identityToken);
-        additionalParameters.put("nonce", nonce);
         return new AppleAppAuthenticationToken(
-                identityToken, nonce, fullName, clientPrincipal, additionalParameters);
+                identityToken, authorizationCode, nonce, fullName,
+                clientPrincipal, additionalParameters);
     }
 
     private String normalizeFullName(String fullName) {

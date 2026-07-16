@@ -198,12 +198,19 @@ public class AccountApplicationService {
      * @param subject 服务端验签后的 Apple identity token subject
      * @param email 服务端验签且 Apple 标记为已验证的邮箱
      * @param fullName Apple 首次授权时客户端返回的展示名提示
+     * @param encryptedRefreshToken Apple refresh token 密文
      */
     @Transactional(rollbackFor = Exception.class)
-    public Account findOrCreateByApple(String subject, String email, String fullName) {
+    public Account findOrCreateByApple(
+            String subject, String email, String fullName,
+            String encryptedRefreshToken) {
         return accountRepository.findByAppleBindingSubject(subject)
-                .orElseGet(() -> accountRepository.save(
-                        Account.createFromApple(subject, email, fullName)));
+                .map(account -> {
+                    account.rotateAppleRefreshToken(subject, encryptedRefreshToken);
+                    return accountRepository.save(account);
+                })
+                .orElseGet(() -> accountRepository.save(Account.createFromApple(
+                        subject, email, fullName, encryptedRefreshToken)));
     }
 
     /**

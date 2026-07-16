@@ -89,7 +89,14 @@ public enum AuthErrorCode implements ErrorCode {
             "Apple identity token 不能为空"),
     APPLE_NONCE_REQUIRED(11052, "error.auth.apple_nonce_required", "Apple nonce 不能为空"),
     APPLE_IDENTITY_INVALID(11053, "error.auth.apple_identity_invalid", "Apple 登录凭证无效"),
-    APPLE_SUBJECT_REQUIRED(11054, "error.auth.apple_subject_required", "Apple subject 不能为空");
+    APPLE_SUBJECT_REQUIRED(11054, "error.auth.apple_subject_required", "Apple subject 不能为空"),
+    APPLE_AUTHORIZATION_CODE_REQUIRED(11055, "error.auth.apple_authorization_code_required",
+            "Apple authorization code 不能为空"),
+    APPLE_NOT_CONFIGURED(11056, "error.auth.apple_not_configured", "Apple 登录服务尚未配置"),
+    APPLE_TOKEN_EXCHANGE_FAILED(11057, "error.auth.apple_token_exchange_failed",
+            "Apple 授权码换票失败"),
+    APPLE_TOKEN_REVOCATION_FAILED(11058, "error.auth.apple_token_revocation_failed",
+            "Apple 登录授权撤销失败");
 
     private final ErrorCode.Meta meta;
 

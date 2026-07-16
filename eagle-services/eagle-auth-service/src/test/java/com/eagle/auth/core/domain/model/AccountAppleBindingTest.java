@@ -13,19 +13,22 @@ class AccountAppleBindingTest {
 
     @Test
     void createsAccountFromVerifiedAppleSubject() {
-        Account account = Account.createFromApple("apple-subject-1", "relay@privaterelay.appleid.com", "小明");
+        Account account = Account.createFromApple(
+                "apple-subject-1", "relay@privaterelay.appleid.com", "小明", "encrypted-token");
 
         assertTrue(account.getUsername().startsWith("apple_"));
         assertEquals(Account.DISABLED_PASSWORD, account.getPassword());
         assertNotNull(account.getAppleBinding());
         assertEquals("apple-subject-1", account.getAppleBinding().getSubject());
+        assertEquals("encrypted-token", account.getAppleBinding().getRefreshTokenCiphertext());
         assertEquals("小明", account.getProfileHints().nickname());
     }
 
     @Test
     void rejectsMissingAppleSubject() {
         DomainException error = assertThrows(
-                DomainException.class, () -> Account.createFromApple(" ", null, null));
+                DomainException.class,
+                () -> Account.createFromApple(" ", null, null, "encrypted-token"));
 
         assertEquals(AuthErrorCode.APPLE_SUBJECT_REQUIRED, error.getErrorCode());
     }

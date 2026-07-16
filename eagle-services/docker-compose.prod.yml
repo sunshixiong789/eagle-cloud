@@ -3,7 +3,7 @@
 # 本文件**只部署无状态 / 轻状态应用**;有状态基础设施(PG / Redis / Nacos / RocketMQ)
 # **不**在本文件,理由见下方"为什么不用 docker 跑基础设施"。
 #
-# 配套外部基础设施清单(必须在启动前准备好,通过 .env.prod.prod 把端点 / 凭据写进对应 *_HOST / *_PASSWORD):
+# 配套外部基础设施清单(必须在启动前准备好,通过 .env.prod 把端点 / 凭据写进对应 *_HOST / *_PASSWORD):
 #   ┌──────────────┬──────────────────────────────────────────────────────────────┐
 #   │ PostgreSQL16+│ 阿里云 RDS for PostgreSQL / 腾讯云 TDSQL-PG / 自建 Patroni    │
 #   │ Redis 7+     │ 阿里云 Tair / 腾讯云 Redis / 自建 Sentinel 或 Cluster        │
@@ -35,18 +35,18 @@
 #   本文件不再包含它;gateway 通过 SENTINEL_DASHBOARD 环境变量指向其地址即可。
 #
 # ── env 文件(prod 自包含,与 dev 完全独立)──
-#   .env.prod.prod —— prod 全套值 + 机密(外部端点/凭据/对外 URL),gitignore
-#   首次部署:cp .env.prod.prod.example .env.prod.prod,把外部基础设施端点 / 凭据填进去
+#   .env.prod —— prod 全套值 + 机密(外部端点/凭据/对外 URL),gitignore
+#   首次部署:cp .env.prod.example .env.prod,把外部基础设施端点 / 凭据填进去
 #
 # ── 启动(命令行)──
-#   docker compose -f docker-compose.prod.yml --env-file .env.prod.prod up -d
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 #   IDEA 一键:Docker Compose 运行配置里 Compose files=docker-compose.prod.yml,
-#             Environment variables file=.env.prod.prod,点绿三角即部署
+#             Environment variables file=.env.prod,点绿三角即部署
 #
 # ── 灰度 / 滚动单服务(env 文件照样要带)──
-#   docker compose -f docker-compose.prod.yml --env-file .env.prod.prod up -d --no-deps --build auth
-#   docker compose -f docker-compose.prod.yml --env-file .env.prod.prod up -d --no-deps --build system
-#   docker compose -f docker-compose.prod.yml --env-file .env.prod.prod up -d --no-deps --build gateway
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --no-deps --build auth
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --no-deps --build system
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --no-deps --build gateway
 #
 # ── staging / PoC 想在单机自建基础设施 ──
 #   不要改本文件;直接复用 docker-compose.yml(开发本地配置),把 mem_limit / JVM 拉大即可。
@@ -150,6 +150,13 @@ services:
       - TAOBAO_APP_KEY=${TAOBAO_APP_KEY:-}
       - TAOBAO_APP_SECRET=${TAOBAO_APP_SECRET:-}
       - TAOBAO_APP_SIGN_METHOD=${TAOBAO_APP_SIGN_METHOD:-md5}
+      # Apple 登录：私钥与 refresh token 加密密钥必须来自 Secret / .env.prod（不进镜像）
+      - APPLE_AUTH_ENABLED=${APPLE_AUTH_ENABLED:-false}
+      - APPLE_CLIENT_ID=${APPLE_CLIENT_ID:-com.shengxinfast.app}
+      - APPLE_TEAM_ID=${APPLE_TEAM_ID:-}
+      - APPLE_KEY_ID=${APPLE_KEY_ID:-}
+      - APPLE_PRIVATE_KEY=${APPLE_PRIVATE_KEY:-}
+      - EAGLE_ENCRYPT_SECRET_KEY=${EAGLE_ENCRYPT_SECRET_KEY:-}
       # 短信
       - SMS_PROVIDER=${SMS_PROVIDER:-hnsls}
       - SMS_ACCESS_KEY_ID=${SMS_ACCESS_KEY_ID:-}

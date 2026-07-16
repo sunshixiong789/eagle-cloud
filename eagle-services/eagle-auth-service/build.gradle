@@ -16,6 +16,7 @@ dependencies {
     implementation project(':eagle-starter:eagle-rocketmq-starter')
     implementation project(':eagle-starter:eagle-openapi-starter')
     implementation project(':eagle-starter:eagle-audit-log-starter')
+    implementation project(':eagle-starter:eagle-encrypt-starter')
     // Servlet 栈：用 RestClient 调下游（同步阻塞）
     implementation project(':eagle-starter:eagle-restclient-starter')
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'

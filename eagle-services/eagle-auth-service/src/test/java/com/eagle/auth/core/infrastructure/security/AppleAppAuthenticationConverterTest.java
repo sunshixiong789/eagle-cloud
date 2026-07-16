@@ -17,6 +17,7 @@ class AppleAppAuthenticationConverterTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter(OAuth2ParameterNames.GRANT_TYPE, "apple_app");
         request.setParameter("identity_token", "signed-jwt");
+        request.setParameter("authorization_code", "apple-auth-code");
         request.setParameter("nonce", "nonce-1");
         request.setParameter("full_name", "小明");
         SecurityContextHolder.getContext().setAuthentication(
@@ -27,6 +28,7 @@ class AppleAppAuthenticationConverterTest {
                     AppleAppAuthenticationToken.class,
                     new AppleAppAuthenticationConverter().convert(request));
             assertEquals("signed-jwt", token.getIdentityToken());
+            assertEquals("apple-auth-code", token.getAuthorizationCode());
             assertEquals("nonce-1", token.getNonce());
             assertEquals("小明", token.getFullName());
         } finally {
@@ -44,6 +46,7 @@ class AppleAppAuthenticationConverterTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter(OAuth2ParameterNames.GRANT_TYPE, "apple_app");
         request.setParameter("identity_token", "signed-jwt");
+        request.setParameter("authorization_code", "apple-auth-code");
         request.setParameter("nonce", "nonce-1");
         request.setParameter("full_name", "  " + "名".repeat(80) + "  ");
         SecurityContextHolder.getContext().setAuthentication(

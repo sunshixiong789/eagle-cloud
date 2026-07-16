@@ -3,7 +3,7 @@ package com.eagle.auth.core.infrastructure.security;
 import com.eagle.auth.core.application.service.AccountApplicationService;
 import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.service.AppleIdentityService;
-import com.eagle.auth.core.domain.service.AppleIdentityService.AppleIdentity;
+import com.eagle.auth.core.domain.service.AppleIdentityService.AppleAuthorization;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
@@ -46,10 +46,11 @@ public class AppleAppAuthenticationProvider extends AbstractCustomGrantAuthentic
     @Override
     protected Account authenticateGrant(Authentication authentication) {
         AppleAppAuthenticationToken token = (AppleAppAuthenticationToken) authentication;
-        AppleIdentity identity = appleIdentityService.verify(
-                token.getIdentityToken(), token.getNonce());
-        blacklistChecker.checkApple(identity.subject(), ClientIpHolder.get());
+        AppleAuthorization authorization = appleIdentityService.authorize(
+                token.getIdentityToken(), token.getAuthorizationCode(), token.getNonce());
+        blacklistChecker.checkApple(authorization.subject(), ClientIpHolder.get());
         return accountApplicationService.findOrCreateByApple(
-                identity.subject(), identity.email(), token.getFullName());
+                authorization.subject(), authorization.email(), token.getFullName(),
+                authorization.encryptedRefreshToken());
     }
 }

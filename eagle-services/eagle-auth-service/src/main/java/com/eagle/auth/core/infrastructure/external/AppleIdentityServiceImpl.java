@@ -1,7 +1,9 @@
 package com.eagle.auth.core.infrastructure.external;
 
 import com.eagle.auth.core.domain.AuthErrorCode;
+import com.eagle.auth.core.domain.service.AppleCredentialCipher;
 import com.eagle.auth.core.domain.service.AppleIdentityService;
+import com.eagle.auth.core.infrastructure.external.AppleTokenClient.AppleTokenSet;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -18,21 +20,51 @@ import java.security.MessageDigest;
 public class AppleIdentityServiceImpl implements AppleIdentityService {
 
     private final JwtDecoder jwtDecoder;
+    private final AppleTokenClient tokenClient;
+    private final AppleCredentialCipher credentialCipher;
 
-    public AppleIdentityServiceImpl(@Qualifier("appleJwtDecoder") JwtDecoder jwtDecoder) {
+    public AppleIdentityServiceImpl(
+            @Qualifier("appleJwtDecoder") JwtDecoder jwtDecoder,
+            AppleTokenClient tokenClient,
+            AppleCredentialCipher credentialCipher) {
         this.jwtDecoder = jwtDecoder;
+        this.tokenClient = tokenClient;
+        this.credentialCipher = credentialCipher;
     }
 
     @Override
-    public AppleIdentity verify(String identityToken, String nonce) {
+    public AppleAuthorization authorize(
+            String identityToken, String authorizationCode, String nonce) {
+        TrustedIdentity clientIdentity = verifyIdentityToken(identityToken, nonce, true);
+        AppleTokenSet tokenSet = tokenClient.exchangeAuthorizationCode(authorizationCode);
+        TrustedIdentity exchangedIdentity = verifyIdentityToken(
+                tokenSet.identityToken(), null, false);
+        if (!constantTimeEquals(clientIdentity.subject(), exchangedIdentity.subject())) {
+            throw AuthErrorCode.APPLE_IDENTITY_INVALID.toDomainException();
+        }
+        String encryptedRefreshToken = credentialCipher.encrypt(tokenSet.refreshToken());
+        String email = exchangedIdentity.email() != null
+                ? exchangedIdentity.email() : clientIdentity.email();
+        return new AppleAuthorization(
+                clientIdentity.subject(), email, encryptedRefreshToken);
+    }
+
+    @Override
+    public void revokeEncryptedRefreshToken(String encryptedRefreshToken) {
+        tokenClient.revoke(credentialCipher.decrypt(encryptedRefreshToken));
+    }
+
+    private TrustedIdentity verifyIdentityToken(
+            String identityToken, String nonce, boolean nonceRequired) {
         try {
             Jwt jwt = jwtDecoder.decode(identityToken);
             String subject = jwt.getSubject();
             String tokenNonce = jwt.getClaimAsString("nonce");
-            if (subject == null || subject.isBlank() || !constantTimeEquals(nonce, tokenNonce)) {
+            if (subject == null || subject.isBlank()
+                    || (nonceRequired && !constantTimeEquals(nonce, tokenNonce))) {
                 throw AuthErrorCode.APPLE_IDENTITY_INVALID.toDomainException();
             }
-            return new AppleIdentity(subject, verifiedEmail(jwt));
+            return new TrustedIdentity(subject, verifiedEmail(jwt));
         } catch (JwtException ex) {
             throw AuthErrorCode.APPLE_IDENTITY_INVALID.toDomainException();
         }
@@ -52,5 +84,8 @@ public class AppleIdentityServiceImpl implements AppleIdentityService {
         return MessageDigest.isEqual(
                 expected.getBytes(StandardCharsets.UTF_8),
                 actual.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private record TrustedIdentity(String subject, String email) {
     }
 }
