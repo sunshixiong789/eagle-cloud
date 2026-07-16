@@ -8,6 +8,7 @@ import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.security.KeyFactory;
@@ -28,10 +29,12 @@ public class AppleClientSecretGenerator {
     private final AppleAuthenticationProperties properties;
     private final Clock clock;
 
+    @Autowired
     public AppleClientSecretGenerator(AppleAuthenticationProperties properties) {
         this(properties, Clock.systemUTC());
     }
 
+    /** 测试用构造器：允许注入固定 Clock。 */
     AppleClientSecretGenerator(AppleAuthenticationProperties properties, Clock clock) {
         this.properties = properties;
         this.clock = clock;
