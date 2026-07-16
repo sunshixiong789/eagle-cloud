@@ -1,7 +1,11 @@
 package com.eagle.auth.core.infrastructure.security;
 
-import com.eagle.auth.core.application.service.AccountApplicationService;
+import com.eagle.auth.core.application.service.WechatWebUserService;
 import com.eagle.auth.core.domain.model.Account;
+import com.eagle.auth.core.domain.model.enums.SocialProvider;
+import com.eagle.auth.core.domain.model.enums.WechatChannel;
+import com.eagle.auth.core.domain.port.BindTicket;
+import com.eagle.auth.core.domain.port.BindTicketStore;
 import com.eagle.auth.core.domain.service.WechatService;
 import com.eagle.auth.core.domain.service.WechatService.WechatUserInfo;
 import org.springframework.security.core.Authentication;
@@ -15,6 +19,10 @@ import org.springframework.stereotype.Component;
 /**
  * 微信小程序登录认证提供者（grant_type = wechat_mini_program）。
  *
+ * <p>openid / unionid 命中 → 直登（unionid 命中补绑小程序 openid，
+ * 同一微信主体不重复验手机号）；未命中 → 发放 BindTicket 抛
+ * {@code binding_required}，客户端走 {@code social_bind} 挂靠到手机号主账号。
+ *
  * @author sunshixiong
  */
 @Component
@@ -22,7 +30,8 @@ public class WechatMiniProgramAuthenticationProvider
         extends AbstractCustomGrantAuthenticationProvider {
 
     private final WechatService wechatService;
-    private final AccountApplicationService accountApplicationService;
+    private final WechatWebUserService wechatWebUserService;
+    private final BindTicketStore bindTicketStore;
     private final BlacklistChecker blacklistChecker;
 
     public WechatMiniProgramAuthenticationProvider(
@@ -30,11 +39,13 @@ public class WechatMiniProgramAuthenticationProvider
             OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator,
             UserDetailsService userDetailsService,
             WechatService wechatService,
-            AccountApplicationService accountApplicationService,
+            WechatWebUserService wechatWebUserService,
+            BindTicketStore bindTicketStore,
             BlacklistChecker blacklistChecker) {
         super(authorizationService, tokenGenerator, userDetailsService);
         this.wechatService = wechatService;
-        this.accountApplicationService = accountApplicationService;
+        this.wechatWebUserService = wechatWebUserService;
+        this.bindTicketStore = bindTicketStore;
         this.blacklistChecker = blacklistChecker;
     }
 
@@ -54,6 +65,12 @@ public class WechatMiniProgramAuthenticationProvider
                 (WechatMiniProgramAuthenticationToken) authentication;
         WechatUserInfo info = wechatService.getUserInfo(authToken.getCode());
         blacklistChecker.checkWechat(info.openid(), ClientIpHolder.get());
-        return accountApplicationService.findOrCreateByWechatOpenid(info.openid(), info.unionid());
+        return wechatWebUserService.findWechatAccount(
+                        WechatChannel.MINI_PROGRAM, info.openid(), info.unionid())
+                .orElseThrow(() -> new SocialBindingRequiredException(
+                        bindTicketStore.save(BindTicket.ofWechat(
+                                WechatChannel.MINI_PROGRAM, info.openid(), info.unionid(),
+                                null, null)),
+                        SocialProvider.WECHAT));
     }
 }

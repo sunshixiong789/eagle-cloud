@@ -1,6 +1,7 @@
 package com.eagle.auth.core.application.service;
 
 import com.eagle.auth.core.domain.model.Account;
+import com.eagle.auth.core.domain.model.enums.WechatChannel;
 import com.eagle.auth.core.domain.repository.AccountRepository;
 import com.eagle.auth.core.domain.service.WechatWebService.WechatWebUserInfo;
 import lombok.RequiredArgsConstructor;
@@ -12,9 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 /**
- * 微信 Web 端用户应用服务
- * <p>
- * 负责微信开放平台 App / Web 登录的账号查找与创建。
+ * 微信用户应用服务。
+ *
+ * <p>提供四渠道（小程序 / App / PC 扫码 / H5）统一的微信账号查找：
+ * 本渠道 openid 优先，unionid 归并兜底（同一微信主体已在别的渠道完成过
+ * 手机号验证时，补绑本渠道 openid 直登，不重复验手机号）。
  * 通过 {@link AccountRepository} 直接操作 auth 域的 Account 聚合根。
  *
  * @author sunshixiong
@@ -28,81 +31,105 @@ public class WechatWebUserService {
     private final AccountRepository accountRepository;
 
     /**
-     * 查找或创建微信开放平台账号
-     * <p>
-     * 账号合并策略:
+     * 四渠道统一查找微信账号（不创建）。
+     *
+     * <p>顺序：
      * <ol>
-     *   <li>优先按 unionid 查找(同一微信开放平台账号下的不同应用 unionid 相同)</li>
-     *   <li>如果找到,绑定当前渠道的 openid 并返回(实现 PC 扫码与 H5 账号合并)</li>
-     *   <li>如果没找到,按当前渠道的 openid 查找</li>
-     *   <li>如果还没找到,创建新账号</li>
+     *   <li>本渠道 openid 命中 → 返回（附带 unionid 时补写）</li>
+     *   <li>unionid 命中 → 补绑本渠道 openid 后返回（跨渠道归并直登）</li>
+     *   <li>都未命中 → empty（由调用方走 binding_required 流程）</li>
      * </ol>
+     *
+     * @param channel 微信渠道
+     * @param openid  本渠道 openid
+     * @param unionid unionid（可空）
+     * @return 命中的账号；未命中 empty
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Optional<Account> findWechatAccount(WechatChannel channel,
+                                               String openid, String unionid) {
+        Optional<Account> byOpenid = findByChannelOpenid(channel, openid);
+        if (byOpenid.isPresent()) {
+            Account existing = byOpenid.get();
+            // 历史数据可能缺 unionid，命中后补写
+            if (unionid != null && !unionid.isBlank()) {
+                bindChannelOpenid(existing, channel, openid, unionid);
+                accountRepository.save(existing);
+            }
+            return Optional.of(existing);
+        }
+
+        if (unionid != null && !unionid.isBlank()) {
+            Optional<Account> byUnionid = accountRepository.findByWechatBindingUnionid(unionid);
+            if (byUnionid.isPresent()) {
+                Account existing = byUnionid.get();
+                bindChannelOpenid(existing, channel, openid, unionid);
+                accountRepository.save(existing);
+                log.info("微信登录：通过 unionid 归并账号, accountId: {}, channel: {}",
+                        existing.getId(), channel);
+                return Optional.of(existing);
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * 查找或创建微信开放平台账号（网页扫码 / H5 浏览器 session 流程专用）。
+     *
+     * <p>token 端点的四个 grant 已改为 binding_required + social_bind，
+     * 不再调用本方法的创建分支；web/H5 保留「先建账号 + 引导绑手机 + 归并」路径。
      *
      * @param info 微信用户信息
      * @return Account 实体
      */
     @Transactional(rollbackFor = Exception.class)
     public Account findOrCreateWechatWebAccount(WechatWebUserInfo info) {
-        // 1. 优先按 unionid 查找(实现跨平台账号合并)
-        if (info.unionid() != null && !info.unionid().isBlank()) {
-            Optional<Account> byUnionid =
-                    accountRepository.findByWechatBindingUnionid(info.unionid());
-            if (byUnionid.isPresent()) {
-                Account existing = byUnionid.get();
-                // 绑定当前渠道的 openid(App、PC 或 H5)
-                bindChannelOpenid(existing, info);
-                accountRepository.save(existing);
-                log.info("微信 Web 登录:通过 unionid 合并账号, accountId: {}, channel: {}",
-                        existing.getId(), info.channel());
-                return existing;
-            }
+        WechatChannel channel = webChannelOf(info.channel());
+        Optional<Account> found = findWechatAccount(channel, info.openid(), info.unionid());
+        if (found.isPresent()) {
+            return found.get();
         }
 
-        // 2. 按平台 openid 查找(App、PC 扫码或 H5)
-        Optional<Account> byOpenid = findByChannelOpenid(info);
-        if (byOpenid.isPresent()) {
-            Account existing = byOpenid.get();
-            // 如果有 unionid,补充绑定(历史数据可能没有 unionid)
-            if (info.unionid() != null && !info.unionid().isBlank()) {
-                bindChannelOpenid(existing, info);
-                accountRepository.save(existing);
-            }
-            return existing;
-        }
-
-        // 3. 自动创建新账号
-        Account newAccount = createWechatWebAccount(info);
-        Account saved = accountRepository.save(newAccount);
+        Account saved = accountRepository.save(createWechatWebAccount(info));
         log.info("微信 Web 登录:自动注册新账号, username: {}, channel: {}",
                 saved.getUsername(), info.channel());
         return saved;
     }
 
-    private Optional<Account> findByChannelOpenid(WechatWebUserInfo info) {
-        if (isOpenPlatformChannel(info.channel())) {
-            return accountRepository.findByWechatBindingWebOpenid(info.openid());
-        }
-        return accountRepository.findByWechatBindingMpOpenid(info.openid());
+    /**
+     * Web 流程的字符串渠道转枚举（"app" / "pc" 属开放平台，其余按 H5 处理）。
+     */
+    public static WechatChannel webChannelOf(String channel) {
+        return switch (channel) {
+            case "app" -> WechatChannel.APP;
+            case "pc" -> WechatChannel.PC;
+            default -> WechatChannel.H5;
+        };
     }
 
-    private void bindChannelOpenid(Account account, WechatWebUserInfo info) {
-        if (isOpenPlatformChannel(info.channel())) {
-            account.bindWechatWeb(info.openid(), info.unionid());
-        } else {
-            account.bindWechatH5(info.openid(), info.unionid());
+    private Optional<Account> findByChannelOpenid(WechatChannel channel, String openid) {
+        return switch (channel) {
+            case MINI_PROGRAM -> accountRepository.findByWechatBindingOpenid(openid);
+            case APP, PC -> accountRepository.findByWechatBindingWebOpenid(openid);
+            case H5 -> accountRepository.findByWechatBindingMpOpenid(openid);
+        };
+    }
+
+    private void bindChannelOpenid(Account account, WechatChannel channel,
+                                   String openid, String unionid) {
+        switch (channel) {
+            case MINI_PROGRAM -> account.bindWechat(openid, unionid);
+            case APP, PC -> account.bindWechatWeb(openid, unionid);
+            case H5 -> account.bindWechatH5(openid, unionid);
         }
     }
 
     private Account createWechatWebAccount(WechatWebUserInfo info) {
-        if (isOpenPlatformChannel(info.channel())) {
+        if (webChannelOf(info.channel()).isOpenPlatform()) {
             return Account.createFromWechatWeb(
                     info.openid(), info.unionid(), info.nickname(), info.avatar());
         }
         return Account.createFromWechatH5(
                 info.openid(), info.unionid(), info.nickname(), info.avatar());
-    }
-
-    private boolean isOpenPlatformChannel(String channel) {
-        return "app".equals(channel) || "pc".equals(channel);
     }
 }

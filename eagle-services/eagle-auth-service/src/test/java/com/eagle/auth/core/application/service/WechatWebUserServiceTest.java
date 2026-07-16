@@ -1,6 +1,7 @@
 package com.eagle.auth.core.application.service;
 
 import com.eagle.auth.core.domain.model.Account;
+import com.eagle.auth.core.domain.model.enums.WechatChannel;
 import com.eagle.auth.core.domain.repository.AccountRepository;
 import com.eagle.auth.core.domain.service.WechatWebService.WechatWebUserInfo;
 import org.junit.jupiter.api.DisplayName;
@@ -104,6 +105,72 @@ class WechatWebUserServiceTest {
             Account result = service.findOrCreateWechatWebAccount(info("h5", OPENID, UNIONID));
 
             assertEquals(OPENID, result.getWechatBinding().getMpOpenid());
+        }
+    }
+
+    @Nested
+    @DisplayName("findWechatAccount 四渠道统一查找（不创建）")
+    class FindWechatAccount {
+
+        @Test
+        @DisplayName("小程序渠道 openid 命中应直接返回")
+        void miniProgramOpenidHit() {
+            Account existing = Account.createFromWechat(OPENID, UNIONID);
+            when(accountRepository.findByWechatBindingOpenid(OPENID))
+                    .thenReturn(Optional.of(existing));
+
+            Optional<Account> result = service.findWechatAccount(
+                    WechatChannel.MINI_PROGRAM, OPENID, UNIONID);
+
+            assertSame(existing, result.orElseThrow());
+        }
+
+        @Test
+        @DisplayName("小程序 openid 未命中但 unionid 命中，应补绑小程序 openid 并返回")
+        void miniProgramUnionidHitShouldAttachOpenid() {
+            Account existing = Account.createFromPhone("13800138000");
+            existing.bindWechatWeb("web-openid-1", UNIONID);
+            when(accountRepository.findByWechatBindingOpenid(OPENID))
+                    .thenReturn(Optional.empty());
+            when(accountRepository.findByWechatBindingUnionid(UNIONID))
+                    .thenReturn(Optional.of(existing));
+            when(accountRepository.save(existing)).thenReturn(existing);
+
+            Optional<Account> result = service.findWechatAccount(
+                    WechatChannel.MINI_PROGRAM, OPENID, UNIONID);
+
+            assertSame(existing, result.orElseThrow());
+            assertEquals(OPENID, existing.getWechatBinding().getOpenid());
+            assertEquals("web-openid-1", existing.getWechatBinding().getWebOpenid());
+            verify(accountRepository).save(existing);
+        }
+
+        @Test
+        @DisplayName("openid 与 unionid 均未命中应返回 empty 且不创建账号")
+        void bothMissShouldReturnEmpty() {
+            when(accountRepository.findByWechatBindingOpenid(OPENID))
+                    .thenReturn(Optional.empty());
+            when(accountRepository.findByWechatBindingUnionid(UNIONID))
+                    .thenReturn(Optional.empty());
+
+            Optional<Account> result = service.findWechatAccount(
+                    WechatChannel.MINI_PROGRAM, OPENID, UNIONID);
+
+            assertEquals(Optional.empty(), result);
+            verify(accountRepository, never()).save(any(Account.class));
+        }
+
+        @Test
+        @DisplayName("无 unionid 时仅按本渠道 openid 查找")
+        void withoutUnionidOnlyChannelLookup() {
+            when(accountRepository.findByWechatBindingMpOpenid(OPENID))
+                    .thenReturn(Optional.empty());
+
+            Optional<Account> result = service.findWechatAccount(
+                    WechatChannel.H5, OPENID, null);
+
+            assertEquals(Optional.empty(), result);
+            verify(accountRepository, never()).findByWechatBindingUnionid(any());
         }
     }
 }

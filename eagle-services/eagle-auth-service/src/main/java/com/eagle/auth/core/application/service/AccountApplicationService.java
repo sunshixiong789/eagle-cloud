@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -162,55 +163,21 @@ public class AccountApplicationService {
     }
 
     /**
-     * 按微信小程序 openid 查找或自动创建账号。
+     * 按 Apple subject 查找账号（不创建；未绑定的 Apple 身份走 binding_required 流程）。
      *
-     * @param openid  微信小程序 openid
-     * @param unionid 微信 unionid（可选）
-     * @return Account 实例
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public Account findOrCreateByWechatOpenid(String openid, String unionid) {
-        return accountRepository.findByWechatBindingOpenid(openid)
-                .orElseGet(() -> {
-                    Account newAccount = Account.createFromWechat(openid, unionid);
-                    return accountRepository.save(newAccount);
-                });
-    }
-
-    /**
-     * 按淘宝 openUid 查找或自动创建账号（淘宝一键登录场景，无需手机号）。
+     * <p>命中时轮换服务端保存的 refresh token 密文。
      *
-     * @param openUid 淘宝 openUid
-     * @return Account 实例
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public Account findOrCreateByTaobao(String openUid) {
-        return accountRepository.findByTaobaoBindingOpenUid(openUid)
-                .orElseGet(() -> {
-                    Account newAccount = Account.createFromTaobao(openUid);
-                    return accountRepository.save(newAccount);
-                });
-    }
-
-    /**
-     * 按 Apple subject 查找或自动创建账号。
-     *
-     * @param subject 服务端验签后的 Apple identity token subject
-     * @param email 服务端验签且 Apple 标记为已验证的邮箱
-     * @param fullName Apple 首次授权时客户端返回的展示名提示
+     * @param subject               服务端验签后的 Apple identity token subject
      * @param encryptedRefreshToken Apple refresh token 密文
+     * @return 已挂靠该 Apple 身份的账号；未挂靠返回 empty
      */
     @Transactional(rollbackFor = Exception.class)
-    public Account findOrCreateByApple(
-            String subject, String email, String fullName,
-            String encryptedRefreshToken) {
+    public Optional<Account> findByAppleSubject(String subject, String encryptedRefreshToken) {
         return accountRepository.findByAppleBindingSubject(subject)
                 .map(account -> {
                     account.rotateAppleRefreshToken(subject, encryptedRefreshToken);
                     return accountRepository.save(account);
-                })
-                .orElseGet(() -> accountRepository.save(Account.createFromApple(
-                        subject, email, fullName, encryptedRefreshToken)));
+                });
     }
 
     /**

@@ -1,11 +1,13 @@
 package com.eagle.auth.core.infrastructure.security;
 
+import com.eagle.auth.core.application.service.WechatWebUserService;
 import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.model.enums.SocialProvider;
+import com.eagle.auth.core.domain.model.enums.WechatChannel;
 import com.eagle.auth.core.domain.port.BindTicket;
 import com.eagle.auth.core.domain.port.BindTicketStore;
-import com.eagle.auth.core.domain.repository.AccountRepository;
-import com.eagle.auth.core.domain.service.TaobaoService;
+import com.eagle.auth.core.domain.service.WechatWebService;
+import com.eagle.auth.core.domain.service.WechatWebService.WechatWebUserInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,42 +25,43 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class TaobaoAppAuthenticationProviderTest {
+class WechatAppAuthenticationProviderTest {
 
-    private TaobaoService taobaoService;
-    private AccountRepository accountRepository;
+    private WechatWebService wechatWebService;
+    private WechatWebUserService wechatWebUserService;
     private BindTicketStore bindTicketStore;
     private BlacklistChecker blacklistChecker;
-    private TaobaoAppAuthenticationProvider provider;
+    private WechatAppAuthenticationProvider provider;
 
     @BeforeEach
     void setUp() {
-        taobaoService = mock(TaobaoService.class);
-        accountRepository = mock(AccountRepository.class);
+        wechatWebService = mock(WechatWebService.class);
+        wechatWebUserService = mock(WechatWebUserService.class);
         bindTicketStore = mock(BindTicketStore.class);
         blacklistChecker = mock(BlacklistChecker.class);
-        provider = new TaobaoAppAuthenticationProvider(
+        provider = new WechatAppAuthenticationProvider(
                 mock(OAuth2AuthorizationService.class),
                 mock(OAuth2TokenGenerator.class),
                 mock(UserDetailsService.class),
-                taobaoService, accountRepository, bindTicketStore,
-                blacklistChecker);
+                wechatWebService, wechatWebUserService, bindTicketStore, blacklistChecker);
     }
 
-    private TaobaoAppAuthenticationToken token() {
-        // authenticateGrant() 只读取 tbAccessToken/tbAuthCode，不访问 principal；
-        // 但父类 OAuth2AuthorizationGrantAuthenticationToken 要求 clientPrincipal 非空，
-        // 故用 TestingAuthenticationToken 占位。
-        return new TaobaoAppAuthenticationToken("acc", "authcode", null, null,
+    private WechatAppAuthenticationToken token() {
+        return new WechatAppAuthenticationToken("app-code",
                 new TestingAuthenticationToken("eagleApp", null), Map.of());
     }
 
+    private WechatWebUserInfo info() {
+        return new WechatWebUserInfo("oid-1", "uid-1", "Nick", "https://a.png", "app");
+    }
+
     @Test
-    @DisplayName("openUid 已绑账号 → 直接返回该账号（老用户直登）")
-    void returningUserLogsInDirectly() {
+    @DisplayName("openid/unionid 命中 → 直登")
+    void boundIdentityLogsInDirectly() {
         Account existing = Account.createFromPhone("13800138000");
-        when(taobaoService.resolveOpenUid("acc", "authcode")).thenReturn("uid-1");
-        when(accountRepository.findByTaobaoBindingOpenUid("uid-1")).thenReturn(Optional.of(existing));
+        when(wechatWebService.exchangeAppCode("app-code")).thenReturn(info());
+        when(wechatWebUserService.findWechatAccount(WechatChannel.APP, "oid-1", "uid-1"))
+                .thenReturn(Optional.of(existing));
 
         Account result = provider.authenticateGrant(token());
 
@@ -66,17 +69,19 @@ class TaobaoAppAuthenticationProviderTest {
     }
 
     @Test
-    @DisplayName("新 openUid → 发放 BindTicket 并抛 binding_required（不再自动建账号）")
-    void newIdentityRequiresBinding() {
-        when(taobaoService.resolveOpenUid("acc", "authcode")).thenReturn("uid-2");
-        when(accountRepository.findByTaobaoBindingOpenUid("uid-2")).thenReturn(Optional.empty());
-        when(bindTicketStore.save(BindTicket.ofTaobao("uid-2"))).thenReturn("ticket-1");
+    @DisplayName("未命中 → 发放含昵称头像的 BindTicket 并抛 binding_required")
+    void unboundIdentityRequiresBinding() {
+        when(wechatWebService.exchangeAppCode("app-code")).thenReturn(info());
+        when(wechatWebUserService.findWechatAccount(WechatChannel.APP, "oid-1", "uid-1"))
+                .thenReturn(Optional.empty());
+        when(bindTicketStore.save(BindTicket.ofWechat(
+                WechatChannel.APP, "oid-1", "uid-1", "Nick", "https://a.png")))
+                .thenReturn("ticket-1");
 
         SocialBindingRequiredException ex = assertThrows(SocialBindingRequiredException.class,
                 () -> provider.authenticateGrant(token()));
 
-        assertEquals("binding_required", ex.getError().getErrorCode());
         assertEquals("ticket-1", ex.getBindTicket());
-        assertEquals(SocialProvider.TAOBAO, ex.getProvider());
+        assertEquals(SocialProvider.WECHAT, ex.getProvider());
     }
 }

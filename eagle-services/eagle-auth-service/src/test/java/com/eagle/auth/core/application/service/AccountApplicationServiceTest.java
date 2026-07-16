@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -61,8 +62,8 @@ class AccountApplicationServiceTest {
     }
 
     @Nested
-    @DisplayName("findOrCreateByApple")
-    class FindOrCreateByApple {
+    @DisplayName("findByAppleSubject")
+    class FindByAppleSubject {
 
         @Test
         @DisplayName("已有账号应轮换 refresh token 密文")
@@ -73,13 +74,23 @@ class AccountApplicationServiceTest {
                     .thenReturn(Optional.of(existing));
             when(accountRepository.save(existing)).thenReturn(existing);
 
-            Account result = service.findOrCreateByApple(
-                    "apple-subject", null, null, "new-ciphertext");
+            Account result = service.findByAppleSubject("apple-subject", "new-ciphertext")
+                    .orElseThrow();
 
             assertSame(existing, result);
             assertEquals("new-ciphertext",
                     result.getAppleBinding().getRefreshTokenCiphertext());
             verify(accountRepository).save(existing);
+        }
+
+        @Test
+        @DisplayName("未挂靠的 subject 应返回 empty，不创建账号")
+        void shouldReturnEmptyWhenUnbound() {
+            when(accountRepository.findByAppleBindingSubject("apple-subject"))
+                    .thenReturn(Optional.empty());
+
+            assertTrue(service.findByAppleSubject("apple-subject", "cipher").isEmpty());
+            verify(accountRepository, never()).save(any());
         }
     }
 
@@ -324,38 +335,6 @@ class AccountApplicationServiceTest {
 
             assertNotNull(result);
             assertEquals(PHONE, result.getPhone());
-            verify(accountRepository, times(1)).save(any(Account.class));
-        }
-    }
-
-    @Nested
-    @DisplayName("findOrCreateByTaobao")
-    class FindOrCreateByTaobao {
-
-        @Test
-        @DisplayName("应返回已有")
-        void shouldReturnExisting() {
-            Account existing = existingAccount();
-            when(accountRepository.findByTaobaoBindingOpenUid(TAOBAO_OPEN_UID))
-                    .thenReturn(Optional.of(existing));
-
-            Account result = service.findOrCreateByTaobao(TAOBAO_OPEN_UID);
-
-            assertSame(existing, result);
-            verify(accountRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("应创建New，无需手机号")
-        void shouldCreateNewWithoutPhone() {
-            when(accountRepository.findByTaobaoBindingOpenUid(TAOBAO_OPEN_UID))
-                    .thenReturn(Optional.empty());
-            when(accountRepository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
-
-            Account result = service.findOrCreateByTaobao(TAOBAO_OPEN_UID);
-
-            assertNotNull(result);
-            assertEquals(TAOBAO_OPEN_UID, result.getTaobaoBinding().getOpenUid());
             verify(accountRepository, times(1)).save(any(Account.class));
         }
     }
