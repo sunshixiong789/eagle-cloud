@@ -2,11 +2,14 @@ package com.eagle.auth.core.application.service;
 
 import com.eagle.audit.annotation.AuditLog;
 import com.eagle.common.exception.codes.DataErrorCode;
+import com.eagle.auth.core.application.command.BindPhoneResult;
 import com.eagle.auth.core.application.command.FreezeAccountCommand;
 import com.eagle.auth.core.domain.AuthErrorCode;
 import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.model.enums.AccountStatus;
 import com.eagle.auth.core.domain.model.valueobject.ProfileHints;
+import com.eagle.auth.core.domain.model.valueobject.WechatBinding;
+import com.eagle.auth.core.domain.port.OnlineUserPort;
 import com.eagle.auth.core.domain.repository.AccountRepository;
 import com.eagle.auth.core.domain.service.SmsService;
 import com.eagle.auth.core.infrastructure.config.AdminProperties;
@@ -16,6 +19,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -39,6 +44,7 @@ public class AccountApplicationService {
     private final PasswordEncoder passwordEncoder;
     private final SmsService smsService;
     private final AdminProperties adminProperties;
+    private final OnlineUserPort onlineUserPort;
 
     /**
      * 短信验证码 Web 登录：校验手机号格式 + 验证码后查 / 建账号。
@@ -211,27 +217,106 @@ public class AccountApplicationService {
     }
 
     /**
-     * 绑定手机号（微信登录后补充手机号场景，已认证）。
+     * 绑定手机号（第三方登录后补充手机号场景，已认证）。
+     *
+     * <p>手机号为主账号体系：手机号已属其他账号时，若当前账号是影子账号
+     * （第三方直登自动创建、无密码无手机号），自动把影子账号的第三方绑定
+     * 迁移到手机号主账号并注销影子账号（{@code merged=true}，客户端引导重新登录）；
+     * 实账号之间不自动合并，仍抛 {@code PHONE_ALREADY_BOUND}。
      *
      * <p>注意：username 字段不随手机号变化（用户名是登录别名，与手机号脱钩），
-     * 微信账号绑手机号后 username 仍是创建时生成的 wx_xxx，避免与已有用户名冲突。
+     * 第三方账号绑手机号后 username 仍是创建时生成的 wx_xxx / apple_xxx，避免与已有用户名冲突。
+     *
+     * @return 归并结果：{@code merged=true} 表示当前影子账号已并入手机号主账号
      */
     @Transactional(rollbackFor = Exception.class)
-    public void bindPhone(Long accountId, String phone, String code) {
+    public BindPhoneResult bindPhone(Long accountId, String phone, String code) {
         if (!smsService.verifyCode(phone, code)) {
             throw AuthErrorCode.SMS_CODE_INVALID.toDomainException();
         }
-        accountRepository.findByPhone(phone).ifPresent(existing -> {
-            if (!existing.getId().equals(accountId)) {
-                throw AuthErrorCode.PHONE_ALREADY_BOUND.toConflictException();
-            }
-        });
         Account account = findAccountById(accountId);
         if (account.getStatus() == AccountStatus.FROZEN) {
             throw AuthErrorCode.ACCOUNT_FROZEN.toDomainException();
         }
+
+        Account primary = accountRepository.findByPhone(phone).orElse(null);
+        if (primary != null && !primary.getId().equals(accountId)) {
+            if (!account.isShadowAccount()) {
+                throw AuthErrorCode.PHONE_ALREADY_BOUND.toConflictException();
+            }
+            if (primary.getStatus() == AccountStatus.FROZEN) {
+                throw AuthErrorCode.ACCOUNT_FROZEN.toDomainException();
+            }
+            mergeShadowIntoPrimary(account, primary);
+            return new BindPhoneResult(true);
+        }
+
         account.bindPhone(phone);
         savePhoneWithUniquenessGuard(account);
+        return new BindPhoneResult(false);
+    }
+
+    /**
+     * 影子账号归并：第三方绑定整体迁移到手机号主账号，注销影子账号。
+     *
+     * <p>顺序关键：先删除影子账号并 <b>flush</b>，再把绑定落到主账号——
+     * Hibernate 默认 flush 顺序 update 先于 delete，若主账号绑定列先落库而
+     * 影子账号还持有相同值，会误撞第三方身份唯一索引。
+     * 删除走 {@code publishDeletedEvent()} 级联清理 system 域 User
+     * （不走 AccountDeletionApplicationService，Apple refresh token 密文随绑定
+     * 迁移、身份仍在使用，不得调用 Apple revoke）。
+     * 事务提交后将影子账号在线 token 全部拉黑（客户端引导重新登录）。
+     */
+    private void mergeShadowIntoPrimary(Account shadow, Account primary) {
+        shadow.publishDeletedEvent();
+        accountRepository.delete(shadow);
+        accountRepository.flush();
+
+        if (shadow.getTaobaoBinding() != null
+                && shadow.getTaobaoBinding().getOpenUid() != null) {
+            primary.bindTaobao(shadow.getTaobaoBinding().getOpenUid());
+        }
+        if (shadow.getAppleBinding() != null) {
+            primary.bindApple(shadow.getAppleBinding().getSubject(),
+                    shadow.getAppleBinding().getRefreshTokenCiphertext());
+        }
+        WechatBinding wechat = shadow.getWechatBinding();
+        if (wechat != null) {
+            if (wechat.getOpenid() != null) {
+                primary.bindWechat(wechat.getOpenid(), wechat.getUnionid());
+            }
+            if (wechat.getWebOpenid() != null) {
+                primary.bindWechatWeb(wechat.getWebOpenid(), wechat.getUnionid());
+            }
+            if (wechat.getMpOpenid() != null) {
+                primary.bindWechatH5(wechat.getMpOpenid(), wechat.getUnionid());
+            }
+        }
+        savePhoneWithUniquenessGuard(primary);
+
+        Long shadowId = shadow.getId();
+        log.info("shadow account merged into primary: shadowId={}, primaryId={}",
+                shadowId, primary.getId());
+        runAfterCommit(() -> onlineUserPort.listJtisByAccount(shadowId)
+                .forEach(onlineUserPort::forceLogout));
+    }
+
+    /**
+     * 事务提交后执行（归并成功才踢影子账号下线）；
+     * 无事务上下文（纯单测）时立即执行。
+     */
+    private void runAfterCommit(Runnable action) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            action.run();
+                        }
+                    });
+        } else {
+            action.run();
+        }
     }
 
     /**

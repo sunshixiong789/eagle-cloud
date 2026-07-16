@@ -337,6 +337,17 @@ public class Account extends BaseAggregateRoot<Account> {
     }
 
     /**
+     * 是否为「影子账号」：第三方直登自动创建、无密码且未绑手机号的账号。
+     *
+     * <p>手机号为主账号体系下，影子账号补绑手机号时若手机号已有主账号，
+     * 允许自动归并（绑定迁移 + 注销影子账号）。
+     */
+    public boolean isShadowAccount() {
+        return DISABLED_PASSWORD.equals(this.password)
+                && (this.phone == null || this.phone.isBlank());
+    }
+
+    /**
      * 绑定手机号（微信登录后补充手机号场景）。
      *
      * <p>username 不随手机号变化——用户名是登录别名，与手机号脱钩，避免与已有用户名冲突。

@@ -2,7 +2,7 @@
 
 - 日期：2026-07-16
 - 作者：sunshixiong（与 Claude Code 协作 brainstorm）
-- 状态：设计稿，待评审 → writing-plans
+- 状态：已实现并通过全量单测（feature/phone-primary-account 分支）
 - 影响范围：`eagle-auth-service` 的 Account 聚合 / 四个自定义 grant Provider / AccountApplicationService / 错误码；客户端登录流程（App 端及未来小程序端）
 
 ## 1. 背景与目标
@@ -171,8 +171,11 @@ email / fullName / 微信昵称头像作为 ProfileHints 仅在 `findOrCreateByP
 
   开发期依赖 `ddl-auto=update`（项目约定不写 Flyway）；**注意 `update` 不会把既有普通索引
   改成 unique**，开发 / 测试库需手动 `DROP INDEX` 旧索引后由 JPA 重建，spec 落地时在计划中列为独立步骤。
-- 新错误码（`AuthErrorCode`，11059 起顺延）：`SOCIAL_BIND_TICKET_INVALID`、`ACCOUNT_MERGE_CONFLICT`、
-  `SOCIAL_IDENTITY_ALREADY_BOUND`（并发兜底通用翻译）。
+- 新错误码（`AuthErrorCode`，实现落地）：`SOCIAL_BIND_TICKET_INVALID(11059)`、
+  `APPLE_ALREADY_BOUND(11060)`、`WECHAT_ALREADY_BOUND(11061)`、
+  `SOCIAL_IDENTITY_ALREADY_BOUND(11062)`（并发兜底通用翻译）。
+  归并冲突不单设 `ACCOUNT_MERGE_CONFLICT`——「主账号已绑同 provider 异身份」
+  复用 `XXX_ALREADY_BOUND` 系列，语义一致。
 
 ## 7. 错误处理与边界
 
@@ -206,7 +209,18 @@ email / fullName / 微信昵称头像作为 ProfileHints 仅在 `findOrCreateByP
 服务端兼容性：已绑定用户全链路无感；`bindPhone` 对非影子账号行为不变；
 现存错误响应契约不变（failure handler 只拦截 `binding_required`）。
 
-## 10. 非目标
+## 10. 实现偏差记录（2026-07-16 实现完成后回写）
+
+- `social_bind` 的 token 端点错误契约：ticket 失效 → `error=invalid_bind_ticket`
+  （客户端重走第三方授权）；验证码错误 / 冻结 / 黑名单 / 冲突 → `error=invalid_grant`
+  （`error_description` 携带业务文案）。
+- 微信绑定兼容性检查比 spec 更严：除同渠道异 openid 外，**unionid 不同主体**也拒绝
+  （防止两个不同微信号挂到同一账号）。
+- `bindPhone` 接口从 204 无响应体改为 200 `{"merged": bool}`。
+- 微信查找顺序统一为「本渠道 openid → unionid」（原 Web 流程为 unionid 优先，
+  行为差异仅出现在脏数据场景，唯一索引兜底后不可达）。
+
+## 11. 非目标
 
 - 不拆 `auth_account_binding` 独立绑定表；
 - 不重构网页扫码 / 公众号 H5 的浏览器 session 流程：其已有 `/login/bind-phone`

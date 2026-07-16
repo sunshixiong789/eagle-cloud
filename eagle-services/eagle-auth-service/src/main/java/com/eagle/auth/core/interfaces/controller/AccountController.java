@@ -81,14 +81,16 @@ public class AccountController {
                 request.getPhone(), request.getCode(), request.getNewPassword());
     }
 
-    @Operation(summary = "绑定手机号")
+    @Operation(summary = "绑定手机号",
+            description = "手机号已属其他主账号且当前为影子账号时自动归并，"
+                    + "响应 merged=true，客户端应引导重新登录（当前 token 已失效）")
     @PostMapping("/{accountId}/phone")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("#accountId == authentication.principal.id")
-    public void bindPhone(@Parameter(description = "账号ID") @PathVariable Long accountId,
-                          @Valid @RequestBody BindPhoneRequest request) {
-        accountApplicationService.bindPhone(
-                accountId, request.getPhone(), request.getCode());
+    public Map<String, Boolean> bindPhone(
+            @Parameter(description = "账号ID") @PathVariable Long accountId,
+            @Valid @RequestBody BindPhoneRequest request) {
+        return Map.of("merged", accountApplicationService.bindPhone(
+                accountId, request.getPhone(), request.getCode()).merged());
     }
 
     @Operation(summary = "修改手机号")

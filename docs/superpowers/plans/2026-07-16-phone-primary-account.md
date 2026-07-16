@@ -46,7 +46,7 @@ interface BindTicketStore {
 错误码：`SOCIAL_BIND_TICKET_INVALID(11059)`、`APPLE_ALREADY_BOUND(11060)`、
 `WECHAT_ALREADY_BOUND(11061)`、`SOCIAL_IDENTITY_ALREADY_BOUND(11062)`。
 
-- [ ] 测试先行（mock StringRedisTemplate，参照 OnlineUserAdapterTest）→ 实现 → 通过
+- [x] 测试先行（mock StringRedisTemplate，参照 OnlineUserAdapterTest）→ 实现 → 通过
 
 ### Task 2: Account 域方法补齐（bindApple + 微信/淘宝冲突语义）
 
@@ -62,14 +62,14 @@ void bindApple(String subject, String encryptedRefreshToken)
 // bindTaobao 维持现有语义（幂等 / TAOBAO_ALREADY_BOUND）
 ```
 
-- [ ] 测试先行 → 实现 → 通过
+- [x] 测试先行 → 实现 → 通过
 
 ### Task 3: 唯一索引收紧
 
 **Files:**
 - Modify: `Account.java` @Table indexes：`openid`/`unionid`/`web_openid`/`mp_openid`/`taobao_open_uid` 全部 `unique = true`
 
-- [ ] 修改 + 编译通过（交付说明注明存量库需 DROP 旧普通索引）
+- [x] 修改 + 编译通过（交付说明注明存量库需 DROP 旧普通索引）
 
 ### Task 4: 微信统一查找（unionid 优先，四渠道一致）
 
@@ -85,7 +85,7 @@ Optional<Account> findWechatAccount(WechatChannel channel, String openid, String
 // findOrCreateWechatWebAccount 内部改为复用该查找，创建分支保留（web/H5 现状流程）
 ```
 
-- [ ] 测试先行 → 实现 → 通过
+- [x] 测试先行 → 实现 → 通过
 
 ### Task 5: SocialBindingRequiredException + token 端点 errorResponseHandler
 
@@ -104,7 +104,7 @@ class SocialBindingRequiredException extends OAuth2AuthenticationException {
 // 其余异常委托 SAS 默认 OAuth2ErrorAuthenticationFailureHandler
 ```
 
-- [ ] 测试先行 → 实现 → 通过
+- [x] 测试先行 → 实现 → 通过
 
 ### Task 6: 四个 Provider 未命中改抛 binding_required
 
@@ -117,7 +117,7 @@ class SocialBindingRequiredException extends OAuth2AuthenticationException {
 `SocialBindingRequiredException`。`findOrCreateByTaobao/Apple/WechatOpenid` 的"创建"分支移除
 （方法删除或收窄为纯查找，调用点同步）。
 
-- [ ] 测试先行 → 实现 → 通过
+- [x] 测试先行 → 实现 → 通过
 
 ### Task 7: social_bind grant 三件套 + 应用服务
 
@@ -138,7 +138,7 @@ Account SocialBindApplicationService.bind(String ticketId, String phone, String 
 // 6 冻结前置检查 7 按 provider/channel 挂接 8 save(唯一索引冲突翻译)
 ```
 
-- [ ] 测试先行 → 实现 → 通过
+- [x] 测试先行 → 实现 → 通过
 
 ### Task 8: bindPhone 影子账号自动归并
 
@@ -154,13 +154,13 @@ Account SocialBindApplicationService.bind(String ticketId, String phone, String 
 AccountDeletionApplicationService，避免 Apple revoke）→ afterCommit 同步器
 `OnlineUserPort.listJtisByAccount + forceLogout` 踢影子下线。
 
-- [ ] 测试先行 → 实现 → 通过
+- [x] 测试先行 → 实现 → 通过
 
 ### Task 9: 全量验证 + 收尾
 
-- [ ] `./gradlew :eagle-services:eagle-auth-service:test` 全绿
-- [ ] spec 与实现的偏差回写 spec（错误码命名等）
-- [ ] feature 分支提交（不 push）
+- [x] `./gradlew :eagle-services:eagle-auth-service:test` 全绿
+- [x] spec 与实现的偏差回写 spec（错误码命名等）
+- [x] feature 分支提交（不 push）
 
 ## Self-Review 结论
 
