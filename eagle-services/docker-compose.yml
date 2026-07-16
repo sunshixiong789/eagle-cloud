@@ -397,6 +397,13 @@ services:
       - TAOBAO_APP_KEY=${TAOBAO_APP_KEY:-}
       - TAOBAO_APP_SECRET=${TAOBAO_APP_SECRET:-}
       - TAOBAO_APP_SIGN_METHOD=${TAOBAO_APP_SIGN_METHOD:-md5}
+      # Apple 登录（apple_app grant）：enabled=true 时必须同时提供 EAGLE_ENCRYPT_SECRET_KEY（refresh token 字段加密）
+      - APPLE_AUTH_ENABLED=${APPLE_AUTH_ENABLED:-false}
+      - APPLE_CLIENT_ID=${APPLE_CLIENT_ID:-com.shengxinfast.app}
+      - APPLE_TEAM_ID=${APPLE_TEAM_ID:-}
+      - APPLE_KEY_ID=${APPLE_KEY_ID:-}
+      - APPLE_PRIVATE_KEY=${APPLE_PRIVATE_KEY:-}
+      - EAGLE_ENCRYPT_SECRET_KEY=${EAGLE_ENCRYPT_SECRET_KEY:-}
       # 短信服务商切换（由 eagle-notification-starter 统一处理）
       - SMS_PROVIDER=${SMS_PROVIDER:-hnsls}
       - SMS_ACCESS_KEY_ID=${SMS_ACCESS_KEY_ID:-}
