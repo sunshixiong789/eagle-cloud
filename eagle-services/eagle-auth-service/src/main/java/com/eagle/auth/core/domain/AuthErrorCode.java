@@ -96,7 +96,18 @@ public enum AuthErrorCode implements ErrorCode {
     APPLE_TOKEN_EXCHANGE_FAILED(11057, "error.auth.apple_token_exchange_failed",
             "Apple 授权码换票失败"),
     APPLE_TOKEN_REVOCATION_FAILED(11058, "error.auth.apple_token_revocation_failed",
-            "Apple 登录授权撤销失败");
+            "Apple 登录授权撤销失败"),
+
+    // ==================== 手机号统一挂靠（11059–11062）====================
+
+    SOCIAL_BIND_TICKET_INVALID(11059, "error.auth.social_bind_ticket_invalid",
+            "绑定凭证已失效，请重新登录"),
+    APPLE_ALREADY_BOUND(11060, "error.auth.apple_already_bound",
+            "该账号已绑定其他 Apple ID"),
+    WECHAT_ALREADY_BOUND(11061, "error.auth.wechat_already_bound",
+            "该账号已绑定其他微信"),
+    SOCIAL_IDENTITY_ALREADY_BOUND(11062, "error.auth.social_identity_already_bound",
+            "该第三方身份已绑定其他账号");
 
     private final ErrorCode.Meta meta;
 
