@@ -155,9 +155,22 @@ public class AccountApplicationService {
      */
     @Transactional(rollbackFor = Exception.class)
     public Account findOrCreateByPhone(String phone) {
+        return findOrCreateByPhone(phone, ProfileHints.EMPTY);
+    }
+
+    /**
+     * 按手机号查找或自动创建账号，创建时携带 profile 提示
+     * （social_bind 首绑场景：第三方昵称 / 头像 / 邮箱传给 system 域）。
+     *
+     * @param phone 手机号
+     * @param hints profile 提示（仅创建新账号时生效）
+     * @return Account 实例
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Account findOrCreateByPhone(String phone, ProfileHints hints) {
         return accountRepository.findByPhone(phone)
                 .orElseGet(() -> {
-                    Account newAccount = Account.createFromPhone(phone);
+                    Account newAccount = Account.createFromPhone(phone, hints);
                     return accountRepository.save(newAccount);
                 });
     }

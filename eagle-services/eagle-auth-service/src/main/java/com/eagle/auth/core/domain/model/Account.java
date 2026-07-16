@@ -173,6 +173,14 @@ public class Account extends BaseAggregateRoot<Account> {
      * 手机登录的账号识别以 {@code phone} 字段为准；密码占位 {@link #DISABLED_PASSWORD}。
      */
     public static Account createFromPhone(String phone) {
+        return createFromPhone(phone, ProfileHints.EMPTY);
+    }
+
+    /**
+     * 通过手机号创建账号，携带 profile 提示（social_bind 首绑场景：
+     * 第三方昵称 / 头像 / 邮箱随注册事件传给 system 域）。
+     */
+    public static Account createFromPhone(String phone, ProfileHints profileHints) {
         if (phone == null || phone.isBlank()) {
             throw AuthErrorCode.PHONE_REQUIRED.toDomainException();
         }
@@ -181,7 +189,7 @@ public class Account extends BaseAggregateRoot<Account> {
         account.password = DISABLED_PASSWORD;
         account.phone = phone;
         account.status = AccountStatus.ACTIVE;
-        account.profileHints = ProfileHints.EMPTY;
+        account.profileHints = profileHints == null ? ProfileHints.EMPTY : profileHints;
         return account;
     }
 
