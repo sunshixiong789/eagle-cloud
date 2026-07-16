@@ -56,3 +56,6 @@ bin/
 
 # 含 Nexus 凭证，禁止入库
 gradle.properties
+
+# Apple Sign In 私钥,禁止入库
+*.p8
