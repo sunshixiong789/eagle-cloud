@@ -83,6 +83,7 @@ class SocialBindApplicationServiceTest {
     @Test
     @DisplayName("ticket 无效应抛 SOCIAL_BIND_TICKET_INVALID")
     void invalidTicketShouldThrow() {
+        when(smsService.verifyCode(PHONE, CODE)).thenReturn(true);
         when(bindTicketStore.consume(TICKET_ID)).thenReturn(Optional.empty());
 
         AppException ex = assertThrows(DomainException.class,
@@ -92,16 +93,16 @@ class SocialBindApplicationServiceTest {
     }
 
     @Test
-    @DisplayName("验证码错误应抛 SMS_CODE_INVALID")
-    void invalidSmsCodeShouldThrow() {
-        when(bindTicketStore.consume(TICKET_ID))
-                .thenReturn(Optional.of(BindTicket.ofTaobao("tb-1")));
+    @DisplayName("验证码错误应抛 SMS_CODE_INVALID，且不消费 ticket（可重试）")
+    void invalidSmsCodeShouldThrowWithoutConsumingTicket() {
         when(smsService.verifyCode(PHONE, CODE)).thenReturn(false);
 
         AppException ex = assertThrows(DomainException.class,
                 () -> service.bind(TICKET_ID, PHONE, CODE, IP));
 
         assertEquals(AuthErrorCode.SMS_CODE_INVALID, ex.getErrorCode());
+        // 验证码输错是高频事件，ticket 必须保留供用户原地重试
+        verify(bindTicketStore, never()).consume(TICKET_ID);
     }
 
     @Test

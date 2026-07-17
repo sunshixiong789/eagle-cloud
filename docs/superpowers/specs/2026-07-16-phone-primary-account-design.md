@@ -105,8 +105,9 @@ token 端点注册自定义 `AuthenticationFailureHandler`：识别 `binding_req
 新增 `SocialBindAuthenticationToken / Converter / Provider`（沿用现有自定义 grant 三件套模式），
 grant_type = `social_bind`，参数 `bind_ticket`、`phone`、`code`：
 
-1. 取出并删除 ticket（不存在 / 过期 → `SOCIAL_BIND_TICKET_INVALID`，客户端重走第三方授权）；
-2. 校验短信验证码（`SmsService.verifyCode`）；
+1. 校验短信验证码（`SmsService.verifyCode`）——必须先于 ticket 消费：
+   验证码输错是高频可重试事件，先 GETDEL 会被一次错码烧掉 ticket，用户被迫重走第三方授权；
+2. 取出并删除 ticket（不存在 / 过期 → `SOCIAL_BIND_TICKET_INVALID`，客户端重走第三方授权）；
 3. 黑名单检查（复用 `BlacklistChecker`，按 provider 分派）；
 4. `findOrCreateByPhone(phone)` 得到主账号；
 5. 并发兜底：此刻第三方身份若已被其他账号绑定（双端同时提交）→ 409；

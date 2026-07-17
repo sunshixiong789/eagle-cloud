@@ -20,8 +20,10 @@ import java.util.Optional;
 /**
  * 第三方身份挂靠手机号应用服务（social_bind grant 核心逻辑）。
  *
- * <p>流程：消费 BindTicket → 短信验证码 → 黑名单 → 查/建手机号主账号 →
+ * <p>流程：短信验证码 → 消费 BindTicket → 黑名单 → 查/建手机号主账号 →
  * 冻结前置检查（挂接是持久化副作用，必须在绑定之前拒绝）→ 挂接第三方身份 → 保存。
+ * 验证码校验必须先于 ticket 消费：验证码输错是高频可重试事件，
+ * 若先 GETDEL ticket 会被一次错码烧掉，用户被迫重走第三方授权。
  * 并发兜底由第三方身份唯一索引兜住，唯一约束冲突翻译为
  * {@link AuthErrorCode#SOCIAL_IDENTITY_ALREADY_BOUND}。
  *
@@ -49,11 +51,11 @@ public class SocialBindApplicationService {
      */
     @Transactional(rollbackFor = Exception.class)
     public Account bind(String ticketId, String phone, String code, String clientIp) {
-        BindTicket ticket = bindTicketStore.consume(ticketId)
-                .orElseThrow(AuthErrorCode.SOCIAL_BIND_TICKET_INVALID::toDomainException);
         if (!smsService.verifyCode(phone, code)) {
             throw AuthErrorCode.SMS_CODE_INVALID.toDomainException();
         }
+        BindTicket ticket = bindTicketStore.consume(ticketId)
+                .orElseThrow(AuthErrorCode.SOCIAL_BIND_TICKET_INVALID::toDomainException);
         checkBlacklist(ticket, phone, clientIp);
 
         Account account = accountApplicationService.findOrCreateByPhone(phone, hintsOf(ticket));
