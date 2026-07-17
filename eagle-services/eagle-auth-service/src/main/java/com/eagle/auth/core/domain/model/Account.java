@@ -48,7 +48,7 @@ import java.util.HexFormat;
         @Index(name = "idx_account_username", columnList = "username", unique = true),
         @Index(name = "idx_account_phone", columnList = "phone", unique = true),
         // 第三方身份 → 账号一对一（手机号为主账号体系），unique 兜底并发；
-        // MySQL 唯一索引允许多行 NULL，不影响未绑定账号。
+        // PostgreSQL 唯一索引默认 NULLS DISTINCT，多行 NULL 不冲突，不影响未绑定账号。
         // 注意：ddl-auto=update 不会把既有普通索引升级为 unique，存量库需手动 DROP 旧索引。
         @Index(name = "idx_account_openid", columnList = "openid", unique = true),
         @Index(name = "idx_account_unionid", columnList = "unionid", unique = true),

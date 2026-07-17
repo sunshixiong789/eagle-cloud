@@ -166,7 +166,7 @@ email / fullName / 微信昵称头像作为 ProfileHints 仅在 `findOrCreateByP
 |---|---|---|
 | apple_subject | unique | 不变 |
 | taobao_open_uid | 普通索引 | **unique** |
-| openid / web_openid / mp_openid | 普通索引 | **unique**（MySQL 唯一索引允许多行 NULL，不影响未绑定账号） |
+| openid / web_openid / mp_openid | 普通索引 | **unique**（PostgreSQL 唯一索引默认 NULLS DISTINCT，多行 NULL 不冲突，不影响未绑定账号） |
 | unionid | 普通索引 | **unique**——unionid 现在承担跨渠道归并直登的查找职责，同一 unionid 出现在两个账号会使 `findByWechatBindingUnionid` 结果不确定，必须一对一 |
 
   开发期依赖 `ddl-auto=update`（项目约定不写 Flyway）；**注意 `update` 不会把既有普通索引
