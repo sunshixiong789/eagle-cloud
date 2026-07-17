@@ -47,6 +47,7 @@ public final class CustomGrantPublicClientAuthenticationConverter implements Aut
             PhoneOneClickAuthenticationToken.PHONE_ONE_CLICK.getValue(),
             TaobaoAppAuthenticationToken.TAOBAO_APP.getValue(),
             AppleAppAuthenticationToken.APPLE_APP.getValue(),
+            SocialBindAuthenticationToken.SOCIAL_BIND.getValue(),
             // 公共客户端（无 secret）刷新 token：SAS 内置 4 个 client auth converter 都不识别
             // grant_type=refresh_token + 无 secret + 无 PKCE 的组合，因此 fallback 到 invalid_client。
             // 这里把 refresh_token 也放进自定义 public client 链路。
