@@ -161,7 +161,6 @@ Phase 6  Finish        ← superpowers:finishing-a-development-branch
 | ID 生成(雪花/TSID/订单号)           | `eagle-id-generator`       |
 | 接口幂等                         | `eagle-idempotency`        |
 | 多租户隔离                        | `eagle-tenant`             |
-| 行级数据权限                       | `eagle-row-security`       |
 | OAuth2 资源服务器                 | `eagle-resource-server`    |
 | Feign 远程调用                   | `eagle-feign-client`       |
 | MinIO 对象存储                   | `eagle-oss-minio`          |
@@ -173,7 +172,6 @@ Phase 6  Finish        ← superpowers:finishing-a-development-branch
 | WebSocket / SSE              | `eagle-websocket`          |
 | 链路追踪                         | `eagle-tracing`            |
 | Swagger / OpenAPI            | `eagle-openapi`            |
-| MyBatis-Plus(可选,与 JPA 二选一)   | `eagle-mybatis`            |
 | 多数据源                         | `eagle-dynamic-datasource` |
 | Elasticsearch                | `eagle-elasticsearch`      |
 

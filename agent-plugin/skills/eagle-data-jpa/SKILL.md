@@ -13,7 +13,7 @@ description: Use when working with JPA/Hibernate in eagle-cloud projects — ent
 
 ## 何时不要使用
 
-- 模块只用 MyBatis → `eagle-mybatis-starter`
+- 模块无关系型数据库持久化需求（纯 Redis / ES / MQ 模块）
 
 ## 依赖与启用
 

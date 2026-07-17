@@ -354,7 +354,6 @@ L1 模式即可:模型读 CLAUDE.md → 知道 Eagle 用乐观锁(`@Version`)→
 |------------------------------|----------------------------|
 | 聚合根 / 异常 / 事件 / `EagleUser`  | `eagle-common`             |
 | JPA 实体 / 审计字段 / 索引           | `eagle-data-jpa`           |
-| MyBatis-Plus(可选)             | `eagle-mybatis`            |
 | 多数据源主从分离                     | `eagle-dynamic-datasource` |
 | Elasticsearch 检索             | `eagle-elasticsearch`      |
 | Redis 缓存 / 分布式锁 / 限流 / 布隆    | `eagle-redis`              |
@@ -362,7 +361,6 @@ L1 模式即可:模型读 CLAUDE.md → 知道 Eagle 用乐观锁(`@Version`)→
 | ID 生成(雪花/TSID/订单号)           | `eagle-id-generator`       |
 | 接口幂等                         | `eagle-idempotency`        |
 | 多租户隔离                        | `eagle-tenant`             |
-| 行级数据权限                       | `eagle-row-security`       |
 | OAuth2 资源服务器(JWT 校验)         | `eagle-resource-server`    |
 | RestClient 远程调用(自动透传)        | `eagle-feign-client`       |
 | 链路追踪(Brave/Zipkin)           | `eagle-tracing`            |

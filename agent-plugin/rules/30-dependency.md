@@ -80,7 +80,7 @@ dependencies {
 
     constraints {
         api 'com.alibaba:druid-spring-boot-3-starter:1.2.28'
-        api 'com.baomidou:mybatis-plus-spring-boot3-starter:3.5.x'
+        api 'cn.hutool:hutool-all:5.8.x'
         // ...
     }
 }
@@ -172,7 +172,6 @@ implementation('com.example:lib') {
 | 分布式锁    | `eagle-common-starter` 的 `DistributedLock` |
 | OSS     | `eagle-oss-minio-starter`                  |
 | 多租户     | `eagle-tenant-starter`                     |
-| 数据权限    | `eagle-row-security-starter`               |
 | 链路追踪    | `eagle-tracing-starter`                    |
 | OpenAPI | `eagle-openapi-starter`                    |
 

@@ -46,9 +46,9 @@
 编码触及 starter 时读取对应 skill，而不是凭记忆写 API：
 
 - 基础：`eagle-common`、`eagle-id-generator`、`eagle-resilience`、`eagle-audit-log`
-- 数据：`eagle-data-jpa`、`eagle-mybatis`、`eagle-dynamic-datasource`、`eagle-sharding`、`eagle-elasticsearch`
+- 数据：`eagle-data-jpa`、`eagle-dynamic-datasource`、`eagle-sharding`、`eagle-elasticsearch`
 - 基础设施：`eagle-redis`、`eagle-rocketmq`、`eagle-oss-minio`、`eagle-scheduler`、`eagle-seata`、`eagle-sentinel`
-- 安全与治理：`eagle-tenant`、`eagle-row-security`、`eagle-resource-server`、`eagle-openapi`、`eagle-tracing`
+- 安全与治理：`eagle-tenant`、`eagle-resource-server`、`eagle-openapi`、`eagle-tracing`
 - 业务能力：`eagle-notification`、`eagle-payment`、`eagle-websocket`、`eagle-excel`、`eagle-encrypt`、`eagle-ai`
 
 ## 验证

@@ -119,8 +119,7 @@ public class ProductController {
 @PreAuthorize("hasRole('admin') or #userId == authentication.principal.id")
 ```
 
-- 多租户场景额外通过 `eagle-tenant-starter` 强制租户 ID 过滤（详见 `17-tenant-permission.md`）
-- 行级数据权限通过 `eagle-row-security-starter` 注解声明，**禁止**在 SQL 中手动拼接
+- 多租户场景额外通过 `eagle-tenant-starter` 强制租户 ID 过滤（详见 `17-tenant-permission.md`），**禁止**在 SQL 中手动拼接租户条件
 
 ### 公开路径前缀约定
 

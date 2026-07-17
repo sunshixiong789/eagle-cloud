@@ -75,7 +75,6 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 | `eagle-webclient-starter`          | 反应式 WebClient + `@HttpExchange`（WebFlux 服务用，同套透传 + 统一错误处理）                                  |
 | `eagle-tracing-starter`            | 分布式链路追踪（Brave/Zipkin）                                                                          |
 | `eagle-rocketmq-starter`           | RocketMQ v5 消息队列（事务消息、DLQ、AbstractRocketMqListener）                                            |
-| `eagle-row-security-starter`       | 行级数据权限控制（@DataPermission，AspectJ + JPA Specification）                                          |
 | `eagle-dynamic-datasource-starter` | 多数据源动态路由（主从切换、@ReadOnly、轮询负载均衡）                                                                |
 | `eagle-tenant-starter`             | 多租户支持（COLUMN/DATABASE 隔离模式、TenantContextHolder）                                                |
 | `eagle-oss-minio-starter`          | 对象存储（MinIO 8.x，签名 URL、分片上传）                                                                    |
@@ -84,7 +83,6 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 | `eagle-openapi-starter`            | Swagger/OpenAPI 文档集成（SpringDoc 3.0.2）                                                          |
 | `eagle-seata-starter`              | 分布式事务（Seata AT/TCC 2.2.0）                                                                      |
 | `eagle-sentinel-starter`           | 流量控制与熔断（Sentinel，网关层限流）                                                                        |
-| `eagle-mybatis-starter`            | MyBatis-Plus 配置（分页、逻辑删除、审计）                                                                    |
 | `eagle-id-generator-starter`       | 分布式 ID 生成（雪花算法 / Leaf 等）                                                                       |
 | `eagle-idempotency-starter`        | 接口幂等性（@Idempotent，Redis SETNX + 唯一约束双重保障）                                                      |
 | `eagle-elasticsearch-starter`      | Elasticsearch 全文检索（Spring Data ES）                                                             |
@@ -157,7 +155,7 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 | `.claude/rules/14-cache.md`                   | Redis+Caffeine、Key 命名、TTL、击穿/穿透/雪崩            |
 | `.claude/rules/15-messaging.md`               | RocketMQ Topic 命名、幂等、死信、事务消息                  |
 | `.claude/rules/16-transaction-distributed.md` | Seata AT/TCC 选型、本地消息表                         |
-| `.claude/rules/17-tenant-permission.md`       | 多租户隔离、行级数据权限、跨租户操作                            |
+| `.claude/rules/17-tenant-permission.md`       | 多租户隔离、跨租户操作                                   |
 | `.claude/rules/18-openapi.md`                 | SpringDoc 注解、版本、错误码文档化                        |
 | `.claude/rules/19-config.md`                  | Properties、Nacos、profile、Jasypt 加密            |
 | `.claude/rules/20-i18n.md`                    | messages 组织、key 规则、Locale 解析                  |

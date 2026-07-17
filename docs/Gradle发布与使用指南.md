@@ -311,7 +311,7 @@ dependencies {
 
     // 任何 BOM 管理过的第三方依赖也无需版本
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'com.baomidou:mybatis-plus-spring-boot4-starter'
+    implementation 'cn.hutool:hutool-all'
     runtimeOnly 'com.mysql:mysql-connector-j'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

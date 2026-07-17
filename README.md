@@ -12,7 +12,6 @@
 - **Spring Modulith 模块治理** — 编译期静态验证模块边界，杜绝循环依赖和非法跨模块访问
 - **OAuth2 授权服务器** — 基于 Spring Authorization Server，支持授权码 + PKCE、刷新令牌、微信登录、短信登录
 - **RBAC 权限体系** — 用户、角色、权限、部门、菜单、岗位、字典完整管理
-- **行级数据权限** — 基于 AspectJ 的细粒度数据访问控制
 - **多级缓存** — Redis (Redisson) + Caffeine 两级缓存，内置缓存穿透 / 击穿 / 雪崩三重防护
 - **API 网关** — Spring Cloud Gateway + Sentinel 限流（Nacos 持久化）+ Request ID 全链路注入 + 链路追踪
 - **统一异常体系** — 类型化异常 + ErrorCode 枚举 + i18n 国际化消息
@@ -21,7 +20,6 @@
 - **流量治理** — Sentinel 声明式限流（`@RateLimit`）+ 程序化规则管理，支持 WARM_UP / 匀速排队
 - **分布式事务** — Seata AT 模式自动集成 + TCC 模板 + 编程式全局事务
 - **全文搜索** — Elasticsearch 流式 DSL 构建器、通用 Repository、高亮回写、聚合提取
-- **MyBatis-Plus 增强** — 统一分页 / 慢 SQL / 审计填充 / 链式查询条件辅助
 - **支付集成** — 支付宝 / 微信支付双网关，统一 pay / refund / transfer / notify 接口
 - **实时推送** — STOMP WebSocket + SSE 双模式，离线消息存储，Micrometer 连接指标
 - **分库分表** — Apache ShardingSphere YAML 驱动，零侵入分库分表与读写分离
@@ -42,7 +40,6 @@
 | 微服务           | Spring Cloud / Spring Cloud Alibaba           | 2025.1.1 / 2025.1.0.0 |
 | 模块治理          | Spring Modulith                               | 2.0.5                 |
 | ORM (JPA)     | Hibernate                                     | 7.2.6                 |
-| ORM (MyBatis) | MyBatis-Plus                                  | 3.5.11                |
 | 数据库           | MySQL / PostgreSQL / H2                       | 9.x / 42.7 / -        |
 | 搜索引擎          | Elasticsearch                                 | 9.x                   |
 | 缓存            | Redis (Redisson) + Caffeine                   | 4.3.0 / 3.2.0         |
@@ -86,7 +83,6 @@ eagle-cloud/
     │   # ── 数据访问 ──────────────────────────────────────────────────
     ├── eagle-dynamic-datasource-starter/   # 多数据源动态路由（主从切换 / 多从轮询 / @ReadOnly）
     ├── eagle-sharding-starter/             # 分库分表（Apache ShardingSphere YAML 驱动）
-    ├── eagle-mybatis-starter/              # MyBatis-Plus 增强（分页 / 慢 SQL / 审计填充 / 查询辅助）
     ├── eagle-elasticsearch-starter/        # Elasticsearch（流式 DSL / 通用 Repository / 高亮 / 聚合）
     │
     │   # ── 消息与任务 ────────────────────────────────────────────────
@@ -104,7 +100,6 @@ eagle-cloud/
     ├── eagle-websocket-starter/            # 实时推送（STOMP WebSocket + SSE + 离线消息存储）
     │
     │   # ── 平台能力 ──────────────────────────────────────────────────
-    ├── eagle-row-security-starter/         # 行级数据权限（@DataPermission，JPA Specification）
     ├── eagle-tenant-starter/               # 多租户支持（COLUMN / DATABASE 隔离模式）
     ├── eagle-oss-minio-starter/            # 对象存储（MinIO，签名 URL / 分片上传）
     ├── eagle-excel-starter/                # Excel 导入导出（@ExcelColumn，流式写入）
@@ -229,30 +224,6 @@ public class ProductRepository extends BaseElasticSearchRepository<ProductDoc> {
         return search(EsQueryBuilder.<ProductDoc>builder()
             .multiMatch(keyword, List.of("name")).build());
     }
-}
-```
-
----
-
-### eagle-mybatis-starter — MyBatis-Plus 增强
-
-```java
-// 统一分页查询
-public EaglePageResult<UserVO> listUsers(UserQuery req) {
-    LambdaQueryWrapper<UserDO> wrapper = new LambdaQueryWrapper<>();
-    QueryHelper.likeAny(req.getKeyword(), UserDO::getName, UserDO::getPhone);
-    QueryHelper.dateBetween(wrapper, UserDO::getCreateTime, req.getStart(), req.getEnd());
-    QueryHelper.conditionEq(wrapper, req.getStatus() != null, UserDO::getStatus, req.getStatus());
-
-    EaglePageQuery page = new EaglePageQuery();
-    page.setPageNum(req.getPageNum()).setPageSize(req.getPageSize()).addOrderDesc("create_time");
-    return EaglePageResult.of(userMapper.selectPage(page.toPage(), wrapper));
-}
-
-// 继承基础 Service
-@Service
-public class UserServiceImpl extends EagleServiceImpl<UserMapper, UserDO> implements UserService {
-    public UserDO getOrThrow(Long id) { return getByIdOrThrow(id); }
 }
 ```
 
@@ -606,9 +577,8 @@ dependencies {
     // 数据库：阻塞式 JPA / JDBC
     implementation project(':eagle-starter:eagle-data-jpa-starter')
 
-    // 可选：缓存、数据权限、租户、链路追踪等平台能力
+    // 可选：缓存、租户、链路追踪等平台能力
     implementation project(':eagle-starter:eagle-redis-starter')
-    implementation project(':eagle-starter:eagle-row-security-starter')
     implementation project(':eagle-starter:eagle-tenant-starter')
     implementation project(':eagle-starter:eagle-tracing-starter')
 }

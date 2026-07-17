@@ -1,3 +1,0 @@
-interface:
-  display_name: "Eagle Row Security"
-  short_description: "Use when implementing row-level data permissions in eagle-cloud projects — @Data"

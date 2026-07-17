@@ -8,7 +8,7 @@
 
 ## 项目栈定位
 
-业务项目依赖 `eagle-cloud` 基础架子（BOM + 31 个 starter），遵循以下技术栈与约定：
+业务项目依赖 `eagle-cloud` 基础架子（BOM + 29 个 starter），遵循以下技术栈与约定：
 
 - **Java 25** / Gradle 8.x（Groovy DSL）
 - **Spring Boot 4.0.6** / Spring Cloud 2025.1.1 / Spring Cloud Alibaba 2025.1.0.0
@@ -51,7 +51,7 @@
 | `rules/14-cache.md`                   | Redis+Caffeine、Key 命名、击穿/穿透/雪崩防护              |
 | `rules/15-messaging.md`               | RocketMQ Topic、幂等、死信、事务消息                     |
 | `rules/16-transaction-distributed.md` | Seata AT/TCC、本地消息表                            |
-| `rules/17-tenant-permission.md`       | 多租户隔离、行级数据权限                                  |
+| `rules/17-tenant-permission.md`       | 多租户隔离                                         |
 | `rules/18-openapi.md`                 | SpringDoc 注解、版本、错误码文档化                        |
 | `rules/19-config.md`                  | Properties、Nacos、profile、Jasypt 加密            |
 | `rules/20-i18n.md`                    | messages 组织、key 规则                            |
@@ -98,14 +98,13 @@
 
 ## Starter 使用（按需 skill 加载）
 
-31 个 starter 各有独立 skill，AI 在编码时会按场景自动加载相关 skill。手动列表见 `skills/` 目录：
+29 个 starter 各有独立 skill，AI 在编码时会按场景自动加载相关 skill。手动列表见 `skills/` 目录：
 
 | Skill                      | 何时触发                                      |
 |----------------------------|-------------------------------------------|
 | `eagle-common`             | DDD 基类、异常、领域事件、分布式锁接口                     |
 | `eagle-data-jpa`           | JPA Auditing + Hibernate 配置               |
 | `eagle-data-r2dbc`         | 响应式 R2DBC 持久化、BaseR2dbcAggregateRoot      |
-| `eagle-mybatis`            | MyBatis-Plus 增强                           |
 | `eagle-dynamic-datasource` | 主从读写分离、@ReadOnly                          |
 | `eagle-sharding`           | 分库分表、ShardingSphere YAML 配置               |
 | `eagle-elasticsearch`      | ES 检索 / 聚合 / 高亮                           |
@@ -114,7 +113,6 @@
 | `eagle-id-generator`       | 雪花 / TSID / NanoId / 业务单号                 |
 | `eagle-idempotency`        | 接口幂等                                      |
 | `eagle-tenant`             | 多租户上下文                                    |
-| `eagle-row-security`       | 行级数据权限                                    |
 | `eagle-resource-server`    | OAuth2 资源服务器                              |
 | `eagle-restclient`         | Servlet 服务 HTTP Service + 自动透传（阻塞 RestClient）|
 | `eagle-webclient`          | WebFlux 服务 HTTP Service + 自动透传（响应式 WebClient）|
@@ -175,6 +173,5 @@
    `AbstractDlqListener` 同此约束
 5. **DistributedLock API**：`tryLock(key, long waitSec, long leaseSec, Supplier)`，参数是 **`long` 秒**不是 `Duration`
 6. **CacheProtectionUtil**：`getWithMutex(key, ttl, loader, type)` — **4 参数**含返回类型 `Class<T>`
-7. **DataScope 枚举**：`ALL / SELF / DEPT / DEPT_AND_CHILD / CUSTOM`（**不是** `DEPT_ONLY/SELF_ONLY`）
-8. **多个 starter 默认 disabled**：`eagle.tenant.enabled`、`eagle.datasource.enabled` 默认 `false`
-9. **生产环境必须改的默认值**：`eagle.storage.type` 默认 `local`、`eagle.tracing.sampling-probability` 默认 `1.0`
+7. **多个 starter 默认 disabled**：`eagle.tenant.enabled`、`eagle.datasource.enabled` 默认 `false`
+8. **生产环境必须改的默认值**：`eagle.storage.type` 默认 `local`、`eagle.tracing.sampling-probability` 默认 `1.0`

@@ -65,9 +65,6 @@ ext {
     // 容错/熔断
     resilience4jVersion = '2.4.0'
 
-    // ORM
-    mybatisPlusVersion = '3.5.16'
-
     // 支付 SDK
     alipayVersion = '4.40.837.ALL'
     wechatpayVersion = '0.2.17'
@@ -164,9 +161,6 @@ dependencies {
         add('api', "io.github.resilience4j:resilience4j-circuitbreaker:${resilience4jVersion}")
         add('api', "io.github.resilience4j:resilience4j-timelimiter:${resilience4jVersion}")
 
-        // MyBatis-Plus
-        add('api', "com.baomidou:mybatis-plus-spring-boot4-starter:${mybatisPlusVersion}")
-
         // 支付 SDK
         add('api', "com.alipay.sdk:alipay-sdk-java:${alipayVersion}")
         add('api', "com.github.wechatpay-apiv3:wechatpay-java:${wechatpayVersion}")
@@ -183,7 +177,6 @@ dependencies {
         add('api', "com.eagle:eagle-tracing-starter:${project.version}")
         add('api', "com.eagle:eagle-rocketmq-starter:${project.version}")
         add('api', "com.eagle:eagle-dynamic-datasource-starter:${project.version}")
-        add('api', "com.eagle:eagle-row-security-starter:${project.version}")
         add('api', "com.eagle:eagle-oss-minio-starter:${project.version}")
         add('api', "com.eagle:eagle-notification-starter:${project.version}")
         add('api', "com.eagle:eagle-scheduler-starter:${project.version}")
@@ -198,7 +191,6 @@ dependencies {
         add('api', "com.eagle:eagle-sentinel-starter:${project.version}")
         add('api', "com.eagle:eagle-seata-starter:${project.version}")
         add('api', "com.eagle:eagle-elasticsearch-starter:${project.version}")
-        add('api', "com.eagle:eagle-mybatis-starter:${project.version}")
         add('api', "com.eagle:eagle-websocket-starter:${project.version}")
         add('api', "com.eagle:eagle-ai-starter:${project.version}")
         add('api', "com.eagle:eagle-zhetaoke-starter:${project.version}")
