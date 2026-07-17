@@ -1,9 +1,12 @@
 package com.eagle.auth.core.infrastructure.external;
 
+import com.eagle.common.util.LogMask;
 import com.eagle.message.channel.sms.SmsProvider;
 import com.eagle.message.properties.MessageProperties;
 import com.eagle.auth.core.domain.AuthErrorCode;
+import com.eagle.auth.core.infrastructure.config.SmsMockProperties;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
@@ -18,14 +21,38 @@ import java.util.Map;
  * <p>通过 {@code eagle.message.sms.provider} 切换阿里云/腾讯云/手拉手，无需改动代码。
  * 当未配置有效服务商或签名时，{@link #isConfigured()} 返回 false，验证码仅打印到日志（便于开发联调）。
  *
+ * <p>命中 {@link SmsMockProperties} 审核白名单的手机号不发送真实短信，直接使用固定验证码校验
+ * （App Store 提审用），其余手机号不受影响。
+ *
  * @author sunshixiong
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SmsServiceImpl extends AbstractCachedSmsService {
 
     private final ObjectProvider<SmsProvider> smsProviderProvider;
     private final MessageProperties messageProperties;
+    private final SmsMockProperties smsMockProperties;
+
+    @Override
+    public void sendCode(String phone) {
+        if (smsMockProperties.isMockPhone(phone)) {
+            log.warn("审核白名单手机号命中，跳过真实短信发送，使用固定验证码: phone={}", LogMask.phone(phone));
+            return;
+        }
+        super.sendCode(phone);
+    }
+
+    @Override
+    public boolean verifyCode(String phone, String code) {
+        if (smsMockProperties.isMockPhone(phone)) {
+            boolean matched = smsMockProperties.getCode().equals(code);
+            log.warn("审核白名单手机号使用固定验证码校验: phone={}, matched={}", LogMask.phone(phone), matched);
+            return matched;
+        }
+        return super.verifyCode(phone, code);
+    }
 
     @Override
     protected boolean isConfigured() {

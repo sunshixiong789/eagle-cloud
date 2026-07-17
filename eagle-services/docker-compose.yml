@@ -404,6 +404,9 @@ services:
       - APPLE_KEY_ID=${APPLE_KEY_ID:-}
       - APPLE_PRIVATE_KEY=${APPLE_PRIVATE_KEY:-}
       - EAGLE_ENCRYPT_SECRET_KEY=${EAGLE_ENCRYPT_SECRET_KEY:-}
+      # App Store 审核固定验证码：SMS_MOCK_PHONES 填审核测试手机号（逗号分隔），白名单内不发真实短信，直接用 SMS_MOCK_CODE 登录；留空 = 关闭
+      - SMS_MOCK_CODE=${SMS_MOCK_CODE:-123456}
+      - SMS_MOCK_PHONES=${SMS_MOCK_PHONES:-}
       # 短信服务商切换（由 eagle-notification-starter 统一处理）
       - SMS_PROVIDER=${SMS_PROVIDER:-hnsls}
       - SMS_ACCESS_KEY_ID=${SMS_ACCESS_KEY_ID:-}

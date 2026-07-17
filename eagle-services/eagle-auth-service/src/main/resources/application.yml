@@ -214,6 +214,12 @@ eagle:
     private-key: ${APPLE_PRIVATE_KEY:}
     connect-timeout: 5s
     read-timeout: 10s
+  auth:
+    # 审核白名单固定验证码（App Store 提审用）：白名单手机号不发真实短信，直接用固定验证码登录；
+    # phones 为空（默认）时功能关闭，其余手机号不受影响
+    sms-mock:
+      code: ${SMS_MOCK_CODE:123456}
+      phones: ${SMS_MOCK_PHONES:}
   message:
     sms:
       provider: ${SMS_PROVIDER:hnsls}
