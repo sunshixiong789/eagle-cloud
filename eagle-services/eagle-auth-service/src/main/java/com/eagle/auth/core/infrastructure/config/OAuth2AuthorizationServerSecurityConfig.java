@@ -7,8 +7,11 @@ import com.eagle.auth.core.infrastructure.security.CustomGrantClientAuthenticati
 import com.eagle.auth.core.infrastructure.security.CustomGrantPublicClientAuthenticationConverter;
 import com.eagle.auth.core.infrastructure.security.PhoneOneClickAuthenticationConverter;
 import com.eagle.auth.core.infrastructure.security.PhoneOneClickAuthenticationProvider;
+import com.eagle.auth.core.infrastructure.security.BindingRequiredErrorResponseHandler;
 import com.eagle.auth.core.infrastructure.security.SmsCodeAuthenticationConverter;
 import com.eagle.auth.core.infrastructure.security.SmsCodeAuthenticationProvider;
+import com.eagle.auth.core.infrastructure.security.SocialBindAuthenticationConverter;
+import com.eagle.auth.core.infrastructure.security.SocialBindAuthenticationProvider;
 import com.eagle.auth.core.infrastructure.security.TaobaoAppAuthenticationConverter;
 import com.eagle.auth.core.infrastructure.security.TaobaoAppAuthenticationProvider;
 import com.eagle.auth.core.infrastructure.security.TokenTrackingHandler;
@@ -63,8 +66,10 @@ public class OAuth2AuthorizationServerSecurityConfig {
             PhoneOneClickAuthenticationProvider phoneOneClickProvider,
             TaobaoAppAuthenticationProvider taobaoAppProvider,
             AppleAppAuthenticationProvider appleAppProvider,
+            SocialBindAuthenticationProvider socialBindProvider,
             SecurityContextRepository securityContextRepository,
             TokenTrackingHandler tokenTrackingHandler,
+            BindingRequiredErrorResponseHandler bindingRequiredErrorResponseHandler,
             RegisteredClientRepository registeredClientRepository,
             AuthorizationServerSettings authorizationServerSettings,
             BlacklistAwareJwtDecoder jwtDecoder) throws Exception {
@@ -82,7 +87,8 @@ public class OAuth2AuthorizationServerSecurityConfig {
                         .tokenEndpoint(tokenEndpoint ->
                                 registerCustomGrants(tokenEndpoint, wechatAppProvider, wechatProvider,
                                         smsProvider, phoneOneClickProvider, taobaoAppProvider,
-                                        appleAppProvider, tokenTrackingHandler))
+                                        appleAppProvider, socialBindProvider,
+                                        tokenTrackingHandler, bindingRequiredErrorResponseHandler))
                         .oidc(oidc -> oidc.userInfoEndpoint(userInfo -> userInfo
                                 .userInfoMapper(OAuth2AuthorizationServerSecurityConfig::mapUserInfoFromIdToken))))
                 .authorizeHttpRequests(authorize -> authorize
@@ -136,6 +142,9 @@ public class OAuth2AuthorizationServerSecurityConfig {
 
     /**
      * 在 token endpoint 上注册自定义 grant_type 的 Converter + Provider。
+     *
+     * <p>errorResponseHandler 仅拦截 {@code binding_required}
+     * （携带 bind_ticket 的第三方首登响应），其余错误走 SAS 默认输出。
      */
     private void registerCustomGrants(OAuth2TokenEndpointConfigurer tokenEndpoint,
                                       WechatAppAuthenticationProvider wechatAppProvider,
@@ -144,7 +153,9 @@ public class OAuth2AuthorizationServerSecurityConfig {
                                       PhoneOneClickAuthenticationProvider phoneOneClickProvider,
                                       TaobaoAppAuthenticationProvider taobaoAppProvider,
                                       AppleAppAuthenticationProvider appleAppProvider,
-                                      TokenTrackingHandler tokenTrackingHandler) {
+                                      SocialBindAuthenticationProvider socialBindProvider,
+                                      TokenTrackingHandler tokenTrackingHandler,
+                                      BindingRequiredErrorResponseHandler bindingRequiredErrorResponseHandler) {
         tokenEndpoint
                 .accessTokenRequestConverter(new WechatAppAuthenticationConverter())
                 .authenticationProvider(wechatAppProvider)
@@ -158,6 +169,9 @@ public class OAuth2AuthorizationServerSecurityConfig {
                 .authenticationProvider(taobaoAppProvider)
                 .accessTokenRequestConverter(new AppleAppAuthenticationConverter())
                 .authenticationProvider(appleAppProvider)
-                .accessTokenResponseHandler(tokenTrackingHandler);
+                .accessTokenRequestConverter(new SocialBindAuthenticationConverter())
+                .authenticationProvider(socialBindProvider)
+                .accessTokenResponseHandler(tokenTrackingHandler)
+                .errorResponseHandler(bindingRequiredErrorResponseHandler);
     }
 }

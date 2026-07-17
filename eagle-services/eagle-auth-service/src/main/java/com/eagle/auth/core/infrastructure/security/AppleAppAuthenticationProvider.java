@@ -2,6 +2,9 @@ package com.eagle.auth.core.infrastructure.security;
 
 import com.eagle.auth.core.application.service.AccountApplicationService;
 import com.eagle.auth.core.domain.model.Account;
+import com.eagle.auth.core.domain.model.enums.SocialProvider;
+import com.eagle.auth.core.domain.port.BindTicket;
+import com.eagle.auth.core.domain.port.BindTicketStore;
 import com.eagle.auth.core.domain.service.AppleIdentityService;
 import com.eagle.auth.core.domain.service.AppleIdentityService.AppleAuthorization;
 import org.springframework.security.core.Authentication;
@@ -12,12 +15,18 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.stereotype.Component;
 
-/** Apple App 登录认证提供者（grant_type = apple_app）。 */
+/**
+ * Apple App 登录认证提供者（grant_type = apple_app）。
+ *
+ * <p>subject 已挂靠 → 直登并轮换 refresh token 密文；未挂靠 → 发放 BindTicket
+ * 抛 {@code binding_required}，客户端走 {@code social_bind} 挂靠到手机号主账号。
+ */
 @Component
 public class AppleAppAuthenticationProvider extends AbstractCustomGrantAuthenticationProvider {
 
     private final AppleIdentityService appleIdentityService;
     private final AccountApplicationService accountApplicationService;
+    private final BindTicketStore bindTicketStore;
     private final BlacklistChecker blacklistChecker;
 
     public AppleAppAuthenticationProvider(
@@ -26,10 +35,12 @@ public class AppleAppAuthenticationProvider extends AbstractCustomGrantAuthentic
             UserDetailsService userDetailsService,
             AppleIdentityService appleIdentityService,
             AccountApplicationService accountApplicationService,
+            BindTicketStore bindTicketStore,
             BlacklistChecker blacklistChecker) {
         super(authorizationService, tokenGenerator, userDetailsService);
         this.appleIdentityService = appleIdentityService;
         this.accountApplicationService = accountApplicationService;
+        this.bindTicketStore = bindTicketStore;
         this.blacklistChecker = blacklistChecker;
     }
 
@@ -49,8 +60,12 @@ public class AppleAppAuthenticationProvider extends AbstractCustomGrantAuthentic
         AppleAuthorization authorization = appleIdentityService.authorize(
                 token.getIdentityToken(), token.getAuthorizationCode(), token.getNonce());
         blacklistChecker.checkApple(authorization.subject(), ClientIpHolder.get());
-        return accountApplicationService.findOrCreateByApple(
-                authorization.subject(), authorization.email(), token.getFullName(),
-                authorization.encryptedRefreshToken());
+        return accountApplicationService.findByAppleSubject(
+                        authorization.subject(), authorization.encryptedRefreshToken())
+                .orElseThrow(() -> new SocialBindingRequiredException(
+                        bindTicketStore.save(BindTicket.ofApple(
+                                authorization.subject(), authorization.email(),
+                                token.getFullName(), authorization.encryptedRefreshToken())),
+                        SocialProvider.APPLE));
     }
 }

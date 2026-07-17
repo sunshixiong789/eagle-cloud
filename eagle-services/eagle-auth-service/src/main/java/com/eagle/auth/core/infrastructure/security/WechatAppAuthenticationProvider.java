@@ -2,6 +2,10 @@ package com.eagle.auth.core.infrastructure.security;
 
 import com.eagle.auth.core.application.service.WechatWebUserService;
 import com.eagle.auth.core.domain.model.Account;
+import com.eagle.auth.core.domain.model.enums.SocialProvider;
+import com.eagle.auth.core.domain.model.enums.WechatChannel;
+import com.eagle.auth.core.domain.port.BindTicket;
+import com.eagle.auth.core.domain.port.BindTicketStore;
 import com.eagle.auth.core.domain.service.WechatWebService;
 import com.eagle.auth.core.domain.service.WechatWebService.WechatWebUserInfo;
 import org.springframework.security.core.Authentication;
@@ -15,6 +19,10 @@ import org.springframework.stereotype.Component;
 /**
  * 微信 App 登录认证提供者（grant_type = wechat_app）。
  *
+ * <p>openid / unionid 命中 → 直登（unionid 命中补绑本渠道 openid）；
+ * 未命中 → 发放 BindTicket 抛 {@code binding_required}，
+ * 客户端走 {@code social_bind} 挂靠到手机号主账号。
+ *
  * @author sunshixiong
  */
 @Component
@@ -23,6 +31,7 @@ public class WechatAppAuthenticationProvider
 
     private final WechatWebService wechatWebService;
     private final WechatWebUserService wechatWebUserService;
+    private final BindTicketStore bindTicketStore;
     private final BlacklistChecker blacklistChecker;
 
     public WechatAppAuthenticationProvider(
@@ -31,10 +40,12 @@ public class WechatAppAuthenticationProvider
             UserDetailsService userDetailsService,
             WechatWebService wechatWebService,
             WechatWebUserService wechatWebUserService,
+            BindTicketStore bindTicketStore,
             BlacklistChecker blacklistChecker) {
         super(authorizationService, tokenGenerator, userDetailsService);
         this.wechatWebService = wechatWebService;
         this.wechatWebUserService = wechatWebUserService;
+        this.bindTicketStore = bindTicketStore;
         this.blacklistChecker = blacklistChecker;
     }
 
@@ -53,6 +64,12 @@ public class WechatAppAuthenticationProvider
         WechatAppAuthenticationToken authToken = (WechatAppAuthenticationToken) authentication;
         WechatWebUserInfo info = wechatWebService.exchangeAppCode(authToken.getCode());
         blacklistChecker.checkWechat(info.openid(), ClientIpHolder.get());
-        return wechatWebUserService.findOrCreateWechatWebAccount(info);
+        return wechatWebUserService.findWechatAccount(
+                        WechatChannel.APP, info.openid(), info.unionid())
+                .orElseThrow(() -> new SocialBindingRequiredException(
+                        bindTicketStore.save(BindTicket.ofWechat(
+                                WechatChannel.APP, info.openid(), info.unionid(),
+                                info.nickname(), info.avatar())),
+                        SocialProvider.WECHAT));
     }
 }

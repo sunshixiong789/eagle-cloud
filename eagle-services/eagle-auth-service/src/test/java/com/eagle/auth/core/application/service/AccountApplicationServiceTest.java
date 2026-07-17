@@ -5,9 +5,11 @@ import com.eagle.common.exception.ConflictException;
 import com.eagle.common.exception.DomainException;
 import com.eagle.common.exception.NotFoundException;
 import com.eagle.common.exception.codes.DataErrorCode;
+import com.eagle.auth.core.application.command.BindPhoneResult;
 import com.eagle.auth.core.domain.AuthErrorCode;
 import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.model.valueobject.ProfileHints;
+import com.eagle.auth.core.domain.port.OnlineUserPort;
 import com.eagle.auth.core.domain.repository.AccountRepository;
 import com.eagle.auth.core.domain.service.SmsService;
 import com.eagle.auth.core.infrastructure.config.AdminProperties;
@@ -28,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -52,6 +55,8 @@ class AccountApplicationServiceTest {
     private SmsService smsService;
     @Mock
     private AdminProperties adminProperties;
+    @Mock
+    private OnlineUserPort onlineUserPort;
     @InjectMocks
     private AccountApplicationService service;
 
@@ -61,8 +66,8 @@ class AccountApplicationServiceTest {
     }
 
     @Nested
-    @DisplayName("findOrCreateByApple")
-    class FindOrCreateByApple {
+    @DisplayName("findByAppleSubject")
+    class FindByAppleSubject {
 
         @Test
         @DisplayName("已有账号应轮换 refresh token 密文")
@@ -73,13 +78,23 @@ class AccountApplicationServiceTest {
                     .thenReturn(Optional.of(existing));
             when(accountRepository.save(existing)).thenReturn(existing);
 
-            Account result = service.findOrCreateByApple(
-                    "apple-subject", null, null, "new-ciphertext");
+            Account result = service.findByAppleSubject("apple-subject", "new-ciphertext")
+                    .orElseThrow();
 
             assertSame(existing, result);
             assertEquals("new-ciphertext",
                     result.getAppleBinding().getRefreshTokenCiphertext());
             verify(accountRepository).save(existing);
+        }
+
+        @Test
+        @DisplayName("未挂靠的 subject 应返回 empty，不创建账号")
+        void shouldReturnEmptyWhenUnbound() {
+            when(accountRepository.findByAppleBindingSubject("apple-subject"))
+                    .thenReturn(Optional.empty());
+
+            assertTrue(service.findByAppleSubject("apple-subject", "cipher").isEmpty());
+            verify(accountRepository, never()).save(any());
         }
     }
 
@@ -329,34 +344,125 @@ class AccountApplicationServiceTest {
     }
 
     @Nested
-    @DisplayName("findOrCreateByTaobao")
-    class FindOrCreateByTaobao {
+    @DisplayName("bindPhone 影子账号归并")
+    class BindPhoneMerge {
 
-        @Test
-        @DisplayName("应返回已有")
-        void shouldReturnExisting() {
-            Account existing = existingAccount();
-            when(accountRepository.findByTaobaoBindingOpenUid(TAOBAO_OPEN_UID))
-                    .thenReturn(Optional.of(existing));
+        private static final String CODE = "123456";
 
-            Account result = service.findOrCreateByTaobao(TAOBAO_OPEN_UID);
-
-            assertSame(existing, result);
-            verify(accountRepository, never()).save(any());
+        private Account withId(Account account, Long id) {
+            try {
+                java.lang.reflect.Field field = null;
+                for (Class<?> c = account.getClass(); c != null; c = c.getSuperclass()) {
+                    try {
+                        field = c.getDeclaredField("id");
+                        break;
+                    } catch (NoSuchFieldException ignored) {
+                        // 向上找 BaseAggregateRoot 的 id
+                    }
+                }
+                assertNotNull(field);
+                field.setAccessible(true);
+                field.set(account, id);
+            } catch (ReflectiveOperationException e) {
+                throw new IllegalStateException(e);
+            }
+            return account;
         }
 
         @Test
-        @DisplayName("应创建New，无需手机号")
-        void shouldCreateNewWithoutPhone() {
-            when(accountRepository.findByTaobaoBindingOpenUid(TAOBAO_OPEN_UID))
-                    .thenReturn(Optional.empty());
-            when(accountRepository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
+        @DisplayName("手机号无主时正常绑定，merged=false")
+        void plainBindWhenPhoneFree() {
+            Account account = withId(Account.createFromTaobao("tb-1"), 10L);
+            when(smsService.verifyCode(PHONE, CODE)).thenReturn(true);
+            when(accountRepository.findById(10L)).thenReturn(Optional.of(account));
+            when(accountRepository.findByPhone(PHONE)).thenReturn(Optional.empty());
+            when(accountRepository.save(account)).thenReturn(account);
 
-            Account result = service.findOrCreateByTaobao(TAOBAO_OPEN_UID);
+            BindPhoneResult result = service.bindPhone(10L, PHONE, CODE);
 
-            assertNotNull(result);
-            assertEquals(TAOBAO_OPEN_UID, result.getTaobaoBinding().getOpenUid());
-            verify(accountRepository, times(1)).save(any(Account.class));
+            assertEquals(false, result.merged());
+            assertEquals(PHONE, account.getPhone());
+        }
+
+        @Test
+        @DisplayName("手机号已属他人且当前是实账号 → PHONE_ALREADY_BOUND")
+        void realAccountConflict() {
+            Account real = withId(existingAccount(), 10L);
+            Account primary = withId(Account.createFromPhone("13900139000"), 20L);
+            when(smsService.verifyCode("13900139000", CODE)).thenReturn(true);
+            when(accountRepository.findById(10L)).thenReturn(Optional.of(real));
+            when(accountRepository.findByPhone("13900139000")).thenReturn(Optional.of(primary));
+
+            AppException ex = assertThrows(ConflictException.class,
+                    () -> service.bindPhone(10L, "13900139000", CODE));
+
+            assertEquals(AuthErrorCode.PHONE_ALREADY_BOUND, ex.getErrorCode());
+            verify(accountRepository, never()).delete(any(Account.class));
+        }
+
+        @Test
+        @DisplayName("影子账号绑已有主的手机号 → 自动归并：绑定迁移+注销影子+踢下线")
+        void shadowAccountMergesIntoPrimary() {
+            Account shadow = withId(Account.createFromApple(
+                    "sub-1", "a@b.com", "小明", "cipher-1"), 10L);
+            Account primary = withId(Account.createFromPhone(PHONE), 20L);
+            primary.bindTaobao("tb-1");
+            when(smsService.verifyCode(PHONE, CODE)).thenReturn(true);
+            when(accountRepository.findById(10L)).thenReturn(Optional.of(shadow));
+            when(accountRepository.findByPhone(PHONE)).thenReturn(Optional.of(primary));
+            when(accountRepository.save(primary)).thenReturn(primary);
+            when(onlineUserPort.listJtisByAccount(10L))
+                    .thenReturn(java.util.List.of("jti-1", "jti-2"));
+
+            BindPhoneResult result = service.bindPhone(10L, PHONE, CODE);
+
+            assertEquals(true, result.merged());
+            // Apple 绑定已迁移到主账号，淘宝绑定保留
+            assertEquals("sub-1", primary.getAppleBinding().getSubject());
+            assertEquals("cipher-1", primary.getAppleBinding().getRefreshTokenCiphertext());
+            assertEquals("tb-1", primary.getTaobaoBinding().getOpenUid());
+            // 先删影子并 flush，再保存主账号（Hibernate flush 顺序）
+            org.mockito.InOrder inOrder = org.mockito.Mockito.inOrder(accountRepository);
+            inOrder.verify(accountRepository).delete(shadow);
+            inOrder.verify(accountRepository).flush();
+            inOrder.verify(accountRepository).save(primary);
+            // 影子账号在线 token 全部拉黑
+            verify(onlineUserPort).forceLogout("jti-1");
+            verify(onlineUserPort).forceLogout("jti-2");
+        }
+
+        @Test
+        @DisplayName("主账号已绑不同 Apple 身份 → 归并拒绝 APPLE_ALREADY_BOUND")
+        void mergeConflictOnSameProvider() {
+            Account shadow = withId(Account.createFromApple(
+                    "sub-1", null, null, "cipher-1"), 10L);
+            Account primary = withId(Account.createFromPhone(PHONE), 20L);
+            primary.bindApple("sub-OTHER", "cipher-x");
+            when(smsService.verifyCode(PHONE, CODE)).thenReturn(true);
+            when(accountRepository.findById(10L)).thenReturn(Optional.of(shadow));
+            when(accountRepository.findByPhone(PHONE)).thenReturn(Optional.of(primary));
+
+            AppException ex = assertThrows(DomainException.class,
+                    () -> service.bindPhone(10L, PHONE, CODE));
+
+            assertEquals(AuthErrorCode.APPLE_ALREADY_BOUND, ex.getErrorCode());
+        }
+
+        @Test
+        @DisplayName("影子账号被冻结 → 拒绝归并")
+        void frozenShadowRejected() {
+            Account shadow = withId(Account.createFromTaobao("tb-1"), 10L);
+            shadow.freezeByAdmin(9L, "admin",
+                    com.eagle.auth.core.domain.model.enums.FreezeReason.RISK_CONTROL,
+                    java.time.LocalDateTime.now().plusDays(1), "risk");
+            when(smsService.verifyCode(PHONE, CODE)).thenReturn(true);
+            when(accountRepository.findById(10L)).thenReturn(Optional.of(shadow));
+
+            AppException ex = assertThrows(DomainException.class,
+                    () -> service.bindPhone(10L, PHONE, CODE));
+
+            assertEquals(AuthErrorCode.ACCOUNT_FROZEN, ex.getErrorCode());
+            verify(accountRepository, never()).delete(any(Account.class));
         }
     }
 

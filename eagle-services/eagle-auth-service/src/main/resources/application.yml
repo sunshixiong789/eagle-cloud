@@ -173,7 +173,7 @@ eagle:
       client-id: eagleApp
       client-name: Eagle App 移动端
       client-authentication-methods: none
-      authorization-grant-types: refresh_token,sms_code,wechat_app,wechat_mini_program,phone_one_click,taobao_app,apple_app
+      authorization-grant-types: refresh_token,sms_code,wechat_app,wechat_mini_program,phone_one_click,taobao_app,apple_app,social_bind
       redirect-uris: ""
       scopes: openid,profile,email,address,phone
       require-proof-key: false

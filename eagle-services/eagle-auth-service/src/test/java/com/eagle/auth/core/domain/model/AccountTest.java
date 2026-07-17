@@ -323,9 +323,18 @@ class AccountTest {
         @DisplayName("绑定微信小时5Merges到已有Binding")
         void bindWechatH5MergesIntoExistingBinding() {
             Account account = Account.createFromWechat(OPENID, UNIONID);
-            account.bindWechatH5("mp_openid_123456789012345", "new_unionid");
+            account.bindWechatH5("mp_openid_123456789012345", UNIONID);
             assertEquals("mp_openid_123456789012345", account.getWechatBinding().getMpOpenid());
-            assertEquals("new_unionid", account.getWechatBinding().getUnionid());
+            assertEquals(UNIONID, account.getWechatBinding().getUnionid());
+        }
+
+        @Test
+        @DisplayName("H5 补绑不同 unionid 视为不同微信主体应拒绝")
+        void bindWechatH5RejectsDifferentUnionid() {
+            Account account = Account.createFromWechat(OPENID, UNIONID);
+            AppException ex = assertThrows(DomainException.class,
+                    () -> account.bindWechatH5("mp_openid_123456789012345", "new_unionid"));
+            assertEquals(AuthErrorCode.WECHAT_ALREADY_BOUND, ex.getErrorCode());
         }
     }
 

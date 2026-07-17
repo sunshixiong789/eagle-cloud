@@ -71,6 +71,13 @@ public class WechatBinding {
     }
 
     /**
+     * 设置小程序 openid，返回新对象（不可变）
+     */
+    public WechatBinding withOpenid(String openid) {
+        return new WechatBinding(openid, this.unionid, this.webOpenid, this.mpOpenid, this.bindTime);
+    }
+
+    /**
      * 设置 PC 扫码 openid，返回新对象（不可变）
      */
     public WechatBinding withWebOpenid(String webOpenid) {

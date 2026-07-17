@@ -47,11 +47,14 @@ import java.util.HexFormat;
 @Table(name = "auth_account", indexes = {
         @Index(name = "idx_account_username", columnList = "username", unique = true),
         @Index(name = "idx_account_phone", columnList = "phone", unique = true),
-        @Index(name = "idx_account_openid", columnList = "openid"),
-        @Index(name = "idx_account_unionid", columnList = "unionid"),
-        @Index(name = "idx_account_web_openid", columnList = "web_openid"),
-        @Index(name = "idx_account_mp_openid", columnList = "mp_openid"),
-        @Index(name = "idx_account_taobao_open_uid", columnList = "taobao_open_uid"),
+        // 第三方身份 → 账号一对一（手机号为主账号体系），unique 兜底并发；
+        // MySQL 唯一索引允许多行 NULL，不影响未绑定账号。
+        // 注意：ddl-auto=update 不会把既有普通索引升级为 unique，存量库需手动 DROP 旧索引。
+        @Index(name = "idx_account_openid", columnList = "openid", unique = true),
+        @Index(name = "idx_account_unionid", columnList = "unionid", unique = true),
+        @Index(name = "idx_account_web_openid", columnList = "web_openid", unique = true),
+        @Index(name = "idx_account_mp_openid", columnList = "mp_openid", unique = true),
+        @Index(name = "idx_account_taobao_open_uid", columnList = "taobao_open_uid", unique = true),
         @Index(name = "idx_account_apple_subject", columnList = "apple_subject", unique = true)
 })
 public class Account extends BaseAggregateRoot<Account> {
@@ -170,6 +173,14 @@ public class Account extends BaseAggregateRoot<Account> {
      * 手机登录的账号识别以 {@code phone} 字段为准；密码占位 {@link #DISABLED_PASSWORD}。
      */
     public static Account createFromPhone(String phone) {
+        return createFromPhone(phone, ProfileHints.EMPTY);
+    }
+
+    /**
+     * 通过手机号创建账号，携带 profile 提示（social_bind 首绑场景：
+     * 第三方昵称 / 头像 / 邮箱随注册事件传给 system 域）。
+     */
+    public static Account createFromPhone(String phone, ProfileHints profileHints) {
         if (phone == null || phone.isBlank()) {
             throw AuthErrorCode.PHONE_REQUIRED.toDomainException();
         }
@@ -178,7 +189,7 @@ public class Account extends BaseAggregateRoot<Account> {
         account.password = DISABLED_PASSWORD;
         account.phone = phone;
         account.status = AccountStatus.ACTIVE;
-        account.profileHints = ProfileHints.EMPTY;
+        account.profileHints = profileHints == null ? ProfileHints.EMPTY : profileHints;
         return account;
     }
 
@@ -326,6 +337,17 @@ public class Account extends BaseAggregateRoot<Account> {
     }
 
     /**
+     * 是否为「影子账号」：第三方直登自动创建、无密码且未绑手机号的账号。
+     *
+     * <p>手机号为主账号体系下，影子账号补绑手机号时若手机号已有主账号，
+     * 允许自动归并（绑定迁移 + 注销影子账号）。
+     */
+    public boolean isShadowAccount() {
+        return DISABLED_PASSWORD.equals(this.password)
+                && (this.phone == null || this.phone.isBlank());
+    }
+
+    /**
      * 绑定手机号（微信登录后补充手机号场景）。
      *
      * <p>username 不随手机号变化——用户名是登录别名，与手机号脱钩，避免与已有用户名冲突。
@@ -413,21 +435,35 @@ public class Account extends BaseAggregateRoot<Account> {
 
     /**
      * 绑定微信小程序。
+     *
+     * <p>本渠道已绑相同 openid 幂等；已绑不同 openid 或 unionid 不同主体
+     * 抛 {@code WECHAT_ALREADY_BOUND}；不清除其他渠道 openid。
      */
     public void bindWechat(String openid, String unionid) {
         if (openid == null || openid.isBlank()) {
             throw AuthErrorCode.OPENID_REQUIRED.toDomainException();
         }
-        this.wechatBinding = WechatBinding.create(openid, unionid);
+        ensureWechatIdentityCompatible(this.wechatBinding == null
+                ? null : this.wechatBinding.getOpenid(), openid, unionid);
+        if (this.wechatBinding == null) {
+            this.wechatBinding = WechatBinding.create(openid, unionid);
+        } else {
+            this.wechatBinding = this.wechatBinding.withOpenid(openid);
+            if (unionid != null) {
+                this.wechatBinding = this.wechatBinding.withUnionid(unionid);
+            }
+        }
     }
 
     /**
-     * 绑定微信网页（PC 扫码）。
+     * 绑定微信网页（PC 扫码）。冲突语义同 {@link #bindWechat}。
      */
     public void bindWechatWeb(String webOpenid, String unionid) {
         if (webOpenid == null || webOpenid.isBlank()) {
             throw AuthErrorCode.WEB_OPENID_REQUIRED.toDomainException();
         }
+        ensureWechatIdentityCompatible(this.wechatBinding == null
+                ? null : this.wechatBinding.getWebOpenid(), webOpenid, unionid);
         if (this.wechatBinding == null) {
             this.wechatBinding = WechatBinding.createForWeb(webOpenid, unionid);
         } else {
@@ -439,12 +475,14 @@ public class Account extends BaseAggregateRoot<Account> {
     }
 
     /**
-     * 绑定微信公众号 H5。
+     * 绑定微信公众号 H5。冲突语义同 {@link #bindWechat}。
      */
     public void bindWechatH5(String mpOpenid, String unionid) {
         if (mpOpenid == null || mpOpenid.isBlank()) {
             throw AuthErrorCode.MP_OPENID_REQUIRED.toDomainException();
         }
+        ensureWechatIdentityCompatible(this.wechatBinding == null
+                ? null : this.wechatBinding.getMpOpenid(), mpOpenid, unionid);
         if (this.wechatBinding == null) {
             this.wechatBinding = WechatBinding.createForH5(mpOpenid, unionid);
         } else {
@@ -453,6 +491,49 @@ public class Account extends BaseAggregateRoot<Account> {
                 this.wechatBinding = this.wechatBinding.withUnionid(unionid);
             }
         }
+    }
+
+    /**
+     * 微信身份兼容性检查：同渠道异 openid、或 unionid 不同主体，都视为
+     * 「本账号已绑定其他微信」。
+     *
+     * @param channelOpenid 本渠道已绑 openid（可空）
+     * @param newOpenid     新 openid
+     * @param newUnionid    新 unionid（可空）
+     */
+    private void ensureWechatIdentityCompatible(String channelOpenid,
+                                                String newOpenid, String newUnionid) {
+        if (channelOpenid != null && !channelOpenid.equals(newOpenid)) {
+            throw AuthErrorCode.WECHAT_ALREADY_BOUND.toDomainException();
+        }
+        if (this.wechatBinding != null
+                && this.wechatBinding.getUnionid() != null
+                && newUnionid != null
+                && !this.wechatBinding.getUnionid().equals(newUnionid)) {
+            throw AuthErrorCode.WECHAT_ALREADY_BOUND.toDomainException();
+        }
+    }
+
+    // ==================== Apple 绑定 ====================
+
+    /**
+     * 绑定 Apple 身份（social_bind 挂接到手机号主账号场景）。
+     *
+     * <p>已绑相同 subject 幂等并轮换 refresh token 密文；
+     * 已绑不同 subject 抛 {@code APPLE_ALREADY_BOUND}。
+     */
+    public void bindApple(String subject, String encryptedRefreshToken) {
+        if (subject == null || subject.isBlank()) {
+            throw AuthErrorCode.APPLE_SUBJECT_REQUIRED.toDomainException();
+        }
+        if (this.appleBinding != null) {
+            if (!this.appleBinding.getSubject().equals(subject)) {
+                throw AuthErrorCode.APPLE_ALREADY_BOUND.toDomainException();
+            }
+            this.appleBinding = this.appleBinding.rotateRefreshToken(encryptedRefreshToken);
+            return;
+        }
+        this.appleBinding = AppleBinding.create(subject, encryptedRefreshToken);
     }
 
     // ==================== 淘宝绑定 ====================
