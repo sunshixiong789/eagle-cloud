@@ -31,6 +31,9 @@ public class UserResponse {
     @Schema(description = "用户名", example = "zhangsan")
     private String username;
 
+    @Schema(description = "手机号", example = "13800138000")
+    private String phone;
+
     @Schema(description = "邮箱", example = "zhangsan@example.com")
     private String email;
 

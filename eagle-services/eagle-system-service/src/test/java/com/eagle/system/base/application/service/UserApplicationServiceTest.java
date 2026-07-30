@@ -21,6 +21,7 @@ import com.eagle.system.base.interfaces.dto.request.UserQueryRequest;
 import com.eagle.system.base.interfaces.dto.response.AssignedRoleResponse;
 import com.eagle.system.base.infrastructure.remote.AuthClientFacade;
 import com.eagle.system.base.infrastructure.remote.dto.AccountBlacklistSnapshot;
+import com.eagle.system.base.infrastructure.remote.dto.AccountSnapshot;
 import com.eagle.system.base.interfaces.dto.response.UserResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -194,6 +195,37 @@ class UserApplicationServiceTest {
             Sort sort = pageableCaptor.getValue().getSort();
             assertEquals(Sort.Direction.DESC, sort.getOrderFor("createTime").getDirection());
             assertEquals(Sort.Direction.DESC, sort.getOrderFor("id").getDirection());
+        }
+
+        @Test
+        @DisplayName("应按当前页 accountId 批量回填手机号且只调用 auth 一次")
+        void shouldEnrichPhonesWithSingleBatchCall() {
+            User first = sampleUser();
+            User second = User.create(201L, "bob", "bob@example.com", null);
+            UserResponse firstResponse = UserResponse.builder().id(USER_ID).accountId(ACCOUNT_ID).build();
+            UserResponse secondResponse = UserResponse.builder().id(101L).accountId(201L).build();
+            when(adminProperties.getUsername()).thenReturn("admin");
+            when(userRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class),
+                    any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
+            when(userMapper.toResponse(first)).thenReturn(firstResponse);
+            when(userMapper.toResponse(second)).thenReturn(secondResponse);
+            when(logRepository.findLatestCreateTimeByUsernameAndLogTypeAndStatus(
+                    any(), any(), any())).thenReturn(Optional.empty());
+            when(authClientFacade.listJtisByAccount(ACCOUNT_ID)).thenReturn(List.of());
+            when(authClientFacade.listJtisByAccount(201L)).thenReturn(List.of());
+            when(authClientFacade.findBlacklistByAccountId(ACCOUNT_ID))
+                    .thenReturn(ResponseEntity.noContent().build());
+            when(authClientFacade.findBlacklistByAccountId(201L))
+                    .thenReturn(ResponseEntity.noContent().build());
+            when(authClientFacade.findAccounts(Set.of(ACCOUNT_ID, 201L))).thenReturn(List.of(
+                    new AccountSnapshot(ACCOUNT_ID, "alice", "17708080863"),
+                    new AccountSnapshot(201L, "bob", "18800000008")));
+
+            Page<UserResponse> page = service.queryUsers(PageRequest.of(0, 10));
+
+            assertEquals("17708080863", page.getContent().get(0).getPhone());
+            assertEquals("18800000008", page.getContent().get(1).getPhone());
+            verify(authClientFacade).findAccounts(Set.of(ACCOUNT_ID, 201L));
         }
     }
 
