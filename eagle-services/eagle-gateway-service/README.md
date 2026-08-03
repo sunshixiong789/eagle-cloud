@@ -211,7 +211,7 @@ Client ──→ Gateway
 
 ### 灰度 / 金丝雀
 
-通过 Nacos 元数据 + 自定义 LoadBalancer 实现；详见 `.claude/rules/24-deployment.md`。
+通过 Nacos 元数据 + 自定义 LoadBalancer 实现。
 
 ### Sentinel 规则修改
 
@@ -234,6 +234,6 @@ docker build -t eagle/gateway-service:1.0.0 eagle-services/eagle-gateway-service
 - **WebFlux 服务**：禁止在过滤器或路由中调用阻塞 API（JDBC / JPA / 同步 Feign）；如必需用 `Schedulers.boundedElastic()`
 - 生产 `allowedOriginPatterns` 必须显式枚举具体域名，禁止 `*` + `allowCredentials: true` 同时开启
 - `springdoc.api-docs.enabled` / `springdoc.swagger-ui.enabled` 在生产环境**必须关闭**（详见
-  `.claude/rules/18-openapi.md`）
+  `.claude/rules/03-api-error.md`）
 - **网关不做鉴权**：所有 JWT 校验在下游 `eagle-resource-server-starter`；如新增需要鉴权的端点，确保下游路径未在
   `eagle.resource-server.permit-paths` 中放行

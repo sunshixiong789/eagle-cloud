@@ -21,7 +21,7 @@ argument-hint: "[模块路径，可选；默认 eagle-base-server:eagle-system-s
 
    失败时：
     - 解析输出找出违规依赖（"Module X depends on non-exposed type Y"）
-    - 按 `04-modulith.md` 规范判断是否需要：
+    - 按 `01-architecture.md` 规范判断是否需要：
       a) 给被依赖包加 `@NamedInterface`
       b) 在依赖方 `allowedDependencies` 中声明
       c) 重构通过 Port/Adapter 解耦
@@ -71,13 +71,13 @@ PR 可提交 ✅
 建议：
   1) 在 auth/domain/port/ 定义 TokenPort 接口
   2) 在 auth/infrastructure/adapter/ 提供 JwtTokenAdapter 实现
-  3) base 改为依赖 TokenPort（参考 03-architecture.md 原则一）
+  3) base 改为依赖 TokenPort（参考 01-architecture.md 原则一）
 
 PR 阻塞 ❌
 ```
 
 ## 参考规则
 
-- `04-modulith.md` — Modulith 边界违规处理
-- `03-architecture.md` — 跨域依赖原则（Port/Adapter）
-- `25-review-checklist.md` — PR 前完整检查清单
+- `01-architecture.md` — Modulith 边界违规处理
+- `01-architecture.md` — 跨域依赖原则（Port/Adapter）
+- `06-checklist.md` — PR 前完整检查清单

@@ -172,6 +172,5 @@ public class OpenApiGroupConfig {
 
 ## 关联规则
 
-- `.claude/rules/18-openapi.md`
-- `.claude/rules/05-api.md`
-- `.claude/rules/12-security.md` — 生产关闭文档
+- `.claude/rules/03-api-error.md`
+- `.claude/rules/05-security.md` — 生产关闭文档

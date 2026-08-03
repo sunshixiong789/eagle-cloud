@@ -133,6 +133,4 @@ public class FileApplicationService {
 
 ## 关联规则
 
-- `.claude/rules/26-file-storage.md`
-- `.claude/rules/12-security.md` — 上传安全
-- `.claude/rules/17-tenant-permission.md` — 多租户隔离
+- `.claude/rules/05-security.md` — 上传安全 / 多租户隔离

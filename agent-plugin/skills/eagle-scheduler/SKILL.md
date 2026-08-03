@@ -123,7 +123,6 @@ Cron: 0 */5 * * * ?
 
 ## 常见错误
 
-- ❌ 任务非幂等 → ✅ 必须按状态/游标判断（详见 `27-scheduling.md`）
 - ❌ 集群中用 `@Scheduled` 跑业务任务 → ✅ 改 `@XxlJob`
 - ❌ 任务执行 > 30 min → ✅ 拆分或分片
 - ❌ 不设置失败告警 → ✅ 调度中心配钉钉/企微
@@ -132,6 +131,4 @@ Cron: 0 */5 * * * ?
 
 ## 关联规则
 
-- `.claude/rules/27-scheduling.md`
-- `.claude/rules/17-tenant-permission.md`
-- `.claude/rules/13-logging.md` — `XxlJobHelper.log` vs SLF4J
+- `.claude/rules/05-security.md` — `XxlJobHelper.log` vs SLF4J

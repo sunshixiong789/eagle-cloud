@@ -219,6 +219,4 @@ public class OrderTxChecker extends AbstractRocketMqTransactionChecker {
 
 ## 关联规则
 
-- `.claude/rules/15-messaging.md` — Topic 命名 / 幂等 / 死信
-- `.claude/rules/16-transaction-distributed.md` — 事务消息选型
-- `.claude/rules/03-architecture.md` — 跨域事件契约
+- `.claude/rules/02-architecture.md` — 跨域事件契约

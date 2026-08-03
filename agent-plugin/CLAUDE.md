@@ -8,14 +8,14 @@
 
 ## 项目栈定位
 
-业务项目依赖 `eagle-cloud` 基础架子（BOM + 29 个 starter），遵循以下技术栈与约定：
+业务项目依赖 `eagle-cloud` 基础架子（BOM + 31 个 starter），遵循以下技术栈与约定：
 
 - **Java 25** / Gradle 8.x（Groovy DSL）
 - **Spring Boot 4.0.6** / Spring Cloud 2025.1.1 / Spring Cloud Alibaba 2025.1.0.0
 - **Spring Modulith 2.0.5** — 模块化单体边界静态验证
 - **DDD + 六边形架构**（领域层稳定，infrastructure 可拆分微服务）
 - **Hibernate 7.2.6** / MySQL / PostgreSQL / Druid
-- **Spring Security + OAuth2 Resource Server**（业务服务，授权服务器在 eagle-system-server）
+- **Spring Security + OAuth2 Resource Server**（业务服务，授权服务器是独立的 eagle-auth-service）
 
 ## PR 前必跑（速查）
 
@@ -33,38 +33,19 @@
 
 ### 后端：`rules/`（Spring Boot 4 + DDD + Modulith）
 
-| 文件                                    | 适用场景                                          |
-|---------------------------------------|-----------------------------------------------|
-| `rules/01-naming.md`                  | 命名约定（DDD 组件、ErrorCode、Modulith）               |
-| `rules/02-code-style.md`              | Google Java Style + Lombok + `@NullMarked`    |
-| `rules/03-architecture.md`            | DDD 分层、Port/Adapter、聚合根创建型事件                  |
-| `rules/04-modulith.md`                | `@ApplicationModule` / `@NamedInterface` 边界治理 |
-| `rules/05-api.md`                     | RESTful URL、`@PreAuthorize`、CORS、响应格式         |
-| `rules/06-database.md`                | JPA 实体、跨聚合 ID 引用、索引、CQRS 投影                   |
-| `rules/07-exception.md`               | AppException 体系、ErrorCode 工厂方法                |
-| `rules/08-concurrency.md`             | 事务、领域事件 `@Async + AFTER_COMMIT`、缓存失效          |
-| `rules/09-testing.md`                 | JUnit 5 + Mockito、AAA、命名、覆盖要求                 |
-| `rules/10-starter.md`                 | `@AutoConfiguration` + Properties + imports   |
-| `rules/11-feign.md`                   | HTTP Service 客户端位置、错误处理、分页参数                  |
-| `rules/12-security.md`                | OAuth2 / JWT、密码、敏感字段脱敏、审计                     |
-| `rules/13-logging.md`                 | SLF4J 占位符、MDC、核心操作埋点                          |
-| `rules/14-cache.md`                   | Redis+Caffeine、Key 命名、击穿/穿透/雪崩防护              |
-| `rules/15-messaging.md`               | RocketMQ Topic、幂等、死信、事务消息                     |
-| `rules/16-transaction-distributed.md` | Seata AT/TCC、本地消息表                            |
-| `rules/17-tenant-permission.md`       | 多租户隔离                                         |
-| `rules/18-openapi.md`                 | SpringDoc 注解、版本、错误码文档化                        |
-| `rules/19-config.md`                  | Properties、Nacos、profile、Jasypt 加密            |
-| `rules/20-i18n.md`                    | messages 组织、key 规则                            |
-| `rules/21-resilience.md`              | Resilience4J 熔断/重试/超时、Fallback、注解组合顺序         |
-| `rules/22-git.md`                     | 分支模型、Conventional Commits                     |
-| `rules/23-performance.md`             | N+1、慢 SQL、连接池、Async 池                         |
-| `rules/24-deployment.md`              | Dockerfile、K8s、健康检查、优雅停机                      |
-| `rules/25-review-checklist.md`        | **PR 前完整自检清单**                                |
-| `rules/26-file-storage.md`            | MinIO Bucket、Key 设计、上传校验                      |
-| `rules/27-scheduling.md`              | XXL-JOB 路由、分片、幂等                              |
-| `rules/28-migration.md`               | Flyway 命名、不可变、回滚                              |
-| `rules/29-event-driven.md`            | 领域事件 vs 集成事件、Saga 编排、Event Sourcing、幂等        |
-| `rules/30-dependency.md`              | Gradle 范围、BOM、CVE                             |
+| 文件                          | 适用场景                                                                 |
+|-----------------------------|----------------------------------------------------------------------|
+| `rules/00-core.md`          | **必看**：中文回答、禁 `@Value`、Lombok 分角色规则、DDD 命名、测试范围、依赖与 Git              |
+| `rules/01-java25.md`        | **必看**：record / sealed / 模式匹配 / Gatherers / 虚拟线程 / ScopedValue    |
+| `rules/02-architecture.md`  | DDD 分层、Port/Adapter、Modulith 边界、领域事件与集成事件契约、Saga                     |
+| `rules/03-api-error.md`     | RESTful、`@PreAuthorize` 用法、异常体系、ErrorCode 号段、i18n、OpenAPI             |
+| `rules/04-data.md`          | JPA 实体、禁物理外键、索引唯一性、事务与并发、线程池、Flyway 迁移                               |
+| `rules/05-security.md`      | OAuth2/JWT 取当前用户、脱敏、多租户与数据权限、审计日志、日志规范                               |
+| `rules/06-boot4.md`   | **必看**：Jackson 3 分包、`@AutoConfiguration`、`RestClient`、Security 7 DSL |
+| `rules/07-checklist.md`     | **必看**：高频陷阱速查（Eagle 特有 API）+ PR 前自检清单                                |
+
+缓存、消息队列、分布式事务、定时任务、对象存储、韧性等主题**不设常驻规则文件**，规范随对应 starter skill
+（`eagle-redis` / `eagle-rocketmq` / `eagle-seata` / `eagle-scheduler` / `eagle-oss-minio` / `eagle-resilience`）按需自动加载。
 
 ### 前端：`rules-frontend/`（React Web / React Native / Taro 多端）
 
@@ -98,13 +79,14 @@
 
 ## Starter 使用（按需 skill 加载）
 
-29 个 starter 各有独立 skill，AI 在编码时会按场景自动加载相关 skill。手动列表见 `skills/` 目录：
+31 个 starter 各有独立 skill，AI 在编码时会按场景自动加载相关 skill。手动列表见 `skills/` 目录：
 
 | Skill                      | 何时触发                                      |
 |----------------------------|-------------------------------------------|
 | `eagle-common`             | DDD 基类、异常、领域事件、分布式锁接口                     |
 | `eagle-data-jpa`           | JPA Auditing + Hibernate 配置               |
 | `eagle-data-r2dbc`         | 响应式 R2DBC 持久化、BaseR2dbcAggregateRoot      |
+| `eagle-mybatis`            | MyBatis-Plus 增强                           |
 | `eagle-dynamic-datasource` | 主从读写分离、@ReadOnly                          |
 | `eagle-sharding`           | 分库分表、ShardingSphere YAML 配置               |
 | `eagle-elasticsearch`      | ES 检索 / 聚合 / 高亮                           |
@@ -113,6 +95,7 @@
 | `eagle-id-generator`       | 雪花 / TSID / NanoId / 业务单号                 |
 | `eagle-idempotency`        | 接口幂等                                      |
 | `eagle-tenant`             | 多租户上下文                                    |
+| `eagle-row-security`       | 行级数据权限                                    |
 | `eagle-resource-server`    | OAuth2 资源服务器                              |
 | `eagle-restclient`         | Servlet 服务 HTTP Service + 自动透传（阻塞 RestClient）|
 | `eagle-webclient`          | WebFlux 服务 HTTP Service + 自动透传（响应式 WebClient）|
@@ -152,8 +135,8 @@
 | 2  | Plan       | `superpowers:writing-plans`                  | ★ 必读相关 `rules/*` + 在 plan 中预定要触发的 commands(`/new-module` 等)                  |
 | 3  | TDD        | `superpowers:test-driven-development`        | ★ 加载相关 starter skills(eagle-common / eagle-rocketmq 等) + 触发 plan 中的 commands |
 | 4  | Verify     | `superpowers:verification-before-completion` | ★ 强制 `/check-arch`                                                           |
-| 5  | Review     | `superpowers:requesting-code-review`         | ★ 对照 `rules/25-review-checklist.md`(16 大类自检)                                 |
-| 6  | Finish     | `superpowers:finishing-a-development-branch` | 按 `rules/22-git.md` 整理 commit + PR 描述                                        |
+| 5  | Review     | `superpowers:requesting-code-review`         | ★ 对照 `rules/07-checklist.md`(高频陷阱 + 自检清单)                                 |
+| 6  | Finish     | `superpowers:finishing-a-development-branch` | 按 `rules/00-core.md` 整理 commit + PR 描述                                        |
 
 **设计哲学**:Superpowers 提供工程纪律(brainstorm → plan → TDD → verify → review → finish),
 本 plugin 提供 Eagle 平台的"约束"(rules)和"工具箱"(commands + per-starter skills),后者在主流程的关键节点被嵌入式调用。
@@ -164,14 +147,10 @@
 
 ## 重要约定（高频陷阱）
 
-1. **审计字段名**：`createBy / updateBy / createTime / updateTime`（**不是** `createdBy/updatedBy/createdAt/updatedAt`）
-2. **AsyncConfig Bean 名**：`taskExecutor`（**不是** `eagleTaskExecutor`）
-3. **TenantContextHolder API**：`getTenantId() / setTenantId() / clear()`（**不是** `getCurrentTenantId`）
-4. **RocketMQ 消费者**：继承 `AbstractRocketMqListener<T>` + 实现 `getTopic()/getEventClass()/handle(T event)`，**不用**
-   `@RocketMQMessageListener` 注解。**构造器必须显式声明并调用 `super(rocketMqProperties)`**（基类已改为构造器注入），
-   因此**子类不能再用 `@RequiredArgsConstructor`**——Lombok 生成的构造器不会调用带参 super。
-   `AbstractDlqListener` 同此约束
-5. **DistributedLock API**：`tryLock(key, long waitSec, long leaseSec, Supplier)`，参数是 **`long` 秒**不是 `Duration`
-6. **CacheProtectionUtil**：`getWithMutex(key, ttl, loader, type)` — **4 参数**含返回类型 `Class<T>`
-7. **多个 starter 默认 disabled**：`eagle.tenant.enabled`、`eagle.datasource.enabled` 默认 `false`
-8. **生产环境必须改的默认值**：`eagle.storage.type` 默认 `local`、`eagle.tracing.sampling-probability` 默认 `1.0`
+完整的 12 条高频陷阱速查表见 **`rules/07-checklist.md`**（单一维护点，勿在此处重复）。
+写代码前务必扫一遍——都是 Eagle 特有 API 与命名，凭直觉写必然出错，例如：
+
+- 审计字段是 `createBy / createTime`，**不是** `createdBy / createdAt`
+- `CacheProtectionUtil.getWithMutex(...)` 是 **4 参数**，最后一个是 `Class<T>`
+- `DistributedLock.tryLock(...)` 收 **`long` 秒**，不是 `Duration`
+- Jackson 核心类在 `tools.jackson.*`，注解仍在 `com.fasterxml.jackson.annotation.*`（详见 `rules/06-boot4.md`）

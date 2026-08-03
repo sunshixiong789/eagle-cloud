@@ -20,7 +20,7 @@
   "interface": {
     "displayName": "Eagle Cloud",
     "shortDescription": "Spring Boot 4 + DDD + Modulith 项目的开发规范与 Starter 使用指南",
-    "longDescription": "Eagle Cloud 平台开发插件，包含 30 份开发规范（DDD / 安全 / 缓存 / 消息 / 事务 / 多租户 / 性能 / 部署 等）、29 个 Starter 使用指南（按需自动加载）、6 个脚手架命令（/check-arch、/new-module、/new-aggregate、/new-starter、/add-error-code、/eagle-flow）。",
+    "longDescription": "Eagle Cloud 平台开发插件，包含 7 份核心开发规范（核心约定 / 架构 / 接口与错误码 / 数据 / 安全 / Boot4 陷阱 / 自检清单）、29 个 Starter 使用指南（按需自动加载）、6 个脚手架命令（/check-arch、/new-module、/new-aggregate、/new-starter、/add-error-code、/eagle-flow）。",
     "developerName": "Eagle Cloud",
     "category": "Coding",
     "capabilities": [

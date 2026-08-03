@@ -175,7 +175,5 @@ PayResult result = alipay.queryOrder(orderNo);
 
 ## 关联规则
 
-- `.claude/rules/12-security.md` — 凭证加密、签名验证
-- `.claude/rules/16-transaction-distributed.md` — 最终一致性
-- `.claude/rules/15-messaging.md` — 支付完成事件下游消费
-- `.claude/rules/19-config.md` — Jasypt 加密
+- `.claude/rules/05-security.md` — 凭证加密、签名验证
+- `.claude/rules/00-core.md` — Jasypt 加密

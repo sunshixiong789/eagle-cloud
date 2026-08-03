@@ -17,8 +17,28 @@ description: Use when configuring OpenAPI/Swagger documentation in eagle-cloud p
 
 ## 依赖与启用
 
+`eagle-openapi-starter` 只提供通用 OpenAPI Bean、JWT Security Scheme 和
+`@PreAuthorize` 文档增强，不替业务服务选择 Servlet/WebMVC 或 WebFlux。业务服务必须按自己的 Web
+栈显式选择 SpringDoc UI 适配包。
+
+### Servlet / Spring MVC
+
 ```gradle
-implementation project(':eagle-starter:eagle-openapi-starter')
+dependencies {
+    implementation project(':eagle-starter:eagle-openapi-starter')
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
+}
+```
+
+### Reactive / WebFlux
+
+```gradle
+dependencies {
+    implementation project(':eagle-starter:eagle-openapi-starter')
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui'
+}
 ```
 
 ```yaml
@@ -157,6 +177,5 @@ public class OpenApiGroupConfig {
 
 ## 关联规则
 
-- `.claude/rules/18-openapi.md`
-- `.claude/rules/05-api.md`
-- `.claude/rules/12-security.md` — 生产关闭文档
+- `.claude/rules/03-api-error.md`
+- `.claude/rules/05-security.md` — 生产关闭文档

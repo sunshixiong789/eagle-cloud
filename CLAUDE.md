@@ -24,7 +24,7 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 ./gradlew clean build
 
 # 2) Spring Modulith 架构验证（涉及 system-server 时必跑）
-./gradlew :eagle-base-server:eagle-system-server:test --tests "*.ModulithArchitectureTest"
+./gradlew :eagle-services:eagle-system-service:test --tests "*.ModulithArchitectureTest"
 
 # 3) 仅当前模块测试（开发期快速反馈）
 ./gradlew :path:to:module:test
@@ -39,22 +39,22 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 ./gradlew build
 
 # 构建特定模块
-./gradlew :eagle-base-server:eagle-system-server:build
+./gradlew :eagle-services:eagle-system-service:build
 
 # 运行测试
 ./gradlew test
-./gradlew :eagle-base-server:eagle-system-server:test
-./gradlew :eagle-base-server:eagle-system-server:test --tests "com.eagle.system.YourTestClass"
-./gradlew :eagle-base-server:eagle-system-server:test --tests "com.eagle.system.YourTestClass.testMethod"
+./gradlew :eagle-services:eagle-system-service:test
+./gradlew :eagle-services:eagle-system-service:test --tests "com.eagle.system.YourTestClass"
+./gradlew :eagle-services:eagle-system-service:test --tests "com.eagle.system.YourTestClass.testMethod"
 
 # 运行服务
-./gradlew :eagle-base-server:eagle-system-server:bootRun
-./gradlew :eagle-base-server:eagle-gateway-server:bootRun
+./gradlew :eagle-services:eagle-system-service:bootRun
+./gradlew :eagle-services:eagle-gateway-service:bootRun
 ```
 
 ## 项目结构
 
-### 可执行服务 (eagle-base-server)
+### 可执行服务 (eagle-services)
 
 | 服务                      | 说明                                       | 技术栈                                                  |
 |-------------------------|------------------------------------------|------------------------------------------------------|
@@ -75,6 +75,7 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 | `eagle-webclient-starter`          | 反应式 WebClient + `@HttpExchange`（WebFlux 服务用，同套透传 + 统一错误处理）                                  |
 | `eagle-tracing-starter`            | 分布式链路追踪（Brave/Zipkin）                                                                          |
 | `eagle-rocketmq-starter`           | RocketMQ v5 消息队列（事务消息、DLQ、AbstractRocketMqListener）                                            |
+| `eagle-row-security-starter`       | 行级数据权限控制（@DataPermission，AspectJ + JPA Specification）                                          |
 | `eagle-dynamic-datasource-starter` | 多数据源动态路由（主从切换、@ReadOnly、轮询负载均衡）                                                                |
 | `eagle-tenant-starter`             | 多租户支持（COLUMN/DATABASE 隔离模式、TenantContextHolder）                                                |
 | `eagle-oss-minio-starter`          | 对象存储（MinIO 8.x，签名 URL、分片上传）                                                                    |
@@ -83,6 +84,7 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 | `eagle-openapi-starter`            | Swagger/OpenAPI 文档集成（SpringDoc 3.0.2）                                                          |
 | `eagle-seata-starter`              | 分布式事务（Seata AT/TCC 2.2.0）                                                                      |
 | `eagle-sentinel-starter`           | 流量控制与熔断（Sentinel，网关层限流）                                                                        |
+| `eagle-mybatis-starter`            | MyBatis-Plus 配置（分页、逻辑删除、审计）                                                                    |
 | `eagle-id-generator-starter`       | 分布式 ID 生成（雪花算法 / Leaf 等）                                                                       |
 | `eagle-idempotency-starter`        | 接口幂等性（@Idempotent，Redis SETNX + 唯一约束双重保障）                                                      |
 | `eagle-elasticsearch-starter`      | Elasticsearch 全文检索（Spring Data ES）                                                             |
@@ -98,25 +100,25 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 
 ## Spring Modulith 模块划分
 
-`eagle-system-server` 中 `com.eagle.system` 下按有界上下文划分为 4 个模块：
+当前实际的 `@ApplicationModule` 声明（以各 `package-info.java` 为准）：
 
-| 模块         | 包                         | 类型          | 职责                                                           | allowedDependencies                   |
-|------------|---------------------------|-------------|--------------------------------------------------------------|---------------------------------------|
-| **auth**   | `com.eagle.system.auth`   | 业务域         | 认证授权、OAuth2、微信/短信登录                                          | `common`                              |
-| **base**   | `com.eagle.system.base`   | 业务域         | 用户、角色、权限、部门、菜单管理                                             | `auth::port`, `auth::event`, `common` |
-| **config** | `com.eagle.system.config` | 基础设施胶水      | SecurityConfig、CacheConfig、AsyncConfig、WebSocket、i18n、全局异常处理 | `auth::security`, `common`            |
-| **common** | `com.eagle.system.common` | 共享内核 (OPEN) | ErrorCode 枚举、通用 DTO、异常基础设施                                   | 无外部依赖                                 |
+| 模块  | 包                        | 所属服务                  | allowedDependencies |
+|-----|--------------------------|-----------------------|---------------------|
+| 系统管理 | `com.eagle.system.base`    | eagle-system-service  | 未声明（默认全开）           |
+| 文件管理 | `com.eagle.system.file`    | eagle-system-service  | 未声明                 |
+| 站内消息 | `com.eagle.system.message` | eagle-system-service  | `{}`（完全隔离）          |
+| 认证授权 | `com.eagle.auth.core`      | **eagle-auth-service** | `{}`（完全隔离）          |
 
-**模块间协作方式：**
+**协作方式：**
 
-- auth 定义 Driven Port（`auth/domain/port/`），base 在 `infrastructure/` 层实现适配器——auth 对 base 零依赖
-- auth → base 通过领域事件（`AccountRegisteredEvent` 等，放在 `auth/domain/event/`，通过 `@NamedInterface("event")` 暴露）异步解耦
-- config 通过 Named Interface `auth::security` 引用安全组件装配过滤链
+- **auth 已拆为独立服务**，不再是 `com.eagle.system.auth` 子模块——system ↔ auth 走 HTTP client（`infrastructure/remote/`）+ 集成事件，而非 Named Interface
+- `message` 与 `auth.core` 已声明 `allowedDependencies = {}`，新增任何跨模块 import 都会让 `ModulithArchitectureTest` 失败；需要协作时加 Port 或走事件，**不要**放宽 `allowedDependencies`
+- 模块内协作仍遵循 Port + Adapter 或领域事件两条路径（详见 `.claude/rules/02-architecture.md`）
 
 ## DDD 分层架构
 
 每个业务模块内部遵循 `interfaces / application / domain / infrastructure` 四层，依赖方向：
-`interfaces → application → domain ← infrastructure`。完整分层结构和规范见 `.claude/rules/03-architecture.md`。
+`interfaces → application → domain ← infrastructure`。完整分层结构和规范见 `.claude/rules/02-architecture.md`。
 
 ## 关键基类
 
@@ -136,39 +138,20 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 
 ## 详细开发规范（按场景查阅）
 
-| 文件                                            | 适用场景                                          |
-|-----------------------------------------------|-----------------------------------------------|
-| `.claude/rules/00-collaboration.md`           | **协作元规则（必看）**：回答使用中文、禁止 `@Value` 注入配置         |
-| `.claude/rules/01-naming.md`                  | 命名约定（类、方法、DDD 组件、ErrorCode）                   |
-| `.claude/rules/02-code-style.md`              | Google Java Style + Lombok 规则 + `@NullMarked` |
-| `.claude/rules/03-architecture.md`            | DDD 分层、跨域 Port/Adapter、聚合根创建型事件               |
-| `.claude/rules/04-modulith.md`                | `@ApplicationModule` / `@NamedInterface` 边界治理 |
-| `.claude/rules/05-api.md`                     | RESTful URL、`@PreAuthorize`、CORS、响应格式         |
-| `.claude/rules/06-database.md`                | JPA 实体、跨聚合 ID 引用、索引、CQRS 投影                   |
-| `.claude/rules/07-exception.md`               | AppException 体系、ErrorCode 工厂方法                |
-| `.claude/rules/08-concurrency.md`             | 事务、领域事件 `@Async + AFTER_COMMIT`、缓存失效          |
-| `.claude/rules/09-testing.md`                 | JUnit 5 + Mockito、AAA、命名、覆盖要求                 |
-| `.claude/rules/10-starter.md`                 | `@AutoConfiguration` + Properties + imports   |
-| `.claude/rules/11-feign.md`                   | HTTP Service 客户端位置、错误处理、分页参数                  |
-| `.claude/rules/12-security.md`                | OAuth2 / JWT、密码、CORS、敏感数据脱敏、审计                |
-| `.claude/rules/13-logging.md`                 | SLF4J 占位符、MDC、异常日志、敏感字段脱敏                     |
-| `.claude/rules/14-cache.md`                   | Redis+Caffeine、Key 命名、TTL、击穿/穿透/雪崩            |
-| `.claude/rules/15-messaging.md`               | RocketMQ Topic 命名、幂等、死信、事务消息                  |
-| `.claude/rules/16-transaction-distributed.md` | Seata AT/TCC 选型、本地消息表                         |
-| `.claude/rules/17-tenant-permission.md`       | 多租户隔离、跨租户操作                                   |
-| `.claude/rules/18-openapi.md`                 | SpringDoc 注解、版本、错误码文档化                        |
-| `.claude/rules/19-config.md`                  | Properties、Nacos、profile、Jasypt 加密            |
-| `.claude/rules/20-i18n.md`                    | messages 组织、key 规则、Locale 解析                  |
-| `.claude/rules/21-resilience.md`              | Resilience4J 熔断/重试/超时、Fallback、注解组合顺序         |
-| `.claude/rules/22-git.md`                     | 分支模型、Conventional Commits、PR、Tag              |
-| `.claude/rules/23-performance.md`             | N+1、慢 SQL、连接池、Async 池、JVM                     |
-| `.claude/rules/24-deployment.md`              | Dockerfile、健康检查、优雅停机、K8s                      |
-| `.claude/rules/25-review-checklist.md`        | **PR 前完整自检清单（必看）**                            |
-| `.claude/rules/26-file-storage.md`            | MinIO Bucket、Object Key、上传校验、签名 URL           |
-| `.claude/rules/27-scheduling.md`              | XXL-JOB 路由、分片、幂等、超时                           |
-| `.claude/rules/28-migration.md`               | Flyway 命名、不可变、回滚                              |
-| `.claude/rules/29-event-driven.md`            | 领域事件 vs 集成事件、Saga 编排、Event Sourcing、幂等        |
-| `.claude/rules/30-dependency.md`              | Gradle 范围、BOM、版本升级、CVE                        |
+| 文件                                     | 适用场景                                                            |
+|----------------------------------------|-----------------------------------------------------------------|
+| `.claude/rules/00-core.md`             | **必看**：中文回答、禁 `@Value`、Lombok 分角色规则、DDD 命名、测试范围、依赖与 Git         |
+| `.claude/rules/01-java25.md`           | **必看**：record / sealed / 模式匹配 / Stream Gatherers / 虚拟线程 / ScopedValue |
+| `.claude/rules/02-architecture.md`     | DDD 分层、跨域 Port/Adapter、Modulith 边界、领域事件与集成事件契约、Saga             |
+| `.claude/rules/03-api-error.md`        | RESTful、`@PreAuthorize` 用法、异常体系、ErrorCode 号段、i18n、OpenAPI        |
+| `.claude/rules/04-data.md`             | JPA 实体、禁物理外键、索引唯一性、事务与并发、线程池、Flyway 迁移                          |
+| `.claude/rules/05-security.md`         | OAuth2/JWT 取当前用户、脱敏、多租户与数据权限、审计日志、日志规范                          |
+| `.claude/rules/06-boot4.md`      | **必看**：Jackson 3 分包、`@AutoConfiguration`、`RestClient`、Security 7 DSL |
+| `.claude/rules/07-checklist.md`        | **必看**：高频陷阱速查（Eagle 特有 API）+ PR 前自检清单                           |
+
+缓存、消息队列、分布式事务、定时任务、对象存储、韧性等主题**不设常驻规则文件**，
+规范随对应 starter skill（`eagle-redis` / `eagle-rocketmq` / `eagle-seata` / `eagle-scheduler` /
+`eagle-oss-minio` / `eagle-resilience`）按需自动加载。
 
 ## 项目级 Commands（slash command）
 
@@ -192,8 +175,8 @@ OpenSpec）：
 | 2  | Plan       | `superpowers:writing-plans`                  | ★ 必读相关 `.claude/rules/*` + 在 plan 中预定要触发的 commands（`/new-module` 等）             |
 | 3  | TDD        | `superpowers:test-driven-development`        | ★ 加载相关 starter skills（`eagle-common` / `eagle-rocketmq` 等）+ 执行 plan 中的 commands |
 | 4  | Verify     | `superpowers:verification-before-completion` | ★ 强制 `/check-arch`                                                              |
-| 5  | Review     | `superpowers:requesting-code-review`         | ★ 对照 `.claude/rules/25-review-checklist.md`（16 大类自检）                            |
-| 6  | Finish     | `superpowers:finishing-a-development-branch` | 按 `.claude/rules/22-git.md` 整理 commit + PR 描述                                   |
+| 5  | Review     | `superpowers:requesting-code-review`         | ★ 对照 `.claude/rules/07-checklist.md`（高频陷阱 + 自检清单）                            |
+| 6  | Finish     | `superpowers:finishing-a-development-branch` | 按 `.claude/rules/00-core.md` 整理 commit + PR 描述                                   |
 
 **设计哲学**：Superpowers 提供工程纪律（brainstorm → plan → TDD → verify → review → finish），
 本仓库的 `agent-plugin` 提供 Eagle 平台的"约束"（rules）和"工具箱"（commands + per-starter skills），后者在主流程的关键节点被嵌入式调用。

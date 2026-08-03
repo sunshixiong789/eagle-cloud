@@ -197,6 +197,5 @@ JWT 解码走 `spring.security.oauth2.resourceserver.jwt.issuer-uri` 或 `jwk-se
 
 ## 关联规则
 
-- `.claude/rules/12-security.md`
-- `.claude/rules/05-api.md`
-- `.claude/rules/17-tenant-permission.md`
+- `.claude/rules/05-security.md`
+- `.claude/rules/03-api-error.md`

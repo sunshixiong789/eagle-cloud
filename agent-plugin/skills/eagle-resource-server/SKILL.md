@@ -22,6 +22,20 @@ description: Use when implementing OAuth2 resource server (JWT-protected service
 implementation project(':eagle-starter:eagle-resource-server-starter')
 ```
 
+Choose the web stack in the application module:
+
+```gradle
+// Servlet / Spring MVC application
+implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+
+// Reactive / WebFlux application
+implementation 'org.springframework.boot:spring-boot-starter-webflux'
+```
+
+OpenAPI UI is also web-stack specific. Use `eagle-openapi-starter` for shared
+OpenAPI customizations, and add the matching SpringDoc UI artifact for the
+selected web stack.
+
 > ⚠️ **必填**:挂上 `@EnableEagleResourceServer` 后,`spring.security.oauth2.resourceserver.jwt.issuer-uri`
 > 或 `jwk-set-uri` 必须配其一,否则 Spring 找不到 `JwtDecoder`,启动失败。
 > `issuer-uri` 启动时立即拉 `/.well-known/openid-configuration`(auth-server 必须可达);
@@ -35,15 +49,24 @@ spring.security.oauth2.resourceserver.jwt:
 
 # starter 自身配置
 eagle.resource-server:
-  permit-paths: # 额外放行（合并默认白名单）
+  permit-paths:                   # 额外放行（合并默认白名单）
     - /sms/code
     - /auth/refresh
-  auth-server-url: http://localhost:8080  # Swagger OAuth2 流程显示用
-  api:
-    title: 订单服务 API
-    version: v1.0.0
-    description: ""
+
+# OpenAPI / Swagger 配置已迁移到 eagle-openapi-starter（同时支持 Servlet 与 WebFlux）
+eagle.openapi:
+  title: 订单服务 API
+  version: v1.0.0
+  description: ""
+  auth-server-url: http://localhost:8080   # Swagger OAuth2 流程显示用，可空
 ```
+
+> ⚠️ **Servlet vs WebFlux 路径匹配差异**：
+> - Servlet 链路使用 Spring MVC `Ant` 语法（`*` / `**` / `?`）
+> - WebFlux 链路使用 Spring `PathPattern`（`*` / `**` / `{var}` / `{var:regex}`）
+> - 简单通配（`/x/**`、`/x/*`）在两种语法下行为一致
+> - 高级用法（`?` 单字符匹配、自定义正则）只在 PathPattern 可用，Ant 不支持
+> - `eagle.resource-server.permit-paths` 同一份配置文件在 Servlet/WebFlux 服务都用时，应避免使用 `?` 单字符匹配等仅 PathPattern 支持的高级语法
 
 主应用类加 `@EnableEagleResourceServer`：
 
@@ -65,8 +88,9 @@ public class OrderServerApplication {
 | `EagleAuthentication`             | 自定义 `Authentication`，`getPrincipal()` 返回 `EagleUser`                                                                                                |
 | `EagleJwtAuthenticationConverter` | JWT → `EagleAuthentication` 转换器                                                                                                                     |
 | `SecurityUtils`                   | 静态：`getAuthentication() / getCurrentUser() / getCurrentUserId() / getCurrentUsername() / getCurrentDeptId() / hasRole(role) / hasAnyRole(roles...)` |
-| `ResourceServerSecurityConfig`    | 默认 SecurityFilterChain（业务可覆盖更高优先级 Bean）                                                                                                             |
-| `OpenApiConfig` / `CacheConfig`   | 由 `@EnableEagleResourceServer` 自动 Import                                                                                                            |
+| `ResourceServerSecurityConfig`    | Servlet 默认 SecurityFilterChain（业务可覆盖更高优先级 Bean）                                                                                                    |
+| `ReactiveResourceServerSecurityConfig` | WebFlux 默认 SecurityWebFilterChain                                                                                                              |
+| `CacheConfig`                     | 缓存 + Redis 序列化配置（由 starter 自动 Import）                                                                                                              |
 
 ## 最小示例
 
@@ -153,13 +177,11 @@ public class CustomSecurityConfig {
 
 ## 配置项
 
-| key                                     | 类型     | 默认          | 说明                      |
-|-----------------------------------------|--------|-------------|-------------------------|
-| `eagle.resource-server.permit-paths`    | List   | `[]`        | 额外放行路径（合并默认白名单）         |
-| `eagle.resource-server.auth-server-url` | String | `""`        | Swagger OAuth2 流程绝对 URL |
-| `eagle.resource-server.api.title`       | String | `Eagle API` | OpenAPI 标题              |
-| `eagle.resource-server.api.version`     | String | `v1.0.0`    | OpenAPI 版本              |
-| `eagle.resource-server.api.description` | String | `""`        | OpenAPI 描述（空则用内置默认）     |
+| key                                  | 类型   | 默认   | 说明                                  |
+|--------------------------------------|------|------|-------------------------------------|
+| `eagle.resource-server.permit-paths` | List | `[]` | 额外放行路径（合并默认白名单，Servlet=Ant / WebFlux=PathPattern） |
+
+OpenAPI 相关配置移至 `eagle.openapi.*`（详见 `eagle-openapi-starter`）。
 
 JWT 解码走 `spring.security.oauth2.resourceserver.jwt.issuer-uri` 或 `jwk-set-uri`。
 
@@ -180,6 +202,5 @@ JWT 解码走 `spring.security.oauth2.resourceserver.jwt.issuer-uri` 或 `jwk-se
 
 ## 关联规则
 
-- `.claude/rules/12-security.md`
-- `.claude/rules/05-api.md`
-- `.claude/rules/17-tenant-permission.md`
+- `.claude/rules/05-security.md`
+- `.claude/rules/03-api-error.md`

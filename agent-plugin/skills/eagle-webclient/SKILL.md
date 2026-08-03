@@ -134,6 +134,5 @@ WebClient wechatWebClient(WebClient.Builder builder) {
 
 ## 关联规则
 
-- `.claude/rules/11-feign.md` — HTTP Client 位置 / 错误处理
-- `.claude/rules/12-security.md` — JWT 透传规范
-- `.claude/rules/17-tenant-permission.md` — 租户 ID 透传
+- `.claude/rules/06-boot4.md` — HTTP Client 位置 / 错误处理
+- `.claude/rules/05-security.md` — JWT 透传规范 / 租户 ID 透传

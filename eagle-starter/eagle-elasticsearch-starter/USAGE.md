@@ -142,5 +142,4 @@ long total = productRepository.count(query);
 
 ## 关联规则
 
-- `.claude/rules/23-performance.md` — 翻页 / 索引性能
-- `.claude/rules/06-database.md` — ES 与 RDBMS 同步策略
+- `.claude/rules/04-data.md` — 翻页 / 索引性能 / ES 与 RDBMS 同步策略

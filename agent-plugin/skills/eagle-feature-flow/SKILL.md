@@ -45,7 +45,7 @@ Phase 1  Brainstorm    ← superpowers:brainstorming
 Phase 2  Plan          ← superpowers:writing-plans          ★ 注入 Eagle rules + 决策 commands
 Phase 3  TDD           ← superpowers:test-driven-development ★ 注入 Eagle starter skills + 触发 commands
 Phase 4  Verify        ← superpowers:verification-before-completion ★ 强制 /check-arch
-Phase 5  Review        ← superpowers:requesting-code-review  ★ 对照 rules/25-review-checklist.md
+Phase 5  Review        ← superpowers:requesting-code-review  ★ 对照 rules/07-checklist.md
 Phase 6  Finish        ← superpowers:finishing-a-development-branch
 ```
 
@@ -80,21 +80,20 @@ Phase 6  Finish        ← superpowers:finishing-a-development-branch
 
 **A. 必读以下 rules**(写 plan 前先读,把约束体现在 plan 里):
 
-| 涉及           | 必读规则                                                |
-|--------------|-----------------------------------------------------|
-| 新模块 / 跨模块    | `rules/03-architecture.md` + `rules/04-modulith.md` |
-| 新聚合根 / 实体    | `rules/03-architecture.md` + `rules/06-database.md` |
-| 新接口          | `rules/05-api.md` + `rules/18-openapi.md`           |
-| 新错误码         | `rules/07-exception.md` + `rules/20-i18n.md`        |
-| 新事件 / MQ 消费  | `rules/15-messaging.md` + `rules/08-concurrency.md` |
-| 新缓存 / 锁      | `rules/14-cache.md`                                 |
-| 多租户 / 数据权限   | `rules/17-tenant-permission.md`                     |
-| 涉及金额 / 分布式事务 | `rules/16-transaction-distributed.md`               |
-| 新 starter    | `rules/10-starter.md`                               |
-| 新定时任务        | `rules/27-scheduling.md`                            |
-| DB 变更        | `rules/28-migration.md`                             |
+| 涉及                 | 必读                                                            |
+|--------------------|---------------------------------------------------------------|
+| 新模块 / 跨模块 / 事件契约   | `rules/02-architecture.md`                                    |
+| 新聚合根 / 实体 / DB 变更  | `rules/02-architecture.md` + `rules/04-data.md`               |
+| 新接口 / 新错误码         | `rules/03-api-error.md`                                       |
+| 多租户 / 数据权限 / 安全    | `rules/05-security.md` + `eagle-tenant` / `eagle-row-security` skill |
+| Boot 4 / Jackson 3 写法存疑 | `rules/06-boot4.md`                               |
+| 新事件 / MQ 消费        | `rules/02-architecture.md` + `eagle-rocketmq` skill           |
+| 新缓存 / 锁            | `eagle-redis` skill                                           |
+| 涉及金额 / 分布式事务       | `eagle-seata` skill                                           |
+| 新定时任务              | `eagle-scheduler` skill                                       |
+| 新 starter          | `rules/06-boot4.md` + `/new-starter`                    |
 
-不确定要读哪些 → 读 `rules/25-review-checklist.md`(汇总索引)。
+写代码前先扫一遍 `rules/07-checklist.md` 的「高频陷阱」表(Eagle 特有 API,凭直觉写必错)。
 
 **B. 在 plan 中预先决定要触发哪些 Eagle commands**:
 
@@ -114,16 +113,15 @@ Phase 6  Finish        ← superpowers:finishing-a-development-branch
 <一句话说明目标>
 
 ## Eagle Rules Applied(本次依据的规范)
-- rules/03-architecture.md(跨域 Port/Adapter)
-- rules/15-messaging.md(MQ 幂等)
+- rules/02-architecture.md(跨域 Port/Adapter)
 - ...
 
 ## Steps
-1. [ ] /new-module points         (依据 rules/04-modulith.md)
-2. [ ] /new-aggregate points PointAccount  (依据 rules/06-database.md)
+1. [ ] /new-module points         (依据 rules/02-architecture.md)
+2. [ ] /new-aggregate points PointAccount  (依据 rules/04-data.md)
 3. [ ] /add-error-code PointErrorCode INSUFFICIENT_BALANCE error.point.insufficient_balance
 4. [ ] 实现 PointAccount.debit() 状态机 + UT
-5. [ ] 实现 RocketMQ 消费者 + Inbox 表 + UT(rules/15-messaging.md 的支付级强一致)
+5. [ ] 实现 RocketMQ 消费者 + 业务幂等 + UT(依据 rules/02-architecture.md 的集成事件契约)
 6. [ ] /check-arch
 7. [ ] 集成测试 / 手工验证
 ```
@@ -177,7 +175,7 @@ Phase 6  Finish        ← superpowers:finishing-a-development-branch
 
 每个 skill 内含 starter 的 API、配置、典型用法、陷阱。**写涉及该 starter 的代码前必须先 invoke 对应 skill**,而不是凭记忆写。
 
-**D. 测试规范**(`rules/09-testing.md`):
+**D. 测试规范**(`rules/00-core.md`):
 
 - JUnit 5 + Mockito + AAA 结构
 - `@Nested` + `@DisplayName` 分组
@@ -200,13 +198,13 @@ Phase 6  Finish        ← superpowers:finishing-a-development-branch
 **强制动作**:
 
 1. **`/check-arch`**(agent-plugin 提供) — Modulith 静态验证 + 模块测试 + 全量构建,3/3 全绿
-    - Modulith 违规 → 按 `rules/04-modulith.md` 加 `@NamedInterface` / 改 `allowedDependencies` / 重构 Port-Adapter
+    - Modulith 违规 → 按 `rules/02-architecture.md` 加 `@NamedInterface` / 改 `allowedDependencies` / 重构 Port-Adapter
     - 编译失败 → 调用 `everything-claude-code:java-build-resolver` agent 修
     - 测试回归 → 回到 Phase 3 修测试和实现
 2. **`./gradlew clean build`** 通过(`/check-arch` 内部已包含)
 3. **涉及 UI** 的特性已手工启动 dev server 在浏览器验证(单元测试不能替代 UI 验证)
 4. **涉及 DB** 的变更已在本地数据库跑过 Flyway migration,确认能 up 也能(若有)down
-5. **关键路径有日志埋点**(对照 `rules/13-logging.md` 的"核心操作必须埋点"清单)
+5. **关键路径有日志埋点**(对照 `rules/05-security.md` 的"核心操作必须埋点"清单)
 
 **通过条件**:所有验证命令绿;手动验证场景有截图或描述。
 
@@ -220,7 +218,7 @@ Phase 6  Finish        ← superpowers:finishing-a-development-branch
 
 **强制动作**:
 
-1. 打开 `agent-plugin/rules/25-review-checklist.md`,逐项对照(命名 / 架构 / API / 数据库 / 异常 / 日志 / 并发 / 测试 /
+1. 打开 `agent-plugin/rules/07-checklist.md`,逐项对照(命名 / 架构 / API / 数据库 / 异常 / 日志 / 并发 / 测试 /
    Starter / Feign / 安全 / 缓存 / 消息 / 多租户 / 配置 / 性能,共 16 大类)
 2. 发现的问题 → 修复(回到 Phase 3 局部迭代)或显式记入 PR 描述的"已知风险与跟进项"
 3. 可选:调用 `everything-claude-code:java-reviewer` agent 做第二轮自动评审
@@ -237,8 +235,8 @@ Phase 6  Finish        ← superpowers:finishing-a-development-branch
 
 **动作**:
 
-- 整理 commit(按 `rules/22-git.md` 的 Conventional Commits 与原子提交规范)
-- 写 PR 描述(模板见 `rules/25-review-checklist.md` 末尾)
+- 整理 commit(按 `rules/00-core.md` 的 Conventional Commits 与原子提交规范)
+- 写 PR 描述(模板见 `rules/07-checklist.md` 末尾)
 - push + open PR + 分配 reviewer
 
 **最后输出**:flow 总结报告
@@ -278,7 +276,7 @@ Phase 4/6: Verify
   → 手动 API 验证 ✅
 
 Phase 5/6: Review
-  → 对照 rules/25-review-checklist.md
+  → 对照 rules/07-checklist.md
   → 发现 3 处 logging 不规范,修复
 
 Phase 6/6: Finish
@@ -299,7 +297,7 @@ Phase 3: TDD
   → 加载 skills: eagle-common, eagle-feign-client(若适配器走 Feign)
   → 先确保现有测试覆盖了所重构的行为,再做重构,期间测试必须保持绿
 Phase 4: /check-arch
-Phase 5: rules/25-review-checklist.md 自检
+Phase 5: rules/07-checklist.md 自检
 Phase 6: 收尾
 ```
 
@@ -309,8 +307,8 @@ Phase 6: 收尾
 
 | 资源类型               | 路径                                          | 用途                   |
 |--------------------|---------------------------------------------|----------------------|
-| **规范文档(必读)**       | `agent-plugin/rules/01-30*.md`              | Phase 2 写 plan 的约束输入 |
-| **PR 自检清单**        | `agent-plugin/rules/25-review-checklist.md` | Phase 5 评审依据         |
+| **规范文档(必读)**       | `agent-plugin/rules/00-06*.md`(7 份)              | Phase 2 写 plan 的约束输入 |
+| **PR 自检清单**        | `agent-plugin/rules/07-checklist.md` | Phase 5 评审依据         |
 | **Slash Commands** | `agent-plugin/commands/*.md`                | Phase 3 触发的脚手架命令     |
 | **Starter Skills** | `agent-plugin/skills/eagle-*/SKILL.md`      | Phase 3 写代码时按需加载     |
 

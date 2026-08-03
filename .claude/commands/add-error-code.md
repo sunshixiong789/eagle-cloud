@@ -107,6 +107,6 @@ toServiceException(cause);
 
 ## 参考规则
 
-- `07-exception.md` — 异常体系
-- `01-naming.md` — ErrorCode 命名
-- `20-i18n.md` — i18n key 命名
+- `02-api-error.md` — 异常体系
+- `00-core.md` — ErrorCode 命名
+- `02-api-error.md` — i18n key 命名

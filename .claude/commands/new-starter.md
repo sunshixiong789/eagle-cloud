@@ -5,7 +5,7 @@ argument-hint: "<feature-name>，例 webhook（生成 eagle-webhook-starter）"
 
 # /new-starter — 创建新 Starter 模块
 
-按 `10-starter.md` 规范创建一个完整的自动配置 starter，自动注册到 settings.gradle、生成
+按 `05-boot4-traps.md` 规范创建一个完整的自动配置 starter，自动注册到 settings.gradle、生成
 build.gradle、AutoConfiguration、Properties、imports 文件。
 
 ## 输入
@@ -166,6 +166,6 @@ AutoConfigurationTest {
 
 ## 参考规则
 
-- `10-starter.md` — Starter 模板与命名
-- `19-config.md` — Properties 类规范
-- `30-dependency.md` — 依赖范围
+- `05-boot4-traps.md` — Starter 模板与命名
+- `00-core.md` — Properties 类规范
+- `00-core.md` — 依赖范围

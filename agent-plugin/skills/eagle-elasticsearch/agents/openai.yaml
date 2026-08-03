@@ -1,3 +1,3 @@
 interface:
   display_name: "Eagle Elasticsearch"
-  short_description: "Use when working with Elasticsearch in eagle-cloud projects — full-text search, "
+  short_description: "Use when working with Elasticsearch in eagle-cloud projects — full-text search"

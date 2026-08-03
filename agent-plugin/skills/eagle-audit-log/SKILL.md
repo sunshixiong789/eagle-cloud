@@ -137,6 +137,5 @@ public class AuditQueryService {
 
 ## 关联规则
 
-- `.claude/rules/12-security.md` — 哪些操作必须写审计日志
-- `.claude/rules/08-concurrency.md` — AFTER_COMMIT 异步事件
-- `.claude/rules/13-logging.md` — 审计事件不靠 log.info，靠 @AuditLog
+- `.claude/rules/05-security.md` — 哪些操作必须写审计日志 / 审计事件不靠 log.info，靠 @AuditLog
+- `.claude/rules/04-data.md` — AFTER_COMMIT 异步事件

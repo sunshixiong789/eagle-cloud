@@ -112,5 +112,4 @@ public OrderResponse createV2(...) { ...}
 
 ## 关联规则
 
-- `.claude/rules/05-api.md`
-- `.claude/rules/15-messaging.md` — 消息侧幂等不同方案
+- `.claude/rules/03-api-error.md`

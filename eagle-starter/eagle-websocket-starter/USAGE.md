@@ -161,6 +161,4 @@ disconnectUser(userId);
 
 ## 关联规则
 
-- `.claude/rules/12-security.md`
-- `.claude/rules/14-cache.md` — Redis 离线消息 Key 命名
-- `.claude/rules/24-deployment.md` — 集群 Sticky Session
+- `.claude/rules/05-security.md`

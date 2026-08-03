@@ -163,5 +163,4 @@ public void exportLarge(HttpServletResponse response) throws IOException {
 
 ## 关联规则
 
-- `.claude/rules/26-file-storage.md` — 导出文件先写 OSS，再返回签名 URL（大文件）
-- `.claude/rules/23-performance.md` — 大数据量流式处理
+- `.claude/rules/04-data.md` — 大数据量流式处理

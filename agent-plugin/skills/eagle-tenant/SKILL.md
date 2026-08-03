@@ -142,5 +142,5 @@ void clear() {
 
 ## 关联规则
 
-- `.claude/rules/17-tenant-permission.md`
-- `.claude/rules/06-database.md` — `tenant_id` 索引前导
+- `.claude/rules/05-security.md`
+- `.claude/rules/04-data.md` — `tenant_id` 索引前导

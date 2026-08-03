@@ -128,6 +128,5 @@ public class OrderController {
 
 ## 关联规则
 
-- `.claude/rules/12-security.md` — 防刷
-- `.claude/rules/23-performance.md` — 容量规划
-- `.claude/rules/24-deployment.md` — 网关 Sentinel
+- `.claude/rules/05-security.md` — 防刷
+- `.claude/rules/04-data.md` — 容量规划

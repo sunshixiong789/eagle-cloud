@@ -110,7 +110,7 @@ eagle-feature-flow 激活(本 plugin) ← 仅手动触发,不识别普通需求�
     ├─ Phase 2 Plan       → superpowers:writing-plans   + 读 rules/* + 决策 commands
     ├─ Phase 3 TDD        → superpowers:tdd             + 加载 starter skills + 触发 commands
     ├─ Phase 4 Verify     → superpowers:verification    + /check-arch
-    ├─ Phase 5 Review     → superpowers:code-review     + rules/25-review-checklist.md
+    ├─ Phase 5 Review     → superpowers:code-review     + rules/07-checklist.md
     └─ Phase 6 Finish     → superpowers:finishing-branch
 ```
 
@@ -160,7 +160,7 @@ eagle-feature-flow 激活(本 plugin) ← 仅手动触发,不识别普通需求�
 > 用 superpowers brainstorming 帮我澄清"会员等级体系"需求
 [模型走完 brainstorming]
 
-> 现在写 plan,记得读 .claude/rules/03-architecture.md 和 06-database.md
+> 现在写 plan,记得读 .claude/rules/02-architecture.md 和 03-data.md
 [模型用 superpowers writing-plans + 读规则]
 
 > 创建 membership 模块
@@ -177,7 +177,7 @@ eagle-feature-flow 激活(本 plugin) ← 仅手动触发,不识别普通需求�
 > /check-arch
 [Eagle command 跑架构验证]
 
-> 对照 .claude/rules/25-review-checklist.md 帮我自评一遍
+> 对照 .claude/rules/07-checklist.md 帮我自评一遍
 [模型对照清单]
 ```
 
@@ -227,7 +227,7 @@ eagle-feature-flow 激活(本 plugin) ← 仅手动触发,不识别普通需求�
 
 [Eagle Flow] Phase 5/6: Review
   调用 superpowers:requesting-code-review
-  对照 rules/25-review-checklist.md
+  对照 rules/07-checklist.md
   → 发现 3 处 logging 不规范,修复
 
 [Eagle Flow] Phase 6/6: Finish
@@ -253,10 +253,9 @@ eagle-feature-flow 激活(本 plugin) ← 仅手动触发,不识别普通需求�
 
 模型按 6 阶段走。Phase 2 会读:
 
-- `rules/03-architecture.md`(发票算独立聚合根还是订单子实体?)
-- `rules/05-api.md`(URL 设计)
-- `rules/15-messaging.md`(开票完成事件)
-- `rules/12-security.md`(开票涉及敏感信息脱敏)
+- `rules/02-architecture.md`(发票算独立聚合根还是订单子实体?)
+- `rules/03-api-error.md`(URL 设计)
+- `rules/05-security.md`(开票涉及敏感信息脱敏)
 
 Phase 3 会触发:`/new-aggregate order Invoice` 或 `/new-module invoice`(取决于 Phase 2 决策)。
 
@@ -272,7 +271,7 @@ Phase 3 会触发:`/new-aggregate order Invoice` 或 `/new-module invoice`(取�
 
 Phase 2 plan 重点:
 
-- 读 `rules/03-architecture.md` 的 Port/Adapter 章节
+- 读 `rules/02-architecture.md` 的 Port/Adapter 章节
 - 决定 Port 接口放在 `payment::port`,加 `@NamedInterface`
 
 Phase 3 跳过 commands(纯重构),直接 TDD:先确保测试覆盖现有行为 → 重构期间测试保持绿。
@@ -298,7 +297,7 @@ L1 模式即可:模型读 CLAUDE.md → 知道 Eagle 用乐观锁(`@Version`)→
 > 把 OrderController 的日志级别从 info 改成 debug
 ```
 
-直接改即可。模型最多读 `rules/13-logging.md` 校对一下。
+直接改即可。模型最多读 `rules/05-security.md` 校对一下。
 
 ---
 
@@ -392,7 +391,7 @@ L1 模式即可:模型读 CLAUDE.md → 知道 Eagle 用乐观锁(`@Version`)→
 
 # 4. 涉及 DB 变更 → 本地跑过 Flyway migration
 
-# 5. 对照 25-review-checklist.md 自检 16 大类
+# 5. 对照 06-checklist.md 自检 16 大类
 ```
 
 L3 流程的 Phase 4 / Phase 5 已自动包含以上;L1 / L2 必须手动。
@@ -561,4 +560,4 @@ codex plugin install eagle-cloud@eagle-cloud
 >
 > 想做新功能 → "我要做 X" → flow 自动启动 → 6 阶段跑完 → PR ready。
 >
-> 不想被流程绑架 → 用 L1 / L2,但 PR 前手动 `/check-arch`,别忘对照 `rules/25-review-checklist.md`。
+> 不想被流程绑架 → 用 L1 / L2,但 PR 前手动 `/check-arch`,别忘对照 `rules/07-checklist.md`。

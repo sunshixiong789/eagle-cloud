@@ -135,6 +135,4 @@ keyGenerators:
 
 ## 关联规则
 
-- `.claude/rules/06-database.md` — 索引 / 物理 FK 禁止
-- `.claude/rules/16-transaction-distributed.md` — 跨分片事务
-- `.claude/rules/23-performance.md` — 大数据量分页
+- `.claude/rules/04-data.md` — 索引 / 物理 FK 禁止 / 大数据量分页

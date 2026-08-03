@@ -12,7 +12,7 @@ argument-hint: "<service>:<module>:<AggregateName>，例 eagle-system-server:ord
 - Infrastructure：JPA Repository 实现
 - Interfaces：Controller + Request DTO + Response DTO
 
-严格遵循 `03-architecture.md` / `01-naming.md` / `02-code-style.md`。
+严格遵循 `01-architecture.md` / `00-core.md` / `00-core.md`。
 
 ## 输入解析
 
@@ -271,14 +271,14 @@ ApplicationServiceTest {
 1. 已生成文件列表
 2. 提示用户：
     - 用 `/add-error-code` 添加 i18n 翻译
-    - 写 Flyway 建表脚本（`28-migration.md` 模板）
+    - 写 Flyway 建表脚本（`03-data.md` 模板）
     - 跑 `/check-arch` 确保架构验证通过
 3. 关键 TODO 占位：JPA 字段 / 业务方法 / 事件载荷 / 单元测试覆盖
 
 ## 参考规则
 
-- `01-naming.md` `02-code-style.md` `03-architecture.md`
-- `06-database.md` — 实体规范
-- `07-exception.md` — ErrorCode
-- `09-testing.md` — 单元测试结构
-- `18-openapi.md` — Swagger 注解
+- `00-core.md` `00-core.md` `01-architecture.md`
+- `03-data.md` — 实体规范
+- `02-api-error.md` — ErrorCode
+- `00-core.md` — 单元测试结构
+- `02-api-error.md` — Swagger 注解

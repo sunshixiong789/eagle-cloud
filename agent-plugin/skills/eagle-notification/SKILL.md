@@ -152,6 +152,6 @@ public class WechatMpChannel implements MessageChannel {
 
 ## 关联规则
 
-- `.claude/rules/12-security.md` — 验证码安全
-- `.claude/rules/19-config.md` — 凭证加密
-- `.claude/rules/20-i18n.md` — 多语言模板
+- `.claude/rules/05-security.md` — 验证码安全
+- `.claude/rules/00-core.md` — 凭证加密
+- `.claude/rules/03-api-error.md` — 多语言模板

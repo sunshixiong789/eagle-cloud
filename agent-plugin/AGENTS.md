@@ -22,21 +22,15 @@
 
 | 场景 | 规则 |
 | --- | --- |
-| 命名 / Java 风格 | `rules/01-naming.md`、`rules/02-code-style.md` |
-| DDD / Modulith / 跨模块 | `rules/03-architecture.md`、`rules/04-modulith.md` |
-| REST / OpenAPI | `rules/05-api.md`、`rules/18-openapi.md` |
-| JPA / Flyway | `rules/06-database.md`、`rules/28-migration.md` |
-| 异常 / i18n | `rules/07-exception.md`、`rules/20-i18n.md` |
-| 事务 / 并发 / 事件 | `rules/08-concurrency.md`、`rules/29-event-driven.md` |
-| 测试 | `rules/09-testing.md` |
-| Starter / 依赖 | `rules/10-starter.md`、`rules/30-dependency.md` |
-| HTTP 客户端 | `rules/11-feign.md` |
-| 安全 / 配置 | `rules/12-security.md`、`rules/19-config.md` |
-| 日志 / 性能 / 部署 | `rules/13-logging.md`、`rules/23-performance.md`、`rules/24-deployment.md` |
-| 缓存 / 消息 / 分布式事务 | `rules/14-cache.md`、`rules/15-messaging.md`、`rules/16-transaction-distributed.md` |
-| 租户 / 数据权限 | `rules/17-tenant-permission.md` |
-| 文件存储 / 调度 / 韧性 | `rules/26-file-storage.md`、`rules/27-scheduling.md`、`rules/21-resilience.md` |
-| PR 自检 | `rules/25-review-checklist.md` |
+| 命名 / Java 风格 / Lombok / 测试 / 依赖 | `rules/00-core.md` |
+| Java 25 语言基线（record / sealed / 模式匹配 / 虚拟线程） | `rules/01-java25.md` |
+| DDD 分层 / Modulith / 领域事件 / 集成事件 | `rules/02-architecture.md` |
+| REST / OpenAPI / 异常 / 错误码 / i18n | `rules/03-api-error.md` |
+| JPA / 索引 / 事务 / 并发 / Flyway | `rules/04-data.md` |
+| 安全 / 租户 / 数据权限 / 日志 | `rules/05-security.md` |
+| Spring Boot 4 / Jackson 3 / starter / HTTP 客户端 | `rules/06-boot4.md` |
+| 高频陷阱 / PR 自检 | `rules/07-checklist.md` |
+| 缓存 / 消息 / 分布式事务 / 调度 / 存储 / 韧性 | 对应 starter skill（`eagle-redis` / `eagle-rocketmq` / `eagle-seata` / `eagle-scheduler` / `eagle-oss-minio` / `eagle-resilience`） |
 
 只保留和当前任务相关的规则上下文。通用编程常识由模型默认能力和现有代码风格处理；Eagle 专有 API、starter 用法、
 模块边界、配置键、迁移策略和踩坑记录必须按规则执行。

@@ -89,5 +89,4 @@ public class ComplexService {
 
 ## 关联规则
 
-- `.claude/rules/13-logging.md` — MDC + 日志格式
-- `.claude/rules/24-deployment.md` — 监控接入
+- `.claude/rules/05-security.md` — MDC + 日志格式

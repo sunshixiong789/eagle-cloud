@@ -172,6 +172,5 @@ public class InventoryTccActionImpl implements InventoryTccAction {
 
 ## 关联规则
 
-- `.claude/rules/16-transaction-distributed.md` — 选型决策
-- `.claude/rules/11-feign.md` — XID 自动透传
-- `.claude/rules/08-concurrency.md`
+- `.claude/rules/06-boot4.md` — XID 自动透传
+- `.claude/rules/04-data.md`

@@ -3,7 +3,7 @@ name: eagle-restclient
 description: Use when implementing service-to-service HTTP clients in eagle-cloud projects — Spring RestClient / HTTP Service Interface, automatic JWT/tenant-id/Seata-XID propagation, EagleResponseErrorHandler converting downstream HTTP errors to AppException hierarchy
 ---
 
-# eagle-restclient-starter — RestClient / HTTP Service 客户端
+# eagle-restclient-starter — 同步 RestClient + @HttpExchange
 
 ## 何时使用
 
@@ -138,7 +138,5 @@ RestClient wechatRestClient(RestClient.Builder builder) {
 
 ## 关联规则
 
-- `.claude/rules/11-feign.md`（历史文件名，内容已迁移为 HTTP Client 规范）
-- `.claude/rules/16-transaction-distributed.md` — XID 透传
-- `.claude/rules/12-security.md` — JWT 透传
-- `.claude/rules/17-tenant-permission.md` — 租户透传
+- `.claude/rules/06-boot4.md` — HTTP Client 位置 / 错误处理 / `RestClient` 取代 `RestTemplate`
+- `.claude/rules/05-security.md` — JWT 透传 / 租户透传

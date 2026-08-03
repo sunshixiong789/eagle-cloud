@@ -90,4 +90,4 @@ argument-hint: "[功能描述,可选;如\"用户积分系统\"]"
 
 - `skills/eagle-feature-flow/SKILL.md` — flow 完整定义
 - `USAGE.md` — 三种使用层次、典型场景走读、FAQ
-- `rules/25-review-checklist.md` — Phase 5 评审依据
+- `rules/07-checklist.md` — Phase 5 评审依据

@@ -151,6 +151,5 @@ public Mono<Void> atomicUpdate(Long id, String newTitle) {
 
 ## 关联规则
 
-- `.claude/rules/03-architecture.md` — 聚合根规范（R2DBC 版同样适用）
-- `.claude/rules/06-database.md` — 跨聚合只存 ID，无物理 FK
-- `.claude/rules/08-concurrency.md` — 乐观锁与事务边界
+- `.claude/rules/02-architecture.md` — 聚合根规范（R2DBC 版同样适用）
+- `.claude/rules/04-data.md` — 跨聚合只存 ID，无物理 FK / 乐观锁与事务边界

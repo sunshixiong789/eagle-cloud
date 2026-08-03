@@ -144,5 +144,4 @@ public String generateInviteCode() {
 
 ## 关联规则
 
-- `.claude/rules/06-database.md` — 主键策略
-- `.claude/rules/24-deployment.md` — `WORKER_ID` 容器化注入
+- `.claude/rules/04-data.md` — 主键策略

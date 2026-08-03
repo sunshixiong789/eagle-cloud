@@ -5,7 +5,7 @@ argument-hint: "<服务名>:<模块名>，例 eagle-system-server:order"
 
 # /new-module — 创建新业务模块
 
-按 `03-architecture.md` + `04-modulith.md` 规范创建一个完整的 DDD 业务模块骨架。
+按 `01-architecture.md` + `01-architecture.md` 规范创建一个完整的 DDD 业务模块骨架。
 
 ## 输入解析
 
@@ -109,12 +109,12 @@ package com.eagle.{service-short}.{module}.interfaces.exception;
 
 - 完整目录结构
 - 所有 `package-info.java`
-- 占位的 ErrorCode 枚举（提示后续按 `01-naming.md` 命名）
+- 占位的 ErrorCode 枚举（提示后续按 `00-core.md` 命名）
 - 提示下一步：使用 `/new-aggregate` 创建聚合根
 
 ## 参考规则
 
-- `03-architecture.md` — DDD 分层
-- `04-modulith.md` — 模块声明
-- `01-naming.md` — 命名规范
-- `02-code-style.md` — `@NullMarked` 要求
+- `01-architecture.md` — DDD 分层
+- `01-architecture.md` — 模块声明
+- `00-core.md` — 命名规范
+- `00-core.md` — `@NullMarked` 要求

@@ -49,23 +49,21 @@ gradle dependencyUpdates
 
 ## 按场景读取规则
 
+后端规则位于 `agent-plugin/rules/`（软链接为 `.claude/rules/`），共 8 份：
+
 | 场景 | 规则 |
 | --- | --- |
-| 命名 / Java 风格 | `agent-plugin/rules/01-naming.md`、`02-code-style.md` |
-| DDD / Modulith / 跨模块 | `03-architecture.md`、`04-modulith.md` |
-| REST / OpenAPI | `05-api.md`、`18-openapi.md` |
-| JPA / Flyway | `06-database.md`、`28-migration.md` |
-| 异常 / i18n | `07-exception.md`、`20-i18n.md` |
-| 事务 / 并发 / 事件 | `08-concurrency.md`、`29-event-driven.md` |
-| 测试 | `09-testing.md` |
-| Starter / 依赖 | `10-starter.md`、`30-dependency.md` |
-| HTTP 客户端 | `11-feign.md` |
-| 安全 / 配置 | `12-security.md`、`19-config.md` |
-| 日志 / 性能 / 部署 | `13-logging.md`、`23-performance.md`、`24-deployment.md` |
-| 缓存 / 消息 / 分布式事务 | `14-cache.md`、`15-messaging.md`、`16-transaction-distributed.md` |
-| 租户 / 数据权限 | `17-tenant-permission.md` |
-| 文件存储 / 调度 / 韧性 | `26-file-storage.md`、`27-scheduling.md`、`21-resilience.md` |
-| PR 自检 | `25-review-checklist.md` |
+| 命名 / Java 风格 / Lombok / 测试 / 依赖 | `00-core.md` |
+| Java 25 语言基线（record / sealed / 模式匹配 / 虚拟线程） | `01-java25.md` |
+| DDD 分层 / Modulith / 领域事件 / 集成事件 | `02-architecture.md` |
+| REST / OpenAPI / 异常 / 错误码 / i18n | `03-api-error.md` |
+| JPA / 索引 / 事务 / 并发 / Schema | `04-data.md` |
+| 安全 / 租户 / 数据权限 / 日志 | `05-security.md` |
+| Spring Boot 4 / Jackson 3 / starter / HTTP 客户端 | `06-boot4.md` |
+| 高频陷阱 / 存量违例台账 / PR 自检 | `07-checklist.md` |
+| 缓存 / 消息 / 分布式事务 / 调度 / 存储 / 韧性 | 对应 starter skill（`eagle-redis` / `eagle-rocketmq` / `eagle-seata` / `eagle-scheduler` / `eagle-oss-minio` / `eagle-resilience`） |
+
+前端规则位于 `agent-plugin/rules-frontend/`（本仓库无前端代码，供下游前端项目使用）。
 
 只读取本次任务相关规则。规则里若只是通用编程常识，以现有代码风格和模型默认能力处理；若包含 Eagle 专有 API、命名、边界、配置或踩坑记录，必须遵守。
 

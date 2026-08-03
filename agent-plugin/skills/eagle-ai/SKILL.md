@@ -174,6 +174,4 @@ public class RagService {
 
 ## 关联规则
 
-- `.claude/rules/12-security.md` — 敏感字段不进 Prompt
-- `.claude/rules/14-cache.md` — Redis TTL 设计
-- `.claude/rules/21-resilience.md` — Resilience4J 熔断
+- `.claude/rules/05-security.md` — 敏感字段不进 Prompt

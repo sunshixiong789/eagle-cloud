@@ -44,10 +44,10 @@
 你现在能查阅哪些 eagle-cloud 开发规范？列出文件名。
 ```
 
-**预期**：AI 应列出 `01-naming.md` 到 `30-dependency.md` 共 30 份规则。
+**预期**：AI 应列出 `00-core.md` 到 `00-core.md` 共 30 份规则。
 
 - [ ] AI 能列出所有规则
-- [ ] AI 能引用规则文件（如"详见 13-logging.md"）
+- [ ] AI 能引用规则文件（如"详见 04-security.md"）
 
 ### 1.3 Skill 触发验证
 
@@ -193,7 +193,7 @@ JPA 实体的审计字段叫什么名字？
 帮我写一个订单查询 Controller。
 ```
 
-**预期 ✅**：每个方法都有 `@PreAuthorize`（详见 `05-api.md`）
+**预期 ✅**：每个方法都有 `@PreAuthorize`（详见 `02-api-error.md`）
 
 - [ ] 每个 endpoint 都有 `@PreAuthorize`
 - [ ] 创建接口返回 `201 Created`

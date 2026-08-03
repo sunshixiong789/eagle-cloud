@@ -100,6 +100,6 @@ customerRepository.findByMobileHash(DigestUtils.sha256Hex(mobile + salt));
 
 ## 关联规则
 
-- `.claude/rules/12-security.md` — 敏感字段存储规范
-- `.claude/rules/19-config.md` — Jasypt 加密配置
-- `.claude/rules/06-database.md` — 字段注释规范
+- `.claude/rules/05-security.md` — 敏感字段存储规范
+- `.claude/rules/00-core.md` — Jasypt 加密配置
+- `.claude/rules/04-data.md` — 字段注释规范

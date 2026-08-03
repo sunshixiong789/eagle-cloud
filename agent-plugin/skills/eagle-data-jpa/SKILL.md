@@ -115,7 +115,7 @@ JPA / Hibernate 标准配置走 `spring.jpa.*` 和 `spring.jpa.properties.hibern
 
 ## 常见错误
 
-- ❌ 生产 `ddl-auto: update` → ✅ `validate`（详见 `28-migration.md`）
+- ❌ 生产 `ddl-auto: update` → ✅ `validate`（详见 `03-data.md`）
 - ❌ `open-in-view: true` → ✅ `false`
 - ❌ 列表返回完整聚合根 → ✅ 投影接口
 - ❌ 跨聚合 `@ManyToMany` → ✅ 存 ID 集合
@@ -124,6 +124,4 @@ JPA / Hibernate 标准配置走 `spring.jpa.*` 和 `spring.jpa.properties.hibern
 
 ## 关联规则
 
-- `.claude/rules/06-database.md`
-- `.claude/rules/23-performance.md`
-- `.claude/rules/28-migration.md`
+- `.claude/rules/04-data.md`

@@ -137,5 +137,4 @@ Redis 连接走 Spring Boot 标准 `spring.data.redis.*`。
 
 ## 关联规则
 
-- `.claude/rules/14-cache.md` — Key 命名 / TTL / 防护策略
-- `.claude/rules/08-concurrency.md` — 事件驱动失效
+- `.claude/rules/04-data.md` — 事件驱动失效

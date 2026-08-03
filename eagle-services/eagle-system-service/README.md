@@ -182,7 +182,7 @@ i18n 消息见 `messages_zh_CN.properties` / `messages_en.properties` 中的 `er
 ## 数据库迁移
 
 生产路径 `src/main/resources/db/migration/`，遵循 Flyway 命名 `V{yyyyMMddHHmm}__{snake}.sql`（详见
-`.claude/rules/28-migration.md`）。本地开发为加快迭代默认使用 H2 + `ddl-auto: update`，**生产严禁**。
+`.claude/rules/04-data.md`）。本地开发为加快迭代默认使用 H2 + `ddl-auto: update`，**生产严禁**。
 
 ## 测试
 

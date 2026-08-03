@@ -151,5 +151,4 @@ public CompletableFuture<String> callAi(String prompt) { ... }
 
 ## 关联规则
 
-- `.claude/rules/21-resilience.md` — 选型决策 / 注解组合 / Fallback 规范
-- `.claude/rules/23-performance.md` — 超时配置
+- `.claude/rules/04-data.md` — 超时配置

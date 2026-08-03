@@ -14,13 +14,14 @@ description: Use when working with DDD base classes (BaseAggregateRoot, BaseEnti
 - 异常体系：`AppException` + `ErrorCode` 接口（4 个工厂方法）
 - 通用错误码枚举：
   `CommonErrorCode / DataErrorCode / FileErrorCode / OperationErrorCode / ExternalErrorCode / LockErrorCode`
-- 全局异常处理器：`GlobalExceptionHandler`
+- 全局异常处理器：Servlet 环境加载 `GlobalExceptionHandler`，WebFlux 环境加载 `ReactiveGlobalExceptionHandler`
 - 异步线程池：`@Bean("taskExecutor")`，启用 `@EnableAsync` + `@EnableScheduling`
 - i18n 静态工具：`MessageSourceUtil`
 - 业务指标：`BusinessMetrics`（Micrometer 封装）
 - 分布式锁抽象：`DistributedLock`（实现由 redis / rocketmq starter 提供）
 - 通用 DTO：`Result<T>`、`ErrorResult`、`EagleUser`
 - 全链路压测上下文：`PressureTestContext` / `PressureTestFilter`
+- Request ID 透传：Servlet 环境加载 `RequestIdMdcFilter`，WebFlux 环境加载 `RequestIdWebFilter`
 
 ## 依赖与启用
 
@@ -29,6 +30,18 @@ implementation project(':eagle-starter:eagle-common-starter')
 ```
 
 无需额外配置即生效。
+
+Web 栈由应用自己选择，`eagle-common-starter` 根据实际 Web 类型装配对应配置：
+
+```gradle
+// Servlet / Spring MVC
+implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+
+// Reactive / WebFlux
+implementation 'org.springframework.boot:spring-boot-starter-webflux'
+```
+
+不要同时引入 `spring-boot-starter-webmvc` 和 `spring-boot-starter-webflux`。
 
 ## 核心 API
 
@@ -229,7 +242,7 @@ incrementInventoryInsufficient();
 
 ## 关联规则
 
-- `.claude/rules/03-architecture.md` — DDD 分层
-- `.claude/rules/07-exception.md` — 异常体系
-- `.claude/rules/08-concurrency.md` — 事件 + 事务
-- `.claude/rules/02-code-style.md` — 基类使用规则
+- `.claude/rules/02-architecture.md` — DDD 分层
+- `.claude/rules/03-api-error.md` — 异常体系
+- `.claude/rules/04-data.md` — 事件 + 事务
+- `.claude/rules/00-core.md` — 基类使用规则

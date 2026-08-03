@@ -168,6 +168,4 @@ public TaskDecorator combinedDecorator(TaskDecorator tenantDecorator) {
 
 ## 关联规范
 
-- `.claude/rules/16-transaction-distributed.md`
-- `.claude/rules/23-performance.md` — 主从延迟
-- `.claude/rules/08-concurrency.md` — ThreadLocal 使用规范
+- `.claude/rules/04-data.md` — 主从延迟 / ThreadLocal 使用规范

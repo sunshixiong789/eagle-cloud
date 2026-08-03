@@ -994,7 +994,7 @@ public class PaymentApplicationService {
 | **Confirm** | Try 全部成功后**确认**(实际扣款、扣库存)  | 必须可重试至成功(已 Try 过资源,Confirm 一定成功) |
 | **Cancel**  | Try 失败或超时,**释放**预留资源       | 必须可重试至成功(空回滚 / 悬挂检测)             |
 
-详见 `.claude/rules/16-transaction-distributed.md`。Eagle 提供 `eagle-seata-starter` 集成 TCC 模式,RocketMQ 仅作为
+详见 `eagle-seata` skill。Eagle 提供 `eagle-seata-starter` 集成 TCC 模式,RocketMQ 仅作为
 Confirm/Cancel 阶段的事件广播通道。
 
 **适用判断**:

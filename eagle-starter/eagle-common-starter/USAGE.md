@@ -237,7 +237,7 @@ incrementInventoryInsufficient();
 
 ## 关联规则
 
-- `.claude/rules/03-architecture.md` — DDD 分层
-- `.claude/rules/07-exception.md` — 异常体系
-- `.claude/rules/08-concurrency.md` — 事件 + 事务
-- `.claude/rules/02-code-style.md` — 基类使用规则
+- `.claude/rules/02-architecture.md` — DDD 分层
+- `.claude/rules/03-api-error.md` — 异常体系
+- `.claude/rules/04-data.md` — 事件 + 事务
+- `.claude/rules/00-core.md` — 基类使用规则
