@@ -8,6 +8,7 @@ import com.eagle.auth.core.infrastructure.config.AdminProperties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -85,6 +86,25 @@ public class AccountInternalController {
     }
 
     /**
+     * 按手机号批量查询账号快照。未注册的号码不返回，调用方用差集识别未注册号码。
+     *
+     * <p>单个手机号查询也走本端点（集合传一个元素）——手机号属敏感字段，放在请求体里
+     * 避免进入 URL、access log 与 Referer（见 rules/12-security.md）。
+     *
+     * <p>注意手机号账号的 {@code username} 是 {@code "phone_" + shortHash(phone)}，
+     * 不是手机号本身，所以 {@link #findByUsername(String)} 无法用于按手机号查账号。
+     */
+    @Operation(summary = "按手机号批量查询内部账号快照",
+            description = "最多查询 100 个手机号；未注册的号码不返回")
+    @PostMapping("/by-phones")
+    public List<AccountSnapshot> findBatchByPhones(@Valid @RequestBody AccountPhoneBatchRequest request) {
+        return accountRepository.findByPhoneIn(request.phones()).stream()
+                .map(this::toSnapshot)
+                .sorted(Comparator.comparing(AccountSnapshot::accountId))
+                .toList();
+    }
+
+    /**
      * 全量账号数（权威源，不包含初始化管理员）。
      *
      * <p>主用途：system-service Dashboard 统计"总用户数"——auth_account 是注册的事实来源,
@@ -104,6 +124,13 @@ public class AccountInternalController {
     public record AccountBatchRequest(
             @Schema(description = "认证账号 ID 集合", example = "[7, 8]", requiredMode = Schema.RequiredMode.REQUIRED)
             @NotEmpty @Size(max = 100) Set<@NotNull Long> accountIds) {
+    }
+
+    /** 按手机号批量查询请求。手机号为敏感字段，故不提供 {@code example}。 */
+    @Schema(description = "按手机号批量查询账号快照请求")
+    public record AccountPhoneBatchRequest(
+            @Schema(description = "手机号集合", requiredMode = Schema.RequiredMode.REQUIRED)
+            @NotEmpty @Size(max = 100) Set<@NotBlank String> phones) {
     }
 
     /** 内部 Account 快照（仅持久化字段）。{@code locked} = 账号是否冻结（status=FROZEN）。 */

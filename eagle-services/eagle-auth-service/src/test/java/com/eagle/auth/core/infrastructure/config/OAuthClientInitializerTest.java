@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -41,6 +42,7 @@ class OAuthClientInitializerTest {
     OAuthClientRepository repository;
     OAuthClientProperties webProperties;
     OAuthAppClientProperties appProperties;
+    OAuthOpsClientProperties opsProperties;
     @InjectMocks
     OAuthClientInitializer initializer;
 
@@ -48,7 +50,8 @@ class OAuthClientInitializerTest {
     void setUp() {
         webProperties = newWebProps();
         appProperties = newAppProps();
-        initializer = new OAuthClientInitializer(repository, webProperties, appProperties);
+        opsProperties = newOpsProps();
+        initializer = new OAuthClientInitializer(repository, webProperties, appProperties, opsProperties);
     }
 
     private OAuthClientProperties newWebProps() {
@@ -87,6 +90,20 @@ class OAuthClientInitializerTest {
         return p;
     }
 
+    private OAuthOpsClientProperties newOpsProps() {
+        OAuthOpsClientProperties p = new OAuthOpsClientProperties();
+        p.setEnabled(true);
+        p.setClientId("shengxinOps");
+        p.setClientName("省心运营系统");
+        p.setClientSecret("ops-secret");
+        p.setClientAuthenticationMethods(Set.of("client_secret_basic"));
+        p.setAuthorizationGrantTypes(Set.of("client_credentials"));
+        p.setScopes(Set.of("shopping-gold.grant", "shopping-gold.revoke"));
+        p.setAccessTokenTtlSeconds(1800);
+        p.setSyncMode(SyncMode.OVERWRITE);
+        return p;
+    }
+
     private OAuthClient existingWebClient() {
         return OAuthClient.create(
                 "eagleWeb", null, "Eagle Web",
@@ -105,6 +122,8 @@ class OAuthClientInitializerTest {
         @Test
         @DisplayName("应创建New")
         void shouldCreateNew() {
+            // 本用例只覆盖 web + app 两个客户端的创建，运营端另有专门用例
+            opsProperties.setEnabled(false);
             when(repository.findByClientId(webProperties.getClientId()))
                     .thenReturn(Optional.empty());
             // app client also missing
@@ -129,6 +148,7 @@ class OAuthClientInitializerTest {
         void shouldSyncWhenOverwrite() {
             webProperties.setSyncMode(SyncMode.OVERWRITE);
             appProperties.setEnabled(false);
+            opsProperties.setEnabled(false);
 
             OAuthClient existing = existingWebClient();
             // 触发"name 变更"
@@ -149,6 +169,7 @@ class OAuthClientInitializerTest {
             webProperties.setSyncMode(SyncMode.CREATE_ONLY);
             webProperties.setClientName("New Name That Should NOT Apply");
             appProperties.setEnabled(false);
+            opsProperties.setEnabled(false);
 
             OAuthClient existing = existingWebClient();
             String originalName = existing.getClientName();
@@ -172,11 +193,66 @@ class OAuthClientInitializerTest {
         void shouldSkipEverything() {
             webProperties.setEnabled(false);
             appProperties.setEnabled(false);
+            opsProperties.setEnabled(false);
 
             initializer.run(new DefaultApplicationArguments());
 
             verify(repository, never()).findByClientId(any());
             verify(repository, never()).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("运营端 client_credentials 客户端")
+    class OpsClient {
+
+        @Test
+        @DisplayName("应按 client_credentials + client_secret_basic + 购物金 scope 创建")
+        void shouldCreateOpsClientWithClientCredentials() {
+            webProperties.setEnabled(false);
+            appProperties.setEnabled(false);
+            when(repository.findByClientId(opsProperties.getClientId()))
+                    .thenReturn(Optional.empty());
+            when(repository.save(any(OAuthClient.class))).thenAnswer(i -> i.getArgument(0));
+
+            initializer.run(new DefaultApplicationArguments());
+
+            ArgumentCaptor<OAuthClient> captor = ArgumentCaptor.forClass(OAuthClient.class);
+            verify(repository).save(captor.capture());
+            OAuthClient ops = captor.getValue();
+            assertEquals("shengxinOps", ops.getClientId());
+            assertEquals("client_credentials", ops.getAuthorizationGrantTypes());
+            assertEquals("client_secret_basic", ops.getClientAuthenticationMethods());
+            assertTrue(ops.getScopes().contains("shopping-gold.grant"));
+            assertTrue(ops.getScopes().contains("shopping-gold.revoke"));
+        }
+
+        @Test
+        @DisplayName("机器对机器无浏览器回跳,不应配置 redirect_uri")
+        void shouldNotConfigureRedirectUris() {
+            webProperties.setEnabled(false);
+            appProperties.setEnabled(false);
+            when(repository.findByClientId(opsProperties.getClientId()))
+                    .thenReturn(Optional.empty());
+            when(repository.save(any(OAuthClient.class))).thenAnswer(i -> i.getArgument(0));
+
+            initializer.run(new DefaultApplicationArguments());
+
+            ArgumentCaptor<OAuthClient> captor = ArgumentCaptor.forClass(OAuthClient.class);
+            verify(repository).save(captor.capture());
+            assertEquals("", captor.getValue().getRedirectUris());
+        }
+
+        @Test
+        @DisplayName("opsEnabled=false 时不查库不建号")
+        void shouldSkipWhenOpsDisabled() {
+            webProperties.setEnabled(false);
+            appProperties.setEnabled(false);
+            opsProperties.setEnabled(false);
+
+            initializer.run(new DefaultApplicationArguments());
+
+            verify(repository, never()).findByClientId(any());
         }
     }
 }
