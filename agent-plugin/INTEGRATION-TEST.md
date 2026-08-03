@@ -268,7 +268,7 @@ order 模块需要调用 user 模块的查询能力，怎么写？
 当前 eagle-cloud plugin 是什么版本？
 ```
 
-**预期**：能从 CLAUDE.md / AGENTS.md / plugin.json 中找到版本号 `1.2.6`
+**预期**：能从 CLAUDE.md / AGENTS.md / plugin.json 中找到版本号 `1.4.0`
 
 - [ ] 版本可被 AI 识别
 
@@ -311,7 +311,7 @@ order 模块需要调用 user 模块的查询能力，怎么写？
 === Plugin 接入测试报告 ===
 日期：YYYY-MM-DD
 业务项目：xxx
-Plugin 版本：1.2.6
+Plugin 版本：1.4.0
 工具：Claude Code / Codex CLI
 接入方式：marketplace（git） / local marketplace / submodule + 软链
 
