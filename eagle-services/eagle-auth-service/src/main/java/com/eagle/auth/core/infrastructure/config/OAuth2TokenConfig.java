@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2Token;
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -30,6 +31,7 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 
 import java.io.InputStream;
 import java.security.KeyStore;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -119,6 +121,10 @@ public class OAuth2TokenConfig {
             if (!isAccessToken && !isIdToken) {
                 return;
             }
+            if (AuthorizationGrantType.CLIENT_CREDENTIALS.equals(context.getAuthorizationGrantType())) {
+                customizeClientCredentials(context);
+                return;
+            }
             Authentication principal = context.getPrincipal();
             // 所有 grant type 的 Principal 在 OAuth2Authorization 中均只持久化 username（SAS Jackson 白名单兼容），
             // 此处统一经 UserDetailsService 二次加载，把业务扩展字段写入 JWT claims；
@@ -139,5 +145,31 @@ public class OAuth2TokenConfig {
                     .claim(SecurityConstants.DETAILS_PHONE, Objects.requireNonNullElse(user.getPhone(), ""))
                     .claim(SecurityConstants.DETAILS_AVATAR, Objects.requireNonNullElse(user.getAvatar(), ""));
         };
+    }
+
+    /**
+     * {@code client_credentials} 的 claim 定制——机器对机器，没有用户 principal。
+     *
+     * <p>两点与用户流程不同，都是被下游硬性要求的：
+     * <ul>
+     *   <li><strong>不查 UserDetailsService</strong>：该 grant 下 {@code principal.getName()} 是 client_id，
+     *       拿它当用户名查库必然 {@code UsernameNotFoundException}，token 会直接签发失败。</li>
+     *   <li><strong>必须写 {@code preferred_username}</strong>：下游 {@code EagleJwtAuthenticationConverter}
+     *       用该 claim 重建 {@code EagleUser}，而 {@code EagleUser} 继承的 Spring Security {@code User}
+     *       断言用户名非空，缺失会在资源服务器侧认证转换阶段抛异常。这里写入 client_id，
+     *       业务侧即可用它作为操作人标识（{@code id} claim 不写，故 getCurrentUserId() 为 null）。</li>
+     * </ul>
+     *
+     * <p>scope 写进 {@code roles} claim 而非依赖标准 {@code scope} claim：
+     * {@code EagleJwtAuthenticationConverter} 只从 {@code roles} 构造 authority，
+     * 资源服务器侧因此用 {@code hasRole('shopping-gold.grant')} 而不是 {@code hasAuthority('SCOPE_...')}。
+     */
+    private void customizeClientCredentials(JwtEncodingContext context) {
+        context.getClaims()
+                .claim(SecurityConstants.DETAILS_USERNAME, context.getRegisteredClient().getClientId())
+                .claim(DETAILS_ROLES, List.copyOf(context.getAuthorizedScopes()))
+                .claim(SecurityConstants.DETAILS_USER_NAME, "")
+                .claim(SecurityConstants.DETAILS_PHONE, "")
+                .claim(SecurityConstants.DETAILS_AVATAR, "");
     }
 }
