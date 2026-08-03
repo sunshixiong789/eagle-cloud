@@ -10,6 +10,7 @@
 ## 响应格式：不用包装类
 
 **直接返回数据，不用 `ApiResult` 包装**（仓库中确无此类），语义由 HTTP 状态码传递。
+取舍理由见 [ADR-0002](../../docs/adr/0002-no-response-wrapper.md)。
 
 - 请求 / 响应 DTO 一律 `record`（见 `01-java25.md`）
 - 分页用 Spring Data `Page<T>`，列表查询用投影接口

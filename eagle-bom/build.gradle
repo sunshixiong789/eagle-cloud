@@ -17,6 +17,7 @@ ext {
     springCloudAlibabaVersion = '2025.1.0.0'
     springModulithVersion = '2.0.5'
     springAiVersion = '2.0.0'
+    archunitVersion = '1.4.1'
     // 数据库 / 连接池
     mysqlConnectorVersion = '9.7.0'
     postgresqlVersion = '42.7.11'
@@ -93,6 +94,9 @@ dependencies {
     // 项目自管的版本约束（消费方无需写版本即可使用）
     // 用 add('api', ...) 显式调用 DependencyConstraintHandler.add，避免 IDEA 对动态 DSL 误报
     constraints {
+        // 架构约束测试
+        add('api', "com.tngtech.archunit:archunit-junit5:${archunitVersion}")
+
         // 数据库驱动
         add('api', "com.mysql:mysql-connector-j:${mysqlConnectorVersion}")
         add('api', "org.postgresql:postgresql:${postgresqlVersion}")

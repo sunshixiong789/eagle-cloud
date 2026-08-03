@@ -67,8 +67,6 @@ add_skill "eagle-common"              "eagle-common-starter" \
 add_skill "eagle-data-jpa"            "eagle-data-jpa-starter" \
     "Use when working with JPA/Hibernate in eagle-cloud projects — entity mapping, Spring Data Repository, JPA Auditing (createBy/createTime auto-fill), batch writes, slow query thresholds, EntityGraph"
 
-add_skill "eagle-mybatis"             "eagle-mybatis-starter" \
-    "Use when working with MyBatis-Plus in eagle-cloud projects — IEagleService/EagleServiceImpl base classes, BaseMapperPlus, EaglePageQuery/EaglePageResult unified pagination, slow SQL interceptor"
 
 add_skill "eagle-dynamic-datasource"  "eagle-dynamic-datasource-starter" \
     "Use when implementing master/slave read-write splitting in eagle-cloud projects — @ReadOnly annotation, DataSourceContextHolder programmatic switching"
@@ -100,8 +98,6 @@ add_skill "eagle-tracing"             "eagle-tracing-starter" \
 add_skill "eagle-tenant"              "eagle-tenant-starter" \
     "Use when implementing multi-tenancy in eagle-cloud projects — TenantContextHolder (getTenantId/setTenantId/clear, NOT getCurrentTenantId), TenantAware interface, @TenantFilter on Service/Repository (NOT entity), Hibernate @FilterDef/@Filter on entities, COLUMN vs DATABASE mode"
 
-add_skill "eagle-row-security"        "eagle-row-security-starter" \
-    "Use when implementing row-level data permissions in eagle-cloud projects — @DataPermission(deptField, userField), DataScope enum (ALL/SELF/DEPT/DEPT_AND_CHILD/CUSTOM), DataPermissionProvider business implementation, JPA Specification injection"
 
 add_skill "eagle-openapi"             "eagle-openapi-starter" \
     "Use when configuring OpenAPI/Swagger documentation in eagle-cloud projects — SpringDoc annotations (@Tag/@Operation/@Schema/@ApiResponses), grouping, JWT security scheme"
@@ -112,8 +108,6 @@ add_skill "eagle-oss-minio"           "eagle-oss-minio-starter" \
 add_skill "eagle-notification"        "eagle-notification-starter" \
     "Use when sending notifications (SMS/Email/in-app) in eagle-cloud projects — NotificationService.send/sendAsync, MessageDTO record (recipients/templateCode/params/channelType), MessageChannelType enum (SMS/EMAIL/IN_APP), template engine"
 
-add_skill "eagle-payment"             "eagle-payment-starter" \
-    "Use when integrating payments (Alipay/WeChat Pay) in eagle-cloud projects — PaymentGateway interface, alipayPaymentGateway/wechatPaymentGateway beans, async notification handling via PaymentNotifyEvent, signature validation"
 
 add_skill "eagle-scheduler"           "eagle-scheduler-starter" \
     "Use when implementing distributed scheduled tasks in eagle-cloud projects — XXL-JOB integration, @XxlJob annotation, XxlJobHelper (getJobParam/getShardIndex/log), idempotency requirements"

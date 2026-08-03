@@ -34,4 +34,16 @@ dependencies {
     compileOnly 'org.springframework.modulith:spring-modulith-core'
     // spring-modulith-starter-test 提供 ApplicationModules、Documenter 等测试工具
     testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
+    testImplementation 'com.tngtech.archunit:archunit-junit5'
+}
+
+// 集成事件契约文件由 auth-service 的 IntegrationEventContractTest 生成。
+// 声明为测试输入,否则契约变了 Gradle 仍判 UP-TO-DATE 跳过校验（契约漂移就漏网了）。
+tasks.named('test') {
+    def contractsDir = rootProject.file('docs/contracts')
+    if (contractsDir.exists()) {
+        inputs.dir(contractsDir)
+                .withPropertyName('integrationEventContracts')
+                .withPathSensitivity(PathSensitivity.RELATIVE)
+    }
 }

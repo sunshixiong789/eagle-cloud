@@ -185,6 +185,8 @@ public class OrderPaidMessage extends BaseEvent {
 
 - **禁止**消费方 `import` 生产方的 `XxxIntegrationEvent`
 - **禁止**抽 "shared-events.jar" 或 `common/integration/` 共享类
+- 取舍理由与风险缓解见 [ADR-0003](../../docs/adr/0003-consumer-declares-own-event-class.md)；
+  字段改名由 `docs/contracts/*.json` 契约测试兜底（生产方 auth-service + 消费方 system-service 双向）
 - 新增字段直接加；**删除 / 重命名 / 改类型 → 升 `eventVersion` 并灰度**（双发 → 切换 → 下线），过渡期 ≥ 3 个月
 
 ## Topic / Tag

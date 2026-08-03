@@ -60,8 +60,8 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 |-------------------------|------------------------------------------|------------------------------------------------------|
 | `eagle-system-service`  | 系统服务：用户/角色/权限/部门/菜单管理、文件、消息、公告                  | JPA, WebSocket, Nacos                                |
 | `eagle-auth-service`    | 认证服务：OAuth2 授权服务器、JWT 签发、微信/短信/手机一键登录    | JPA, OAuth2 Auth Server, Thymeleaf                   |
-| `eagle-payment-service` | 支付服务：Payment/Refund/Transfer/Reconcile 聚合 + 支付宝/微信渠道适配 | JPA, Alipay/WeChatPay V3 SDK, Resilience4J, XXL-JOB  |
 | `eagle-gateway-service` | API 网关：路由、JWT 鉴权、限流、链路追踪                 | Spring Cloud Gateway (WebFlux), Sentinel, Nacos      |
+| `eagle-monolith-service`| 单体聚合运行形态：把上述业务模块合并为单进程启动                    | JPA, H2/MySQL                                        |
 
 ### Starter 库模块 (eagle-starter)
 
@@ -75,7 +75,6 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 | `eagle-webclient-starter`          | 反应式 WebClient + `@HttpExchange`（WebFlux 服务用，同套透传 + 统一错误处理）                                  |
 | `eagle-tracing-starter`            | 分布式链路追踪（Brave/Zipkin）                                                                          |
 | `eagle-rocketmq-starter`           | RocketMQ v5 消息队列（事务消息、DLQ、AbstractRocketMqListener）                                            |
-| `eagle-row-security-starter`       | 行级数据权限控制（@DataPermission，AspectJ + JPA Specification）                                          |
 | `eagle-dynamic-datasource-starter` | 多数据源动态路由（主从切换、@ReadOnly、轮询负载均衡）                                                                |
 | `eagle-tenant-starter`             | 多租户支持（COLUMN/DATABASE 隔离模式、TenantContextHolder）                                                |
 | `eagle-oss-minio-starter`          | 对象存储（MinIO 8.x，签名 URL、分片上传）                                                                    |
@@ -84,7 +83,6 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 | `eagle-openapi-starter`            | Swagger/OpenAPI 文档集成（SpringDoc 3.0.2）                                                          |
 | `eagle-seata-starter`              | 分布式事务（Seata AT/TCC 2.2.0）                                                                      |
 | `eagle-sentinel-starter`           | 流量控制与熔断（Sentinel，网关层限流）                                                                        |
-| `eagle-mybatis-starter`            | MyBatis-Plus 配置（分页、逻辑删除、审计）                                                                    |
 | `eagle-id-generator-starter`       | 分布式 ID 生成（雪花算法 / Leaf 等）                                                                       |
 | `eagle-idempotency-starter`        | 接口幂等性（@Idempotent，Redis SETNX + 唯一约束双重保障）                                                      |
 | `eagle-elasticsearch-starter`      | Elasticsearch 全文检索（Spring Data ES）                                                             |
@@ -163,6 +161,8 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 | `/new-aggregate`  | 创建聚合根全栈骨架（聚合根 + Repository + ErrorCode + ApplicationService + Controller + DTO） |
 | `/new-starter`    | 按 Spring Boot 4 模板创建新 starter 模块                                                |
 | `/add-error-code` | 在 ErrorCode 枚举追加常量并同步 i18n 三语翻译                                                 |
+| `/verify-rules`   | 校验规则断言与代码实况一致，防止规则腐烂（改 rules、删 starter/模块后必跑）                                  |
+| `/new-adr`        | 新建架构决策记录（ADR），记录规则背后的「为什么」                                                     |
 
 ## 端到端开发流程（eagle-feature-flow skill）
 

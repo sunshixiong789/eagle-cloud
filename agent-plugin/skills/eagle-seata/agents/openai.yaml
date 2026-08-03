@@ -1,3 +1,3 @@
 interface:
   display_name: "Eagle Seata"
-  short_description: "Use when implementing distributed transactions in eagle-cloud projects — Seata"
+  short_description: "Use when implementing distributed transactions in eagle-cloud projects — Seata @"

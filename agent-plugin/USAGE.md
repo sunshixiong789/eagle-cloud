@@ -366,7 +366,6 @@ L1 模式即可:模型读 CLAUDE.md → 知道 Eagle 用乐观锁(`@Version`)→
 | Swagger / OpenAPI 文档         | `eagle-openapi`            |
 | MinIO 对象存储                   | `eagle-oss-minio`          |
 | 短信 / 邮件 / 站内信                | `eagle-notification`       |
-| 支付宝 / 微信支付                   | `eagle-payment`            |
 | XXL-JOB 定时任务                 | `eagle-scheduler`          |
 | Seata 分布式事务                  | `eagle-seata`              |
 | Sentinel 限流                  | `eagle-sentinel`           |

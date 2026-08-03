@@ -8,7 +8,7 @@
 
 ## 项目栈定位
 
-业务项目依赖 `eagle-cloud` 基础架子（BOM + 31 个 starter），遵循以下技术栈与约定：
+业务项目依赖 `eagle-cloud` 基础架子（BOM + 27 个 starter），遵循以下技术栈与约定：
 
 - **Java 25** / Gradle 8.x（Groovy DSL）
 - **Spring Boot 4.0.6** / Spring Cloud 2025.1.1 / Spring Cloud Alibaba 2025.1.0.0
@@ -49,44 +49,34 @@
 
 ### 前端：`rules-frontend/`（React Web / React Native / Taro 多端）
 
-前端规则采用 **核心通用 + 平台变体** 两层结构。所有前端项目读 `core/`，按项目栈读 `platforms/<x>/`：
+业务结构三端统一（FSD-lite），差异集中在一份对照文件里，不再按平台分目录：
 
-| 文件                                           | 适用场景                                            |
-|----------------------------------------------|-------------------------------------------------|
-| `rules-frontend/00-overview.md`              | 总入口：三平台轨说明 + TL;DR + 章节索引                       |
-| `rules-frontend/core/01-architecture.md`     | 六角色与依赖矩阵（Route → Page → Component/Hook → Service）+ 可选 Infrastructure 层 |
-| `rules-frontend/core/02-naming.md`           | 文件/函数/类命名 + Feature 词根公约 + Import 顺序           |
-| `rules-frontend/core/03-types.md`            | 类型三层：DTO / View Model / Component Props        |
-| `rules-frontend/core/04-state.md`            | 状态三分（React Query / Zustand / useState）+ 跨 feature invalidation |
-| `rules-frontend/core/05-bounded-context.md`  | 跨 feature 两条合法路径 + Barrel 平台策略                  |
-| `rules-frontend/core/06-cross-cutting.md`    | 错误 / 加载 / 空态 / 401 / 主题 / 副作用                   |
-| `rules-frontend/core/07-anti-patterns.md`    | 反例速查 16 条                                       |
-| `rules-frontend/core/08-red-lines.md`        | TS / 状态管理 / HTTP-认证 / Bug 修复流程红线                 |
-| `rules-frontend/core/09-scaling.md`          | Scaling Signals                                  |
-| `rules-frontend/core/10-i18n.md`             | 国际化：messages 组织、key 规则、locale 解析             |
-| `rules-frontend/core/11-testing.md`          | 测试金字塔、必测范围、各平台 runner、覆盖率目标            |
-| `rules-frontend/core/12-performance.md`      | 性能预算（bundle / FCP / LCP / 小程序包大小）+ 监控点    |
-| `rules-frontend/platforms/web/*.md`          | Web SPA：目录 / 集中路由 / Tailwind+CSS-in-JS / 新增 feature / `@/*` 别名 |
-| `rules-frontend/platforms/react-native/*.md` | RN/Expo：根 `app/` 目录 / Expo Router / NativeWind / 新增 feature / 完整别名 |
-| `rules-frontend/platforms/taro/*.md`         | Taro 4 多端：`src/pages/` 框架入口 / `app.config.ts` 路由 / Tailwind v4 + weapp-tailwindcss / 新增 feature / 别名双向同步 |
-| `rules-frontend/99-dependency-check.md`      | dependency-cruiser / feature-boundaries / tsc CI 集成（通用） |
+| 文件                                  | 适用场景                                                        |
+|-------------------------------------|-------------------------------------------------------------|
+| `rules-frontend/00-overview.md`     | 入口：平台判断 + 架构定位 + TL;DR 10 条                                |
+| `rules-frontend/01-architecture.md` | FSD-lite 分层、角色矩阵、依赖方向、slice 边界与 public API、Barrel 平台策略      |
+| `rules-frontend/02-conventions.md`  | 文件/函数命名、slice 词根、import 顺序、DTO / ViewModel / Props 类型三层     |
+| `rules-frontend/03-state-data.md`   | React Query / Zustand / local state 边界、错误与 401、主题、副作用、i18n |
+| `rules-frontend/04-platforms.md`    | **三端差异对照**：目录 / 路由 / 样式 / 别名 / 新增业务清单（Web、RN、Taro 一表看全）    |
+| `rules-frontend/05-quality.md`      | 红线、反例速查 16 条、测试、性能预算、依赖校验、扩展信号                             |
 
 **平台轨选择速查**：
 
-- 项目根有 `vite.config.ts` / `webpack.config.js` 但**不是** Taro → 走 `platforms/web/`
-- 项目依赖含 `expo` 或 `@react-navigation` → 走 `platforms/react-native/`
-- 项目依赖含 `@tarojs/taro` → 走 `platforms/taro/`
+- 项目根有 `vite.config.ts` / `webpack.config.js` 但**不是** Taro → Web 轨
+- 项目依赖含 `expo` 或 `@react-navigation` → React Native 轨
+- 项目依赖含 `@tarojs/taro` → Taro 轨
+
+三条轨都先读 `01`–`03`（通用），再查 `04-platforms.md` 里对应平台的列。
 
 ## Starter 使用（按需 skill 加载）
 
-31 个 starter 各有独立 skill，AI 在编码时会按场景自动加载相关 skill。手动列表见 `skills/` 目录：
+27 个 starter 各有独立 skill（另有 eagle-feature-flow 等手写 skill），AI 在编码时会按场景自动加载相关 skill。手动列表见 `skills/` 目录：
 
 | Skill                      | 何时触发                                      |
 |----------------------------|-------------------------------------------|
 | `eagle-common`             | DDD 基类、异常、领域事件、分布式锁接口                     |
 | `eagle-data-jpa`           | JPA Auditing + Hibernate 配置               |
 | `eagle-data-r2dbc`         | 响应式 R2DBC 持久化、BaseR2dbcAggregateRoot      |
-| `eagle-mybatis`            | MyBatis-Plus 增强                           |
 | `eagle-dynamic-datasource` | 主从读写分离、@ReadOnly                          |
 | `eagle-sharding`           | 分库分表、ShardingSphere YAML 配置               |
 | `eagle-elasticsearch`      | ES 检索 / 聚合 / 高亮                           |
@@ -95,7 +85,6 @@
 | `eagle-id-generator`       | 雪花 / TSID / NanoId / 业务单号                 |
 | `eagle-idempotency`        | 接口幂等                                      |
 | `eagle-tenant`             | 多租户上下文                                    |
-| `eagle-row-security`       | 行级数据权限                                    |
 | `eagle-resource-server`    | OAuth2 资源服务器                              |
 | `eagle-restclient`         | Servlet 服务 HTTP Service + 自动透传（阻塞 RestClient）|
 | `eagle-webclient`          | WebFlux 服务 HTTP Service + 自动透传（响应式 WebClient）|
@@ -103,7 +92,6 @@
 | `eagle-openapi`            | SpringDoc 3                               |
 | `eagle-oss-minio`          | 对象存储                                      |
 | `eagle-notification`       | 短信 / 邮件 / 站内信                             |
-| `eagle-payment`            | 支付宝 / 微信支付                                |
 | `eagle-scheduler`          | XXL-JOB                                   |
 | `eagle-seata`              | 分布式事务                                     |
 | `eagle-sentinel`           | 限流 / 熔断                                   |
@@ -124,6 +112,8 @@
 | `/new-aggregate`  | 创建聚合根全栈骨架                          |
 | `/new-starter`    | 按 Spring Boot 4 模板创建新 starter      |
 | `/add-error-code` | 在 ErrorCode 枚举追加常量并同步 i18n 三语翻译    |
+| `/verify-rules`   | 校验规则断言与代码实况一致，防规则腐烂          |
+| `/new-adr`        | 新建架构决策记录（ADR），记录规则背后的"为什么"  |
 
 ## 端到端开发流程(eagle-feature-flow skill)
 

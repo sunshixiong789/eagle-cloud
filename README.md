@@ -63,12 +63,14 @@
 
 ```
 eagle-cloud/
-├── eagle-base-server/                  # 可执行服务
-│   ├── eagle-system-server/            # 系统服务（OAuth2 + 用户权限管理）
-│   ├── eagle-gateway-server/           # API 网关
+├── eagle-services/                     # 可执行服务
+│   ├── eagle-system-service/           # 系统服务（用户/角色/权限/部门/菜单、文件、消息、公告）
+│   ├── eagle-auth-service/             # 认证服务（OAuth2 授权服务器、JWT 签发、第三方登录）
+│   ├── eagle-gateway-service/          # API 网关（路由、JWT 鉴权、限流、链路追踪）
+│   ├── eagle-monolith-service/         # 单体聚合运行形态（业务模块合并为单进程启动）
 │   └── docker-compose.yml              # 开发环境容器编排
 │
-└── eagle-starter/                          # 可复用 Starter 库（共 28 个）
+└── eagle-starter/                          # 可复用 Starter 库（共 27 个）
     │
     │   # ── 基础能力 ──────────────────────────────────────────────────
     ├── eagle-common-starter/               # 核心基础设施（基类、异常体系、领域事件、i18n、压测流量标记）
@@ -96,7 +98,6 @@ eagle-cloud/
     ├── eagle-sentinel-starter/             # 流量治理（@RateLimit 注解 + 规则动态管理）
     ├── eagle-seata-starter/                # 分布式事务（AT 自动集成 + TCC 模板 + 编程式事务）
     ├── eagle-resilience-starter/           # 容错弹性（Resilience4J 熔断器 / 重试 / 超时）
-    ├── eagle-payment-starter/              # 支付集成（支付宝 / 微信双网关 + 转账 + 签名验证）
     ├── eagle-websocket-starter/            # 实时推送（STOMP WebSocket + SSE + 离线消息存储）
     │
     │   # ── 平台能力 ──────────────────────────────────────────────────
@@ -110,16 +111,20 @@ eagle-cloud/
 
 ### Spring Modulith 模块划分
 
-`eagle-system-server` 内按有界上下文划分为 4 个模块：
+当前实际的 `@ApplicationModule` 声明（以各 `package-info.java` 为准）：
 
-| 模块         | 职责                                                        |
-|------------|-----------------------------------------------------------|
-| **auth**   | 认证授权 — OAuth2 授权服务器、微信 / 短信第三方登录、账号管理                     |
-| **base**   | 系统管理 — 用户、角色、权限、部门、菜单、岗位、字典、审计日志                          |
-| **config** | 全局配置 — Security、Cache、Async、i18n、OpenAPI、WebSocket、全局异常处理 |
-| **common** | 共享内核 — 跨域事件契约、ErrorCode 枚举、通用 DTO                         |
+| 模块                        | 所属服务                   | allowedDependencies |
+|---------------------------|------------------------|---------------------|
+| `com.eagle.system.base`    | eagle-system-service   | 未声明（默认全开）           |
+| `com.eagle.system.file`    | eagle-system-service   | 未声明                 |
+| `com.eagle.system.message` | eagle-system-service   | `{}`（完全隔离）          |
+| `com.eagle.auth.core`      | **eagle-auth-service** | `{}`（完全隔离）          |
 
-模块间通过 **领域事件** 异步解耦，跨域依赖通过 **六边形 Port 接口** 隔离。
+**auth 已从模块化单体拆为独立服务**：system ↔ auth 走 HTTP client（`infrastructure/remote/`）+
+RocketMQ 集成事件（topic `eagle_auth_events`），不再是 Named Interface。
+
+模块内协作通过 **领域事件** 异步解耦，跨域依赖通过 **六边形 Port 接口** 隔离。
+边界由 `ModulithArchitectureTest`（模块间）+ `LayeredArchitectureTest`（模块内 DDD 分层）双重静态验证。
 
 ### DDD 分层架构
 
@@ -229,26 +234,6 @@ public class ProductRepository extends BaseElasticSearchRepository<ProductDoc> {
 
 ---
 
-### eagle-payment-starter — 支付集成
-
-```java
-// 统一支付接口，渠道透明
-@Autowired
-@Qualifier("alipayPaymentGateway")  // 或 wechatPaymentGateway
-private PaymentGateway paymentGateway;
-
-PayResult result = paymentGateway.pay(PayRequest.builder()
-    .outTradeNo(orderNo).amount(new BigDecimal("99.00"))
-    .subject("商品名称").notifyUrl("https://example.com/notify").build());
-
-// 统一回调：配置 eagle.payment.alipay.notify-path / wechat.notify-path 即可
-// 回调成功后发布 PaymentNotifyEvent，业务方监听处理
-@EventListener
-public void onPayment(PaymentNotifyEvent event) { ... }
-```
-
----
-
 ### eagle-websocket-starter — 实时推送
 
 ```java
@@ -303,7 +288,7 @@ cd eleganteer-cloud
 gradle build
 
 # 3. 启动系统服务（默认 local profile，使用 H2 + Caffeine）
-gradle :eagle-base-server:eagle-system-server:bootRun
+gradle :eagle-services:eagle-system-service:bootRun
 ```
 
 服务启动后访问：
@@ -321,7 +306,7 @@ gradle :eagle-base-server:eagle-system-server:bootRun
 gradle build
 
 # 2. 启动全部服务（MySQL + Redis + Nacos + Gateway + System）
-cd eagle-base-server
+cd eagle-services
 docker compose up -d
 ```
 
@@ -383,7 +368,7 @@ HNSLS_SMS_CHARSET=UTF-8
 3. 以 dev profile 启动：
 
 ```bash
-gradle :eagle-base-server:eagle-system-server:bootRun --args='--spring.profiles.active=dev'
+gradle :eagle-services:eagle-system-service:bootRun --args='--spring.profiles.active=dev'
 ```
 
 ### 启动网关（可选）
@@ -392,7 +377,7 @@ gradle :eagle-base-server:eagle-system-server:bootRun --args='--spring.profiles.
 
 ```bash
 # local profile（无需 Nacos）
-gradle :eagle-base-server:eagle-gateway-server:bootRun
+gradle :eagle-services:eagle-gateway-service:bootRun
 ```
 
 网关地址：http://localhost:8080
@@ -520,16 +505,16 @@ gradle clean build              # 清理后构建
 
 # 测试
 gradle test                     # 运行全部测试
-gradle :eagle-base-server:eagle-system-server:test    # 运行指定模块测试
-gradle :eagle-base-server:eagle-system-server:test --tests "com.eagle.system.YourTestClass"           # 单个测试类
-gradle :eagle-base-server:eagle-system-server:test --tests "com.eagle.system.YourTestClass.testMethod" # 单个测试方法
+gradle :eagle-services:eagle-system-service:test    # 运行指定模块测试
+gradle :eagle-services:eagle-system-service:test --tests "com.eagle.system.YourTestClass"           # 单个测试类
+gradle :eagle-services:eagle-system-service:test --tests "com.eagle.system.YourTestClass.testMethod" # 单个测试方法
 
 # 架构验证（PR 前必须通过）
-gradle :eagle-base-server:eagle-system-server:test --tests "*.ModulithArchitectureTest"
+gradle :eagle-services:eagle-system-service:test --tests "*.ModulithArchitectureTest"
 
 # 运行服务
-gradle :eagle-base-server:eagle-system-server:bootRun   # 系统服务
-gradle :eagle-base-server:eagle-gateway-server:bootRun   # 网关服务
+gradle :eagle-services:eagle-system-service:bootRun   # 系统服务
+gradle :eagle-services:eagle-gateway-service:bootRun   # 网关服务
 
 # GraalVM Native Image
 gradle nativeCompile
@@ -639,7 +624,7 @@ eagle:
 
 ### 新增业务模块
 
-1. 在 `eagle-system-server` 对应包下创建模块目录，遵循 `interfaces / application / domain / infrastructure` 分层
+1. 在 `eagle-system-service` 对应包下创建模块目录，遵循 `interfaces / application / domain / infrastructure` 分层
 2. 在模块根目录创建 `package-info.java`，声明 `@ApplicationModule` 和 `allowedDependencies`
 3. 为需要暴露的子包添加 `@NamedInterface`
 4. 运行 `gradle test --tests "*.ModulithArchitectureTest"` 验证模块边界

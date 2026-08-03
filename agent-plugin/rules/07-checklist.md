@@ -13,7 +13,7 @@
 | 5 | 租户上下文 API | `TenantContextHolder.getTenantId()` / `setTenantId()` / `clear()`（**没有** `getCurrentTenantId()`） |
 | 6 | 分布式锁签名 | `tryLock(String key, long waitTime, long leaseTime, Supplier<T>)` —— **`long` 秒，不是 `Duration`**；简写 `tryLock(key, supplier)` 默认 3s/30s |
 | 7 | 缓存击穿防护 | `getWithMutex(String key, Duration ttl, Supplier<T> loader, Class<T> type)` —— **4 个参数** |
-| 8 | 数据权限枚举 | `DataScope`：`ALL` / `SELF` / `DEPT` / `DEPT_AND_CHILD` / `CUSTOM`（**没有** `DEPT_ONLY` / `SELF_ONLY`） |
+| 8 | 数据权限 | `eagle-row-security-starter` **已移除**，无 `@DataPermission` / `DataPermissionProvider`。只剩 `Role` 上的业务枚举 `DataScope`：`ALL` / `SELF` / `DEPT` / `DEPT_AND_CHILD` / `CUSTOM`（**没有** `DEPT_ONLY` / `SELF_ONLY`），需手写过滤 |
 | 9 | RocketMQ 消费者 | 继承 `AbstractRocketMqListener<T>` 实现 `getTopic()` / `getEventClass()` / `handle(T)`，**不用** `@RocketMQMessageListener`；**必须手写构造器显式 `super(rocketMqProperties)`，禁用 `@RequiredArgsConstructor`**（`AbstractDlqListener` 同理） |
 | 10 | 多租户装配条件 | 由 `eagle.tenant.mode` 决定（`column`/`database`，默认 `COLUMN`）。**不存在 `eagle.tenant.enabled`** |
 | 11 | 读写分离装配条件 | 由 `eagle.datasource.master.url` 是否配置决定。**不存在 `eagle.datasource.enabled`** |
@@ -36,9 +36,25 @@
 | 禁 `@PreAuthorize("isAuthenticated()")` | **13 处** | 各 Controller |
 | 禁 `@PreAuthorize("permitAll()")` | **4 处** | 各 Controller |
 | 禁 `@Value` 注入配置 | **2 处** | `BlacklistCacheWarmer`、`EagleAuditLogJpaAutoConfiguration` |
+| JPA 实体禁 `@Data` / `@Builder` | **1 处** | `AuditLogRecord`（starter 内部持久化记录，非领域聚合根） |
 | 错误码号段不得冲突 | **2 组 / 共 7 个码** | `40001-40003`(File/Idempotency)、`90001-90004`(Lock/Ai) |
 | 资源不存在用 `toNotFoundException()` | `toDomainException` 98 次 vs `toNotFoundException` 4 次，存在语义漂移 | 全局 |
 | `sealed` + 模式匹配建模 | 使用数 0（本轮新引入） | 仅约束新代码 |
+
+## ArchUnit 冻结基线（`LayeredArchitectureTest`）
+
+分层违例已冻结在 `eagle-services/eagle-system-service/archunit_store/`，**新增违例会让测试失败，存量不阻塞**。
+修好一处基线自动少一处，不会倒退。当前冻结 22 条：
+
+| 违例 | 条数 | 典型案例 / 成因 |
+|---|---|---|
+| `interfaces` 依赖 `infrastructure` | 10 | `AnnouncementView.of(AnnouncementSnapshot)` —— DTO 直接吃 infrastructure 的缓存快照 |
+| `domain` 依赖 `interfaces` | 6 | `UserMessage` / `Announcement` 调 `MessageErrorCode`，而该 ErrorCode 放在了 `interfaces/exception/` —— **ErrorCode 应下沉到 domain** |
+| 应用服务命名不符 | 4 | `AuthorizationQueryService`、`SystemLogRecorder`、`AnnouncementAdminService`、`AnnouncementQueryService`（CQRS 查询服务是否该另立命名，待定） |
+| 聚合根暴露 public setter | 1 | `Role.setDataScope` |
+| Controller 含 try-catch | 1 | `FileController.parseMediaType`（私有解析辅助方法） |
+
+**注意**：子实体（继承 `BaseEntity`）按 `00-core.md` **允许** `@Setter`，该规则只查聚合根。
 
 复核台账：
 

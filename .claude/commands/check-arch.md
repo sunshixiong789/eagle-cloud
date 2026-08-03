@@ -1,6 +1,6 @@
 ---
 description: 跑 Spring Modulith 架构验证 + 关键 starter 单测，PR 前一键检查
-argument-hint: "[模块路径，可选；默认 eagle-base-server:eagle-system-server]"
+argument-hint: "[模块路径，可选；默认 eagle-services:eagle-system-service]"
 ---
 
 # /check-arch — 架构与构建一键验证
@@ -11,9 +11,21 @@ argument-hint: "[模块路径，可选；默认 eagle-base-server:eagle-system-s
 
 1. **解析目标模块**
     - 若用户传入 `$ARGUMENTS`，使用该模块路径
-    - 否则默认 `eagle-base-server:eagle-system-server`
+    - 否则默认 `eagle-services:eagle-system-service`
 
-2. **跑 Modulith 架构验证**
+2. **跑架构验证（两层，缺一不可）**
+
+   ```bash
+   # 模块【之间】的边界
+   ./gradlew :{module}:test --tests "*ModulithArchitectureTest"
+   # 模块【内部】的 DDD 分层（Modulith 看不见的盲区）
+   ./gradlew :{module}:test --tests "*LayeredArchitectureTest"
+   ```
+
+   `LayeredArchitectureTest` 用 ArchUnit 冻结基线：存量违例不阻塞，**新增违例即失败**。
+   若因合理重构导致基线条目消失，直接提交更新后的 `archunit_store/`。
+
+3. **（原）Modulith 细节**
 
    ```bash
    ./gradlew :{module}:test --tests "*.ModulithArchitectureTest"
@@ -21,7 +33,7 @@ argument-hint: "[模块路径，可选；默认 eagle-base-server:eagle-system-s
 
    失败时：
     - 解析输出找出违规依赖（"Module X depends on non-exposed type Y"）
-    - 按 `01-architecture.md` 规范判断是否需要：
+    - 按 `02-architecture.md` 规范判断是否需要：
       a) 给被依赖包加 `@NamedInterface`
       b) 在依赖方 `allowedDependencies` 中声明
       c) 重构通过 Port/Adapter 解耦
@@ -49,7 +61,7 @@ argument-hint: "[模块路径，可选；默认 eagle-base-server:eagle-system-s
 
 ```
 === /check-arch 报告 ===
-模块：eagle-base-server:eagle-system-server
+模块：eagle-services:eagle-system-service
 
 [1/3] Modulith 架构验证 ............ ✅ 通过 (2.3s)
 [2/3] 单元测试 ..................... ✅ 通过 (47 tests, 1m12s)
@@ -78,6 +90,6 @@ PR 阻塞 ❌
 
 ## 参考规则
 
-- `01-architecture.md` — Modulith 边界违规处理
-- `01-architecture.md` — 跨域依赖原则（Port/Adapter）
-- `06-checklist.md` — PR 前完整检查清单
+- `02-architecture.md` — Modulith 边界违规处理
+- `02-architecture.md` — 跨域依赖原则（Port/Adapter）
+- `07-checklist.md` — PR 前完整检查清单

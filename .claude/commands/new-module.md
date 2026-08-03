@@ -1,15 +1,15 @@
 ---
 description: 按 Modulith + DDD 模板创建新业务模块（含 package-info、四层目录骨架）
-argument-hint: "<服务名>:<模块名>，例 eagle-system-server:order"
+argument-hint: "<服务名>:<模块名>，例 eagle-services:eagle-system-service:order"
 ---
 
 # /new-module — 创建新业务模块
 
-按 `01-architecture.md` + `01-architecture.md` 规范创建一个完整的 DDD 业务模块骨架。
+按 `02-architecture.md` + `02-architecture.md` 规范创建一个完整的 DDD 业务模块骨架。
 
 ## 输入解析
 
-- `$ARGUMENTS` 形如 `eagle-system-server:order`
+- `$ARGUMENTS` 形如 `eagle-services:eagle-system-service:order`
 - 若缺省，提示用户输入：服务名（service）、模块名（module）、模块显示名、allowedDependencies
 
 ## 执行步骤
@@ -114,7 +114,7 @@ package com.eagle.{service-short}.{module}.interfaces.exception;
 
 ## 参考规则
 
-- `01-architecture.md` — DDD 分层
-- `01-architecture.md` — 模块声明
+- `02-architecture.md` — DDD 分层
+- `02-architecture.md` — 模块声明
 - `00-core.md` — 命名规范
 - `00-core.md` — `@NullMarked` 要求

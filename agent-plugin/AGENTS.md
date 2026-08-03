@@ -43,7 +43,7 @@
 - 数据：`eagle-data-jpa`、`eagle-dynamic-datasource`、`eagle-sharding`、`eagle-elasticsearch`
 - 基础设施：`eagle-redis`、`eagle-rocketmq`、`eagle-oss-minio`、`eagle-scheduler`、`eagle-seata`、`eagle-sentinel`
 - 安全与治理：`eagle-tenant`、`eagle-resource-server`、`eagle-openapi`、`eagle-tracing`
-- 业务能力：`eagle-notification`、`eagle-payment`、`eagle-websocket`、`eagle-excel`、`eagle-encrypt`、`eagle-ai`
+- 业务能力：`eagle-notification`、`eagle-websocket`、`eagle-excel`、`eagle-encrypt`、`eagle-ai`
 
 ## 验证
 

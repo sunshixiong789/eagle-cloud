@@ -4,7 +4,7 @@
 
 - 业务服务接收 JWT 鉴权（不签发 Token）
 - 需要 `EagleUser` 作为 Spring Security `Authentication.principal`
-- 与 `eagle-system-server`（Authorization Server）配合
+- 与 `eagle-auth-service`（Authorization Server）配合
 
 ## 何时不要使用
 
@@ -40,7 +40,7 @@ selected web stack.
 ```yaml
 # JWT 解码走 Spring Boot 标准配置 —— issuer-uri 与 jwk-set-uri 二选一,必填
 spring.security.oauth2.resourceserver.jwt:
-  issuer-uri: ${OAUTH2_ISSUER:http://eagle-system-server:8081}
+  issuer-uri: ${OAUTH2_ISSUER:http://eagle-auth-service:8081}
 
 # starter 自身配置
 eagle.resource-server:

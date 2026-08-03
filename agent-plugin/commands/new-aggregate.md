@@ -1,6 +1,6 @@
 ---
 description: 在指定模块中创建聚合根 + Repository + ErrorCode + ApplicationService + Controller + DTO 全栈骨架
-argument-hint: "<service>:<module>:<AggregateName>，例 eagle-system-server:order:Order"
+argument-hint: "<service>:<module>:<AggregateName>，例 eagle-services:eagle-system-service:order:Order"
 ---
 
 # /new-aggregate — 创建聚合根全栈骨架
@@ -12,13 +12,13 @@ argument-hint: "<service>:<module>:<AggregateName>，例 eagle-system-server:ord
 - Infrastructure：JPA Repository 实现
 - Interfaces：Controller + Request DTO + Response DTO
 
-严格遵循 `01-architecture.md` / `00-core.md` / `00-core.md`。
+严格遵循 `02-architecture.md` / `00-core.md` / `00-core.md`。
 
 ## 输入解析
 
 `$ARGUMENTS` 格式：`<service>:<module>:<AggregateName>`
 
-- service：`eagle-system-server`
+- service：`eagle-services:eagle-system-service`
 - module：`order`
 - AggregateName（UpperCamelCase）：`Order`
 
@@ -271,14 +271,14 @@ ApplicationServiceTest {
 1. 已生成文件列表
 2. 提示用户：
     - 用 `/add-error-code` 添加 i18n 翻译
-    - 写 Flyway 建表脚本（`03-data.md` 模板）
+    - 写 Flyway 建表脚本（`04-data.md` 模板）
     - 跑 `/check-arch` 确保架构验证通过
 3. 关键 TODO 占位：JPA 字段 / 业务方法 / 事件载荷 / 单元测试覆盖
 
 ## 参考规则
 
-- `00-core.md` `00-core.md` `01-architecture.md`
-- `03-data.md` — 实体规范
-- `02-api-error.md` — ErrorCode
+- `00-core.md` `00-core.md` `02-architecture.md`
+- `04-data.md` — 实体规范
+- `03-api-error.md` — ErrorCode
 - `00-core.md` — 单元测试结构
-- `02-api-error.md` — Swagger 注解
+- `03-api-error.md` — Swagger 注解

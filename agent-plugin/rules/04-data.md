@@ -62,6 +62,7 @@ private Set<Long> roleIds = new HashSet<>();
 ## 强制禁止物理外键
 
 **所有表禁止 `FOREIGN KEY` / `REFERENCES`**，含 `@ElementCollection` / `@CollectionTable` 默认会生成的那些。
+取舍理由见 [ADR-0001](../../docs/adr/0001-no-physical-foreign-keys.md)。
 
 理由：物理 FK 阻塞跨服务拆分、分库分表、数据迁移、批量导入。引用完整性由聚合根业务方法和应用层校验保证。
 

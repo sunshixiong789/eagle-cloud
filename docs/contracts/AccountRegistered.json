@@ -1,0 +1,12 @@
+{
+  "accountId" : 1001,
+  "username" : "alice",
+  "phone" : "13800001234",
+  "nickname" : "Alice",
+  "avatar" : "https://cdn/a.png",
+  "email" : "alice@example.com",
+  "eventId" : "00000000-0000-0000-0000-000000000000",
+  "eventType" : "AccountRegisteredIntegrationEvent",
+  "eventVersion" : "1.0",
+  "occurredOn" : "2000-01-01T00:00:00"
+}

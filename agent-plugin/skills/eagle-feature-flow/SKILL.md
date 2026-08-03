@@ -85,7 +85,7 @@ Phase 6  Finish        ← superpowers:finishing-a-development-branch
 | 新模块 / 跨模块 / 事件契约   | `rules/02-architecture.md`                                    |
 | 新聚合根 / 实体 / DB 变更  | `rules/02-architecture.md` + `rules/04-data.md`               |
 | 新接口 / 新错误码         | `rules/03-api-error.md`                                       |
-| 多租户 / 数据权限 / 安全    | `rules/05-security.md` + `eagle-tenant` / `eagle-row-security` skill |
+| 多租户 / 数据权限 / 安全    | `rules/05-security.md` + `eagle-tenant` skill |
 | Boot 4 / Jackson 3 写法存疑 | `rules/06-boot4.md`                               |
 | 新事件 / MQ 消费        | `rules/02-architecture.md` + `eagle-rocketmq` skill           |
 | 新缓存 / 锁            | `eagle-redis` skill                                           |
@@ -163,7 +163,6 @@ Phase 6  Finish        ← superpowers:finishing-a-development-branch
 | Feign 远程调用                   | `eagle-feign-client`       |
 | MinIO 对象存储                   | `eagle-oss-minio`          |
 | 短信 / 邮件 / 站内信                | `eagle-notification`       |
-| 支付宝 / 微信支付                   | `eagle-payment`            |
 | XXL-JOB 定时任务                 | `eagle-scheduler`          |
 | Seata 分布式事务                  | `eagle-seata`              |
 | Sentinel 限流                  | `eagle-sentinel`           |

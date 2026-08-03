@@ -1,0 +1,17 @@
+{
+  "description": "Eagle Cloud 规范强制：写 Java 前拦截规则明令禁止的确定性错误（@Value / Jackson 2 包名 / 冗余 @PreAuthorize / 物理外键 / t_ 表名 / BeanUtils / 实体 @Data）",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/check-java-conventions.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

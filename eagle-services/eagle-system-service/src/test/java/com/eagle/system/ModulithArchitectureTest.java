@@ -15,13 +15,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * Spring Modulith 模块边界验证测试(eagle-system-service 拆出 auth 后的拓扑)。
  * <p>
- * 当前模块划分:
+ * 当前模块划分(以各 package-info.java 的 @ApplicationModule 声明为准):
  * <pre>
- *   com.eagle.system.base    — 系统管理域(用户、角色、权限、部门、菜单)
- *   com.eagle.system.config  — 全局配置(粘合层)
- *   com.eagle.system.common  — 共享内核(异常体系、基础 DTO)
- *   com.eagle.system.message — 站内消息中心(平台级横切,完全独立)
- *   com.eagle.system.file    — 文件存储(若存在)
+ *   com.eagle.system.base    — 系统管理域(用户、角色、权限、部门、菜单),未声明 allowedDependencies
+ *   com.eagle.system.file    — 文件管理,未声明 allowedDependencies
+ *   com.eagle.system.message — 站内消息中心,allowedDependencies = {} (完全隔离)
  * </pre>
  * <p>
  * auth 已拆分为独立的 eagle-auth-service,base 通过:

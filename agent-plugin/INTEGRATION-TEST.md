@@ -44,7 +44,7 @@
 你现在能查阅哪些 eagle-cloud 开发规范？列出文件名。
 ```
 
-**预期**：AI 应列出 `00-core.md` 到 `00-core.md` 共 30 份规则。
+**预期**：AI 应列出 `00-core.md` 到 `07-checklist.md` 共 8 份后端规则（另有 6 份前端规则在 `rules-frontend/`）。
 
 - [ ] AI 能列出所有规则
 - [ ] AI 能引用规则文件（如"详见 04-security.md"）
@@ -162,12 +162,13 @@ public class OrderCreatedConsumer extends AbstractRocketMqListener<OrderCreatedE
 怎么实现"本部门及子部门可见"的数据权限？
 ```
 
-**预期 ✅**：`DataScope.DEPT_AND_CHILD` 配合 `DataPermissionProvider`
+**预期 ✅**：指出 `eagle-row-security-starter` **已移除**，无注解式数据权限；只剩 `Role` 上的业务枚举 `DataScope.DEPT_AND_CHILD`，需在应用服务 / Repository 查询条件里**显式**过滤
 
-**反例 ❌**：`DataScope.DEPT_ONLY`（不存在）、`@DataPermission(type = ...)`（无 type 字段）
+**反例 ❌**：`@DataPermission(...)`（starter 已删，注解不存在）、`DataPermissionProvider`（不存在）、`DataScope.DEPT_ONLY`（不存在）
 
+- [ ] 未使用 `@DataPermission` / `DataPermissionProvider`
 - [ ] 使用 `DEPT_AND_CHILD`（不是 `DEPT_ONLY`）
-- [ ] `@DataPermission(deptField, userField)`，无 `type`
+- [ ] 说明需手写过滤，且先租户隔离再行级过滤
 
 ### 2.5 审计字段命名
 
@@ -249,7 +250,7 @@ order 模块需要调用 user 模块的查询能力，怎么写？
 ### 4.2 /new-aggregate
 
 ```
-/new-aggregate eagle-system-server:order:Order
+/new-aggregate eagle-services:eagle-system-service:order:Order
 ```
 
 **预期**：生成完整骨架（聚合根 + Repository + ErrorCode + ApplicationService + Controller + DTO）
@@ -267,7 +268,7 @@ order 模块需要调用 user 模块的查询能力，怎么写？
 当前 eagle-cloud plugin 是什么版本？
 ```
 
-**预期**：能从 CLAUDE.md / AGENTS.md / plugin.json 中找到版本号 `1.1.0`
+**预期**：能从 CLAUDE.md / AGENTS.md / plugin.json 中找到版本号 `1.2.6`
 
 - [ ] 版本可被 AI 识别
 
@@ -279,9 +280,9 @@ order 模块需要调用 user 模块的查询能力，怎么写？
 列出所有 eagle starter skill。
 ```
 
-**预期**：23 个 skill 全部出现（22 个 starter skill + 1 个 `eagle-feature-flow` 编排 skill）
+**预期**：28 个 skill 全部出现（starter 派生 skill + `eagle-feature-flow` 等手写 skill）
 
-- [ ] 23 个 skill 全部可见
+- [ ] 28 个 skill 全部可见
 
 ## 通过标准
 
@@ -310,7 +311,7 @@ order 模块需要调用 user 模块的查询能力，怎么写？
 === Plugin 接入测试报告 ===
 日期：YYYY-MM-DD
 业务项目：xxx
-Plugin 版本：1.1.0
+Plugin 版本：1.2.6
 工具：Claude Code / Codex CLI
 接入方式：marketplace（git） / local marketplace / submodule + 软链
 

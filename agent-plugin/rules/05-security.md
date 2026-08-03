@@ -94,10 +94,15 @@ log.info("用户注册 username={}, phone={}, email={}",
 
 ## 行级数据权限
 
-- `@DataPermission(deptField, userField)` 声明范围
-- `DataScope` 固定五值：`ALL` / `SELF` / `DEPT` / `DEPT_AND_CHILD` / `CUSTOM`
-- 业务方实现 `DataPermissionProvider`
-- 先租户隔离，再行级过滤
+**`eagle-row-security-starter` 已移除**（源码已删，`@DataPermission` / `DataPermissionProvider` / `DataPermissionContext` 均不存在）——**不要再按注解式数据权限写代码**。
+
+当前只剩业务侧的范围枚举 [DataScope](eagle-services/eagle-system-service/src/main/java/com/eagle/system/base/domain/model/enums/DataScope.java)，作为 `Role` 的普通字段（默认 `SELF`）：
+
+```java
+private DataScope dataScope = DataScope.SELF;   // ALL / SELF / DEPT / DEPT_AND_CHILD / CUSTOM
+```
+
+需要按范围过滤时，在应用服务或 Repository 查询条件里**显式**处理，并保证先租户隔离、再行级过滤。若要恢复注解式能力，需重新引入 starter 并同步更新本节。
 
 ## 跨租户操作
 
@@ -118,6 +123,69 @@ log.info("用户注册 username={}, phone={}, email={}",
 - 跨租户管理操作
 
 多租户项目用 `TenantAwareSecurityAuditLogUserProvider`（普通的 `SecurityAuditLogUserProvider` 不带 tenantId）。
+
+---
+
+# 可观测性（日志 / 指标 / 追踪）
+
+三者分工：**日志**回答"发生了什么"，**指标**回答"发生了多少/多快"，**追踪**回答"在哪一环"。
+不要用日志代替指标 —— 靠 `grep` 日志算 QPS 是反模式。
+
+## 指标：`BusinessMetrics`
+
+[BusinessMetrics](eagle-starter/eagle-common-starter/src/main/java/com/eagle/common/metrics/BusinessMetrics.java)
+由 `eagle-common-starter` 自动装配（存在 `MeterRegistry` 时生效），**直接注入即可**，不要自建 `Counter`/`Timer`：
+
+```java
+@Service
+@RequiredArgsConstructor
+public class OrderApplicationService {
+
+    private final BusinessMetrics metrics;
+
+    @Transactional(rollbackFor = Exception.class)
+    public void createOrder(CreateOrderRequest req) {
+        Timer.Sample sample = metrics.startTimer();
+        try {
+            // ... 业务
+            metrics.incrementOrderCreated(req.channel());
+        } finally {
+            metrics.recordDuration("order.create", sample);
+        }
+    }
+}
+```
+
+现有语义化方法（指标名统一 `eagle.` 前缀）：
+
+| 方法 | 指标 | tag |
+|---|---|---|
+| `incrementOrderCreated(channel)` | `eagle.order.created` | `channel` |
+| `incrementOrderCancelled(reason)` | `eagle.order.cancelled` | `reason` |
+| `incrementPaymentSuccess(method)` | `eagle.payment.success` | `method` |
+| `incrementPaymentFailed(reason)` | `eagle.payment.failed` | `reason` |
+| `incrementInventoryDeducted(warehouseId)` | `eagle.inventory.deducted` | `warehouse` |
+| `incrementInventoryInsufficient()` | `eagle.inventory.insufficient` | — |
+| `incrementRateLimited(resource)` | `eagle.rate.limited` | `resource` |
+| `incrementCircuitBreaker(service)` | `eagle.circuit.breaker` | `service` |
+| `startTimer()` / `recordDuration(op, sample)` | `eagle.{op}` 耗时 | — |
+
+**现状**：`BusinessMetrics` 目前**业务代码零使用**（只有自身单测覆盖）。新写涉及金额 / 库存 / 状态机流转的用例时应当补上。
+
+## 必须埋指标的场景
+
+- 金额、库存、配额的增减
+- 状态机流转（创建 / 支付 / 取消 / 退款）
+- 限流触发、熔断开合、降级发生
+- 外部依赖（支付 / 短信 / OSS）的成功率与耗时
+
+## tag 基数红线
+
+**tag 值必须是低基数枚举**。把 `userId`、`orderId`、`traceId`、原始 URL 当 tag 会导致时序库指标爆炸（每个值一条时间序列），这是压垮监控系统最常见的原因。高基数信息放日志或追踪，不放指标。
+
+## 追踪
+
+traceId / spanId 由 `eagle-tracing-starter` 注入 MDC，日志自动带上。**生产必须调低采样率** —— `eagle.tracing.sampling-probability` 默认 `1.0`（全采样）。
 
 ---
 

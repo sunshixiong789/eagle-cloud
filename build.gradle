@@ -74,6 +74,29 @@ configure(subprojects.findAll { it.name != 'eagle-bom' }) {
         toolVersion = '0.8.13'
     }
 
+    // 覆盖率门禁（棘轮式：阈值略低于当前水位，只防倒退，不逼着立刻补测试）
+    // 实测基线(system-service)：整体指令 52.8%；domain.model 分支 77%~100%
+    // 覆盖率提升后请同步上调阈值。
+    //
+    // 跑法：gradle :module:test :module:jacocoTestCoverageVerification
+    // ⚠️ 必须跑【完整】test 任务。若加了 --tests 过滤，jacoco 只统计那次过滤执行的覆盖，
+    //    结果会是 0.00 并误报门禁失败 —— 这不是覆盖率退化，是用法问题。
+    tasks.named('jacocoTestCoverageVerification') {
+        violationRules {
+            rule {
+                element = 'BUNDLE'
+                limit { counter = 'INSTRUCTION'; minimum = 0.45 }
+            }
+            // 只卡聚合根/实体所在的 domain.model —— 领域逻辑是核心资产。
+            // 不卡 *.enums / *.repository：纯枚举与接口没有有意义的分支，卡了只会逼出假测试。
+            rule {
+                element = 'PACKAGE'
+                includes = ['*.domain.model']
+                limit { counter = 'BRANCH'; minimum = 0.60 }
+            }
+        }
+    }
+
     // 聚合模块和 starter 模块不应该是可执行应用
     if (project.name in ['eagle-services', 'eagle-starter'] ||
             project.path.contains(':eagle-starter:')) {
