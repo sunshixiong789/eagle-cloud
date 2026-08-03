@@ -1,7 +1,7 @@
 # eagle-system-service
 
 Eagle 平台**系统服务**，承载认证授权、OAuth2 授权服务器与用户/角色/权限/部门/菜单管理。基于 DDD 分层 + Spring Modulith
-模块化设计，可独立运行（搭配 Nacos / 数据库），亦可被 `eagle-monolith-service` 复用为单体启动。
+模块化设计，通过 Nacos 注册发现作为独立服务运行。
 
 ## 定位
 
@@ -216,5 +216,3 @@ docker build -t eagle/system-service:1.0.0 eagle-services/eagle-system-service
                                         ├─ Redis（缓存 / 限流 / Token 黑名单）
                                         └─ RocketMQ（领域事件外发，可选）
 ```
-
-`eagle-monolith-service` 通过 Gradle 依赖直接复用本服务的全部业务代码，剥离 Nacos 后作为单体启动。

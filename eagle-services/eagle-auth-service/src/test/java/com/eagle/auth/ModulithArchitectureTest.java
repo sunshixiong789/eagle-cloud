@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * 不会触发"四层互依"误报。
  *
  * <p>除 Modulith 标准校验外，本测试还附加文件扫描，禁止 import 其他服务
- * （system / monolith / gateway）——这是 auth 拆分为独立服务后的最后一道护栏。
+ * （system / gateway）——这是 auth 拆分为独立服务后的最后一道护栏。
  *
  * <p><strong>运行</strong>
  * <pre>gradle :eagle-services:eagle-auth-service:test --tests "*.ModulithArchitectureTest"</pre>
@@ -47,7 +47,6 @@ class ModulithArchitectureTest {
 
     private static final List<Pattern> FORBIDDEN_IMPORTS = List.of(
             Pattern.compile("^import\\s+(static\\s+)?com\\.eagle\\.system\\..*;"),
-            Pattern.compile("^import\\s+(static\\s+)?com\\.eagle\\.monolith\\..*;"),
             Pattern.compile("^import\\s+(static\\s+)?com\\.eagle\\.gateway\\..*;")
     );
 
@@ -87,7 +86,7 @@ class ModulithArchitectureTest {
     class CrossServiceBoundary {
 
         @Test
-        @DisplayName("auth-service 不应 import 其他服务(system / monolith / gateway)的代码")
+        @DisplayName("auth-service 不应 import 其他服务(system / gateway)的代码")
         void shouldNotImportOtherServicePackages() throws IOException {
             List<String> violations = new ArrayList<>();
             try (Stream<Path> stream = Files.walk(SRC_MAIN)) {

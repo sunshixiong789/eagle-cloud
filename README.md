@@ -67,7 +67,6 @@ eagle-cloud/
 │   ├── eagle-system-service/           # 系统服务（用户/角色/权限/部门/菜单、文件、消息、公告）
 │   ├── eagle-auth-service/             # 认证服务（OAuth2 授权服务器、JWT 签发、第三方登录）
 │   ├── eagle-gateway-service/          # API 网关（路由、JWT 鉴权、限流、链路追踪）
-│   ├── eagle-monolith-service/         # 单体聚合运行形态（业务模块合并为单进程启动）
 │   └── docker-compose.yml              # 开发环境容器编排
 │
 └── eagle-starter/                          # 可复用 Starter 库（共 27 个）

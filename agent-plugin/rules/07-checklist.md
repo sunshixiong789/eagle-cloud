@@ -74,7 +74,7 @@ gradle :eagle-services:eagle-system-service:test --tests "*ModulithArchitectureT
 gradle build                                                                      # 公共 starter / BOM / 跨模块契约
 ```
 
-一键：`/check-arch`。模块路径以 `settings.gradle` 为准（`eagle-services:eagle-system-service` / `eagle-auth-service` / `eagle-gateway-service` / `eagle-monolith-service`）。
+一键：`/check-arch`。模块路径以 `settings.gradle` 为准（`eagle-services:eagle-system-service` / `eagle-auth-service` / `eagle-gateway-service`）。
 
 ## 静态自检（无输出即合规）
 

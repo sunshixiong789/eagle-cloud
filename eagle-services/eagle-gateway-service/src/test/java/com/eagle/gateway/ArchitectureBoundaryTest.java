@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * <p>网关只负责路由 / 限流 / 鉴权透传,业务零侵入。本测试通过文件扫描禁止
  * 网关代码 import 任何业务服务({@code com.eagle.auth} /
- * {@code com.eagle.system} / {@code com.eagle.monolith}),
+ * {@code com.eagle.system}),
  * 防止"图省事"在网关里直接调用业务领域对象。
  *
  * <p>网关与业务服务的合法交互通道只有:
@@ -39,12 +39,11 @@ class ArchitectureBoundaryTest {
 
     private static final List<Pattern> FORBIDDEN_IMPORTS = List.of(
             Pattern.compile("^import\\s+(static\\s+)?com\\.eagle\\.auth\\..*;"),
-            Pattern.compile("^import\\s+(static\\s+)?com\\.eagle\\.system\\..*;"),
-            Pattern.compile("^import\\s+(static\\s+)?com\\.eagle\\.monolith\\..*;")
+            Pattern.compile("^import\\s+(static\\s+)?com\\.eagle\\.system\\..*;")
     );
 
     @Test
-    @DisplayName("gateway-service 不应 import 任何业务服务(auth / system / monolith)的代码")
+    @DisplayName("gateway-service 不应 import 任何业务服务(auth / system)的代码")
     void shouldNotImportBusinessServicePackages() throws IOException {
         List<String> violations = new ArrayList<>();
         try (Stream<Path> stream = Files.walk(SRC_MAIN)) {

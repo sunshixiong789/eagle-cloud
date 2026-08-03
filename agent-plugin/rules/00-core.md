@@ -89,7 +89,7 @@ class OrderApplicationServiceTest {
 | Modulith 边界 / Named Interface | `gradle :eagle-services:{svc}:test --tests "*ModulithArchitectureTest"` |
 | 公共 starter / BOM / Gradle / 跨模块契约 | `gradle build` |
 
-真实模块路径见 `settings.gradle`：`eagle-services:eagle-system-service`、`eagle-auth-service`、`eagle-gateway-service`、`eagle-monolith-service`。
+真实模块路径见 `settings.gradle`：`eagle-services:eagle-system-service`、`eagle-auth-service`、`eagle-gateway-service`。
 
 ## 依赖
 

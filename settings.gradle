@@ -7,7 +7,6 @@ include 'eagle-bom'
 include 'eagle-services:eagle-gateway-service'
 include 'eagle-services:eagle-system-service'
 include 'eagle-services:eagle-auth-service'
-include 'eagle-services:eagle-monolith-service'
 
 // Starter 模块
 include 'eagle-starter:eagle-ai-starter'
@@ -40,5 +39,4 @@ include 'eagle-starter:eagle-sentinel-starter'
 include 'eagle-starter:eagle-seata-starter'
 include 'eagle-starter:eagle-elasticsearch-starter'
 include 'eagle-starter:eagle-websocket-starter'
-
 

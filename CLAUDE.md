@@ -61,8 +61,6 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 | `eagle-system-service`  | 系统服务：用户/角色/权限/部门/菜单管理、文件、消息、公告                  | JPA, WebSocket, Nacos                                |
 | `eagle-auth-service`    | 认证服务：OAuth2 授权服务器、JWT 签发、微信/短信/手机一键登录    | JPA, OAuth2 Auth Server, Thymeleaf                   |
 | `eagle-gateway-service` | API 网关：路由、JWT 鉴权、限流、链路追踪                 | Spring Cloud Gateway (WebFlux), Sentinel, Nacos      |
-| `eagle-monolith-service`| 单体聚合运行形态：把上述业务模块合并为单进程启动                    | JPA, H2/MySQL                                        |
-
 ### Starter 库模块 (eagle-starter)
 
 | 模块                                 | 说明                                                                                             |
