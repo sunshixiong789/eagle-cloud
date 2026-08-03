@@ -17,6 +17,7 @@ import com.eagle.system.base.domain.service.RoleValidationService;
 import com.eagle.system.base.infrastructure.config.AdminProperties;
 import com.eagle.system.base.infrastructure.remote.AuthClientFacade;
 import com.eagle.system.base.infrastructure.remote.dto.AccountBlacklistSnapshot;
+import com.eagle.system.base.infrastructure.remote.dto.AccountSnapshot;
 import com.eagle.system.base.interfaces.dto.request.UpdateProfileRequest;
 import com.eagle.system.base.interfaces.dto.request.UpdateUserRequest;
 import com.eagle.system.base.interfaces.dto.request.UserQueryRequest;
@@ -34,7 +35,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 用户应用服务
@@ -128,7 +132,10 @@ public class UserApplicationService {
      */
     @Transactional(readOnly = true)
     public Page<UserResponse> queryUsers(Pageable pageable) {
-        return userRepository.findAll(visibleUserSpec(), withDefaultUserSort(pageable)).map(this::toListResponse);
+        Page<UserResponse> page = userRepository.findAll(visibleUserSpec(), withDefaultUserSort(pageable))
+                .map(this::toListResponse);
+        enrichPhones(page);
+        return page;
     }
 
     /**
@@ -141,7 +148,10 @@ public class UserApplicationService {
                 .and(UserSpecification.emailLike(request.getEmail()))
                 .and(UserSpecification.nameLike(request.getName()))
                 .and(visibleUserSpec());
-        return userRepository.findAll(spec, withDefaultUserSort(pageable)).map(this::toListResponse);
+        Page<UserResponse> page = userRepository.findAll(spec, withDefaultUserSort(pageable))
+                .map(this::toListResponse);
+        enrichPhones(page);
+        return page;
     }
 
     /**
@@ -190,6 +200,25 @@ public class UserApplicationService {
         response.setLoginStatus(online ? "ONLINE" : "OFFLINE");
         enrichBlacklistStatus(user, response);
         return response;
+    }
+
+    /** 当前页一次批量补齐 auth 权威手机号，不在 system 域持久化副本。 */
+    private void enrichPhones(Page<UserResponse> page) {
+        Set<Long> accountIds = page.getContent().stream()
+                .map(UserResponse::getAccountId)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (accountIds.isEmpty()) {
+            return;
+        }
+        Map<Long, AccountSnapshot> accounts = authClientFacade.findAccounts(accountIds).stream()
+                .collect(Collectors.toMap(AccountSnapshot::accountId, Function.identity(), (left, right) -> left));
+        page.getContent().forEach(response -> {
+            AccountSnapshot account = accounts.get(response.getAccountId());
+            if (account != null) {
+                response.setPhone(account.phone());
+            }
+        });
     }
 
     /**

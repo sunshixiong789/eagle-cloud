@@ -1,9 +1,14 @@
 package com.eagle.system.base.infrastructure.remote;
 
 import com.eagle.system.base.infrastructure.remote.dto.AccountSnapshot;
+import com.eagle.system.base.infrastructure.remote.dto.AccountBatchRequest;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
+import org.springframework.web.service.annotation.PostExchange;
+
+import java.util.List;
 
 /**
  * Account 内部 API 客户端(调 auth-service /internal/accounts/**)。
@@ -21,6 +26,10 @@ public interface AuthAccountClient {
     /** 按用户名查 Account 快照;Account 不存在时 RestClient 错误处理器抛 NotFoundException。 */
     @GetExchange("/by-username/{username}")
     AccountSnapshot findByUsername(@PathVariable String username);
+
+    /** 批量查询账号快照；不存在的账号 ID 不返回。 */
+    @PostExchange("/batch")
+    List<AccountSnapshot> findBatch(@RequestBody AccountBatchRequest request);
 
     /** 全量账号数(权威源,供 Dashboard 等聚合接口使用)。 */
     @GetExchange("/count")

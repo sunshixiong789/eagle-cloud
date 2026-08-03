@@ -6,7 +6,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * 账号仓储接口
@@ -31,6 +33,13 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
      * 通过手机号查找账号（短信登录）
      */
     Optional<Account> findByPhone(String phone);
+
+    /**
+     * 按手机号批量查找账号（跨服务按手机号解析 accountId）。
+     *
+     * <p>未注册的号码不会出现在结果中，调用方可用返回集合与请求集合的差集识别未注册号码。
+     */
+    List<Account> findByPhoneIn(Set<String> phones);
 
     /**
      * 通过微信小程序 openid 查找账号

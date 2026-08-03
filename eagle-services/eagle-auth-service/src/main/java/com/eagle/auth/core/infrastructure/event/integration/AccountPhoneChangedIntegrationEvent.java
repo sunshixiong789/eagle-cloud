@@ -6,8 +6,8 @@ import lombok.Getter;
 /**
  * 手机号变更集成事件（跨服务）。tag {@code account.phone-changed}，topic {@code eagle_auth_events}。
  *
- * <p>版本契约见 {@link AccountRegisteredIntegrationEvent}。当前无消费方，预留给未来需要
- * phone 副本/通知的服务。
+ * <p>版本契约见 {@link AccountRegisteredIntegrationEvent}。当前由会员统计等需要
+ * phone 副本的服务消费。
  *
  * @author sunshixiong
  */

@@ -29,7 +29,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
  * <ul>
  *   <li>{@code account.registered} — system-service 据此创建 User 镜像</li>
  *   <li>{@code account.deleted}    — system-service 据此清理 User 镜像</li>
- *   <li>{@code account.phone-changed} — 手机号变更广播(当前无消费方,预留)</li>
+ *   <li>{@code account.phone-changed} — 手机号变更广播</li>
  * </ul>
  *
  * <p>其余 auth 内部领域事件（{@link com.eagle.auth.core.domain.event.AccountFrozenEvent}、

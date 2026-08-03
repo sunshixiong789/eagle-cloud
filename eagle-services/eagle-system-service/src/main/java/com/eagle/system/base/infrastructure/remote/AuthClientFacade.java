@@ -1,6 +1,8 @@
 package com.eagle.system.base.infrastructure.remote;
 
 import com.eagle.system.base.infrastructure.remote.dto.AccountBlacklistSnapshot;
+import com.eagle.system.base.infrastructure.remote.dto.AccountBatchRequest;
+import com.eagle.system.base.infrastructure.remote.dto.AccountSnapshot;
 import com.eagle.system.base.infrastructure.remote.dto.OnlineUserSnapshot;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * auth-service 内部 API 调用门面 — 集中熔断 + 降级。
@@ -112,6 +115,26 @@ public class AuthClientFacade {
     @CircuitBreaker(name = "eagle-default", fallbackMethod = "countAccountsFallback")
     public long countAccounts() {
         return accountClient.count();
+    }
+
+    /**
+     * 批量查询账号快照。仅用于列表展示增强，下游不可用时降级为空，不阻断 system 用户列表。
+     */
+    @CircuitBreaker(name = "eagle-default", fallbackMethod = "findAccountsFallback")
+    public List<AccountSnapshot> findAccounts(Set<Long> accountIds) {
+        if (accountIds == null || accountIds.isEmpty()) {
+            return List.of();
+        }
+        return accountClient.findBatch(new AccountBatchRequest(accountIds));
+    }
+
+    @SuppressWarnings("unused")
+    private List<AccountSnapshot> findAccountsFallback(Set<Long> accountIds, Throwable ex) {
+        if (!isFallbackEligible(ex)) {
+            sneakyThrow(ex);
+        }
+        log.warn("findAccounts 降级为空列表: accountCount={}", accountIds.size(), ex);
+        return List.of();
     }
 
     @SuppressWarnings("unused")

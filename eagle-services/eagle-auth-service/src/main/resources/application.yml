@@ -180,6 +180,18 @@ eagle:
       require-authorization-consent: false
       access-token-ttl-seconds: 3600
       refresh-token-ttl-seconds: 2592000
+    # 运营端机密客户端（client_credentials）：内部运营系统调用购物金对外接口用。
+    # 默认关闭——secret 未注入时不建号，避免出现无凭据的机密客户端。
+    # 开启需同时提供 EAGLE_OAUTH_OPS_CLIENT_ENABLED=true 与 EAGLE_OAUTH_OPS_CLIENT_SECRET。
+    ops-client:
+      enabled: ${EAGLE_OAUTH_OPS_CLIENT_ENABLED:false}
+      client-id: shengxinOps
+      client-name: 省心运营系统
+      client-secret: ${EAGLE_OAUTH_OPS_CLIENT_SECRET:}
+      client-authentication-methods: client_secret_basic
+      authorization-grant-types: client_credentials
+      scopes: shopping-gold.grant,shopping-gold.revoke
+      access-token-ttl-seconds: 1800
   wechat:
     app:
       app-id: ${WECHAT_APP_APP_ID:}

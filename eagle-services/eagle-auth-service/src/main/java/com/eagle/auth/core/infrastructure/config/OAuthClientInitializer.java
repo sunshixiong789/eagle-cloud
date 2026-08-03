@@ -38,12 +38,14 @@ public class OAuthClientInitializer implements ApplicationRunner {
     private final OAuthClientRepository oAuthClientRepository;
     private final OAuthClientProperties webProperties;
     private final OAuthAppClientProperties appProperties;
+    private final OAuthOpsClientProperties opsProperties;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void run(ApplicationArguments args) {
         initializeIfEnabled(ClientSpec.ofWeb(webProperties), "Web 端");
         initializeIfEnabled(ClientSpec.ofApp(appProperties), "App 端");
+        initializeIfEnabled(ClientSpec.ofOps(opsProperties), "运营端");
     }
 
     private void initializeIfEnabled(ClientSpec spec, String label) {
@@ -182,6 +184,18 @@ public class OAuthClientInitializer implements ApplicationRunner {
                     Set.of(), p.getScopes(),
                     p.isRequireProofKey(), p.isRequireAuthorizationConsent(),
                     p.getAccessTokenTtlSeconds(), p.getRefreshTokenTtlSeconds());
+        }
+
+        // 运营端机器对机器：无浏览器回跳（redirect / post-logout 均空）、无 PKCE、无授权确认页；
+        // client_credentials 不签发 refresh_token，故 refreshTokenTtl 传 0。
+        static ClientSpec ofOps(OAuthOpsClientProperties p) {
+            return new ClientSpec(p.isEnabled(), p.getSyncMode(),
+                    p.getClientId(), p.getClientName(),
+                    p.getClientSecret(), p.getClientAuthenticationMethods(),
+                    p.getAuthorizationGrantTypes(), Set.of(),
+                    Set.of(), p.getScopes(),
+                    false, false,
+                    p.getAccessTokenTtlSeconds(), 0L);
         }
     }
 }
