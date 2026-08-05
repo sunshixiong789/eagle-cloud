@@ -8,14 +8,23 @@ import org.springframework.stereotype.Component;
 /**
  * 手机号一键登录配置属性
  * <p>
- * 对应 application.yml 中的 {@code eagle.auth.one-click} 前缀配置。{@code provider} 决定运行时使用哪一个
- * {@link com.eagle.auth.core.infrastructure.external.provider.PhoneOneClickProvider} 实现：
- * <ul>
- *   <li>{@code mock}（默认）：开发环境直接将 access_token 视为手机号，便于联调</li>
- *   <li>{@code aliyun}：调用阿里云号码认证（dypnsapi）网关换取真实手机号</li>
- *   <li>{@code tencent}：调用腾讯云号码认证（PNSV，通过 SDK CommonClient）换取真实手机号</li>
- * </ul>
- * 生产环境必须切换为运营商或聚合 SDK 实现，并配置对应凭证。
+ * 对应 application.yml 中的 {@code eagle.auth.one-click} 前缀配置。
+ *
+ * <p><strong>当前状态：功能未上线，默认关闭。</strong>唯一在册的
+ * {@link com.eagle.auth.core.infrastructure.external.provider.PhoneOneClickProvider} 实现是
+ * {@code MockPhoneOneClickProvider}，它把 access_token 直接当手机号用 —— 一旦在生产可达，
+ * 等同于「知道手机号即可登录该账号」。因此这里用三道各自独立的锁把它封住：
+ * <ol>
+ *   <li>{@code enabled} 默认 {@code false}（本类）；</li>
+ *   <li>mock provider 标了 {@code @Profile("dev")}，非 dev 环境根本不注册；</li>
+ *   <li>{@code phone_one_click} 已从 application.yml 与
+ *       {@link OAuthClientProperties} / {@link OAuthAppClientProperties} 的默认授权类型中移除，
+ *       客户端拿不到这个 grant。</li>
+ * </ol>
+ *
+ * <p>接入真实运营商 / 聚合网关时：新增一个实现 {@code PhoneOneClickProvider} 的类
+ * （原阿里云 dypnsapi、腾讯云 PNSV 两个实现已随其 SDK 依赖一并移除，需要时从 git 历史取回），
+ * 配上凭证，把上面三道锁逐一打开，并补一条真实 provider 的集成验证。
  *
  * @author sunshixiong
  */
@@ -26,93 +35,14 @@ import org.springframework.stereotype.Component;
 public class PhoneOneClickProperties {
 
     /**
-     * 是否启用一键登录
+     * 是否启用一键登录。默认 {@code false} —— 在接入真实 provider 之前不要打开，
+     * 详见类注释。
      */
-    private boolean enabled = true;
+    private boolean enabled = false;
 
     /**
-     * 提供方：mock / aliyun / tencent
+     * 提供方标识，与 {@code PhoneOneClickProvider#name()} 对齐（不区分大小写）。
+     * 目前仅 {@code mock}（限 dev profile）。
      */
     private String provider = "mock";
-
-    /**
-     * 阿里云号码认证配置
-     */
-    private final Aliyun aliyun = new Aliyun();
-
-    /**
-     * 腾讯云号码认证配置
-     */
-    private final Tencent tencent = new Tencent();
-
-    @Getter
-    @Setter
-    public static class Aliyun {
-
-        /**
-         * 阿里云号码认证 endpoint，默认 dypnsapi.aliyuncs.com
-         */
-        private String endpoint = "dypnsapi.aliyuncs.com";
-
-        /**
-         * AccessKey ID
-         */
-        private String accessKeyId = "";
-
-        /**
-         * AccessKey Secret
-         */
-        private String accessKeySecret = "";
-    }
-
-    @Getter
-    @Setter
-    public static class Tencent {
-
-        /**
-         * 服务区域，默认广州
-         */
-        private String region = "ap-guangzhou";
-
-        /**
-         * 自定义 endpoint，留空则由 SDK 按 service 自动推导（一般无需设置）
-         */
-        private String endpoint = "";
-
-        /**
-         * 腾讯云 API 凭证 SecretId
-         */
-        private String secretId = "";
-
-        /**
-         * 腾讯云 API 凭证 SecretKey
-         */
-        private String secretKey = "";
-
-        /**
-         * 产品代号 / service。号码认证服务默认 {@code pnsv}，按公司实际开通的腾讯云号码认证产品控制台为准
-         */
-        private String service = "pnsv";
-
-        /**
-         * API 版本号（路径 yyyy-MM-dd），与 service 配套
-         */
-        private String version = "2018-07-11";
-
-        /**
-         * 调用的 API Action 名称
-         */
-        private String action = "GetPhoneNumber";
-
-        /**
-         * 业务成功标识码，部分产品在响应里携带 {@code Code}/{@code Status} 字段。默认 {@code Ok}
-         * （腾讯云一键登录文档约定）；不同产品可能是 {@code 0}/{@code Success}，按响应实际值调整
-         */
-        private String successCode = "Ok";
-
-        /**
-         * 响应 JSON 中携带手机号的字段名（不含 {@code Response} 外层），默认 {@code Mobile}
-         */
-        private String phoneField = "Mobile";
-    }
 }

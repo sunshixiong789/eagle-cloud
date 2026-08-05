@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PhoneOneClickServiceImplTest {
@@ -24,6 +25,9 @@ class PhoneOneClickServiceImplTest {
     @BeforeEach
     void setUp() {
         properties = new PhoneOneClickProperties();
+        // 一键登录未接入真实 provider，enabled 默认 false（见 PhoneOneClickProperties）；
+        // 下面的路由用例要测的是"启用之后"的行为，所以显式打开。
+        properties.setEnabled(true);
         mockProvider = new StubProvider("mock", EXPECTED_PHONE);
         aliyunProvider = new StubProvider("aliyun", "13900139000");
     }
@@ -57,6 +61,18 @@ class PhoneOneClickServiceImplTest {
         void shouldRejectWhenDisabled() {
             properties.setEnabled(false);
             assertThrows(AppException.class, () -> newService().verifyAndGetPhone("any-token"));
+        }
+
+        @Test
+        @DisplayName("未显式配置时默认关闭——mock provider 不得成为可用登录入口")
+        void shouldBeDisabledByDefault() {
+            // 回归护栏：mock provider 把 access_token 原样当手机号返回，
+            // 一旦 enabled 默认回到 true，就等于"知道手机号即可登录该账号"。
+            PhoneOneClickProperties defaults = new PhoneOneClickProperties();
+            assertFalse(defaults.isEnabled());
+            assertThrows(AppException.class,
+                    () -> new PhoneOneClickServiceImpl(defaults, List.of(mockProvider))
+                            .verifyAndGetPhone(EXPECTED_PHONE));
         }
 
         @Test

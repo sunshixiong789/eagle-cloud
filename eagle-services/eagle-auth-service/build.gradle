@@ -1,12 +1,3 @@
-// 排除旧式 SAX 解析器（与 system-service 一致，避免 weixin-java-miniapp / dom4j / xstream 传递引入）。
-configurations.configureEach {
-    exclude group: 'xpp3', module: 'xpp3'
-    exclude group: 'xpp3', module: 'xpp3_min'
-    exclude group: 'xmlpull', module: 'xmlpull'
-    exclude group: 'io.github.x-stream', module: 'mxparser'
-    exclude group: 'pull-parser', module: 'pull-parser'
-}
-
 dependencies {
     implementation project(':eagle-starter:eagle-data-jpa-starter')
     implementation project(':eagle-starter:eagle-resource-server-starter')
@@ -30,14 +21,14 @@ dependencies {
     // Nacos 服务注册与发现
     implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery'
 
-    // 微信 SDK（auth 内的 WeChat 登录适配器使用）
-    implementation "com.github.binarywang:weixin-java-miniapp"
-
-    // 阿里云号码认证 / 一键登录（AliyunPhoneOneClickProvider 直接使用 Client 类，必须编译期可见）
-    implementation "com.aliyun:dypnsapi20170525"
-
-    // 腾讯云号码认证 / 一键登录（TencentPhoneOneClickProvider 通过 CommonClient 调用）
-    implementation "com.tencentcloudapi:tencentcloud-sdk-java-common"
+    // 微信小程序登录只用 sns/jscode2session 一个接口，已改为 RestClient 直调
+    // （WechatMiniProgramServiceImpl），与 WechatWebServiceImpl 走同一套手写实现，
+    // 不再引 weixin-java-miniapp —— 那条链净带 5.1 MB（含 bcpkix/bcutil-jdk18on + xstream）。
+    //
+    // 一键登录的阿里云 dypnsapi / 腾讯云 SDK 依赖已移除（功能未上线，见
+    // PhoneOneClickProperties 的说明）。阿里云那条链净带 8.6 MB，其中 7 MB 是它自带的
+    // bcprov/bcpkix/bcutil-jdk15on:1.70（与其他依赖的 jdk18on 包名重叠，属重复类隐患），
+    // 还夹带一个 org.jacoco.agent-runtime。要接真实 provider 时再按需引回。
 
     implementation "com.github.ben-manes.caffeine:caffeine"
     // auth 内的 LoginRateLimitFilter / TokenTrackingHandler / OnlineUserAdapter 直接用 fastjson2

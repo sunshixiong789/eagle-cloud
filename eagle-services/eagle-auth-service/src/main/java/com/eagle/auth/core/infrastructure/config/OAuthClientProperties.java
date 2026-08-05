@@ -59,8 +59,11 @@ public class OAuthClientProperties {
     /**
      * 授权类型
      */
+    // phone_one_click 已移出默认名单：一键登录未接入真实 provider，
+    // 放行它等于把 MockPhoneOneClickProvider（token 即手机号）暴露成登录入口。
+    // 接入真实 provider 后再连同 PhoneOneClickProperties 的开关一起放开。
     private Set<String> authorizationGrantTypes = Set.of(
-            "authorization_code", "refresh_token", "wechat_mini_program", "sms_code", "phone_one_click");
+            "authorization_code", "refresh_token", "wechat_mini_program", "sms_code");
 
     /**
      * 重定向 URI

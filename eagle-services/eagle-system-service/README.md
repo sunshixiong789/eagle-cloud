@@ -79,7 +79,7 @@ spring-dotenv                                  # 本地 .env 自动加载
 | `eagle.wechat.mini-program.*`    | env `WECHAT_MINI_APP_*`             | 微信小程序 AppID / Secret                       |
 | `eagle.wechat.web.pc/h5.*`       | env `WECHAT_WEB_*` / `WECHAT_MP_*`  | 微信网页/H5 登录                                 |
 | `eagle.message.sms.*`            | env `SMS_*` / `HNSLS_SMS_*`         | 短信服务商配置（由 eagle-notification-starter 统一处理） |
-| `eagle.auth.one-click.*`         | provider 默认 `mock`                  | 一键登录提供方 / 阿里云 dypnsapi 配置                  |
+| `eagle.auth.one-click.*`         | `enabled` 默认 `false`                | 一键登录（**未上线，默认关闭**，见下文）                     |
 | `eagle.log.cleanup.cron`         | `0 0 2 * * ?`                       | 审计日志每日清理                                   |
 | `eagle.websocket.endpoint`       | `/ws-stomp`                         | STOMP 握手路径                                 |
 | `spring.cloud.nacos.discovery.*` | env `NACOS_SERVER_ADDR / NAMESPACE` | Nacos 注册中心地址 / 命名空间                        |
@@ -96,11 +96,33 @@ spring-dotenv                                  # 本地 .env 自动加载
 | `refresh_token`       | 刷新令牌         | `refresh_token`                            | Spring Authorization Server 内置            |
 | `wechat_mini_program` | 微信小程序登录      | `js_code`                                  | `WechatMiniProgramAuthenticationProvider` |
 | `sms_code`            | 短信验证码登录      | `phone` / `code`                           | `SmsCodeAuthenticationProvider`           |
-| `phone_one_click`     | 手机号一键登录      | `access_token`（运营商 / 阿里云 dypnsapi 颁发的短期凭证） | `PhoneOneClickAuthenticationProvider`     |
+| ~~`phone_one_click`~~ | 手机号一键登录      | —                                          | **未上线，已从客户端授权类型中移除**（见下文）                 |
 
-### 手机号一键登录
+### 手机号一键登录（未上线）
 
-由运营商在网络层识别 SIM 卡持有人后下发短期 token，服务端凭 token 反查真实手机号，无需用户输入手机号或验证码。
+设想中的形态：由运营商在网络层识别 SIM 卡持有人后下发短期 token，服务端凭 token 反查真实手机号，
+无需用户输入手机号或验证码。
+
+**当前状态：功能未接入真实 provider，grant 已下线。** 原因是唯一在册的实现
+`MockPhoneOneClickProvider` 把 access_token 原样当手机号返回，而调用方拿到手机号后会
+`findOrCreateByPhone` 并签发 token —— 一旦在生产可达，等同于「知道手机号即可登录该账号」。
+`eagleApp` 客户端还是 `client-authentication-methods=none` 的 public client，风险更直接。
+
+因此现在有三道各自独立的锁：
+
+1. `eagle.auth.one-click.enabled` 默认 `false`；
+2. `MockPhoneOneClickProvider` 标了 `@Profile("dev")`，非 dev 环境不注册；
+3. `phone_one_click` 已从 `application.yml` 与 `OAuthClientProperties` /
+   `OAuthAppClientProperties` 的默认授权类型中移除（`syncMode` 默认 `OVERWRITE`，
+   重启即把已有 DB 行同步过去，无需手工改库）。
+
+原阿里云 dypnsapi / 腾讯云 PNSV 两个 provider 实现连同其 SDK 依赖已移除（净减 8.7 MB，
+其中阿里云那条链自带一整套 `bcprov/bcpkix/bcutil-jdk15on:1.70`，与其他依赖的 jdk18on
+包名重叠属重复类隐患，还夹带 `org.jacoco.agent-runtime`）。**接入真实一键登录时**：
+从 git 历史取回或新写一个 `PhoneOneClickProvider` 实现，按需引回 SDK，
+再把上面三道锁逐一打开，并补真实 provider 的集成验证。
+
+下面的时序与配置示例描述的是**放开之后**的目标形态，供接入时参考。
 
 **请求示例**
 
@@ -134,30 +156,30 @@ grant_type=phone_one_click
 **关键组件**
 
 - `auth/domain/service/PhoneOneClickService` — 领域接口（token → phone）
-- `auth/infrastructure/external/PhoneOneClickServiceImpl` — `mock` / `aliyun` 双分支适配
+- `auth/infrastructure/external/PhoneOneClickServiceImpl` — 按 `provider` 配置路由到对应
+  `PhoneOneClickProvider`（目前在册的只有 `mock`，且限 dev profile）
 - `auth/infrastructure/security/PhoneOneClickAuthenticationConverter` — 解析 token endpoint 参数
 - `auth/infrastructure/security/PhoneOneClickAuthenticationProvider` — 校验 + 找/建账号 + 签发 Token
 
 **配置示例**
 
+当前可用配置项只有两个（provider 专属凭证随各自实现走）：
+
 ```yaml
 eagle:
   auth:
     one-click:
-      enabled: true
-      provider: aliyun                # mock（默认） | aliyun
-      endpoint: dypnsapi.aliyuncs.com
-      access-key-id: ENC(...)         # 必须 Jasypt 加密
-      access-key-secret: ENC(...)
+      enabled: false                  # 默认 false，接入真实 provider 前不要打开
+      provider: mock                  # 目前仅 mock（限 dev profile）
 ```
 
-- `provider=mock`（默认）：access_token 直接当作手机号使用，仅用于开发联调；非 11 位号码格式的 token 会被拒绝。
-- `provider=aliyun`：调用 `dypnsapi.GetMobile`，期望响应 `code=OK` 且 `getMobileResultDTO.mobile` 为 11 位手机号。
+- `provider=mock`：access_token 直接当作手机号使用，**仅 dev**；非 11 位号码格式的 token 会被拒绝。
 
 **默认客户端的 grant_types**
 
-`OAuthClientProperties.authorizationGrantTypes` 默认已包含 `phone_one_click`；通过 `OAuthClientInitializer` 在启动时同步到
-DB，旧环境重启即可生效。
+`phone_one_click` 已从 `OAuthClientProperties` / `OAuthAppClientProperties` 的默认名单
+和 `application.yml` 中移除。`syncMode` 默认 `OVERWRITE`，`OAuthClientInitializer`
+启动时会把 DB 中已存客户端的授权类型按配置重写，旧环境重启即生效，无需手工改库。
 
 **错误码（11034–11037）**
 

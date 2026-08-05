@@ -41,8 +41,12 @@ public class OAuthAppClientProperties {
 
     private Set<String> clientAuthenticationMethods = Set.of("none");
 
+    // phone_one_click 已移出默认名单：一键登录未接入真实 provider，
+    // 放行它等于把 MockPhoneOneClickProvider（token 即手机号）暴露成登录入口。
+    // 该客户端还是 client-authentication-methods=none + require-proof-key=false 的 public client，
+    // 一旦放行，知道 client_id 就能凭任意手机号换 token。接入真实 provider 后再放开。
     private Set<String> authorizationGrantTypes = Set.of(
-            "refresh_token", "wechat_app", "wechat_mini_program", "sms_code", "phone_one_click",
+            "refresh_token", "wechat_app", "wechat_mini_program", "sms_code",
             "taobao_app", "apple_app");
 
     private Set<String> redirectUris = Set.of();

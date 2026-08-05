@@ -173,7 +173,10 @@ eagle:
       client-id: eagleApp
       client-name: Eagle App 移动端
       client-authentication-methods: none
-      authorization-grant-types: refresh_token,sms_code,wechat_app,wechat_mini_program,phone_one_click,taobao_app,apple_app,social_bind
+      # phone_one_click 已下线：一键登录没接真实 provider，只剩 mock（token 即手机号）。
+      # 本客户端是 client-authentication-methods=none 的 public client，放行它等于任意手机号可换 token。
+      # 接入真实 provider 后，连同 eagle.auth.one-click.enabled 与 MockPhoneOneClickProvider 的 @Profile 一起放开。
+      authorization-grant-types: refresh_token,sms_code,wechat_app,wechat_mini_program,taobao_app,apple_app,social_bind
       redirect-uris: ""
       scopes: openid,profile,email,address,phone
       require-proof-key: false

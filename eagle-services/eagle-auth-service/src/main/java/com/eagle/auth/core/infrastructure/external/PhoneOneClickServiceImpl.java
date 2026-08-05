@@ -17,12 +17,13 @@ import java.util.stream.Collectors;
  * 手机号一键登录服务（路由层）
  * <p>
  * 根据 {@code eagle.auth.one-click.provider} 配置选择对应的 {@link PhoneOneClickProvider} 适配器，
- * 具体校验逻辑由各 Provider 自行实现：
- * <ul>
- *   <li>{@code mock}（默认）：access_token 直接当手机号校验，仅用于开发联调</li>
- *   <li>{@code aliyun}：阿里云号码认证（dypnsapi）</li>
- *   <li>{@code tencent}：腾讯云号码认证（PNSV，CommonClient）</li>
- * </ul>
+ * 具体校验逻辑由各 Provider 自行实现。
+ *
+ * <p>当前在册的 provider 只有 {@code mock}（限 dev profile），且
+ * {@code eagle.auth.one-click.enabled} 默认 {@code false}
+ * —— 功能未上线，详见 {@link PhoneOneClickProperties} 的三道锁说明。
+ * 非 dev 环境下注入的 provider 列表为空是预期状态，此时任何调用都会在
+ * enabled 检查处提前拒绝。
  *
  * @author sunshixiong
  */
