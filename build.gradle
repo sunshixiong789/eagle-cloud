@@ -227,3 +227,50 @@ configure(subprojects.findAll { it.name != 'eagle-bom' }) {
         }
     }
 }
+
+// ── 三个可执行服务的生产运行时依赖瘦身 + 分层 jar ────────────────────────────
+//
+// 作用域刻意限定在 eagle-services/* ，**不动 eagle-starter**：
+// eagle-data-jpa-starter 有意 runtimeOnly 声明 MySQL / PostgreSQL / H2 三种驱动，
+// 那是框架对外承诺的多库支持，不能在 starter 层砍。但这三个服务的 jdbc url 全是
+// postgresql（已核对 application*.yml），所以在服务层排掉另外两个是安全的。
+//
+// 每条 exclude 都做过静态验证，复核方式：
+//   gradle :eagle-services:<svc>:dependencies --configuration runtimeClasspath
+configure(subprojects.findAll { it.parent?.name == 'eagle-services' }) {
+
+    configurations.named('runtimeClasspath') {
+        // 32.6 MB。broker 端 RocksDB 存储引擎，经 eagle-rocketmq-starter → rocketmq-tools
+        // → rocketmq-common 传递进来。已验证 rocketmq-{common,tools,client,remoting,srvutil}
+        // 全部 class 无一处引用 org/rocksdb —— topic-admin(DefaultMQAdminExt) 路径不加载它。
+        exclude group: 'org.apache.rocketmq', module: 'rocketmq-rocksdb'
+        // 11.6 MB。netty-all 聚合带进来的 QUIC 库：原生库有 linux/osx/windows 5 个平台分类器，
+        // 其中 4 个在 Linux 容器里永远用不上。已验证全链路无 QUIC 引用。
+        // gateway 虽不依赖 rocketmq，但同样经 reactor-netty 吃到这几个包，故一并排除。
+        exclude group: 'io.netty', module: 'netty-codec-native-quic'
+        exclude group: 'io.netty', module: 'netty-codec-classes-quic'
+        // 2.5 + 2.6 MB。eagle-data-jpa-starter 传递的 MySQL 驱动与 H2 内存库；
+        // 三服务运行时都只连 PostgreSQL。测试若需 H2，用 testRuntimeOnly 单独声明
+        // （runtimeClasspath 的 exclude 不会传播到 testRuntimeClasspath）。
+        exclude group: 'com.mysql', module: 'mysql-connector-j'
+        exclude group: 'com.h2database', module: 'h2'
+    }
+
+    // 分层 jar：让镜像层缓存真正生效。三个服务的 Dockerfile 用
+    // `java -Djarmode=tools ... extract --layers` 把这四层拆开分别 COPY，
+    // 改一行业务代码只需重推 application 层。
+    tasks.matching { it.name == 'bootJar' }.configureEach {
+        layered {
+            dependencies {
+                intoLayer('snapshot-dependencies') { include 'com.eagle:*:*' }
+                intoLayer('snapshot-dependencies') { include '*:*:*SNAPSHOT' }
+                intoLayer('dependencies')
+            }
+            application {
+                intoLayer('spring-boot-loader') { include 'org/springframework/boot/loader/**' }
+                intoLayer('application')
+            }
+            layerOrder = ['dependencies', 'spring-boot-loader', 'snapshot-dependencies', 'application']
+        }
+    }
+}

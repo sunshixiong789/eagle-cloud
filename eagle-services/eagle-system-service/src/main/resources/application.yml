@@ -17,6 +17,21 @@ server:
   servlet:
     session:
       tracking-modes: cookie
+  tomcat:
+    # ⚠️ 本服务扛着 C 端 App 的 WebSocket 长连接（/ws-stomp，经 gateway 的 /system/ws-stomp 转发）。
+    # max-connections 是**连接数硬墙**，默认 8192 —— 与内存无关，第 8193 条连接直接被拒。
+    # 后台管理端 HTTP 本身 QPS 很低，这个值几乎完全是给 WS 在线数用的：
+    #   按「同时在线 WS 数 × 1.2 余量 + 管理端并发」取，20000 覆盖到约 1.6 万同时在线。
+    # 每条 WS 连接约 30~50 KB 堆，2 万条 ≈ 800 MB，配合 Dockerfile 里 2G 的堆预算。
+    # ⚠️ 宿主机 / 容器的 ulimit -n 必须大于此值（每条连接一个 fd），否则先撞 fd 上限报
+    #    "Too many open files"。compose 侧需要 ulimits.nofile。
+    max-connections: ${TOMCAT_MAX_CONNECTIONS:20000}
+    accept-count: ${TOMCAT_ACCEPT_COUNT:200}
+    # 未开虚拟线程（spring.threads.virtual 未启用）→ 仍是平台线程池。
+    # WS 空闲连接不占线程，这 200 个是给管理端 HTTP 请求用的，够用。
+    threads:
+      max: ${TOMCAT_MAX_THREADS:200}
+      min-spare: 20
 
 spring:
   application:

@@ -51,6 +51,44 @@
 # ── staging / PoC 想在单机自建基础设施 ──
 #   不要改本文件;直接复用 docker-compose.yml(开发本地配置),把 mem_limit / JVM 拉大即可。
 #   但**仍不建议**对其打线上流量。
+#
+# ─── 容量标定：目标峰值合计 1000~3000 QPS（约对应 10 万在线 / DAU）────────────
+#
+# 三个服务的流量画像**完全不同**，资源不能按"看起来重要"平均分：
+#
+#   gateway  看到 **100% 的流量**（后端各服务只看到自己那一片），是全链路 QPS 最高的组件。
+#            但它是 WebFlux / Netty，少量 event loop 线程处理全部连接，
+#            **主要工作内存在堆外（PooledByteBufAllocator 的 direct buffer）而不是堆**。
+#            → 堆压小（40%）、direct 放大（640M）。容器 1536m → 2g。
+#
+#   auth     只处理登录 / token 刷新 —— 各资源服务器用 JWKS **本地**验签，
+#            不会每个请求都打过来。10 万 DAU 对应峰值大约 50~200 QPS，是低负载服务。
+#            → 容器 2560m → 2g（原本给多了），Hikari 20 绰绰有余。
+#
+#   system   后台管理端 HTTP 的 QPS 只有几十，真正吃资源的是 **C 端 App 的 WebSocket
+#            长连接**（/ws-stomp，经 gateway 的 /system/ws-stomp 转发）。
+#            → 容器保持 4g，堆 2g；每条 WS 约 30~50 KB 堆，够到约 2~3 万同时在线。
+#
+# 【三个此前都存在的隐患，已修】
+#   1. MaxDirectMemorySize 全都没设 —— 不设时默认等于 -Xmx，堆外无上限。
+#      对 gateway 这种 Netty 组件尤其致命：1536m 容器里 -Xmx1g 意味着 direct 也可以涨到 1g，
+#      加上 metaspace 320m 必然先被 OOMKilled。现三个服务都显式封顶。
+#   2. 内存预算超配 —— 例如 auth 原来是 2560m 容器里 -Xmx2g + metaspace 384m = 2432m，
+#      留给 code cache / direct / 线程栈 / JVM 自身的空间几乎为零。
+#   3. WebSocket 连接数硬墙 —— server.tomcat.max-connections 默认 8192，与内存无关。
+#      已在 system 的 application.yml 抬到 20000，并配套 ulimits.nofile=65536
+#      （每条连接一个 fd，Docker 默认 1024 会先撞 "Too many open files"）。
+#
+# 预算核对（上限值，实测常驻远低于此）：
+#   auth    堆1024 + meta256 + code96  + direct128 + JVM~100 = 1604 ≤ 2048
+#   system  堆2048 + meta384 + code128 + direct512 + JVM~100 = 3172 ≤ 4096
+#   gateway 堆 819 + meta256 + code128 + direct640 + JVM~100 = 1943 ≤ 2048
+#
+# 调参不必改镜像：覆盖 AUTH_JAVA_OPTS / SYSTEM_JAVA_OPTS / GATEWAY_JAVA_OPTS，
+# 或用镜像内的 JAVA_OPTS_APPEND 追加单项；连接数用 TOMCAT_MAX_CONNECTIONS。
+# 压测口径：docker stats 看 RSS；容器内 jcmd <pid> VM.native_memory summary
+# （镜像已保留 jdk.jcmd 模块）看堆/metaspace/code cache/**direct** 的实际分布。
+# gateway 重点盯 direct，system 重点盯堆与当前 WS 连接数。
 
 name: eagle-prod
 
@@ -90,8 +128,8 @@ services:
       - "9090:9090"
     networks:
       - eagle-network
-    mem_limit: 2560m
-    mem_reservation: 1536m
+    mem_limit: 2g
+    mem_reservation: 1g
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - SERVER_PORT=${AUTH_SERVER_PORT:-9090}
@@ -173,7 +211,7 @@ services:
       - HNSLS_SMS_CONTENT_TEMPLATE=${HNSLS_SMS_CONTENT_TEMPLATE:-您的验证码是{code}，5分钟内有效。}
       - HNSLS_SMS_SEND_URL=${HNSLS_SMS_SEND_URL:-https://xapi.hnsls.com.cn/eums/sms/utf8/send.do}
       - HNSLS_SMS_CHARSET=${HNSLS_SMS_CHARSET:-UTF-8}
-      - JAVA_OPTS=${AUTH_JAVA_OPTS:--server -XX:+UseG1GC -Xms1g -Xmx2g -XX:MaxMetaspaceSize=384m -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
+      - JAVA_OPTS=${AUTH_JAVA_OPTS:--server -XX:+UseContainerSupport -XX:MaxRAMPercentage=50.0 -XX:InitialRAMPercentage=25.0 -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=96m -XX:MaxDirectMemorySize=128m -Xss768k -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:ParallelGCThreads=4 -XX:ConcGCThreads=1 -XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
       - TZ=${TZ:-Asia/Shanghai}
     volumes:
       - auth-logs:/app/logs
@@ -194,13 +232,19 @@ services:
     image: eagle-system:${EAGLE_IMAGE_TAG:-1.0.0}
     pull_policy: build
     container_name: eagle-system
+    # WebSocket 长连接每条占一个 fd。Docker 默认 nofile 通常 1024，
+    # 远低于 server.tomcat.max-connections=20000，不抬高会先撞 "Too many open files"。
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     restart: unless-stopped
     ports:
       - "8082:8082"
     networks:
       - eagle-network
-    mem_limit: 4096m
-    mem_reservation: 2048m
+    mem_limit: 4g
+    mem_reservation: 2g
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - SERVER_PORT=${SERVER_PORT:-8082}
@@ -262,7 +306,7 @@ services:
       - HNSLS_SMS_CONTENT_TEMPLATE=${HNSLS_SMS_CONTENT_TEMPLATE:-您的验证码是{code}，5分钟内有效。}
       - HNSLS_SMS_SEND_URL=${HNSLS_SMS_SEND_URL:-https://xapi.hnsls.com.cn/eums/sms/utf8/send.do}
       - HNSLS_SMS_CHARSET=${HNSLS_SMS_CHARSET:-UTF-8}
-      - JAVA_OPTS=${SYSTEM_JAVA_OPTS:--server -XX:+UseG1GC -Xms2g -Xmx3g -XX:MaxMetaspaceSize=512m -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
+      - JAVA_OPTS=${SYSTEM_JAVA_OPTS:--server -XX:+UseContainerSupport -XX:MaxRAMPercentage=50.0 -XX:InitialRAMPercentage=25.0 -XX:MaxMetaspaceSize=384m -XX:ReservedCodeCacheSize=128m -XX:MaxDirectMemorySize=512m -Xss768k -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:ParallelGCThreads=4 -XX:ConcGCThreads=1 -XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
       - TZ=${TZ:-Asia/Shanghai}
     volumes:
       - system-logs:/app/logs
@@ -283,13 +327,18 @@ services:
     image: eagle-gateway:${EAGLE_IMAGE_TAG:-1.0.0}
     pull_policy: build
     container_name: eagle-gateway
+    # 网关侧每条客户端 WS 连接还要再开一条到 system 的上游连接，fd 需求约翻倍。
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     restart: unless-stopped
     ports:
       - "8080:8080"
     networks:
       - eagle-network
-    mem_limit: 1536m
-    mem_reservation: 768m
+    mem_limit: 2g
+    mem_reservation: 1g
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:?NACOS_SERVER_ADDR must be set in .env.prod.prod}
@@ -310,7 +359,7 @@ services:
       - ROCKETMQ_NAME_SERVER=${ROCKETMQ_NAME_SERVER:?ROCKETMQ_NAME_SERVER must be set in .env.prod.prod}
       # 生产 CORS 不允许通配符:必须显式列出业务前端域名
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS must be set in .env.prod.prod (no wildcard allowed)}
-      - JAVA_OPTS=${GATEWAY_JAVA_OPTS:--server -XX:+UseG1GC -Xms768m -Xmx1g -XX:MaxMetaspaceSize=320m -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
+      - JAVA_OPTS=${GATEWAY_JAVA_OPTS:--server -XX:+UseContainerSupport -XX:MaxRAMPercentage=40.0 -XX:InitialRAMPercentage=20.0 -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=128m -XX:MaxDirectMemorySize=640m -Xss768k -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:ParallelGCThreads=4 -XX:ConcGCThreads=1 -XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
       - TZ=${TZ:-Asia/Shanghai}
     volumes:
       - gateway-logs:/app/logs
