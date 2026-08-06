@@ -51,18 +51,26 @@ class DictApplicationServiceTest {
         return dict;
     }
 
+    /** mapper 返回值占位：这些用例只验证聚合根状态，不关心响应字段。 */
+    private static DictResponse anyDictResponse() {
+        return new DictResponse(null, null, null, null, null, null, null, null, null);
+    }
+
+    private static DictItemResponse anyDictItemResponse() {
+        return new DictItemResponse(null, null, null, null, null, null,
+                null, null, null, null, null, null);
+    }
+
     @Nested
     @DisplayName("createDict")
     class Create {
         @Test
         @DisplayName("应创建")
         void shouldCreate() {
-            CreateDictRequest req = new CreateDictRequest();
-            req.setDictType("USER_STATUS");
-            req.setDictName("用户状态");
+            CreateDictRequest req = new CreateDictRequest("USER_STATUS", "用户状态", null, null);
             Dict saved = sampleDict();
             when(dictRepository.save(any(Dict.class))).thenReturn(saved);
-            when(dictMapper.toResponse(saved)).thenReturn(new DictResponse());
+            when(dictMapper.toResponse(saved)).thenReturn(anyDictResponse());
 
             service.createDict(req);
 
@@ -111,13 +119,9 @@ class DictApplicationServiceTest {
             Dict dict = sampleDict();
             when(dictRepository.findById(DICT_ID)).thenReturn(Optional.of(dict));
             when(dictRepository.save(dict)).thenReturn(dict);
-            when(dictItemMapper.toResponse(any(DictItemEntity.class))).thenReturn(new DictItemResponse());
+            when(dictItemMapper.toResponse(any(DictItemEntity.class))).thenReturn(anyDictItemResponse());
 
-            CreateDictItemRequest req = new CreateDictItemRequest();
-            req.setItemValue("ACTIVE");
-            req.setName("已激活");
-            req.setParentId(0L);
-            req.setSortOrder(1);
+            CreateDictItemRequest req = new CreateDictItemRequest("ACTIVE", "已激活", 0L, null, 1, null);
 
             service.createDictItem(DICT_ID, req);
             assertEquals(1, dict.getDictItems().size());

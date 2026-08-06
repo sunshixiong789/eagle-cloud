@@ -4,6 +4,8 @@ import com.eagle.system.base.domain.model.entity.DictItemEntity;
 import com.eagle.system.base.interfaces.dto.response.DictItemResponse;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 /**
  * 字典项映射器（纯 Java 实现）。
  */
@@ -11,21 +13,28 @@ import org.springframework.stereotype.Component;
 public class DictItemMapper {
 
     public DictItemResponse toResponse(DictItemEntity entity) {
+        return toResponse(entity, null);
+    }
+
+    /**
+     * 带子节点的映射：树形结构自底向上构建，调用方先递归生成 children 再传入。
+     */
+    public DictItemResponse toResponse(DictItemEntity entity, List<DictItemResponse> children) {
         if (entity == null) {
             return null;
         }
-        DictItemResponse response = new DictItemResponse();
-        response.setId(entity.getId());
-        response.setDictId(entity.getDictId());
-        response.setItemValue(entity.getItemValue());
-        response.setName(entity.getName());
-        response.setDictType(entity.getDictType() != null ? entity.getDictType().name() : null);
-        response.setParentId(entity.getParentId());
-        response.setDescription(entity.getDescription());
-        response.setSortOrder(entity.getSortOrder());
-        response.setStatus(entity.getStatus() != null ? entity.getStatus().name() : null);
-        response.setRemarks(entity.getRemarks());
-        response.setCreateTime(entity.getCreateTime());
-        return response;
+        return new DictItemResponse(
+                entity.getId(),
+                entity.getDictId(),
+                entity.getItemValue(),
+                entity.getName(),
+                entity.getDictType() != null ? entity.getDictType().name() : null,
+                entity.getParentId(),
+                entity.getDescription(),
+                entity.getSortOrder(),
+                entity.getStatus() != null ? entity.getStatus().name() : null,
+                entity.getRemarks(),
+                entity.getCreateTime(),
+                children);
     }
 }

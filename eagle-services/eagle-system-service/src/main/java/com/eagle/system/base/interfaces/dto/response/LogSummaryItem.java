@@ -1,24 +1,14 @@
 package com.eagle.system.base.interfaces.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 /**
  * 日志类型分布数据项
  *
+ * @param logType 日志类型名称
+ * @param count   该类型日志数量
  * @author sunshixiong
  */
-@Data
-@AllArgsConstructor
-public class LogSummaryItem {
-
-    /**
-     * 日志类型名称
-     */
-    private String logType;
-
-    /**
-     * 该类型日志数量
-     */
-    private long count;
+public record LogSummaryItem(
+        String logType,
+        long count
+) {
 }

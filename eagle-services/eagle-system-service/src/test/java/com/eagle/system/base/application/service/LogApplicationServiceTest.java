@@ -46,6 +46,12 @@ class LogApplicationServiceTest {
     @InjectMocks
     LogApplicationService service;
 
+    /** mapper 返回值占位：这些用例只验证分页与导出行为，不关心响应字段。 */
+    private static LogResponse anyLogResponse() {
+        return new LogResponse(null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null);
+    }
+
     @Nested
     @DisplayName("getLogById")
     class GetById {
@@ -54,7 +60,7 @@ class LogApplicationServiceTest {
         void shouldReturnLog() {
             SysLog log = new SysLog();
             when(logRepository.findById(ID)).thenReturn(Optional.of(log));
-            when(logMapper.toResponse(log)).thenReturn(new LogResponse());
+            when(logMapper.toResponse(log)).thenReturn(anyLogResponse());
             assertEquals(LogResponse.class, service.getLogById(ID).getClass());
         }
 
@@ -75,7 +81,7 @@ class LogApplicationServiceTest {
         void shouldQueryPlain() {
             Page<SysLog> page = new PageImpl<>(List.of(new SysLog()));
             when(logRepository.findAll(any(PageRequest.class))).thenReturn(page);
-            when(logMapper.toResponse(any(SysLog.class))).thenReturn(new LogResponse());
+            when(logMapper.toResponse(any(SysLog.class))).thenReturn(anyLogResponse());
             assertEquals(1, service.queryLogs(PageRequest.of(0, 10)).getTotalElements());
         }
 
@@ -85,9 +91,8 @@ class LogApplicationServiceTest {
         void shouldApplySpec() {
             Page<SysLog> page = new PageImpl<>(List.of(new SysLog()));
             when(logRepository.findAll(any(Specification.class), any(PageRequest.class))).thenReturn(page);
-            when(logMapper.toResponse(any(SysLog.class))).thenReturn(new LogResponse());
-            LogQueryRequest req = new LogQueryRequest();
-            req.setUsername("alice");
+            when(logMapper.toResponse(any(SysLog.class))).thenReturn(anyLogResponse());
+            LogQueryRequest req = new LogQueryRequest(null, null, "alice", null, null, null, null);
             assertEquals(1, service.queryLogs(req, PageRequest.of(0, 10)).getTotalElements());
         }
 
@@ -99,7 +104,7 @@ class LogApplicationServiceTest {
             Page<LogSummary> page = new PageImpl<>(List.of(summary));
             when(logRepository.findLogSummariesBy(any(Specification.class), any(PageRequest.class)))
                     .thenReturn(page);
-            assertEquals(1, service.queryLogSummaries(new LogQueryRequest(), PageRequest.of(0, 10))
+            assertEquals(1, service.queryLogSummaries(new LogQueryRequest(null, null, null, null, null, null, null), PageRequest.of(0, 10))
                     .getTotalElements());
         }
     }
@@ -114,7 +119,7 @@ class LogApplicationServiceTest {
             when(logRepository.count(any(Specification.class))).thenReturn(10_001L);
             HttpServletResponse resp = new MockHttpServletResponse();
             AppException ex = assertThrows(DomainException.class,
-                    () -> service.exportLogs(new LogQueryRequest(), "xlsx", resp));
+                    () -> service.exportLogs(new LogQueryRequest(null, null, null, null, null, null, null), "xlsx", resp));
             assertEquals(DataErrorCode.EXPORT_LIMIT_EXCEEDED, ex.getErrorCode());
         }
 
@@ -124,7 +129,7 @@ class LogApplicationServiceTest {
         void shouldWriteEmptyXlsx() throws Exception {
             when(logRepository.count(any(Specification.class))).thenReturn(0L);
             MockHttpServletResponse resp = new MockHttpServletResponse();
-            service.exportLogs(new LogQueryRequest(), "xlsx", resp);
+            service.exportLogs(new LogQueryRequest(null, null, null, null, null, null, null), "xlsx", resp);
             assertTrue(resp.getContentAsByteArray().length > 0);
             assertEquals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     resp.getContentType());

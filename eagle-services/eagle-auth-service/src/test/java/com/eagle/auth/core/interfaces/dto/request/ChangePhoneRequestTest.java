@@ -19,10 +19,7 @@ class ChangePhoneRequestTest {
     }
 
     private ChangePhoneRequest req(String phone, String code) {
-        ChangePhoneRequest r = new ChangePhoneRequest();
-        r.setPhone(phone);
-        r.setCode(code);
-        return r;
+        return new ChangePhoneRequest(phone, code);
     }
 
     @Test

@@ -56,20 +56,21 @@ class RoleApplicationServiceTest {
         return Role.createSystemRole("Super", "super_admin", "system", 1, DataScope.ALL);
     }
 
+    /** mapper 返回值占位：这些用例只验证聚合根状态，不关心响应字段。 */
+    private static RoleResponse anyRoleResponse() {
+        return new RoleResponse(null, null, null, null, null, null, null, null, null);
+    }
+
     @Nested
     @DisplayName("createRole")
     class Create {
         @Test
         @DisplayName("应创建")
         void shouldCreate() {
-            CreateRoleRequest req = new CreateRoleRequest();
-            req.setRoleName("Manager");
-            req.setRoleCode("manager");
-            req.setRoleDesc("desc");
-            req.setSortOrder(10);
+            CreateRoleRequest req = new CreateRoleRequest("Manager", "manager", "desc", 10);
             Role saved = businessRole();
             when(roleRepository.save(any(Role.class))).thenReturn(saved);
-            when(roleMapper.toResponse(saved)).thenReturn(new RoleResponse());
+            when(roleMapper.toResponse(saved)).thenReturn(anyRoleResponse());
 
             service.createRole(req);
 
@@ -86,10 +87,9 @@ class RoleApplicationServiceTest {
             Role role = businessRole();
             when(roleRepository.findById(ID)).thenReturn(Optional.of(role));
             when(roleRepository.save(role)).thenReturn(role);
-            when(roleMapper.toResponse(role)).thenReturn(new RoleResponse());
+            when(roleMapper.toResponse(role)).thenReturn(anyRoleResponse());
 
-            UpdateRoleRequest req = new UpdateRoleRequest();
-            req.setRoleName("New Name");
+            UpdateRoleRequest req = new UpdateRoleRequest("New Name", null, null);
             service.updateRole(ID, req);
             assertEquals("New Name", role.getRoleName());
         }
@@ -100,7 +100,7 @@ class RoleApplicationServiceTest {
             Role role = systemRole();
             when(roleRepository.findById(ID)).thenReturn(Optional.of(role));
             AppException ex = assertThrows(DomainException.class,
-                    () -> service.updateRole(ID, new UpdateRoleRequest()));
+                    () -> service.updateRole(ID, new UpdateRoleRequest(null, null, null)));
             assertEquals(SystemErrorCode.ROLE_SYSTEM_PROTECTED, ex.getErrorCode());
             verify(roleRepository, never()).save(any());
         }
@@ -110,7 +110,7 @@ class RoleApplicationServiceTest {
         void shouldThrowWhenMissing() {
             when(roleRepository.findById(ID)).thenReturn(Optional.empty());
             AppException ex = assertThrows(NotFoundException.class,
-                    () -> service.updateRole(ID, new UpdateRoleRequest()));
+                    () -> service.updateRole(ID, new UpdateRoleRequest(null, null, null)));
             assertEquals(SystemErrorCode.ROLE_NOT_FOUND, ex.getErrorCode());
         }
     }

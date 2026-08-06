@@ -51,12 +51,12 @@ public class DictApplicationService {
      */
     @Transactional(rollbackFor = Exception.class)
     public DictResponse createDict(CreateDictRequest request) {
-        DictType dictType = DictType.valueOf(request.getDictType());
+        DictType dictType = DictType.valueOf(request.dictType());
         Dict dict = Dict.create(
                 dictType,
-                request.getDictName(),
-                request.getDescription(),
-                request.getRemarks()
+                request.dictName(),
+                request.description(),
+                request.remarks()
         );
 
         Dict saved = dictRepository.save(dict);
@@ -74,9 +74,9 @@ public class DictApplicationService {
     public DictResponse updateDict(Long id, UpdateDictRequest request) {
         Dict dict = findDictById(id);
         dict.updateInfo(
-                request.getDictName(),
-                request.getDescription(),
-                request.getRemarks()
+                request.dictName(),
+                request.description(),
+                request.remarks()
         );
 
         Dict saved = dictRepository.save(dict);
@@ -122,9 +122,8 @@ public class DictApplicationService {
         DictType type = DictType.valueOf(dictType);
         Dict dict = dictRepository.findByDictType(type)
                 .orElseThrow(SystemErrorCode.DICT_NOT_FOUND::toNotFoundException);
-        DictResponse response = dictMapper.toResponse(dict);
-        response.setItems(buildDictItemTree(dict.getDictItems(), 0L));
-        return response;
+        return dictMapper.toResponse(dict)
+                .withItems(buildDictItemTree(dict.getDictItems(), 0L));
     }
 
     /**
@@ -142,11 +141,10 @@ public class DictApplicationService {
                 .map(DictType::valueOf)
                 .toList();
         List<Dict> list = dictRepository.findByDictTypeIn(types);
-        return list.stream().map(dict -> {
-            DictResponse response = dictMapper.toResponse(dict);
-            response.setItems(buildDictItemTree(dict.getDictItems(), 0L));
-            return response;
-        }).toList();
+        return list.stream()
+                .map(dict -> dictMapper.toResponse(dict)
+                        .withItems(buildDictItemTree(dict.getDictItems(), 0L)))
+                .toList();
     }
 
     /**
@@ -203,12 +201,12 @@ public class DictApplicationService {
         Dict dict = findDictById(dictId);
 
         DictItemEntity item = dict.addItem(
-                request.getItemValue(),
-                request.getName(),
-                request.getParentId(),
-                request.getDescription(),
-                request.getSortOrder(),
-                request.getRemarks()
+                request.itemValue(),
+                request.name(),
+                request.parentId(),
+                request.description(),
+                request.sortOrder(),
+                request.remarks()
         );
 
         dictRepository.save(dict);
@@ -233,11 +231,11 @@ public class DictApplicationService {
         DictItemEntity item = dict.findItemById(itemId);
 
         item.updateInfo(
-                request.getItemValue(),
-                request.getName(),
-                request.getDescription(),
-                request.getSortOrder(),
-                request.getRemarks()
+                request.itemValue(),
+                request.name(),
+                request.description(),
+                request.sortOrder(),
+                request.remarks()
         );
 
         dictRepository.save(dict);
@@ -336,11 +334,9 @@ public class DictApplicationService {
                 .filter(item -> Objects.equals(item.getParentId(), parentId))
                 .sorted(Comparator.comparing(DictItemEntity::getSortOrder,
                         Comparator.nullsLast(Comparator.naturalOrder())))
-                .map(item -> {
-                    DictItemResponse response = dictItemMapper.toResponse(item);
-                    response.setChildren(buildDictItemTree(allItems, item.getId()));
-                    return response;
-                })
+                // record 不可变：先递归生成子节点，再连同子节点一次性构造父节点
+                .map(item -> dictItemMapper.toResponse(item,
+                        buildDictItemTree(allItems, item.getId())))
                 .collect(Collectors.toList());
     }
 }

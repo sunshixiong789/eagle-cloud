@@ -36,10 +36,10 @@ public class RoleApplicationService {
     @Transactional(rollbackFor = Exception.class)
     public RoleResponse createRole(CreateRoleRequest request) {
         Role role = Role.create(
-                request.getRoleName(),
-                request.getRoleCode(),
-                request.getRoleDesc(),
-                request.getSortOrder()
+                request.roleName(),
+                request.roleCode(),
+                request.roleDesc(),
+                request.sortOrder()
         );
 
         Role saved = roleRepository.save(role);
@@ -55,9 +55,9 @@ public class RoleApplicationService {
         }
 
         role.updateInfo(
-                request.getRoleName(),
-                request.getRoleDesc(),
-                request.getSortOrder()
+                request.roleName(),
+                request.roleDesc(),
+                request.sortOrder()
         );
 
         Role saved = roleRepository.save(role);
@@ -95,9 +95,9 @@ public class RoleApplicationService {
     @Transactional(readOnly = true)
     public Page<RoleResponse> queryRoles(RoleQueryRequest request, Pageable pageable) {
         Specification<Role> spec = Specification
-                .where(RoleSpecification.roleNameLike(request.getRoleName()))
-                .and(RoleSpecification.roleCodeEquals(request.getRoleCode()))
-                .and(RoleSpecification.statusEquals(request.getStatus()));
+                .where(RoleSpecification.roleNameLike(request.roleName()))
+                .and(RoleSpecification.roleCodeEquals(request.roleCode()))
+                .and(RoleSpecification.statusEquals(request.status()));
         return roleRepository.findAll(spec, pageable).map(roleMapper::toResponse);
     }
 

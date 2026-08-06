@@ -148,13 +148,13 @@ public class LogApplicationService {
      */
     private Specification<SysLog> buildSpec(LogQueryRequest request) {
         return Specification
-                .where(LogSpecification.logTypeEquals(request.getLogType()))
-                .and(LogSpecification.statusEquals(request.getStatus()))
-                .and(LogSpecification.usernameLike(request.getUsername()))
-                .and(LogSpecification.requestUriLike(request.getRequestUri()))
-                .and(LogSpecification.remoteAddrLike(request.getRemoteAddr()))
+                .where(LogSpecification.logTypeEquals(request.logType()))
+                .and(LogSpecification.statusEquals(request.status()))
+                .and(LogSpecification.usernameLike(request.username()))
+                .and(LogSpecification.requestUriLike(request.requestUri()))
+                .and(LogSpecification.remoteAddrLike(request.remoteAddr()))
                 .and(LogSpecification.createTimeBetween(
-                        request.getStartTime(), request.getEndTime()));
+                        request.startTime(), request.endTime()));
     }
 
     /**

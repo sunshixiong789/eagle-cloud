@@ -1,19 +1,16 @@
 package com.eagle.system.base.interfaces.dto.response;
 
-import lombok.Data;
-
 import java.time.LocalDateTime;
 
-@Data
-public class RoleResponse {
-
-    private Long id;
-    private String roleName;
-    private String roleCode;
-    private String roleDesc;
-    private String roleType;
-    private String dataScope;
-    private Integer sortOrder;
-    private String status;
-    private LocalDateTime createTime;
+public record RoleResponse(
+        Long id,
+        String roleName,
+        String roleCode,
+        String roleDesc,
+        String roleType,
+        String dataScope,
+        Integer sortOrder,
+        String status,
+        LocalDateTime createTime
+) {
 }

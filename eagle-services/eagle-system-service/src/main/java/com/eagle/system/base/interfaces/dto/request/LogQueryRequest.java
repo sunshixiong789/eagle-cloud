@@ -1,51 +1,36 @@
 package com.eagle.system.base.interfaces.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
 
 import java.time.LocalDateTime;
 
 /**
  * 日志查询请求
  *
+ * @param logType    日志类型
+ * @param status     日志状态
+ * @param username   用户名
+ * @param requestUri 请求 URI
+ * @param remoteAddr 请求 IP（模糊匹配）
+ * @param startTime  开始时间
+ * @param endTime    结束时间
  * @author sunshixiong
  */
-@Data
-public class LogQueryRequest {
+public record LogQueryRequest(
 
-    /**
-     * 日志类型
-     */
-    private String logType;
+        String logType,
 
-    /**
-     * 日志状态
-     */
-    private String status;
+        String status,
 
-    /**
-     * 用户名
-     */
-    private String username;
+        String username,
 
-    /**
-     * 请求URI
-     */
-    private String requestUri;
+        String requestUri,
 
-    /**
-     * 请求IP（模糊匹配）
-     */
-    @Schema(description = "请求IP（模糊匹配）")
-    private String remoteAddr;
+        @Schema(description = "请求IP（模糊匹配）")
+        String remoteAddr,
 
-    /**
-     * 开始时间
-     */
-    private LocalDateTime startTime;
+        LocalDateTime startTime,
 
-    /**
-     * 结束时间
-     */
-    private LocalDateTime endTime;
+        LocalDateTime endTime
+) {
 }

@@ -62,8 +62,8 @@ public class BlacklistController {
                                  @AuthenticationPrincipal EagleUser principal) {
         return blacklistApplicationService.addToBlacklist(
                 new AddBlacklistCommand(
-                        request.getType(), request.getValue(), request.getReason(),
-                        request.getExpiresAt(),
+                        request.type(), request.value(), request.reason(),
+                        request.expiresAt(),
                         principal != null ? principal.getId() : null,
                         principal != null ? principal.getName() : "admin"));
     }

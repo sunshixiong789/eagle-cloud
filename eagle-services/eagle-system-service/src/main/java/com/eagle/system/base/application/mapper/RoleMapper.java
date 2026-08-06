@@ -14,16 +14,15 @@ public class RoleMapper {
         if (role == null) {
             return null;
         }
-        RoleResponse response = new RoleResponse();
-        response.setId(role.getId());
-        response.setRoleName(role.getRoleName());
-        response.setRoleCode(role.getRoleCode());
-        response.setRoleDesc(role.getRoleDesc());
-        response.setRoleType(role.getRoleType() != null ? role.getRoleType().name() : null);
-        response.setDataScope(role.getDataScope() != null ? role.getDataScope().name() : null);
-        response.setSortOrder(role.getSortOrder());
-        response.setStatus(role.getStatus() != null ? role.getStatus().name() : null);
-        response.setCreateTime(role.getCreateTime());
-        return response;
+        return new RoleResponse(
+                role.getId(),
+                role.getRoleName(),
+                role.getRoleCode(),
+                role.getRoleDesc(),
+                role.getRoleType() != null ? role.getRoleType().name() : null,
+                role.getDataScope() != null ? role.getDataScope().name() : null,
+                role.getSortOrder(),
+                role.getStatus() != null ? role.getStatus().name() : null,
+                role.getCreateTime());
     }
 }

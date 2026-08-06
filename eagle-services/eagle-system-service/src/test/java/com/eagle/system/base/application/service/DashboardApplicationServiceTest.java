@@ -74,14 +74,14 @@ class DashboardApplicationServiceTest {
 
             DashboardStatsResponse stats = service.getStats();
 
-            assertEquals(50L, stats.getUserCount());
-            assertEquals(5L, stats.getUserCountLast7Days());
-            assertEquals(8L, stats.getRoleCount());
-            assertEquals(20L, stats.getTodayLoginCount());
-            assertEquals(100.0, stats.getTodayLoginVsYesterday());
-            assertEquals(200L, stats.getTodayLogCount());
-            assertEquals(1L, stats.getTodayExceptionCount());
-            assertEquals(3L, stats.getOnlineUserCount());
+            assertEquals(50L, stats.userCount());
+            assertEquals(5L, stats.userCountLast7Days());
+            assertEquals(8L, stats.roleCount());
+            assertEquals(20L, stats.todayLoginCount());
+            assertEquals(100.0, stats.todayLoginVsYesterday());
+            assertEquals(200L, stats.todayLogCount());
+            assertEquals(1L, stats.todayExceptionCount());
+            assertEquals(3L, stats.onlineUserCount());
         }
 
         @Test
@@ -101,7 +101,7 @@ class DashboardApplicationServiceTest {
             when(monitorApplicationService.countOnlineUsers()).thenReturn(0L);
 
             DashboardStatsResponse stats = service.getStats();
-            assertEquals(42L, stats.getUserCount());
+            assertEquals(42L, stats.userCount());
         }
 
         @Test
@@ -120,8 +120,8 @@ class DashboardApplicationServiceTest {
             when(monitorApplicationService.countOnlineUsers()).thenReturn(0L);
 
             DashboardStatsResponse stats = service.getStats();
-            assertEquals(100.0, stats.getTodayLoginVsYesterday());
-            assertEquals(0L, stats.getOnlineUserCount());
+            assertEquals(100.0, stats.todayLoginVsYesterday());
+            assertEquals(0L, stats.onlineUserCount());
         }
     }
 
@@ -150,7 +150,7 @@ class DashboardApplicationServiceTest {
             when(logRepository.findLoginTrendByPeriod(any(), any(), any())).thenReturn(List.of());
             List<LoginTrendItem> trend = service.getLoginTrend(3);
             assertEquals(3, trend.size());
-            assertEquals(0L, trend.get(0).getCount());
+            assertEquals(0L, trend.get(0).count());
         }
 
         @Test
@@ -163,7 +163,7 @@ class DashboardApplicationServiceTest {
             when(logRepository.findLoginTrendByPeriod(any(), any(), any())).thenReturn(List.of(p));
 
             List<LoginTrendItem> trend = service.getLoginTrend(3);
-            assertEquals(7L, trend.get(2).getCount());
+            assertEquals(7L, trend.get(2).count());
         }
     }
 }

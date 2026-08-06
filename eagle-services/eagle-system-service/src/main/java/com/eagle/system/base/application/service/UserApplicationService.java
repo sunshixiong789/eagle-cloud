@@ -34,6 +34,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -75,8 +76,8 @@ public class UserApplicationService {
     @Transactional(rollbackFor = Exception.class)
     public UserResponse updateUser(Long id, UpdateUserRequest request) {
         User user = findUserById(id);
-        applyProfileFields(user, request.getName(), request.getNickname(),
-                request.getAvatar(), request.getEmail());
+        applyProfileFields(user, request.name(), request.nickname(),
+                request.avatar(), request.email());
         return userMapper.toResponse(userRepository.save(user));
     }
 
@@ -97,8 +98,8 @@ public class UserApplicationService {
     @Transactional(rollbackFor = Exception.class)
     public UserResponse updateCurrentUserByAccountId(Long accountId, UpdateProfileRequest request) {
         User user = findUserByAccountId(accountId);
-        applyProfileFields(user, request.getName(), request.getNickname(),
-                request.getAvatar(), request.getEmail());
+        applyProfileFields(user, request.name(), request.nickname(),
+                request.avatar(), request.email());
         return userMapper.toResponse(userRepository.save(user));
     }
 
@@ -132,10 +133,8 @@ public class UserApplicationService {
      */
     @Transactional(readOnly = true)
     public Page<UserResponse> queryUsers(Pageable pageable) {
-        Page<UserResponse> page = userRepository.findAll(visibleUserSpec(), withDefaultUserSort(pageable))
-                .map(this::toListResponse);
-        enrichPhones(page);
-        return page;
+        return withPhones(userRepository.findAll(visibleUserSpec(), withDefaultUserSort(pageable))
+                .map(this::toListResponse));
     }
 
     /**
@@ -144,14 +143,12 @@ public class UserApplicationService {
     @Transactional(readOnly = true)
     public Page<UserResponse> queryUsers(UserQueryRequest request, Pageable pageable) {
         Specification<User> spec = Specification
-                .where(UserSpecification.usernameLike(request.getUsername()))
-                .and(UserSpecification.emailLike(request.getEmail()))
-                .and(UserSpecification.nameLike(request.getName()))
+                .where(UserSpecification.usernameLike(request.username()))
+                .and(UserSpecification.emailLike(request.email()))
+                .and(UserSpecification.nameLike(request.name()))
                 .and(visibleUserSpec());
-        Page<UserResponse> page = userRepository.findAll(spec, withDefaultUserSort(pageable))
-                .map(this::toListResponse);
-        enrichPhones(page);
-        return page;
+        return withPhones(userRepository.findAll(spec, withDefaultUserSort(pageable))
+                .map(this::toListResponse));
     }
 
     /**
@@ -188,36 +185,34 @@ public class UserApplicationService {
     }
 
     private UserResponse toListResponse(User user) {
-        UserResponse response = userMapper.toResponse(user);
-        response.setRoles(getAssignedRoles(user));
-        response.setLastLoginAt(logRepository
+        LocalDateTime lastLogin = logRepository
                 .findLatestCreateTimeByUsernameAndLogTypeAndStatus(
                         user.getUsername(), LogType.LOGIN, LogStatus.SUCCESS)
-                .orElse(null));
+                .orElse(null);
+        AccountBlacklistSnapshot blacklist = findBlacklist(user);
 
-        boolean online = isOnline(user.getAccountId());
-        response.setOnline(online);
-        response.setLoginStatus(online ? "ONLINE" : "OFFLINE");
-        enrichBlacklistStatus(user, response);
-        return response;
+        return userMapper.toResponse(user).withEnrichment(
+                getAssignedRoles(user),
+                lastLogin,
+                isOnline(user.getAccountId()),
+                blacklist != null,
+                blacklist != null ? blacklist.id() : null);
     }
 
     /** 当前页一次批量补齐 auth 权威手机号，不在 system 域持久化副本。 */
-    private void enrichPhones(Page<UserResponse> page) {
+    private Page<UserResponse> withPhones(Page<UserResponse> page) {
         Set<Long> accountIds = page.getContent().stream()
-                .map(UserResponse::getAccountId)
+                .map(UserResponse::accountId)
                 .filter(java.util.Objects::nonNull)
                 .collect(Collectors.toSet());
         if (accountIds.isEmpty()) {
-            return;
+            return page;
         }
         Map<Long, AccountSnapshot> accounts = authClientFacade.findAccounts(accountIds).stream()
                 .collect(Collectors.toMap(AccountSnapshot::accountId, Function.identity(), (left, right) -> left));
-        page.getContent().forEach(response -> {
-            AccountSnapshot account = accounts.get(response.getAccountId());
-            if (account != null) {
-                response.setPhone(account.phone());
-            }
+        return page.map(response -> {
+            AccountSnapshot account = accounts.get(response.accountId());
+            return account != null ? response.withPhone(account.phone()) : response;
         });
     }
 
@@ -232,19 +227,15 @@ public class UserApplicationService {
         return !authClientFacade.listJtisByAccount(accountId).isEmpty();
     }
 
-    private void enrichBlacklistStatus(User user, UserResponse response) {
-        response.setBlacklisted(false);
-        response.setBlacklistId(null);
+    /** 查询账号黑名单记录；无账号、非 2xx 或空响应体均视为未加黑，返回 null。 */
+    private AccountBlacklistSnapshot findBlacklist(User user) {
         if (user.getAccountId() == null) {
-            return;
+            return null;
         }
         ResponseEntity<AccountBlacklistSnapshot> resp =
                 authClientFacade.findBlacklistByAccountId(user.getAccountId());
         AccountBlacklistSnapshot info = resp.getBody();
-        if (resp.getStatusCode().is2xxSuccessful() && info != null) {
-            response.setBlacklisted(true);
-            response.setBlacklistId(info.id());
-        }
+        return resp.getStatusCode().is2xxSuccessful() ? info : null;
     }
 
     private List<AssignedRoleResponse> getAssignedRoles(User user) {
@@ -253,14 +244,13 @@ public class UserApplicationService {
             return List.of();
         }
         return roleRepository.findAllById(roleIds).stream()
-                .map(role -> AssignedRoleResponse.builder()
-                        .id(role.getId())
-                        .roleName(role.getRoleName())
-                        .roleCode(role.getRoleCode())
+                .map(role -> new AssignedRoleResponse(
+                        role.getId(),
+                        role.getRoleName(),
+                        role.getRoleCode(),
                         // API 契约：RoleStatus.NORMAL → "ENABLE", DISABLED → "DISABLE"
-                        .status(role.getStatus() == RoleStatus.NORMAL ? "ENABLE" :
-                                role.getStatus() == RoleStatus.DISABLED ? "DISABLE" : null)
-                        .build())
+                        role.getStatus() == RoleStatus.NORMAL ? "ENABLE" :
+                                role.getStatus() == RoleStatus.DISABLED ? "DISABLE" : null))
                 .toList();
     }
 

@@ -21,23 +21,22 @@ public class OAuthClientMapper {
         if (entity == null) {
             return null;
         }
-        OAuthClientResponse response = new OAuthClientResponse();
-        response.setId(entity.getId());
-        response.setClientId(entity.getClientId());
-        response.setClientName(entity.getClientName());
-        response.setClientAuthenticationMethods(csvToSet(entity.getClientAuthenticationMethods()));
-        response.setAuthorizationGrantTypes(csvToSet(entity.getAuthorizationGrantTypes()));
-        response.setRedirectUris(csvToSet(entity.getRedirectUris()));
-        response.setScopes(csvToSet(entity.getScopes()));
-        response.setRequireProofKey(entity.getRequireProofKey());
-        response.setRequireAuthorizationConsent(entity.getRequireAuthorizationConsent());
-        response.setAccessTokenTtlSeconds(entity.getAccessTokenTtlSeconds());
-        response.setRefreshTokenTtlSeconds(entity.getRefreshTokenTtlSeconds());
-        response.setClientIdIssuedAt(entity.getClientIdIssuedAt());
-        response.setEnabled(entity.getEnabled());
-        response.setCreateTime(entity.getCreateTime());
-        response.setUpdateTime(entity.getUpdateTime());
-        return response;
+        return new OAuthClientResponse(
+                entity.getId(),
+                entity.getClientId(),
+                entity.getClientName(),
+                csvToSet(entity.getClientAuthenticationMethods()),
+                csvToSet(entity.getAuthorizationGrantTypes()),
+                csvToSet(entity.getRedirectUris()),
+                csvToSet(entity.getScopes()),
+                entity.getRequireProofKey(),
+                entity.getRequireAuthorizationConsent(),
+                entity.getAccessTokenTtlSeconds(),
+                entity.getRefreshTokenTtlSeconds(),
+                entity.getClientIdIssuedAt(),
+                entity.getEnabled(),
+                entity.getCreateTime(),
+                entity.getUpdateTime());
     }
 
     private Set<String> csvToSet(String csv) {

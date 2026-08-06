@@ -92,16 +92,15 @@ public class MonitorApplicationService {
                         LinkedHashMap::new))
                 .values()
                 .stream()
-                .map(info -> OnlineUserResponse.builder()
-                        .tokenId(info.tokenId())
-                        .userId(info.userId())
-                        .username(info.username())
-                        .ip(info.ip())
-                        .loginTime(info.loginTime())
-                        .lastActiveTime(info.lastActiveTime())
-                        .browser(info.browser())
-                        .os(info.os())
-                        .build())
+                .map(info -> new OnlineUserResponse(
+                        info.tokenId(),
+                        info.userId(),
+                        info.username(),
+                        info.ip(),
+                        info.loginTime(),
+                        info.lastActiveTime(),
+                        info.browser(),
+                        info.os()))
                 .toList();
         return new OnlineUserListResponse(responses.size(), responses);
     }
@@ -163,13 +162,14 @@ public class MonitorApplicationService {
         LocalDateTime todayStart = LocalDate.now().atStartOfDay();
         LocalDateTime tomorrowStart = todayStart.plusDays(1);
 
-        LogQueryRequest logRequest = new LogQueryRequest();
-        logRequest.setUsername(request.getUsername());
-        logRequest.setRemoteAddr(request.getIp());
-        logRequest.setStatus("FAIL".equals(request.getStatus()) ? "FAILURE" : request.getStatus());
-        logRequest.setStartTime(request.getStartTime());
-        logRequest.setEndTime(request.getEndTime());
-        logRequest.setLogType(LogType.LOGIN.name());
+        LogQueryRequest logRequest = new LogQueryRequest(
+                LogType.LOGIN.name(),
+                "FAIL".equals(request.status()) ? "FAILURE" : request.status(),
+                request.username(),
+                null,
+                request.ip(),
+                request.startTime(),
+                request.endTime());
 
         long todayTotal = logRepository.countByLogTypeAndPeriod(LogType.LOGIN, todayStart, tomorrowStart);
         long todayFail = logRepository.countByLogTypeAndStatusAndPeriod(
@@ -177,13 +177,12 @@ public class MonitorApplicationService {
         long todayUniqueUsers = logRepository.countDistinctUsernameByLogTypeAndPeriod(
                 LogType.LOGIN, todayStart, tomorrowStart);
 
-        return LoginLogStatsResponse.builder()
-                .todayTotal(todayTotal)
-                .todayFail(todayFail)
-                .todayUniqueUsers(todayUniqueUsers)
-                .page(logApplicationService.queryLogs(logRequest, withDefaultLoginLogSort(pageable))
-                        .map(this::toLoginLogItem))
-                .build();
+        return new LoginLogStatsResponse(
+                todayTotal,
+                todayFail,
+                todayUniqueUsers,
+                logApplicationService.queryLogs(logRequest, withDefaultLoginLogSort(pageable))
+                        .map(this::toLoginLogItem));
     }
 
     private static Pageable withDefaultLoginLogSort(Pageable pageable) {
@@ -216,12 +215,11 @@ public class MonitorApplicationService {
     private ServiceStatusResponse buildServiceStatus(String serviceId) {
         List<ServiceInstance> instances = discoveryClient.getInstances(serviceId);
         List<ServiceInstanceInfo> infos = instances.stream()
-                .map(inst -> ServiceInstanceInfo.builder()
-                        .instanceId(inst.getInstanceId())
-                        .host(inst.getHost())
-                        .port(inst.getPort())
-                        .metadata(inst.getMetadata())
-                        .build())
+                .map(inst -> new ServiceInstanceInfo(
+                        inst.getInstanceId(),
+                        inst.getHost(),
+                        inst.getPort(),
+                        inst.getMetadata()))
                 .toList();
 
         String displayName = instances.isEmpty() ? serviceId
@@ -242,17 +240,16 @@ public class MonitorApplicationService {
             healthStatus = fetchHealthStatus(baseUrl);
         }
 
-        return ServiceStatusResponse.builder()
-                .serviceId(serviceId)
-                .displayName(displayName)
-                .status(infos.isEmpty() ? "DOWN" : "UP")
-                .healthStatus(healthStatus)
-                .healthyCount(infos.size())
-                .instances(infos)
-                .cpuUsage(cpu)
-                .memUsed(memUsed)
-                .memMax(memMax)
-                .build();
+        return new ServiceStatusResponse(
+                serviceId,
+                displayName,
+                infos.isEmpty() ? "DOWN" : "UP",
+                healthStatus,
+                infos.size(),
+                infos,
+                cpu,
+                memUsed,
+                memMax);
     }
 
     /**
@@ -311,17 +308,16 @@ public class MonitorApplicationService {
     // -------------------------------------------------------------------------
 
     private LoginLogItemResponse toLoginLogItem(LogResponse log) {
-        return LoginLogItemResponse.builder()
-                .id(log.getId())
-                .userId(log.getUserId())
-                .username(log.getUsername())
-                .ip(log.getRemoteAddr())
-                .browser(parseBrowser(log.getUserAgent()))
-                .os(parseOs(log.getUserAgent()))
-                .status("FAILURE".equals(log.getStatus()) ? "FAIL" : log.getStatus())
-                .loginTime(log.getCreateTime() != null ? log.getCreateTime().toString() : null)
-                .failReason(log.getException())
-                .build();
+        return new LoginLogItemResponse(
+                log.id(),
+                log.userId(),
+                log.username(),
+                log.remoteAddr(),
+                parseBrowser(log.userAgent()),
+                parseOs(log.userAgent()),
+                "FAILURE".equals(log.status()) ? "FAIL" : log.status(),
+                log.createTime() != null ? log.createTime().toString() : null,
+                log.exception());
     }
 
     private String parseBrowser(String ua) {

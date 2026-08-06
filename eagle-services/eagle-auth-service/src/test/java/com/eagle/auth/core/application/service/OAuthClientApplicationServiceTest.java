@@ -58,19 +58,24 @@ class OAuthClientApplicationServiceTest {
     }
 
     private CreateOAuthClientRequest createReq() {
-        CreateOAuthClientRequest r = new CreateOAuthClientRequest();
-        r.setClientId(CLIENT_ID);
-        r.setClientName("Eagle Web");
-        r.setClientSecret("plain-secret");
-        r.setClientAuthenticationMethods(Set.of("client_secret_basic"));
-        r.setAuthorizationGrantTypes(Set.of("authorization_code", "refresh_token"));
-        r.setRedirectUris(Set.of("http://localhost/cb"));
-        r.setScopes(Set.of("openid", "profile"));
-        r.setAccessTokenTtlSeconds(3600L);
-        r.setRefreshTokenTtlSeconds(86400L);
-        r.setRequireProofKey(true);
-        r.setRequireAuthorizationConsent(false);
-        return r;
+        return new CreateOAuthClientRequest(
+                CLIENT_ID,
+                "plain-secret",
+                "Eagle Web",
+                Set.of("client_secret_basic"),
+                Set.of("authorization_code", "refresh_token"),
+                Set.of("http://localhost/cb"),
+                Set.of("openid", "profile"),
+                true,
+                false,
+                3600L,
+                86400L);
+    }
+
+    /** mapper 返回值占位：这些用例只验证入库内容，不关心响应字段。 */
+    private OAuthClientResponse anyResponse() {
+        return new OAuthClientResponse(null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null);
     }
 
     @Nested
@@ -82,7 +87,7 @@ class OAuthClientApplicationServiceTest {
             when(oAuthClientRepository.existsByClientId(CLIENT_ID)).thenReturn(false);
             when(passwordEncoder.encode("plain-secret")).thenReturn("{bcrypt}secret");
             when(oAuthClientRepository.save(any(OAuthClient.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(oAuthClientMapper.toResponse(any(OAuthClient.class))).thenReturn(new OAuthClientResponse());
+            when(oAuthClientMapper.toResponse(any(OAuthClient.class))).thenReturn(anyResponse());
 
             service.createClient(createReq());
 
@@ -113,12 +118,11 @@ class OAuthClientApplicationServiceTest {
             OAuthClient existing = sampleClient();
             when(oAuthClientRepository.findById(ID)).thenReturn(Optional.of(existing));
             when(oAuthClientRepository.save(existing)).thenReturn(existing);
-            when(oAuthClientMapper.toResponse(existing)).thenReturn(new OAuthClientResponse());
+            when(oAuthClientMapper.toResponse(existing)).thenReturn(anyResponse());
 
-            UpdateOAuthClientRequest req = new UpdateOAuthClientRequest();
-            req.setClientName("New Name");
-            req.setAccessTokenTtlSeconds(7200L);
-            req.setRefreshTokenTtlSeconds(172800L);
+            // 只改名称与两个 TTL，其余 null 表示不修改
+            UpdateOAuthClientRequest req = new UpdateOAuthClientRequest(
+                    "New Name", null, null, null, null, null, null, null, 7200L, 172800L);
 
             service.updateClient(ID, req);
 
@@ -130,7 +134,8 @@ class OAuthClientApplicationServiceTest {
         @DisplayName("缺失时应抛出")
         void shouldThrowWhenMissing() {
             when(oAuthClientRepository.findById(ID)).thenReturn(Optional.empty());
-            UpdateOAuthClientRequest req = new UpdateOAuthClientRequest();
+            UpdateOAuthClientRequest req = new UpdateOAuthClientRequest(
+                    null, null, null, null, null, null, null, null, null, null);
             AppException ex = assertThrows(NotFoundException.class,
                     () -> service.updateClient(ID, req));
             assertEquals(AuthErrorCode.CLIENT_NOT_FOUND, ex.getErrorCode());
@@ -195,7 +200,7 @@ class OAuthClientApplicationServiceTest {
             OAuthClient c = sampleClient();
             Page<OAuthClient> page = new PageImpl<>(List.of(c));
             when(oAuthClientRepository.findAll(any(PageRequest.class))).thenReturn(page);
-            when(oAuthClientMapper.toResponse(c)).thenReturn(new OAuthClientResponse());
+            when(oAuthClientMapper.toResponse(c)).thenReturn(anyResponse());
             Page<OAuthClientResponse> result = service.queryClients(PageRequest.of(0, 10));
             assertEquals(1, result.getTotalElements());
         }

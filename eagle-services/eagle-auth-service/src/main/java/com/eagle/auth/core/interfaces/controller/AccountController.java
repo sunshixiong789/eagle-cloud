@@ -53,11 +53,11 @@ public class AccountController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("permitAll()")
     public Map<String, Long> register(@Valid @RequestBody RegisterAccountRequest request) {
-        blacklistChecker.checkRegister(request.getPhone(), request.getEmail(),
+        blacklistChecker.checkRegister(request.phone(), request.email(),
                 com.eagle.auth.core.infrastructure.security.ClientIpHolder.get());
         Long accountId = accountApplicationService.register(
-                request.getUsername(), request.getPassword(), request.getPhone(),
-                request.getEmail(), request.getNickname());
+                request.username(), request.password(), request.phone(),
+                request.email(), request.nickname());
         return Map.of("accountId", accountId);
     }
 
@@ -67,8 +67,8 @@ public class AccountController {
     @PreAuthorize("isAuthenticated()")
     public Map<String, Long> createAccount(@Valid @RequestBody CreateAccountRequest request) {
         Long accountId = accountApplicationService.createAccount(
-                request.getUsername(), request.getPassword(), request.getPhone(),
-                request.getNickname(), request.getName(), request.getEmail());
+                request.username(), request.password(), request.phone(),
+                request.nickname(), request.name(), request.email());
         return Map.of("accountId", accountId);
     }
 
@@ -78,7 +78,7 @@ public class AccountController {
     @PreAuthorize("permitAll()")
     public void resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         accountApplicationService.resetPasswordByPhone(
-                request.getPhone(), request.getCode(), request.getNewPassword());
+                request.phone(), request.code(), request.newPassword());
     }
 
     @Operation(summary = "绑定手机号",
@@ -90,7 +90,7 @@ public class AccountController {
             @Parameter(description = "账号ID") @PathVariable Long accountId,
             @Valid @RequestBody BindPhoneRequest request) {
         return Map.of("merged", accountApplicationService.bindPhone(
-                accountId, request.getPhone(), request.getCode()).merged());
+                accountId, request.phone(), request.code()).merged());
     }
 
     @Operation(summary = "修改手机号")
@@ -99,7 +99,7 @@ public class AccountController {
     @PreAuthorize("#accountId == authentication.principal.id")
     public void changePhone(@Parameter(description = "账号ID") @PathVariable Long accountId,
                             @Valid @RequestBody ChangePhoneRequest request) {
-        accountApplicationService.changePhone(accountId, request.getPhone(), request.getCode());
+        accountApplicationService.changePhone(accountId, request.phone(), request.code());
     }
 
     @Operation(summary = "修改密码")
@@ -108,7 +108,7 @@ public class AccountController {
     @PreAuthorize("#accountId == authentication.principal.id")
     public void changePassword(@Parameter(description = "账号ID") @PathVariable Long accountId,
                                @Valid @RequestBody ChangePasswordRequest request) {
-        accountApplicationService.changePassword(accountId, request.getNewPassword());
+        accountApplicationService.changePassword(accountId, request.newPassword());
     }
 
     @Operation(summary = "冻结账号")
@@ -119,8 +119,8 @@ public class AccountController {
                               @Valid @RequestBody FreezeAccountRequest request,
                               @AuthenticationPrincipal EagleUser principal) {
         accountApplicationService.freezeAccount(accountId,
-                new FreezeAccountCommand(request.getReason(), request.getFreezeUntil(),
-                        request.getRemark(),
+                new FreezeAccountCommand(request.reason(), request.freezeUntil(),
+                        request.remark(),
                         principal != null ? principal.getId() : null,
                         principal != null ? principal.getName() : "admin"));
     }

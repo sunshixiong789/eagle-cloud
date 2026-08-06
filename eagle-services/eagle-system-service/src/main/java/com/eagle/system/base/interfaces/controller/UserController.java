@@ -131,7 +131,7 @@ public class UserController {
     @PreAuthorize("hasRole('admin')")
     public void assignRoles(@Parameter(description = "用户ID") @PathVariable Long id,
                             @Valid @RequestBody AssignRolesRequest request) {
-        userApplicationService.assignRoles(id, request.getRoleIds());
+        userApplicationService.assignRoles(id, request.roleIds());
     }
 
     /**

@@ -79,6 +79,15 @@ class UserApplicationServiceTest {
         return User.create(ACCOUNT_ID, "alice", "alice@example.com", profile);
     }
 
+    /**
+     * UserMapper 的返回值占位：只填用例关心的字段，其余为 null / false。
+     * 富化字段（角色、在线态、黑名单）由被测方法自己回填，不在这里给。
+     */
+    private static UserResponse mappedResponse(Long id, Long accountId, String username) {
+        return new UserResponse(id, accountId, username, null, null, null, null, null,
+                null, null, false, null, false, null, null);
+    }
+
     @Nested
     @DisplayName("updateUser")
     class Update {
@@ -88,11 +97,9 @@ class UserApplicationServiceTest {
             User user = sampleUser();
             when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
             when(userRepository.save(user)).thenReturn(user);
-            when(userMapper.toResponse(user)).thenReturn(UserResponse.builder().build());
+            when(userMapper.toResponse(user)).thenReturn(mappedResponse(null, null, null));
 
-            UpdateUserRequest req = new UpdateUserRequest();
-            req.setNickname("NewNick");
-            req.setEmail("new@example.com");
+            UpdateUserRequest req = new UpdateUserRequest(null, null, "NewNick", null, "new@example.com");
 
             service.updateUser(USER_ID, req);
 
@@ -105,7 +112,7 @@ class UserApplicationServiceTest {
         void shouldThrowWhenMissing() {
             when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
             AppException ex = assertThrows(NotFoundException.class,
-                    () -> service.updateUser(USER_ID, new UpdateUserRequest()));
+                    () -> service.updateUser(USER_ID, new UpdateUserRequest(null, null, null, null, null)));
             assertEquals(UserErrorCode.USER_NOT_FOUND, ex.getErrorCode());
         }
 
@@ -116,9 +123,9 @@ class UserApplicationServiceTest {
             String originalNick = user.getProfile().getNickname();
             when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
             when(userRepository.save(user)).thenReturn(user);
-            when(userMapper.toResponse(user)).thenReturn(UserResponse.builder().build());
+            when(userMapper.toResponse(user)).thenReturn(mappedResponse(null, null, null));
 
-            service.updateUser(USER_ID, new UpdateUserRequest());
+            service.updateUser(USER_ID, new UpdateUserRequest(null, null, null, null, null));
 
             assertEquals(originalNick, user.getProfile().getNickname());
         }
@@ -132,11 +139,7 @@ class UserApplicationServiceTest {
         void shouldEnrichUserList() {
             User user = sampleUser();
             user.assignRoles(Set.of(1L));
-            UserResponse base = UserResponse.builder()
-                    .id(USER_ID)
-                    .accountId(ACCOUNT_ID)
-                    .username("alice")
-                    .build();
+            UserResponse base = mappedResponse(USER_ID, ACCOUNT_ID, "alice");
             Role admin = Role.create("Admin", "admin", null, 1);
             LocalDateTime lastLoginAt = LocalDateTime.of(2026, 5, 20, 9, 30);
 
@@ -155,14 +158,14 @@ class UserApplicationServiceTest {
             Page<UserResponse> page = service.queryUsers(PageRequest.of(0, 10));
 
             UserResponse response = page.getContent().getFirst();
-            assertEquals(ACCOUNT_ID, response.getAccountId());
-            assertEquals(lastLoginAt, response.getLastLoginAt());
-            assertTrue(response.isOnline());
-            assertEquals("ONLINE", response.getLoginStatus());
-            assertTrue(response.isBlacklisted());
-            assertEquals(300L, response.getBlacklistId());
-            assertEquals(1, response.getRoles().size());
-            assertEquals("Admin", response.getRoles().getFirst().getRoleName());
+            assertEquals(ACCOUNT_ID, response.accountId());
+            assertEquals(lastLoginAt, response.lastLoginAt());
+            assertTrue(response.online());
+            assertEquals("ONLINE", response.loginStatus());
+            assertTrue(response.blacklisted());
+            assertEquals(300L, response.blacklistId());
+            assertEquals(1, response.roles().size());
+            assertEquals("Admin", response.roles().getFirst().roleName());
         }
 
         @Test
@@ -173,7 +176,7 @@ class UserApplicationServiceTest {
                     any(PageRequest.class))).thenReturn(Page.empty());
 
             service.queryUsers(PageRequest.of(0, 10));
-            service.queryUsers(new UserQueryRequest(), PageRequest.of(0, 10));
+            service.queryUsers(new UserQueryRequest(null, null, null, null, null), PageRequest.of(0, 10));
 
             verify(userRepository, org.mockito.Mockito.times(2))
                     .findAll(any(org.springframework.data.jpa.domain.Specification.class),
@@ -187,7 +190,7 @@ class UserApplicationServiceTest {
             when(userRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class),
                     any(PageRequest.class))).thenReturn(Page.empty());
 
-            service.queryUsers(new UserQueryRequest(), PageRequest.of(0, 10));
+            service.queryUsers(new UserQueryRequest(null, null, null, null, null), PageRequest.of(0, 10));
 
             ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
             verify(userRepository).findAll(any(org.springframework.data.jpa.domain.Specification.class),
@@ -202,8 +205,8 @@ class UserApplicationServiceTest {
         void shouldEnrichPhonesWithSingleBatchCall() {
             User first = sampleUser();
             User second = User.create(201L, "bob", "bob@example.com", null);
-            UserResponse firstResponse = UserResponse.builder().id(USER_ID).accountId(ACCOUNT_ID).build();
-            UserResponse secondResponse = UserResponse.builder().id(101L).accountId(201L).build();
+            UserResponse firstResponse = mappedResponse(USER_ID, ACCOUNT_ID, null);
+            UserResponse secondResponse = mappedResponse(101L, 201L, null);
             when(adminProperties.getUsername()).thenReturn("admin");
             when(userRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class),
                     any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(first, second)));
@@ -223,8 +226,8 @@ class UserApplicationServiceTest {
 
             Page<UserResponse> page = service.queryUsers(PageRequest.of(0, 10));
 
-            assertEquals("17708080863", page.getContent().get(0).getPhone());
-            assertEquals("18800000008", page.getContent().get(1).getPhone());
+            assertEquals("17708080863", page.getContent().get(0).phone());
+            assertEquals("18800000008", page.getContent().get(1).phone());
             verify(authClientFacade).findAccounts(Set.of(ACCOUNT_ID, 201L));
         }
     }
@@ -269,14 +272,13 @@ class UserApplicationServiceTest {
         @DisplayName("应按 accountId 返回当前用户")
         void shouldReturnByAccountId() {
             User user = sampleUser();
-            UserResponse mapped = UserResponse.builder()
-                    .accountId(ACCOUNT_ID).username("alice").build();
+            UserResponse mapped = mappedResponse(null, ACCOUNT_ID, "alice");
             when(userRepository.findByAccountId(ACCOUNT_ID)).thenReturn(Optional.of(user));
             when(userMapper.toResponse(user)).thenReturn(mapped);
 
             UserResponse res = service.getCurrentUserByAccountId(ACCOUNT_ID);
 
-            assertEquals(ACCOUNT_ID, res.getAccountId());
+            assertEquals(ACCOUNT_ID, res.accountId());
         }
 
         @Test
@@ -298,11 +300,9 @@ class UserApplicationServiceTest {
             User user = sampleUser();
             when(userRepository.findByAccountId(ACCOUNT_ID)).thenReturn(Optional.of(user));
             when(userRepository.save(user)).thenReturn(user);
-            when(userMapper.toResponse(user)).thenReturn(UserResponse.builder().build());
+            when(userMapper.toResponse(user)).thenReturn(mappedResponse(null, null, null));
 
-            UpdateProfileRequest req = new UpdateProfileRequest();
-            req.setNickname("NewNick");
-            req.setEmail("new@example.com");
+            UpdateProfileRequest req = new UpdateProfileRequest(null, "NewNick", null, "new@example.com");
 
             service.updateCurrentUserByAccountId(ACCOUNT_ID, req);
 
@@ -315,7 +315,7 @@ class UserApplicationServiceTest {
         void shouldThrowWhenMissing() {
             when(userRepository.findByAccountId(ACCOUNT_ID)).thenReturn(Optional.empty());
             AppException ex = assertThrows(NotFoundException.class,
-                    () -> service.updateCurrentUserByAccountId(ACCOUNT_ID, new UpdateProfileRequest()));
+                    () -> service.updateCurrentUserByAccountId(ACCOUNT_ID, new UpdateProfileRequest(null, null, null, null)));
             assertEquals(UserErrorCode.USER_NOT_FOUND, ex.getErrorCode());
         }
     }
@@ -345,7 +345,7 @@ class UserApplicationServiceTest {
             List<AssignedRoleResponse> roles = service.getUserRoles(USER_ID);
 
             assertEquals(2, roles.size());
-            assertEquals("ENABLE", roles.get(0).getStatus());
+            assertEquals("ENABLE", roles.get(0).status());
         }
     }
 }

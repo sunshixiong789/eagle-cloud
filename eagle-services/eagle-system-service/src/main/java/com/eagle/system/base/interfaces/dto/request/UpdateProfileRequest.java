@@ -2,7 +2,6 @@ package com.eagle.system.base.interfaces.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
-import lombok.Data;
 
 /**
  * 更新当前用户档案请求（{@code PUT /users/me}）。
@@ -12,20 +11,20 @@ import lombok.Data;
  *
  * @author sunshixiong
  */
-@Data
 @Schema(description = "更新当前用户档案请求")
-public class UpdateProfileRequest {
+public record UpdateProfileRequest(
 
-    @Schema(description = "真实姓名", example = "张三")
-    private String name;
+        @Schema(description = "真实姓名", example = "张三")
+        String name,
 
-    @Schema(description = "昵称", example = "小张")
-    private String nickname;
+        @Schema(description = "昵称", example = "小张")
+        String nickname,
 
-    @Schema(description = "头像URL", example = "https://example.com/avatar.jpg")
-    private String avatar;
+        @Schema(description = "头像URL", example = "https://example.com/avatar.jpg")
+        String avatar,
 
-    @Email(message = "邮箱格式不正确")
-    @Schema(description = "邮箱", example = "zhangsan@example.com")
-    private String email;
+        @Email(message = "邮箱格式不正确")
+        @Schema(description = "邮箱", example = "zhangsan@example.com")
+        String email
+) {
 }

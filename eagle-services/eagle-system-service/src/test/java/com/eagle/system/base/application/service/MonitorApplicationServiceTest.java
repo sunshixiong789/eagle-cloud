@@ -65,7 +65,7 @@ class MonitorApplicationServiceTest {
             when(logRepository.countDistinctUsernameByLogTypeAndPeriod(any(), any(), any())).thenReturn(0L);
             when(logApplicationService.queryLogs(any(), any(Pageable.class))).thenReturn(Page.empty());
 
-            service.queryLoginLogs(new LoginLogQueryRequest(), PageRequest.of(0, 20));
+            service.queryLoginLogs(new LoginLogQueryRequest(null, null, null, null, null), PageRequest.of(0, 20));
 
             ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
             verify(logApplicationService).queryLogs(any(), pageableCaptor.capture());
@@ -90,8 +90,8 @@ class MonitorApplicationServiceTest {
 
             OnlineUserListResponse resp = service.listOnlineUsers();
 
-            assertEquals(1, resp.getTotalCount());
-            assertEquals("jti-1", resp.getUsers().get(0).getTokenId());
+            assertEquals(1, resp.totalCount());
+            assertEquals("jti-1", resp.users().get(0).tokenId());
         }
 
         @Test
@@ -109,9 +109,9 @@ class MonitorApplicationServiceTest {
 
             OnlineUserListResponse resp = service.listOnlineUsers();
 
-            assertEquals(1, resp.getTotalCount());
-            assertEquals("jti-new", resp.getUsers().get(0).getTokenId());
-            assertEquals("10.0.0.2", resp.getUsers().get(0).getIp());
+            assertEquals(1, resp.totalCount());
+            assertEquals("jti-new", resp.users().get(0).tokenId());
+            assertEquals("10.0.0.2", resp.users().get(0).ip());
         }
 
         @Test
@@ -129,7 +129,7 @@ class MonitorApplicationServiceTest {
 
             OnlineUserListResponse resp = service.listOnlineUsers();
 
-            assertEquals(2, resp.getTotalCount());
+            assertEquals(2, resp.totalCount());
         }
 
         @Test
@@ -147,8 +147,8 @@ class MonitorApplicationServiceTest {
 
             OnlineUserListResponse resp = service.listOnlineUsers();
 
-            assertEquals(1, resp.getTotalCount());
-            assertEquals("jti-new", resp.getUsers().get(0).getTokenId());
+            assertEquals(1, resp.totalCount());
+            assertEquals("jti-new", resp.users().get(0).tokenId());
         }
     }
 

@@ -16,15 +16,14 @@ public class BlacklistMapper {
         if (blacklist == null) {
             return null;
         }
-        BlacklistResponse response = new BlacklistResponse();
-        response.setId(blacklist.getId());
-        response.setType(blacklist.getType());
-        response.setValue(blacklist.getValue());
-        response.setReason(blacklist.getReason());
-        response.setExpiresAt(blacklist.getExpiresAt());
-        response.setOperatorId(blacklist.getOperatorId());
-        response.setOperatorName(blacklist.getOperatorName());
-        response.setCreateTime(blacklist.getCreateTime());
-        return response;
+        return new BlacklistResponse(
+                blacklist.getId(),
+                blacklist.getType(),
+                blacklist.getValue(),
+                blacklist.getReason(),
+                blacklist.getExpiresAt(),
+                blacklist.getOperatorId(),
+                blacklist.getOperatorName(),
+                blacklist.getCreateTime());
     }
 }

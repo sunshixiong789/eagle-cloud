@@ -39,32 +39,32 @@ public class OAuthClientApplicationService {
      */
     @Transactional(rollbackFor = Exception.class)
     public OAuthClientResponse createClient(CreateOAuthClientRequest request) {
-        if (oAuthClientRepository.existsByClientId(request.getClientId())) {
+        if (oAuthClientRepository.existsByClientId(request.clientId())) {
             throw AuthErrorCode.CLIENT_ID_EXISTS.toConflictException();
         }
 
         String encodedSecret = null;
-        if (request.getClientSecret() != null && !request.getClientSecret().isBlank()) {
-            encodedSecret = passwordEncoder.encode(request.getClientSecret());
+        if (request.clientSecret() != null && !request.clientSecret().isBlank()) {
+            encodedSecret = passwordEncoder.encode(request.clientSecret());
         }
 
         OAuthClient client = OAuthClient.create(
-                request.getClientId(),
+                request.clientId(),
                 encodedSecret,
-                request.getClientName(),
-                joinSet(request.getClientAuthenticationMethods()),
-                joinSet(request.getAuthorizationGrantTypes()),
-                joinSet(request.getRedirectUris()),
-                joinSet(request.getScopes())
+                request.clientName(),
+                joinSet(request.clientAuthenticationMethods()),
+                joinSet(request.authorizationGrantTypes()),
+                joinSet(request.redirectUris()),
+                joinSet(request.scopes())
         );
 
         client.updateTokenSettings(
-                request.getAccessTokenTtlSeconds(),
-                request.getRefreshTokenTtlSeconds()
+                request.accessTokenTtlSeconds(),
+                request.refreshTokenTtlSeconds()
         );
         client.updateClientSettings(
-                request.getRequireProofKey(),
-                request.getRequireAuthorizationConsent()
+                request.requireProofKey(),
+                request.requireAuthorizationConsent()
         );
 
         OAuthClient saved = oAuthClientRepository.save(client);
@@ -84,25 +84,25 @@ public class OAuthClientApplicationService {
                 .orElseThrow(AuthErrorCode.CLIENT_NOT_FOUND::toNotFoundException);
 
         String encodedSecret = null;
-        if (request.getClientSecret() != null && !request.getClientSecret().isBlank()) {
-            encodedSecret = passwordEncoder.encode(request.getClientSecret());
+        if (request.clientSecret() != null && !request.clientSecret().isBlank()) {
+            encodedSecret = passwordEncoder.encode(request.clientSecret());
         }
 
         client.updateInfo(
-                request.getClientName(),
+                request.clientName(),
                 encodedSecret,
-                joinSet(request.getClientAuthenticationMethods()),
-                joinSet(request.getAuthorizationGrantTypes()),
-                joinSet(request.getRedirectUris()),
-                joinSet(request.getScopes())
+                joinSet(request.clientAuthenticationMethods()),
+                joinSet(request.authorizationGrantTypes()),
+                joinSet(request.redirectUris()),
+                joinSet(request.scopes())
         );
         client.updateTokenSettings(
-                request.getAccessTokenTtlSeconds(),
-                request.getRefreshTokenTtlSeconds()
+                request.accessTokenTtlSeconds(),
+                request.refreshTokenTtlSeconds()
         );
         client.updateClientSettings(
-                request.getRequireProofKey(),
-                request.getRequireAuthorizationConsent()
+                request.requireProofKey(),
+                request.requireAuthorizationConsent()
         );
 
         OAuthClient saved = oAuthClientRepository.save(client);

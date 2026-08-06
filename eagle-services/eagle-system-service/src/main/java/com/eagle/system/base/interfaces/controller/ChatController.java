@@ -48,7 +48,7 @@ public class ChatController {
             description = "客户端通过 STOMP SEND 到 /message/broadcast-message;服务端转发到 /topic/public,所有订阅者收到。content 必填,空白抛 OperationErrorCode.MESSAGE_REQUIRED(13005)。")
     @MessageMapping("/broadcast-message")
     public void sendMessage(@Payload ChatMessage message, Principal principal) {
-        if (message == null || message.getContent() == null || message.getContent().isBlank()) {
+        if (message == null || message.content() == null || message.content().isBlank()) {
             throw OperationErrorCode.MESSAGE_REQUIRED.toDomainException();
         }
         log.debug("用户 {} 发送广播消息", principal != null ? principal.getName() : "匿名");
@@ -68,14 +68,14 @@ public class ChatController {
             description = "客户端 STOMP SEND 到 /message/message-to-one;服务端推送给指定用户的 /user/queue/private。to+content 必填,缺失分别抛 RECIPIENT_REQUIRED(13006)/MESSAGE_REQUIRED(13005)。")
     @MessageMapping("/message-to-one")
     public void sendPrivateMessage(@Payload PrivateMessage message, Principal principal) {
-        if (message == null || message.getTo() == null || message.getTo().isBlank()) {
+        if (message == null || message.to() == null || message.to().isBlank()) {
             throw OperationErrorCode.RECIPIENT_REQUIRED.toDomainException();
         }
-        if (message.getContent() == null || message.getContent().isBlank()) {
+        if (message.content() == null || message.content().isBlank()) {
             throw OperationErrorCode.MESSAGE_REQUIRED.toDomainException();
         }
-        log.debug("用户 {} 发送私信给 {}", principal != null ? principal.getName() : "匿名", message.getTo());
-        webSocketSessionManager.sendToUser(message.getTo(), "/queue/private", message);
+        log.debug("用户 {} 发送私信给 {}", principal != null ? principal.getName() : "匿名", message.to());
+        webSocketSessionManager.sendToUser(message.to(), "/queue/private", message);
     }
 
     /**

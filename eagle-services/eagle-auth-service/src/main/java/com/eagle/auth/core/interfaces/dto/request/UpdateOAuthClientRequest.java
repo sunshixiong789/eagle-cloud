@@ -1,37 +1,38 @@
 package com.eagle.auth.core.interfaces.dto.request;
 
 import jakarta.validation.constraints.Size;
-import lombok.Data;
 
 import java.util.Set;
 
 /**
  * 更新 OAuth2 客户端请求
+ * <p>
+ * 字段为 null 表示「不修改」，由应用服务按 null 判断是否覆盖。
  *
  * @author sunshixiong
  */
-@Data
-public class UpdateOAuthClientRequest {
+public record UpdateOAuthClientRequest(
 
-    @Size(max = 200)
-    private String clientName;
+        @Size(max = 200)
+        String clientName,
 
-    @Size(max = 200)
-    private String clientSecret;
+        @Size(max = 200)
+        String clientSecret,
 
-    private Set<String> clientAuthenticationMethods;
+        Set<String> clientAuthenticationMethods,
 
-    private Set<String> authorizationGrantTypes;
+        Set<String> authorizationGrantTypes,
 
-    private Set<String> redirectUris;
+        Set<String> redirectUris,
 
-    private Set<String> scopes;
+        Set<String> scopes,
 
-    private Boolean requireProofKey;
+        Boolean requireProofKey,
 
-    private Boolean requireAuthorizationConsent;
+        Boolean requireAuthorizationConsent,
 
-    private Long accessTokenTtlSeconds;
+        Long accessTokenTtlSeconds,
 
-    private Long refreshTokenTtlSeconds;
+        Long refreshTokenTtlSeconds
+) {
 }

@@ -67,17 +67,16 @@ public class DashboardApplicationService {
         long authAccountCount = authClientFacade.countAccounts();
         long userCount = authAccountCount >= 0 ? authAccountCount : userRepository.countByUsernameNot(adminUsername);
 
-        return DashboardStatsResponse.builder()
-                .userCount(userCount)
-                .userCountLast7Days(userRepository.countByCreateTimeSinceAndUsernameNot(sevenDaysAgo, adminUsername))
-                .roleCount(roleRepository.count())
-                .roleEnabledCount(roleRepository.countByStatus(RoleStatus.NORMAL))
-                .todayLoginCount(todayLogins)
-                .todayLoginVsYesterday(vsYesterday)
-                .todayLogCount(logRepository.countByPeriod(todayStart, tomorrowStart))
-                .todayExceptionCount(logRepository.countByLogTypeAndPeriod(LogType.EXCEPTION, todayStart, tomorrowStart))
-                .onlineUserCount(monitorApplicationService.countOnlineUsers())
-                .build();
+        return new DashboardStatsResponse(
+                userCount,
+                userRepository.countByCreateTimeSinceAndUsernameNot(sevenDaysAgo, adminUsername),
+                roleRepository.count(),
+                roleRepository.countByStatus(RoleStatus.NORMAL),
+                todayLogins,
+                vsYesterday,
+                logRepository.countByPeriod(todayStart, tomorrowStart),
+                logRepository.countByLogTypeAndPeriod(LogType.EXCEPTION, todayStart, tomorrowStart),
+                monitorApplicationService.countOnlineUsers());
     }
 
     /**

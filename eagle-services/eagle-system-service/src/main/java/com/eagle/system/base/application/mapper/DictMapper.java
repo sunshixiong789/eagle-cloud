@@ -14,15 +14,15 @@ public class DictMapper {
         if (dict == null) {
             return null;
         }
-        DictResponse response = new DictResponse();
-        response.setId(dict.getId());
-        response.setDictType(dict.getDictType() != null ? dict.getDictType().name() : null);
-        response.setDictName(dict.getDictName());
-        response.setDescription(dict.getDescription());
-        response.setSystemFlag(dict.getSystemFlag());
-        response.setStatus(dict.getStatus() != null ? dict.getStatus().name() : null);
-        response.setRemarks(dict.getRemarks());
-        response.setCreateTime(dict.getCreateTime());
-        return response;
+        return new DictResponse(
+                dict.getId(),
+                dict.getDictType() != null ? dict.getDictType().name() : null,
+                dict.getDictName(),
+                dict.getDescription(),
+                dict.getSystemFlag(),
+                dict.getStatus() != null ? dict.getStatus().name() : null,
+                dict.getRemarks(),
+                dict.getCreateTime(),
+                null);
     }
 }
