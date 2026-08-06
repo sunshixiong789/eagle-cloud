@@ -1,0 +1,26 @@
+# 构建上下文只需要 build/libs 下的 bootJar —— 其余全部排除，
+# 免得把源码、编译中间产物、测试报告和本地凭据一起塞给 docker daemon。
+# 显式列举而不用 "* + !例外"：Docker 的 ignore 语义和 .gitignore 不同，
+# 反向模式在被排除的父目录下行为容易踩坑，这里宁可写得笨一点。
+
+src/
+docs/
+.gradle/
+build/classes/
+build/resources/
+build/generated/
+build/native/
+build/tmp/
+build/reports/
+build/test-results/
+build/jacoco/
+build/spring-modulith-docs/
+build/resolvedMainClassName
+build/libs/*-plain.jar
+archunit_store/
+
+# 本地凭据 / 环境文件绝不进镜像上下文
+.env
+.env.*
+*.md
+.DS_Store

@@ -108,9 +108,32 @@ configure(subprojects.findAll { it.name != 'eagle-bom' }) {
         }
     }
 
-    // 禁用 AOT 相关任务（避免 Gradle 9.x 并发问题和测试扫描问题）
-    tasks.matching { it.name in ['processAot', 'processTestAot'] }.configureEach {
-        enabled = false
+    // ── AOT 任务按需触发：只有显式跑 native* 任务时才执行 ────────────────────────
+    // apply 'org.graalvm.buildtools.native' 后，Spring Boot 的 NativeImagePluginAction 会把
+    // processAot / processTestAot 挂进 classes / testClasses —— nativeCompile 本身不在 build
+    // 里，但这两个前置任务每次 gradle build 都要跑。processAot 真的启动一次 Spring 上下文，
+    // processTestAot 还要启动全部测试上下文，代价很高（姊妹仓库 ease-mind-servers 实测
+    // 单服务约 19s），且本仓库还撞上过 Gradle 9.x 的并发与测试扫描问题 —— 这正是它们原先
+    // 被**无条件**禁用的原因。
+    //
+    // 无条件禁用的副作用是 nativeCompile 也一并残废：拿不到 AOT 产物的 native image 基本
+    // build 不出来。改成按本次调用的任务名判定，两边都不牺牲：
+    //   gradle build / test / bootJar         → 禁用，与此前行为完全一致（build 不会变慢）
+    //   gradle nativeCompile / nativeRun / …  → 启用，native image 该有的一步不少
+    //
+    // 带路径的 :eagle-services:eagle-auth-service:nativeCompile 同样识别；直接点名
+    // processAot / processTestAot 也视为请求，免得手动跑这两个任务反被自己禁掉。
+    //
+    // ⚠️ 上面那个 Gradle 9.x 并发 / 测试扫描问题并未修复，只是挪到了 native 构建时才会碰上。
+    //    首次跑 nativeCompile 若复现，就地排查，不要退回无条件禁用（那等于放弃 native）。
+    def nativeRequested = gradle.startParameter.taskNames.any {
+        def name = it.tokenize(':').last().toLowerCase()
+        name.startsWith('native') || name.contains('aot')
+    }
+    if (!nativeRequested) {
+        tasks.matching {
+            it.name in ['processAot', 'processTestAot', 'collectReachabilityMetadata']
+        }.configureEach { enabled = false }
     }
 
     hibernate {
@@ -256,21 +279,9 @@ configure(subprojects.findAll { it.parent?.name == 'eagle-services' }) {
         exclude group: 'com.h2database', module: 'h2'
     }
 
-    // 分层 jar：让镜像层缓存真正生效。三个服务的 Dockerfile 用
-    // `java -Djarmode=tools ... extract --layers` 把这四层拆开分别 COPY，
-    // 改一行业务代码只需重推 application 层。
-    tasks.matching { it.name == 'bootJar' }.configureEach {
-        layered {
-            dependencies {
-                intoLayer('snapshot-dependencies') { include 'com.eagle:*:*' }
-                intoLayer('snapshot-dependencies') { include '*:*:*SNAPSHOT' }
-                intoLayer('dependencies')
-            }
-            application {
-                intoLayer('spring-boot-loader') { include 'org/springframework/boot/loader/**' }
-                intoLayer('application')
-            }
-            layerOrder = ['dependencies', 'spring-boot-loader', 'snapshot-dependencies', 'application']
-        }
-    }
+    // 注：这里原本有一段自定义 bootJar `layered {}` 配置（把 com.eagle:* 与 *-SNAPSHOT
+    // 改判到 snapshot-dependencies 层），唯一消费方是三个服务 Dockerfile 里
+    // `java -Djarmode=tools ... extract --layers` 那个 stage。镜像已简化为单阶段直接跑
+    // fat jar，分层信息不再有人读，故删除。若日后改用 Cloud Native Buildpacks 或重新
+    // 引入分层 COPY，从 git 历史里取回即可。
 }

@@ -1,4 +1,0 @@
-Class <com.eagle.system.base.application.service.AuthorizationQueryService> does not have simple name ending with 'ApplicationService' in (AuthorizationQueryService.java:0)
-Class <com.eagle.system.base.application.service.SystemLogRecorder> does not have simple name ending with 'ApplicationService' in (SystemLogRecorder.java:0)
-Class <com.eagle.system.message.announcement.application.service.AnnouncementAdminService> does not have simple name ending with 'ApplicationService' in (AnnouncementAdminService.java:0)
-Class <com.eagle.system.message.announcement.application.service.AnnouncementQueryService> does not have simple name ending with 'ApplicationService' in (AnnouncementQueryService.java:0)
