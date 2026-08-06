@@ -19,11 +19,4 @@ public interface AuditLogUserProvider {
      * 当前操作者名称，无登录上下文返回 null。
      */
     String getCurrentUserName();
-
-    /**
-     * 当前租户 ID，无多租户场景返回 null。
-     */
-    default String getCurrentTenantId() {
-        return null;
-    }
 }

@@ -29,8 +29,7 @@ import java.time.LocalDateTime;
 @Table(name = "eagle_audit_log", indexes = {
         @Index(name = "idx_audit_log_occurred_at", columnList = "occurred_at"),
         @Index(name = "idx_audit_log_operator", columnList = "operator_id, occurred_at"),
-        @Index(name = "idx_audit_log_module", columnList = "module, occurred_at"),
-        @Index(name = "idx_audit_log_tenant", columnList = "tenant_id, occurred_at")
+        @Index(name = "idx_audit_log_module", columnList = "module, occurred_at")
 })
 @Getter
 @NoArgsConstructor
@@ -51,9 +50,6 @@ public class AuditLogRecord {
 
     @Column(name = "operator_name", length = 128, comment = "操作者名称")
     private String operatorName;
-
-    @Column(name = "tenant_id", length = 64, comment = "租户 ID")
-    private String tenantId;
 
     @Column(length = 64, comment = "所属模块")
     private String module;
@@ -97,7 +93,6 @@ public class AuditLogRecord {
                 .serviceId(serviceId)
                 .operatorId(entry.getOperatorId())
                 .operatorName(entry.getOperatorName())
-                .tenantId(entry.getTenantId())
                 .module(entry.getModule())
                 .action(entry.getAction())
                 .requestArgs(entry.getRequestArgs())

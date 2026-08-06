@@ -37,11 +37,6 @@ public final class AuditLogSpecification {
                 ? null : cb.like(root.get("operatorName"), "%" + operatorName + "%");
     }
 
-    public static Specification<AuditLogRecord> tenantIdEquals(String tenantId) {
-        return (root, query, cb) -> (tenantId == null || tenantId.isBlank())
-                ? null : cb.equal(root.get("tenantId"), tenantId);
-    }
-
     public static Specification<AuditLogRecord> successEquals(Boolean success) {
         return (root, query, cb) -> success == null
                 ? null : cb.equal(root.get("success"), success);

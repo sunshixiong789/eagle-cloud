@@ -26,9 +26,6 @@ public class AuditLogQueryRequest {
     @Schema(description = "操作者名称(模糊)", example = "alice")
     private String operatorName;
 
-    @Schema(description = "租户 ID", example = "t-default")
-    private String tenantId;
-
     @Schema(description = "是否成功", example = "true")
     private Boolean success;
 

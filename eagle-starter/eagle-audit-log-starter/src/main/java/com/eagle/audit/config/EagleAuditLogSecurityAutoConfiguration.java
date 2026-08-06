@@ -15,10 +15,10 @@ import org.springframework.security.oauth2.jwt.Jwt;
  *
  * <p>类路径有 SecurityContextHolder + Jwt 时启用,覆盖主配置中的匿名 Provider。
  *
- * <p><b>多租户支持已移除</b>：随 {@code eagle-tenant-starter} 一并下线，
- * 原先按 {@code com.eagle.tenant.TenantContextHolder} 是否在类路径来路由到
- * {@code TenantAwareSecurityAuditLogUserProvider} 的逻辑不再需要，
- * 审计 entry 的 tenantId 恒为 null。
+ * <p><b>多租户支持已移除</b>：随 {@code eagle-tenant-starter} 一并下线。
+ * 原先按 {@code TenantContextHolder} 是否在类路径路由到 {@code TenantAwareSecurityAuditLogUserProvider}
+ * 的逻辑已删除，{@code tenantId} 字段与 {@code idx_audit_log_tenant} 索引也已从
+ * {@code AuditLogRecord} 移除（存量库需手工 DROP，见 CHANGELOG）。
  *
  * @author eagle
  */

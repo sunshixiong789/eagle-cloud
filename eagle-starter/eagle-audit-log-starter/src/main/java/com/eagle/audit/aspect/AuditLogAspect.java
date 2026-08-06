@@ -55,8 +55,7 @@ public class AuditLogAspect {
 
         try {
             builder.operatorId(userProvider.getCurrentUserId())
-                    .operatorName(userProvider.getCurrentUserName())
-                    .tenantId(userProvider.getCurrentTenantId());
+                    .operatorName(userProvider.getCurrentUserName());
         } catch (Exception e) {
             log.debug("Failed to fill audit user context", e);
         }

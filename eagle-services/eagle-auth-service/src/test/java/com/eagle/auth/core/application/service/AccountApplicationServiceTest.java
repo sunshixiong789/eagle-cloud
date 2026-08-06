@@ -44,7 +44,6 @@ class AccountApplicationServiceTest {
     private static final String RAW_PASSWORD = "Pa$$w0rd!";
     private static final String ENCODED_PASSWORD = "{bcrypt}encoded";
     private static final String PHONE = "13800138000";
-    private static final String TAOBAO_OPEN_UID = "tb_open_uid_abcdef0123456789";
     private static final Long ACCOUNT_ID = 100L;
 
     @Mock

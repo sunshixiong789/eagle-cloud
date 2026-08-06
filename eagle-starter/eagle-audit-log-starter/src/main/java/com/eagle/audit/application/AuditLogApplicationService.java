@@ -30,7 +30,6 @@ public class AuditLogApplicationService {
                 .and(AuditLogSpecification.actionLike(request.getAction()))
                 .and(AuditLogSpecification.operatorIdEquals(request.getOperatorId()))
                 .and(AuditLogSpecification.operatorNameLike(request.getOperatorName()))
-                .and(AuditLogSpecification.tenantIdEquals(request.getTenantId()))
                 .and(AuditLogSpecification.successEquals(request.getSuccess()))
                 .and(AuditLogSpecification.occurredBetween(request.getStartTime(), request.getEndTime()));
         return repository.findAll(spec, pageable).map(AuditLogResponse::from);

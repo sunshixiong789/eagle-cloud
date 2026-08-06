@@ -30,11 +30,6 @@ public class AuditLogEntry implements Serializable {
     private String operatorName;
 
     /**
-     * 租户 ID。
-     */
-    private String tenantId;
-
-    /**
      * 所属模块。
      */
     private String module;

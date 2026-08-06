@@ -42,4 +42,6 @@ dependencies {
     // Spring Modulith：@ApplicationModule / @Modulithic 注解（编译期可见即可）
     compileOnly 'org.springframework.modulith:spring-modulith-core'
     testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
+    // LayeredArchitectureTest：模块内部的 DDD 分层约束（Modulith 只管模块之间）
+    testImplementation 'com.tngtech.archunit:archunit-junit5'
 }
