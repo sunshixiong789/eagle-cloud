@@ -350,6 +350,12 @@ services:
       - CONSUL_DISCOVERY_ENABLED=${CONSUL_DISCOVERY_ENABLED:-true}
       - CONSUL_INSTANCE_IP=${CONSUL_INSTANCE_IP:-}
       - AUTH_SERVER_URL=${AUTH_SERVER_URL:-http://auth:9090}
+      # Redis：RedisRateLimiter 令牌桶后端。不注入时 Boot 默认连 localhost:6379，
+      # 容器内 Connection refused 会让 /actuator/health DOWN，Consul 随即把网关判为 critical。
+      - REDIS_HOST=${REDIS_HOST:?REDIS_HOST must be set in .env.prod.prod}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?REDIS_PASSWORD must be set in .env.prod.prod}
+      - REDIS_DATABASE=${REDIS_DATABASE:-0}
       # 生产 CORS 不允许通配符:必须显式列出业务前端域名
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS must be set in .env.prod.prod (no wildcard allowed)}
       - JAVA_OPTS=${GATEWAY_JAVA_OPTS:--server -XX:+UseContainerSupport -XX:MaxRAMPercentage=40.0 -XX:InitialRAMPercentage=20.0 -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=128m -XX:MaxDirectMemorySize=640m -Xss768k -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:ParallelGCThreads=4 -XX:ConcGCThreads=1 -XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}

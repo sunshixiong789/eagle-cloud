@@ -17,6 +17,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.List;
@@ -76,7 +77,7 @@ class OnlineUserAdapterTest {
             when(redisTemplate.opsForValue()).thenReturn(valueOps);
             adapter.trackLogin(info(1800L));
             verify(valueOps).set(eq("online:users:" + JTI), any(String.class),
-                    eq(1800L), eq(TimeUnit.SECONDS));
+                    eq(Duration.ofSeconds(1800L)));
         }
 
         @Test
@@ -132,7 +133,7 @@ class OnlineUserAdapterTest {
             adapter.forceLogout(JTI);
             verify(redisTemplate).delete("online:users:" + JTI);
             verify(valueOps).set(eq("token:blacklist:" + JTI), eq("1"),
-                    eq(120L), eq(TimeUnit.SECONDS));
+                    eq(Duration.ofSeconds(120L)));
         }
 
         @Test
@@ -141,7 +142,7 @@ class OnlineUserAdapterTest {
             when(redisTemplate.getExpire("online:users:" + JTI, TimeUnit.SECONDS)).thenReturn(-1L);
             when(redisTemplate.opsForValue()).thenReturn(valueOps);
             adapter.forceLogout(JTI);
-            verify(valueOps).set(any(), any(), eq(3600L), eq(TimeUnit.SECONDS));
+            verify(valueOps).set(any(), any(), eq(Duration.ofSeconds(3600L)));
         }
 
         @Test

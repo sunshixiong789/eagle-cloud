@@ -23,6 +23,28 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 30s
 
+  # ---- Redis 连接 ----
+  # 网关自身不缓存业务数据，唯一用途是 Spring Cloud Gateway 内置 RedisRateLimiter
+  # （令牌桶 Lua 脚本，key 维度见 GatewayRateLimitConfig 的 KeyResolver）。
+  # 必须显式配置：spring-boot-starter-data-redis-reactive 只要在 classpath 上，
+  # 缺省即 localhost:6379 —— 容器内必然 Connection refused，DataRedisReactiveHealthIndicator
+  # 会把 /actuator/health 整体拉成 DOWN，进而让 Consul 把 gateway-server 判为 critical。
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      connect-timeout: 3000ms
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: ${REDIS_POOL_MAX_ACTIVE:64}
+          max-idle: ${REDIS_POOL_MAX_IDLE:16}
+          min-idle: ${REDIS_POOL_MIN_IDLE:4}
+          max-wait: ${REDIS_POOL_MAX_WAIT:2000ms}
+        shutdown-timeout: 1000ms
+
   cloud:
     # Spring Cloud LoadBalancer 缓存：默认 TTL 35s 偏长，
     # 在“gateway 启动早于下游服务注册到注册中心”的场景下会缓存空实例列表 35s，

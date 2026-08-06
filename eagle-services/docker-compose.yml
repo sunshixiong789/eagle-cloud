@@ -393,7 +393,7 @@ services:
     mem_limit: 512m
     mem_reservation: 256m
     # environment 显式枚举所有关键变量，统一 ${VAR:-default} 插值
-    # 默认值已包含容器网络约束（consul:8500 / auth:9090 / system:8082），.env.prod 可整体覆盖
+    # 默认值已包含容器网络约束（consul:8500 / redis:6379 / auth:9090 / system:8082），.env.prod 可整体覆盖
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       # Consul 注册中心
@@ -402,6 +402,12 @@ services:
       - CONSUL_DISCOVERY_ENABLED=${CONSUL_DISCOVERY_ENABLED:-true}
       # 多机部署时改为宿主机/公网 IP；单机留空，客户端自动取容器 IP
       - CONSUL_INSTANCE_IP=${CONSUL_INSTANCE_IP:-}
+      # Redis：RedisRateLimiter 令牌桶后端。缺这几个变量时 Boot 默认连 localhost:6379，
+      # 容器内必然 Connection refused，健康检查 DOWN 会连带 Consul 把网关判为 critical。
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis123456}
+      - REDIS_DATABASE=${REDIS_DATABASE:-0}
       # AUTH_SERVER_URL: gateway 走 Consul lb://auth，此处仅为兼容历史显式直连
       - AUTH_SERVER_URL=${AUTH_SERVER_URL:-http://auth:9090}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-}

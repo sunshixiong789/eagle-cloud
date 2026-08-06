@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -43,13 +44,12 @@ public class OnlineUserAdapter implements OnlineUserPort {
     public void trackLogin(OnlineUserInfo info) {
         try {
             String json = objectMapper.writeValueAsString(info);
-            redisTemplate.opsForValue().set(
-                    ONLINE_KEY_PREFIX + info.tokenId(), json,
-                    info.expiresIn(), TimeUnit.SECONDS);
+            Duration ttl = Duration.ofSeconds(info.expiresIn());
+            redisTemplate.opsForValue().set(ONLINE_KEY_PREFIX + info.tokenId(), json, ttl);
             if (info.userId() != null) {
                 String indexKey = ACCOUNT_INDEX_PREFIX + info.userId();
                 redisTemplate.opsForSet().add(indexKey, info.tokenId());
-                redisTemplate.expire(indexKey, info.expiresIn(), TimeUnit.SECONDS);
+                redisTemplate.expire(indexKey, ttl);
             }
         } catch (Exception e) {
             log.warn("failed to track online user, redis may be unavailable: tokenId={}",
@@ -115,8 +115,7 @@ public class OnlineUserAdapter implements OnlineUserPort {
             redisTemplate.delete(onlineKey);
             long blacklistTtl = (ttl != null && ttl > 0) ? ttl : DEFAULT_TTL_SECONDS;
             redisTemplate.opsForValue().set(
-                    BLACKLIST_KEY_PREFIX + tokenId, "1",
-                    blacklistTtl, TimeUnit.SECONDS);
+                    BLACKLIST_KEY_PREFIX + tokenId, "1", Duration.ofSeconds(blacklistTtl));
         } catch (Exception e) {
             log.warn("failed to force logout, redis may be unavailable: tokenId={}", tokenId, e);
         }

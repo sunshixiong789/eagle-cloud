@@ -37,9 +37,16 @@ spring:
         health-check-path: /actuator/health
         health-check-interval: 10s
         health-check-critical-timeout: 30s
+        # 实例 metadata：网关 GatewayOpenApiConfig 按 spring-doc 聚合 OpenAPI，对应 /v3/api-docs/auth。
+        # 必须放 metadata 不能放 tags —— Spring Cloud Consul 5.x 的 ConsulServiceInstance.getMetadata()
+        # 只读 Consul 原生 Meta 字段，不再像 4.x 那样把 "k=v" 形式的 tag 折算进 metadata，
+        # 写成 tags 的话网关侧 instance.getMetadata() 永远取不到 spring-doc，聚合恒为空。
+        metadata:
+          spring-doc: auth
+          spring-doc-name: Auth Service
+        # tags 仅供 Consul UI / DNS 侧筛选，不参与网关聚合
         tags:
           - spring-doc=auth
-          - spring-doc-name=Auth Service
 
   # ---- 数据源：PostgreSQL（环境变量驱动连接信息）----
   datasource:

@@ -1,6 +1,7 @@
 package com.eagle.gateway.config;
 
 import org.springframework.cloud.client.discovery.event.HeartbeatEvent;
+import org.springframework.cloud.client.discovery.event.HeartbeatMonitor;
 import org.springframework.context.event.EventListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,12 @@ import java.util.Set;
  *   <li>{@link HeartbeatEvent} —— 注册中心实例上下线时实时刷新（注册中心无关，
  *       Consul / Eureka / Zookeeper 的 DiscoveryClient 均发布此事件）</li>
  * </ul>
+ *
+ * <p><b>心跳去重</b>：{@code HeartbeatEvent} 是<b>轮询</b>事件而非变更事件 ——
+ * Consul 的 {@code ConsulCatalogWatch} 每个 watch 周期（默认 1s + watch timeout）都发一次，
+ * 不管服务目录有没有变。直接在监听里 refresh 会导致每几秒全量扫一遍注册表并重复打日志。
+ * 用 {@link HeartbeatMonitor} 比对事件携带的状态值（Consul 侧是 catalog index），
+ * 只有真正变化时才刷新，这也是 Spring Cloud Gateway 自身 {@code RouteRefreshListener} 的做法。
  *
  * @author eagle
  */
@@ -64,17 +71,27 @@ public class GatewayOpenApiConfig implements ApplicationListener<ApplicationRead
     private final SwaggerUiConfigProperties swaggerUiConfigProperties;
 
     /**
+     * 心跳状态游标：{@link HeartbeatMonitor#update(Object)} 仅在值变化时返回 true。
+     */
+    private final HeartbeatMonitor heartbeatMonitor = new HeartbeatMonitor();
+
+    /**
      * 注册中心状态变化时刷新 Swagger URL。
      *
      * <p>{@link HeartbeatEvent} 是 Spring Cloud 的注册中心无关事件 —— Consul / Eureka /
-     * Zookeeper 的 DiscoveryClient 在探测到注册表变更时都会发布它，
+     * Zookeeper 的 DiscoveryClient 轮询注册表时都会发布它，
      * 取代了原先绑死 Nacos 的 {@code NotifyCenter} + {@code InstancesChangeEvent} 订阅。
      *
-     * @param event 心跳事件，仅作触发信号，不读取其内容
+     * <p>事件按固定周期发布（Consul 默认 1s 一轮），因此必须先用 {@link HeartbeatMonitor}
+     * 过滤：只有 {@code event.getValue()} 变化（注册表真的动过）才做全量扫描。
+     *
+     * @param event 心跳事件，其 value 为注册中心的目录状态游标
      */
     @EventListener(HeartbeatEvent.class)
     public void onHeartbeat(HeartbeatEvent event) {
-        refresh();
+        if (heartbeatMonitor.update(event.getValue())) {
+            refresh();
+        }
     }
 
     /**

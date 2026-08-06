@@ -4,6 +4,7 @@ import com.eagle.auth.core.domain.AuthErrorCode;
 import com.eagle.auth.core.domain.service.TaobaoService;
 import com.eagle.auth.core.infrastructure.config.TaobaoAppProperties;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -58,6 +59,7 @@ public class TaobaoServiceImpl implements TaobaoService {
     private final ObjectMapper objectMapper;
     private final Clock clock;
 
+    @Autowired
     public TaobaoServiceImpl(TaobaoAppProperties properties,
                               @Qualifier("taobaoRestClient") RestClient restClient,
                               ObjectMapper objectMapper) {
