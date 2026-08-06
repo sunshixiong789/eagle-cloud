@@ -3,7 +3,7 @@ plugins {
     id 'maven-publish'
 }
 
-// group / version 由根 all projects 块统一管理（com.eagle:1.0.0-SNAPSHOT）
+// group / version 由根 allprojects 块统一管理（com.eagle:${version}，见 /build.gradle）
 
 // 允许通过 api platform(...) 导入其他 BOM
 javaPlatform {
@@ -12,11 +12,9 @@ javaPlatform {
 
 ext {
     // Spring 系
-    springBootVersion = '4.0.6'
-    springCloudVersion = '2025.1.1'
-    springCloudAlibabaVersion = '2025.1.0.0'
-    springModulithVersion = '2.0.5'
-    springAiVersion = '2.0.0'
+    springBootVersion = '4.1.0'
+    springCloudVersion = '2025.1.2'
+    springModulithVersion = '2.1.0'
     archunitVersion = '1.4.1'
     // 数据库 / 连接池
     mysqlConnectorVersion = '9.7.0'
@@ -27,29 +25,12 @@ ext {
     redissonVersion = '4.5.0'
 
     // 工具类
-    hutoolVersion = '5.8.46'
-    guavaVersion = '33.6.0-jre'
-    commonsLang3Version = '3.20.0'
-    commonsCollections4Version = '4.5.0'
-    commonsIoVersion = '2.21.0'
     uuidCreatorVersion = '6.1.1'
     tsidCreatorVersion = '5.2.6'
     caffeineVersion = '3.2.4'
 
-    // 第三方 SDK
-    wxJavaVersion = '4.8.4-20260609.153254'
-    aliyunSmsVersion = '4.5.1'
-    aliyunDypnsapiVersion = '1.2.3'
-    tencentCloudSmsVersion = '3.1.1451'
-
     // API 文档
     springdocVersion = '3.0.3'
-
-    // 消息中间件
-    rocketMqVersion = '2.3.6'
-    // rocketmq-tools (4.x classic admin client,用于 starter 启动期主动建 topic;
-    // 与 broker 镜像版本对齐,5.x minor 版本间 remoting 协议兼容)
-    rocketMqToolsVersion = '5.5.0'
 
     // 对象存储
     minioVersion = '8.5.17'
@@ -57,7 +38,7 @@ ext {
     // 任务调度
     xxlJobVersion = '3.4.0'
 
-    // 分布式事务
+    // 分布式事务（compileOnly 可选集成，见 eagle-restclient-starter/eagle-webclient-starter 的 SeataXid 透传）
     seataVersion = '2.6.0'
 
     // 分库分表
@@ -66,18 +47,12 @@ ext {
     // 容错/熔断
     resilience4jVersion = '2.4.0'
 
-    // 支付 SDK
-    alipayVersion = '4.40.837.ALL'
-    wechatpayVersion = '0.2.17'
-
-    // 序列化
-    fastjson2Version = '2.0.62'
+    // 支付 SDK（消费方：ease-mind-servers/trade-service）
+    // alipay-sdk-java 已移除：trade-service 自实现了支付宝网关协议（无 GraalVM native-image
+    // reachability metadata 是移除动机）。微信支付渠道未启用（暂不涉及），wechatpay-java 一并移除。
 
     // Reactor / Micrometer Context Propagation
     contextPropagationVersion = '1.2.1'
-
-    // 服务发现 / 配置中心（与 docker-compose 中 nacos-server:v3.2.1 严格对齐）
-    nacosClientVersion = '3.2.1'
 
     // Office 文档
     poiVersion = '5.5.1'
@@ -87,9 +62,7 @@ dependencies {
     // 导入官方 BOM（platform 形式）
     api platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
     api platform("org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}")
-    api platform("com.alibaba.cloud:spring-cloud-alibaba-dependencies:${springCloudAlibabaVersion}")
     api platform("org.springframework.modulith:spring-modulith-bom:${springModulithVersion}")
-    api platform("org.springframework.ai:spring-ai-bom:${springAiVersion}")
 
     // 项目自管的版本约束（消费方无需写版本即可使用）
     // 用 add('api', ...) 显式调用 DependencyConstraintHandler.add，避免 IDEA 对动态 DSL 误报
@@ -108,44 +81,20 @@ dependencies {
         add('api', "org.redisson:redisson-spring-boot-starter:${redissonVersion}")
 
         // 工具类
-        add('api', "cn.hutool:hutool-all:${hutoolVersion}")
-        add('api', "com.google.guava:guava:${guavaVersion}")
-        add('api', "org.apache.commons:commons-lang3:${commonsLang3Version}")
-        add('api', "org.apache.commons:commons-collections4:${commonsCollections4Version}")
-        add('api', "commons-io:commons-io:${commonsIoVersion}")
         add('api', "com.github.f4b6a3:uuid-creator:${uuidCreatorVersion}")
         add('api', "com.github.f4b6a3:tsid-creator:${tsidCreatorVersion}")
         add('api', "com.github.ben-manes.caffeine:caffeine:${caffeineVersion}")
-
-        // 微信/第三方 SDK
-        add('api', "com.github.binarywang:weixin-java-miniapp:${wxJavaVersion}")
-        add('api', "com.aliyun:dysmsapi20170525:${aliyunSmsVersion}")
-        add('api', "com.aliyun:dypnsapi20170525:${aliyunDypnsapiVersion}")
-        add('api', "com.tencentcloudapi:tencentcloud-sdk-java-sms:${tencentCloudSmsVersion}")
-        add('api', "com.tencentcloudapi:tencentcloud-sdk-java-common:${tencentCloudSmsVersion}")
 
         // API 文档
         add('api', "org.springdoc:springdoc-openapi-starter-common:${springdocVersion}")
         add('api', "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}")
         add('api', "org.springdoc:springdoc-openapi-starter-webflux-ui:${springdocVersion}")
 
-        // 序列化
-        add('api', "com.alibaba.fastjson2:fastjson2:${fastjson2Version}")
-
         // Reactor / Micrometer Context Propagation（WebFlux 自动透传 MDC/ThreadLocal）
         add('api', "io.micrometer:context-propagation:${contextPropagationVersion}")
 
-        // Nacos 客户端（严格锁定到 server 同版本，覆盖 Spring Cloud Alibaba BOM 默认）
-        add('api', "com.alibaba.nacos:nacos-client") { version { strictly nacosClientVersion } }
-
         // Office 文档
         add('api', "org.apache.poi:poi-ooxml:${poiVersion}")
-
-        // RocketMQ
-        add('api', "org.apache.rocketmq:rocketmq-spring-boot-starter:${rocketMqVersion}")
-        add('api', "org.apache.rocketmq:rocketmq-v5-client-spring-boot-starter:${rocketMqVersion}")
-        // 4.x classic admin client,供 eagle-rocketmq-starter 启动期幂等建 topic 使用
-        add('api', "org.apache.rocketmq:rocketmq-tools:${rocketMqToolsVersion}")
 
         // 对象存储
         add('api', "io.minio:minio:${minioVersion}")
@@ -165,10 +114,6 @@ dependencies {
         add('api', "io.github.resilience4j:resilience4j-circuitbreaker:${resilience4jVersion}")
         add('api', "io.github.resilience4j:resilience4j-timelimiter:${resilience4jVersion}")
 
-        // 支付 SDK
-        add('api', "com.alipay.sdk:alipay-sdk-java:${alipayVersion}")
-        add('api', "com.github.wechatpay-apiv3:wechatpay-java:${wechatpayVersion}")
-
         // 内部 Starter 模块（消费方引用时无需写版本）
         add('api', "com.eagle:eagle-common-starter:${project.version}")
         add('api', "com.eagle:eagle-data-jpa-starter:${project.version}")
@@ -179,25 +124,16 @@ dependencies {
         add('api', "com.eagle:eagle-redis-starter:${project.version}")
         add('api', "com.eagle:eagle-resource-server-starter:${project.version}")
         add('api', "com.eagle:eagle-tracing-starter:${project.version}")
-        add('api', "com.eagle:eagle-rocketmq-starter:${project.version}")
-        add('api', "com.eagle:eagle-dynamic-datasource-starter:${project.version}")
+        add('api', "com.eagle:eagle-amqp-starter:${project.version}")
         add('api', "com.eagle:eagle-oss-minio-starter:${project.version}")
-        add('api', "com.eagle:eagle-notification-starter:${project.version}")
         add('api', "com.eagle:eagle-scheduler-starter:${project.version}")
-        add('api', "com.eagle:eagle-tenant-starter:${project.version}")
         add('api', "com.eagle:eagle-sharding-starter:${project.version}")
-        add('api', "com.eagle:eagle-excel-starter:${project.version}")
         add('api', "com.eagle:eagle-resilience-starter:${project.version}")
         add('api', "com.eagle:eagle-encrypt-starter:${project.version}")
         add('api', "com.eagle:eagle-audit-log-starter:${project.version}")
         add('api', "com.eagle:eagle-idempotency-starter:${project.version}")
         add('api', "com.eagle:eagle-id-generator-starter:${project.version}")
-        add('api', "com.eagle:eagle-sentinel-starter:${project.version}")
-        add('api', "com.eagle:eagle-seata-starter:${project.version}")
-        add('api', "com.eagle:eagle-elasticsearch-starter:${project.version}")
         add('api', "com.eagle:eagle-websocket-starter:${project.version}")
-        add('api', "com.eagle:eagle-ai-starter:${project.version}")
-        add('api', "com.eagle:eagle-zhetaoke-starter:${project.version}")
     }
 }
 

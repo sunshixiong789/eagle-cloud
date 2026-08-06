@@ -1,36 +1,29 @@
-# -------- 自托管中间件：Redis + Nacos + RocketMQ + Sentinel（正式环境，独立 16G 机器）----------
+# -------- 自托管中间件：Redis + Consul + RabbitMQ（正式环境，独立 16G 机器）----------
 #
-# 用途：在 prod 独立中间件机器（约 16G 内存）上，用 docker 跑 Redis + Nacos + RocketMQ，
+# 用途：在 prod 独立中间件机器（约 16G 内存）上，用 docker 跑 Redis + Consul + RabbitMQ，
 #       仅 PostgreSQL 走托管（资金类数据本体优先用 RDS：PITR + 多副本 + 自动备份）。
 #       应用层（docker-compose.prod.yml）在另外的机器，通过本机内网地址连这些中间件。
 #
 # ── 资源规划（独占 16G，预留约 2g 给 OS / pagecache）──
-#   nacos      limit 2g    / JVM_XMX 1.5g  （堆必须 < limit，留头部给 metaspace/线程/直接内存）
-#   broker     limit 6g    / -Xmx4g        （另需 OS pagecache 映射 commitlog，limit 给足）
-#   namesrv    limit 1g    / -Xmx768m
-#   proxy      limit 1.5g  / -Xmx1g
+#   consul     limit 512m  （单节点 dev-friendly server，无需大堆）
+#   rabbitmq   limit 1g    （Erlang VM，无需单独设 JVM 堆）
 #   redis      limit 3g    / maxmemory 2g
-#   rmq-dash   limit 512m  / -Xmx384m
-#   sentinel   limit 768m  / -Xmx512m
-#   合计 ≈ 14.8g（留 ~1.2g 给 OS；嫌紧可删 rmq dashboard 省 512m）
+#   合计 ≈ 4.5g（比 Nacos+RocketMQ+Sentinel 集群省下 10g+，可视负载上调 redis/rabbitmq limit）
 #   ⚠️ 改内存时务必「mem_limit 和 JVM 堆 / maxmemory 一起改」，只改一个没用。
 #
 # ── 跨机连接（应用在别的机器）──
 #   端口已绑 0.0.0.0 对外暴露，应用机的 .env.prod.prod 里把 host 填本机内网 IP：
 #     REDIS_HOST=<中间件机内网IP>
-#     NACOS_SERVER_ADDR=<中间件机内网IP>:8848
-#     ROCKETMQ_ENDPOINTS=<中间件机内网IP>:8081
-#     ROCKETMQ_NAME_SERVER=<中间件机内网IP>:9876
-#   ⚠️ RocketMQ broker 的 brokerIP1 必须改成本机内网 IP（见 broker 注释），否则应用机连不上。
+#     CONSUL_HOST=<中间件机内网IP>
+#     RABBITMQ_HOST=<中间件机内网IP>
 #   ⚠️ 这些端口绝不能暴露公网，务必用安全组 / 防火墙只放行应用机内网 IP。
 #
 # ── 启动 ──
 #   docker compose -f docker-compose.middleware.yml --env-file .env.prod.prod up -d
 #
 # ⚠️ 持久化：
-#   - Nacos standalone 内嵌 Derby，配置存卷，卷丢=配置全丢；生产建议接外部 MySQL（见 nacos 注释）或定期导出。
-#   - RocketMQ store 在本地卷，磁盘坏=消息丢；定期备份 store + 消费端幂等（项目规则已要求）。
-#   - autoCreateTopicEnable 默认 true；生产建议 .env.prod.prod 设 ROCKETMQ_AUTO_CREATE_TOPIC=false 并预创建 topic。
+#   - Consul 单节点无 Raft 多数派保护，卷丢=服务目录全丢；生产建议 ≥3 节点集群或定期快照。
+#   - RabbitMQ 数据在本地卷，磁盘坏=消息丢；定期备份卷 + 消费端幂等（项目规则已要求）。
 
 networks:
   eagle-network:
@@ -39,11 +32,8 @@ networks:
 
 volumes:
   redis-data:
-  nacos-data:
-  rocketmq-namesrv-logs:
-  rocketmq-broker-logs:
-  rocketmq-broker-store:
-  sentinel-data:
+  consul-data:
+  rabbitmq-data:
 
 services:
   # ─────────────────────────────── Redis ───────────────────────────────
@@ -72,197 +62,53 @@ services:
       retries: 5
       start_period: 10s
 
-  # ─────────────────────────────── Nacos ───────────────────────────────
-  nacos:
-    image: nacos/nacos-server:v3.2.1
-    container_name: eagle-nacos
+  # ─────────────────────────────── Consul ───────────────────────────────
+  consul:
+    image: hashicorp/consul:1.20
+    container_name: eagle-consul
     restart: always
     ports:
-      # 8090=控制台(容器内 8080) / 8848=OpenAPI / 9848=gRPC
-      - "8090:8080"
-      - "8848:8848"
-      - "9848:9848"
+      - "8500:8500"       # HTTP API + Web UI
+      - "8600:8600/udp"   # DNS
     networks:
       - eagle-network
     environment:
-      - PREFER_HOST_MODE=${NACOS_PREFER_HOST_MODE:-hostname}
-      - MODE=${NACOS_MODE:-standalone}
-      - NACOS_AUTH_IDENTITY_KEY=${NACOS_AUTH_IDENTITY_KEY:-serverIdentity}
-      - NACOS_AUTH_IDENTITY_VALUE=${NACOS_AUTH_IDENTITY_VALUE:-security}
-      - NACOS_AUTH_TOKEN=${NACOS_AUTH_TOKEN:-VGhpc0lzTXlDdXN0b21TZWNyZXRLZXkwMTIzNDU2Nzg=}
-      # 堆 1.5g（与 mem_limit 2g 配套：堆必须 < limit，留头部给 metaspace/线程/直接内存，否则 OOM kill）
-      - JVM_XMS=${NACOS_JVM_XMS:-1536m}
-      - JVM_XMX=${NACOS_JVM_XMX:-1536m}
-      - JVM_XMN=${NACOS_JVM_XMN:-768m}
       - TZ=${TZ:-Asia/Shanghai}
-      # ── 可选：外部 MySQL 持久化（生产强烈建议；替代易丢的内嵌 Derby）──
-      # MySQL 需预建 nacos 库 + 导入官方 nacos-mysql.sql，再取消下面注释并在 .env.prod.prod 填值
-      # - SPRING_DATASOURCE_PLATFORM=mysql
-      # - MYSQL_SERVICE_HOST=${NACOS_MYSQL_HOST}
-      # - MYSQL_SERVICE_PORT=${NACOS_MYSQL_PORT:-3306}
-      # - MYSQL_SERVICE_DB_NAME=${NACOS_MYSQL_DB:-nacos}
-      # - MYSQL_SERVICE_USER=${NACOS_MYSQL_USER}
-      # - MYSQL_SERVICE_PASSWORD=${NACOS_MYSQL_PASSWORD}
-      # - MYSQL_SERVICE_DB_PARAM=characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false&serverTimezone=Asia/Shanghai
-    mem_limit: 2048m
-    mem_reservation: 1024m
-    volumes:
-      - nacos-data:/home/nacos/data
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -fsS -o /dev/null -m 3 http://127.0.0.1:8080/ || exit 1" ]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-      start_period: 60s
-
-  # ────────────────────────── RocketMQ NameServer ──────────────────────────
-  rocketmq-namesrv:
-    image: apache/rocketmq:5.3.2
-    container_name: eagle-rocketmq-namesrv
-    restart: always
-    user: root
-    ports:
-      - "9876:9876"
-    networks:
-      - eagle-network
-    environment:
-      - JAVA_OPT_EXT=${ROCKETMQ_NAMESRV_JAVA_OPT_EXT:--server -Xms768m -Xmx768m -Xmn384m}
-      - TZ=${TZ:-Asia/Shanghai}
-    command:
-      - sh
-      - -c
-      - |
-        set -e
-        mkdir -p /home/rocketmq/logs/rocketmqlogs
-        exec sh mqnamesrv
-    mem_limit: 1024m
-    mem_reservation: 512m
-    volumes:
-      - rocketmq-namesrv-logs:/home/rocketmq/logs
-
-  # ──────────────────────────── RocketMQ Broker ────────────────────────────
-  # 单机 master（无 slave）。
-  # ⚠️ 跨机部署：brokerIP1 必须改成本机内网 IP（应用在别的机器，靠这个 IP 回连 broker）。
-  #    在 .env.prod.prod 里设 ROCKETMQ_BROKER_IP=<中间件机内网IP>，下方 broker.conf 会用它。
-  rocketmq-broker:
-    image: apache/rocketmq:5.3.2
-    container_name: eagle-rocketmq-broker
-    restart: always
-    user: root
-    ports:
-      - "10909:10909"   # VIP channel
-      - "10911:10911"   # 主端口（读写）
-      - "10912:10912"   # HA 同步端口
-    networks:
-      - eagle-network
-    depends_on:
-      - rocketmq-namesrv
-    environment:
-      - NAMESRV_ADDR=${ROCKETMQ_NAMESRV_ADDR:-rocketmq-namesrv:9876}
-      # 正式环境堆 4g（与 mem_limit 6g 配套，余 2g 给 OS pagecache 映射 commitlog）
-      - JAVA_OPT_EXT=${ROCKETMQ_BROKER_JAVA_OPT_EXT:--server -Xms4g -Xmx4g -Xmn2g}
-      - TZ=${TZ:-Asia/Shanghai}
-    # brokerIP1 用 ${ROCKETMQ_BROKER_IP:-rocketmq-broker}：单机同网络默认服务名即可；
-    # 跨机（应用在别的机器）必须在 .env.prod.prod 设 ROCKETMQ_BROKER_IP=<本机内网IP>
-    # autoCreateTopicEnable 生产建议 .env.prod.prod 设 ROCKETMQ_AUTO_CREATE_TOPIC=false 并预创建 topic
-    command:
-      - sh
-      - -c
-      - |
-        set -e
-        mkdir -p /home/rocketmq/store /home/rocketmq/logs/rocketmqlogs
-        cat > /home/rocketmq/broker.conf <<'EOF'
-        brokerIP1=${ROCKETMQ_BROKER_IP:-rocketmq-broker}
-        brokerName=broker-a
-        brokerId=0
-        brokerClusterName=DefaultCluster
-        namesrvAddr=rocketmq-namesrv:9876
-        storePathRootDir=/home/rocketmq/store
-        autoCreateTopicEnable=${ROCKETMQ_AUTO_CREATE_TOPIC:-true}
-        autoCreateSubscriptionGroup=true
-        EOF
-        exec sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/broker.conf
-    mem_limit: 6144m
-    mem_reservation: 3072m
-    volumes:
-      - rocketmq-broker-logs:/home/rocketmq/logs
-      - rocketmq-broker-store:/home/rocketmq/store
-
-  # ───────────────────────────── RocketMQ Proxy ─────────────────────────────
-  rocketmq-proxy:
-    image: apache/rocketmq:5.3.2
-    container_name: eagle-rocketmq-proxy
-    restart: always
-    user: root
-    ports:
-      - "8081:8081"
-    networks:
-      - eagle-network
-    depends_on:
-      - rocketmq-namesrv
-      - rocketmq-broker
-    environment:
-      - NAMESRV_ADDR=${ROCKETMQ_NAMESRV_ADDR:-rocketmq-namesrv:9876}
-      - JAVA_OPT_EXT=${ROCKETMQ_PROXY_JAVA_OPT_EXT:--server -Xms1g -Xmx1g -Xmn512m}
-      - TZ=${TZ:-Asia/Shanghai}
-    command:
-      - sh
-      - -c
-      - |
-        set -e
-        mkdir -p /home/rocketmq/logs/rocketmqlogs
-        exec sh mqproxy -n rocketmq-namesrv:9876
-    mem_limit: 1536m
-    mem_reservation: 768m
-
-  # ─────────────────────────── RocketMQ Dashboard ───────────────────────────
-  # 可视化控制台（可选）；不需要可整段删除以省内存
-  rocketmq-dashboard:
-    image: apacherocketmq/rocketmq-dashboard:1.0.0
-    container_name: eagle-rocketmq-dashboard
-    restart: always
-    ports:
-      - "8180:8080"
-    networks:
-      - eagle-network
-    depends_on:
-      - rocketmq-namesrv
-      - rocketmq-broker
-    environment:
-      - JAVA_OPTS=${ROCKETMQ_DASHBOARD_JAVA_OPTS:--server -Xms128m -Xmx384m -Drocketmq.namesrv.addr=rocketmq-namesrv:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false}
-      - TZ=${TZ:-Asia/Shanghai}
+    command: agent -server -bootstrap-expect=1 -ui -client=0.0.0.0 -data-dir=/consul/data
     mem_limit: 512m
     mem_reservation: 256m
+    volumes:
+      - consul-data:/consul/data
+    healthcheck:
+      test: [ "CMD", "wget", "-qO-", "http://127.0.0.1:8500/v1/status/leader" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
-  # ─────────────────────────── Sentinel Dashboard ───────────────────────────
-  # 限流规则管理 UI（规则源在 Nacos，容器本身无状态，挂了重启不影响业务）。
-  # gateway 通过 SENTINEL_DASHBOARD=<本机内网IP>:8858 上报心跳 + 拉规则（跨机时 .env.prod.prod 填本机内网 IP）。
-  # ⚠️ 1.8.6+ 默认登录 sentinel/sentinel，务必在 .env.prod.prod 的 SENTINEL_JAVA_OPTS 追加：
-  #    -Dsentinel.dashboard.auth.username=xxx -Dsentinel.dashboard.auth.password=xxx
-  # 镜像本地构建（拉官方 fat jar），需要本目录下有 ./sentinel-dashboard/Dockerfile
-  sentinel-dashboard:
-    build:
-      context: ./sentinel-dashboard
-      args:
-        SENTINEL_VERSION: 1.8.9
-    image: eagle-sentinel-dashboard:1.8.9
-    pull_policy: build
-    container_name: eagle-sentinel
+  # ──────────────────────────────── RabbitMQ ────────────────────────────────
+  # management 插件自带可视化控制台（15672），单容器承载 broker + 管理界面。
+  rabbitmq:
+    image: rabbitmq:4.2-management
+    container_name: eagle-rabbitmq
     restart: always
     ports:
-      - "8858:8858"
+      - "5672:5672"    # AMQP
+      - "15672:15672"  # management 控制台
     networks:
       - eagle-network
     environment:
-      - JAVA_OPTS=${SENTINEL_JAVA_OPTS:--server -XX:+UseG1GC -Xms256m -Xmx512m -Dserver.port=8858 -Dcsp.sentinel.dashboard.server=localhost:8858 -Dproject.name=sentinel-dashboard}
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-guest}
+      - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_VHOST:-/}
       - TZ=${TZ:-Asia/Shanghai}
     volumes:
-      - sentinel-data:/sentinel-dashboard
-    mem_limit: 768m
-    mem_reservation: 384m
+      - rabbitmq-data:/var/lib/rabbitmq
+    mem_limit: 1024m
+    mem_reservation: 512m
     healthcheck:
-      test: [ "CMD-SHELL", "wget -qO- http://127.0.0.1:8858/ > /dev/null 2>&1 || exit 1" ]
-      interval: 30s
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 60s
+      start_period: 30s

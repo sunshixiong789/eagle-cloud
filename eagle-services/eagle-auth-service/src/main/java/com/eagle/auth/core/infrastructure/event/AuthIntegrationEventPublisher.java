@@ -7,7 +7,7 @@ import com.eagle.auth.core.infrastructure.event.integration.AccountDeletedIntegr
 import com.eagle.auth.core.infrastructure.event.integration.AccountPhoneChangedIntegrationEvent;
 import com.eagle.auth.core.infrastructure.event.integration.AccountRegisteredIntegrationEvent;
 import com.eagle.auth.core.infrastructure.remote.SystemUserSyncClient;
-import com.eagle.rocketmq.publisher.DomainEventPublisher;
+import com.eagle.amqp.publisher.DomainEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -19,11 +19,8 @@ import org.springframework.transaction.event.TransactionalEventListener;
  * Auth 域跨服务集成事件桥接器。
  *
  * <p>把 auth 内部的领域事件（record）转换为 {@code extends BaseEvent} 的集成事件，发布到
- * RocketMQ topic {@code eagle_auth_events}（tag 按事件类型区分），供 system-service /
+ * AMQP exchange {@code eagle_auth_events}（routing key 按事件类型区分），供 system-service /
  * 其他下游服务消费。
- *
- * <p><strong>Topic 命名</strong>:RocketMQ 5.x gRPC 客户端强制 topic 匹配
- * {@code ^[%a-zA-Z0-9_-]+$}（禁止点号），因此用下划线分隔而非点号。
  *
  * <p>当前发布的跨服务集成事件:
  * <ul>
@@ -43,8 +40,8 @@ import org.springframework.transaction.event.TransactionalEventListener;
  *
  * <p>所有发布在 {@code AFTER_COMMIT} 阶段触发并 {@code @Async}，主事务无任何同步阻塞。
  *
- * <p><strong>Topic 命名约定</strong>:本 topic 故意<em>不</em>拼 {@code eagle.rocketmq.topic-env-prefix},
- * 走字面 {@code eagle_auth_events}(环境通过独立 RocketMQ 集群 / Nacos namespace 隔离,
+ * <p><strong>Topic 命名约定</strong>:本 topic 故意<em>不</em>拼 {@code eagle.amqp.exchange-prefix},
+ * 走字面 {@code eagle_auth_events}(环境通过独立 broker 集群 / vhost 隔离,
  * topic 名本身不带 env 前缀,见 rules/15-messaging.md)。
  * 消费侧 {@code AccountRegisteredConsumer} / {@code AccountDeletedConsumer} 必须严格一致,
  * 不要在 {@code getTopic()} 里拼 prefix。
@@ -74,7 +71,7 @@ public class AuthIntegrationEventPublisher {
             // MQ 投递失败(broker 不可达 / gRPC 连接关闭 / 超时等)→ 同步 HTTP 兜底,
             // 保证 base_user 镜像不因 broker 抖动而永久缺失。下游已通过 existsByAccountId
             // + DB 唯一索引兜住幂等,即使后续 MQ 恢复重投递也不会重复创建 user。
-            log.warn("RocketMQ publish failed, falling back to HTTP sync, accountId={}",
+            log.warn("AMQP publish failed, falling back to HTTP sync, accountId={}",
                     event.accountId(), mqEx);
             try {
                 systemUserSyncClient.syncFromAccount(integration);

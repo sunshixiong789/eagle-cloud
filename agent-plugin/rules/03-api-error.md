@@ -140,7 +140,7 @@ public enum OrderErrorCode implements ErrorCode {
 | 10000–10999 | 用户域 `UserErrorCode` |
 | 11000–11999 | 认证域 `AuthErrorCode` |
 | 12000–15999 | common-starter：`DataErrorCode` / `OperationErrorCode` / `FileErrorCode` / `ExternalErrorCode` |
-| 16000–16999 | rocketmq-starter |
+| 16000–16999 | amqp-starter |
 | 17000–17999 | notification-starter |
 | 20000–29999 | 系统管理域 `SystemErrorCode` |
 | 30500–30599 | 消息 / 公告域 |

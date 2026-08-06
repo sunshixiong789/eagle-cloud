@@ -23,8 +23,6 @@ public class EagleRestClientCustomizer implements RestClientCustomizer {
 
     private final List<? extends ClientHttpRequestInterceptor> baseInterceptors;
 
-    private final List<? extends ClientHttpRequestInterceptor> tenantInterceptors;
-
     private final List<? extends ClientHttpRequestInterceptor> seataInterceptors;
 
     private final EagleResponseErrorHandler errorHandler;
@@ -33,7 +31,6 @@ public class EagleRestClientCustomizer implements RestClientCustomizer {
     public void customize(RestClient.Builder builder) {
         builder.requestInterceptors(interceptors -> {
             interceptors.addAll(baseInterceptors);
-            interceptors.addAll(tenantInterceptors);
             interceptors.addAll(seataInterceptors);
         });
 

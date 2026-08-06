@@ -22,15 +22,12 @@ public class EagleWebClientCustomizer {
 
     private final List<? extends ExchangeFilterFunction> baseFilters;
 
-    private final List<? extends ExchangeFilterFunction> tenantFilters;
-
     private final List<? extends ExchangeFilterFunction> seataFilters;
 
     private final EagleWebClientErrorFilter errorFilter;
 
     public void customize(WebClient.Builder builder) {
         baseFilters.forEach(builder::filter);
-        tenantFilters.forEach(builder::filter);
         seataFilters.forEach(builder::filter);
 
         if (properties.isErrorHandlerEnabled()) {

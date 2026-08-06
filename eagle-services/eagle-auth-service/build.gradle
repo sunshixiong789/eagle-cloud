@@ -2,9 +2,8 @@ dependencies {
     implementation project(':eagle-starter:eagle-data-jpa-starter')
     implementation project(':eagle-starter:eagle-resource-server-starter')
     implementation project(':eagle-starter:eagle-resilience-starter')
-    implementation project(':eagle-starter:eagle-notification-starter')
     implementation project(':eagle-starter:eagle-websocket-starter')
-    implementation project(':eagle-starter:eagle-rocketmq-starter')
+    implementation project(':eagle-starter:eagle-amqp-starter')
     implementation project(':eagle-starter:eagle-openapi-starter')
     implementation project(':eagle-starter:eagle-audit-log-starter')
     implementation project(':eagle-starter:eagle-encrypt-starter')
@@ -19,7 +18,7 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
 
     // Nacos 服务注册与发现
-    implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery'
+    implementation 'org.springframework.cloud:spring-cloud-starter-consul-discovery'
 
     // 微信小程序登录只用 sns/jscode2session 一个接口，已改为 RestClient 直调
     // （WechatMiniProgramServiceImpl），与 WechatWebServiceImpl 走同一套手写实现，
@@ -31,8 +30,6 @@ dependencies {
     // 还夹带一个 org.jacoco.agent-runtime。要接真实 provider 时再按需引回。
 
     implementation "com.github.ben-manes.caffeine:caffeine"
-    // auth 内的 LoginRateLimitFilter / TokenTrackingHandler / OnlineUserAdapter 直接用 fastjson2
-    implementation "com.alibaba.fastjson2:fastjson2"
 
     // 淘宝官方 TOP SDK（本地 jar，无 Nexus/Maven 坐标；与 ease-mind-servers 的
     // zhetaoke-starter/libs 下同一份 jar 一致）：TaobaoServiceImpl 调

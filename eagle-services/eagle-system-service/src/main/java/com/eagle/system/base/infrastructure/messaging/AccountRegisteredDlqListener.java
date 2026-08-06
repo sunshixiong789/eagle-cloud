@@ -3,8 +3,8 @@ package com.eagle.system.base.infrastructure.messaging;
 import com.eagle.common.alert.AlertEvent;
 import com.eagle.common.alert.AlertService;
 import com.eagle.common.alert.AlertSeverity;
-import com.eagle.rocketmq.listener.AbstractDlqListener;
-import com.eagle.rocketmq.properties.RocketMqProperties;
+import com.eagle.amqp.listener.AbstractDlqListener;
+import com.eagle.amqp.properties.AmqpProperties;
 import com.eagle.system.base.domain.model.DeadLetterRecord;
 import com.eagle.system.base.domain.repository.DeadLetterRecordRepository;
 import com.eagle.system.base.infrastructure.messaging.event.AccountRegisteredMessage;
@@ -15,7 +15,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.Map;
 
 /**
- * AccountRegistered DLQ 兜底 —— RocketMQ 重试 16 次仍失败时进入此处。
+ * AccountRegistered DLQ 兜底 —— 重试耗尽（{@code eagle.amqp.consumer.max-attempts}）仍失败时进入此处。
  * <p>
  * 业务影响:auth-service 已创建 Account,但 base 域 User 创建失败 — 数据不一致,
  * 后续登录时 {@code RemoteAuthorizationAdapter} 会查不到 user(返回 empty),
@@ -35,7 +35,7 @@ public class AccountRegisteredDlqListener extends AbstractDlqListener<AccountReg
     private final DeadLetterRecordRepository deadLetterRepository;
     private final ObjectMapper objectMapper;
 
-    public AccountRegisteredDlqListener(RocketMqProperties props,
+    public AccountRegisteredDlqListener(AmqpProperties props,
                                         AlertService alertService,
                                         DeadLetterRecordRepository deadLetterRepository,
                                         ObjectMapper objectMapper) {
@@ -43,6 +43,11 @@ public class AccountRegisteredDlqListener extends AbstractDlqListener<AccountReg
         this.alertService = alertService;
         this.deadLetterRepository = deadLetterRepository;
         this.objectMapper = objectMapper;
+    }
+
+    @Override
+    protected String getOriginalTopic() {
+        return AccountRegisteredConsumer.TOPIC;
     }
 
     @Override
@@ -89,7 +94,7 @@ public class AccountRegisteredDlqListener extends AbstractDlqListener<AccountReg
                     payload,
                     "base 域 User 创建失败 - 详见 MDC traceId 关联的业务异常"));
         } catch (RuntimeException ex) {
-            // 落库失败不能阻塞 RocketMQ ack —— 至少 ERROR 日志 + 告警还在
+            // 落库失败不能阻塞 AMQP ack —— 至少 ERROR 日志 + 告警还在
             log.error("persist dead letter failed, eventId={}", event.getEventId(), ex);
         }
     }

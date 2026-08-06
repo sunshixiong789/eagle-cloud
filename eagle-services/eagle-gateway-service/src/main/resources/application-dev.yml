@@ -3,29 +3,10 @@
 # 与基线相比的覆盖：
 #   - Actuator 暴露调试端点 + details=always
 #   - 日志 com.eagle=DEBUG
-# 其余（Nacos / Sentinel transport / lb 路由 / CORS=* / Swagger 开）使用基线 + 环境变量。
+# 其余（Consul 注册 / lb 路由 / CORS=* / Swagger 开）使用基线 + 环境变量。
 # ===========================================
 
 spring:
-  # dev 环境默认沿用 Nacos 内置 public 命名空间。
-  # 注意：Spring Boot 4 占位符行为变化——${VAR:default} 在 VAR 已定义但为空时也会用 default，
-  # 因此默认值必须是 Nacos 已存在的 namespace ID。若改为不存在的 ID（如 dev），Nacos 3 对注册
-  # 路径会 fallback 到 public、查询路径不 fallback，导致 gateway/system 错位看不到彼此。
-  # 真要做环境隔离请优先用独立 Nacos 集群；若用 namespace，请显式在 .env.prod 设 NACOS_NAMESPACE
-  # 并在 Nacos 控制台预创建对应 ID。
-  cloud:
-    nacos:
-      discovery:
-        namespace: ${NACOS_NAMESPACE:public}
-    sentinel:
-      datasource:
-        ds-flow:
-          nacos:
-            namespace: ${NACOS_NAMESPACE:public}
-        ds-degrade:
-          nacos:
-            namespace: ${NACOS_NAMESPACE:public}
-
 management:
   endpoints:
     web:

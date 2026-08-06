@@ -2,7 +2,7 @@
 # Eagle System Server · 基线配置（承载全部默认）
 # 设计原则：
 #   - application.yml 承载完整配置；profile 文件只声明"开发/线上不一样"的差异
-#   - 环境变量仅暴露外部接入字段：数据源/Redis/Nacos 连接信息、凭证、白名单
+#   - 环境变量仅暴露外部接入字段：数据源/Redis/Consul 连接信息、凭证、白名单
 #   - 默认值取"生产安全"基线（validate / show-sql=false / details=never / WARN 日志）
 #     dev/local profile 显式打开调试便利
 # ===========================================
@@ -42,20 +42,24 @@ spring:
     timeout-per-shutdown-phase: 30s
 
   cloud:
-    nacos:
+    consul:
+      host: ${CONSUL_HOST:localhost}
+      port: ${CONSUL_PORT:8500}
       discovery:
-        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
-        namespace: ${NACOS_NAMESPACE:}
-        group: ${NACOS_GROUP:DEFAULT_GROUP}
-        # Nacos 3.0+ 默认开启鉴权（nacos.core.auth.enabled=true），客户端必须传账号密码
-        username: ${NACOS_USERNAME:nacos}
-        password: ${NACOS_PASSWORD:}
+        enabled: ${CONSUL_DISCOVERY_ENABLED:true}
+        register: true
         # 多机部署时显式注入宿主机/可达 IP；单机 docker 部署留空，客户端自动取容器 IP
-        ip: ${NACOS_REGISTER_IP:}
-        # 实例 metadata：网关按 spring-doc 聚合 OpenAPI，对应 /v3/api-docs/system
-        metadata:
-          spring-doc: system
-          spring-doc-name: System Server
+        prefer-ip-address: true
+        ip-address: ${CONSUL_INSTANCE_IP:}
+        service-name: ${spring.application.name}
+        instance-id: ${spring.application.name}-${random.value}
+        health-check-path: /actuator/health
+        health-check-interval: 10s
+        health-check-critical-timeout: 30s
+        # 实例 tag：网关按 spring-doc 聚合 OpenAPI，对应 /v3/api-docs/system
+        tags:
+          - spring-doc=system
+          - spring-doc-name=System Server
 
   # ---- 数据源:PostgreSQL(环境变量驱动连接信息) ----
   # 注:Schema 当前由 Hibernate ddl-auto=update 同步;Flyway 后期统一引入。
@@ -119,6 +123,16 @@ spring:
           max-wait: ${REDIS_POOL_MAX_WAIT:2000ms}
         shutdown-timeout: 1000ms
 
+  # ---- RabbitMQ 连接（取代 RocketMQ 的 endpoints）----
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+
   # ---- OAuth2 资源服务器:直连 auth-service JWKS endpoint ----
   # 24f3f21/f7e82eb 拆出 auth-service 后,本服务作为纯资源服务器,JwtDecoder 必须有 jwk-set-uri 才能创建。
   # 直连 JWKS(不走 issuer-uri OIDC discovery)避免容器启动早于 auth 时的 503 + 重启风暴(参考既往 bug)。
@@ -159,14 +173,13 @@ eagle:
       # K8s liveness/readiness 探针:/actuator/health/liveness、/actuator/health/readiness
       # starter DEFAULT_PERMIT_PATHS 仅放行 /actuator/health,需追加 /** 覆盖子路径
       - /actuator/health/**
-  # ----- RocketMQ -----
+  # ----- AMQP -----
   # 既消费站内消息,也消费 auth-service 的集成事件(eagle_auth_events)
   # starter 已无 enabled 总开关:auto-configuration 装即生效;
-  # 本地无 broker 时让 endpoints 指向不可达地址即可,Consumer/Publisher 启动后日志告警但不影响应用启动
-  rocketmq:
-    endpoints: ${ROCKETMQ_ENDPOINTS:localhost:8081}
+  # 本地无 broker 时让 spring.rabbitmq.host 指向不可达地址即可,Consumer/Publisher 启动后日志告警但不影响应用启动
+  amqp:
     consumer-group: system_consumer
-    topic-env-prefix: ${ROCKETMQ_TOPIC_ENV_PREFIX:dev_}
+    exchange-prefix: ${RABBITMQ_EXCHANGE_PREFIX:dev_}
   # ----- 文件存储(eagle-oss-minio-starter) -----
   # type 默认 local,本地文件系统存储;生产应切到 minio
   storage:

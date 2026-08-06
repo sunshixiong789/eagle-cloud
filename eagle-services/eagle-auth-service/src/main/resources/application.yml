@@ -2,7 +2,7 @@
 # Eagle Auth Service · 基线配置（Servlet + JPA + PostgreSQL）
 # 设计原则：
 #   - application.yml 承载完整配置；profile 文件仅声明"开发/线上不一样"的差异
-#   - 环境变量仅暴露外部接入字段：数据源/Redis/Nacos 连接信息、凭证、白名单
+#   - 环境变量仅暴露外部接入字段：数据源/Redis/Consul 连接信息、凭证、白名单
 #   - 默认值取"生产安全"基线（validate / show-sql=false / details=never / WARN 日志）
 # ===========================================
 
@@ -23,17 +23,23 @@ spring:
     timeout-per-shutdown-phase: 30s
 
   cloud:
-    nacos:
+    consul:
+      host: ${CONSUL_HOST:localhost}
+      port: ${CONSUL_PORT:8500}
       discovery:
-        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
-        namespace: ${NACOS_NAMESPACE:}
-        group: ${NACOS_GROUP:DEFAULT_GROUP}
-        username: ${NACOS_USERNAME:nacos}
-        password: ${NACOS_PASSWORD:}
-        ip: ${NACOS_REGISTER_IP:}
-        metadata:
-          spring-doc: auth
-          spring-doc-name: Auth Service
+        enabled: ${CONSUL_DISCOVERY_ENABLED:true}
+        register: true
+        # 用 IP 注册而非 hostname：容器内 hostname 是容器 ID，跨主机不可达。
+        prefer-ip-address: true
+        ip-address: ${CONSUL_INSTANCE_IP:}
+        service-name: ${spring.application.name}
+        instance-id: ${spring.application.name}-${random.value}
+        health-check-path: /actuator/health
+        health-check-interval: 10s
+        health-check-critical-timeout: 30s
+        tags:
+          - spring-doc=auth
+          - spring-doc-name=Auth Service
 
   # ---- 数据源：PostgreSQL（环境变量驱动连接信息）----
   datasource:
@@ -106,6 +112,16 @@ spring:
           max-wait: ${REDIS_POOL_MAX_WAIT:2000ms}
         shutdown-timeout: 1000ms
 
+  # ---- RabbitMQ 连接（取代 RocketMQ 的 endpoints）----
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+
 # ===========================================
 # Eagle 业务配置（仅 auth 域相关）
 # ===========================================
@@ -143,10 +159,9 @@ eagle:
   remember-me:
     key: ${EAGLE_REMEMBER_ME_KEY}
     validity: 14d
-  rocketmq:
-    endpoints: ${ROCKETMQ_ENDPOINTS:localhost:8081}
+  amqp:
     consumer-group: auth_consumer
-    topic-env-prefix: ${ROCKETMQ_TOPIC_ENV_PREFIX:dev_}
+    exchange-prefix: ${RABBITMQ_EXCHANGE_PREFIX:dev_}
   websocket:
     endpoint: /ws-stomp
     app-prefix: /message

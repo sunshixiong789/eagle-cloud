@@ -1,7 +1,7 @@
 # ===========================================
 # Gateway 本地开发差异
 # 与基线相比的覆盖：
-#   - 关闭 Nacos / Sentinel
+#   - 关闭 Consul 服务发现
 #   - 路由从 lb:// 切换为本地静态地址 http://localhost:80
 #   - 关闭 OpenAPI 服务发现聚合，手动配置 swagger urls
 #   - Actuator 暴露调试端点 + details=always
@@ -11,57 +11,9 @@
 
 spring:
   cloud:
-    nacos:
+    consul:
       discovery:
         enabled: false
-    sentinel:
-      enabled: false
-    gateway:
-      server:
-        webflux:
-          # 本地用静态地址路由（覆盖基线的 lb://）
-          routes:
-            - id: system-server-ws
-              uri: ws://localhost:80
-              predicates:
-                - Path=/system/ws-stomp,/system/ws-stomp/**
-              filters:
-                - StripPrefix=1
-            - id: system-server-api-docs
-              uri: http://localhost:80
-              predicates:
-                - Path=/v3/api-docs/eagle-system-server
-              filters:
-                - SetPath=/v3/api-docs
-              metadata:
-                response-timeout: 10000
-                connect-timeout: 3000
-            - id: system-server
-              uri: http://localhost:80
-              predicates:
-                - Path=/api/system/**,/oauth2/**,/.well-known/**,/userinfo,/login,/login/**,/logout,/connect/**,/accounts/**,/sms/**
-              filters:
-                - StripPrefix=0
-              metadata:
-                response-timeout: 30000
-                connect-timeout: 3000
-            # /auth/userinfo 前端别名：StripPrefix=1 → 下游收到标准 /userinfo
-            - id: auth-userinfo-alias
-              uri: http://localhost:80
-              predicates:
-                - Path=/auth/userinfo
-              filters:
-                - StripPrefix=1
-              metadata:
-                response-timeout: 30000
-                connect-timeout: 3000
-            - id: default
-              uri: http://localhost:80
-              predicates:
-                - Path=/api/**
-              metadata:
-                response-timeout: 30000
-                connect-timeout: 3000
 
 management:
   endpoints:
@@ -76,9 +28,9 @@ management:
 eagle:
   gateway:
     openapi:
-      discovery-enabled: false                  # 本地无 Nacos，关闭服务发现聚合
+      discovery-enabled: false                  # 本地无注册中心，关闭服务发现聚合
     routes:
-      enabled: false                            # 本地无 Nacos，关闭服务发现路由生成；走上方静态路由
+      enabled: false                            # 本地无注册中心，关闭服务发现路由生成；走上方静态路由
 
 # 本地手动聚合 Swagger 文档源
 springdoc:

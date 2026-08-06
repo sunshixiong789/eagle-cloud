@@ -12,8 +12,6 @@ dependencies {
     // 类编译需要 HttpServletRequest 符号，运行时由 servlet web 服务自身提供
     compileOnly 'jakarta.servlet:jakarta.servlet-api'
 
-    // 可选：租户 ID 透传（eagle-tenant-starter 引入时生效）
-    compileOnly project(':eagle-starter:eagle-tenant-starter')
     // 可选：Seata 分布式事务 XID 透传（seata-spring-boot-starter 引入时生效）
     compileOnly 'org.apache.seata:seata-spring-boot-starter'
 

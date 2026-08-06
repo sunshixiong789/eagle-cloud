@@ -2,8 +2,8 @@
  * 站内消息模块（Message Bounded Context）。
  *
  * <p><strong>定位</strong>：平台级横切能力——通用站内消息中心。任何业务方需要给用户发站内信，
- * 通过发布 {@link com.eagle.rocketmq.events.SendUserMessageIntegrationEvent}
- * 到 {@link com.eagle.rocketmq.events.CommonMessageTopics#USER_MESSAGE_SEND}
+ * 通过发布 {@link com.eagle.amqp.events.SendUserMessageIntegrationEvent}
+ * 到 {@link com.eagle.amqp.events.CommonMessageTopics#USER_MESSAGE_SEND}
  * 即可，本模块统一消费、落库、推送。
  *
  * <p><strong>职责</strong>：

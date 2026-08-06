@@ -1,14 +1,11 @@
 package com.eagle.gateway.config;
 
-import com.alibaba.nacos.client.naming.event.InstancesChangeEvent;
-import com.alibaba.nacos.common.notify.Event;
-import com.alibaba.nacos.common.notify.NotifyCenter;
-import com.alibaba.nacos.common.notify.listener.Subscriber;
+import org.springframework.cloud.client.discovery.event.HeartbeatEvent;
+import org.springframework.context.event.EventListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.properties.AbstractSwaggerUiConfigProperties.SwaggerUrl;
 import org.springdoc.core.properties.SwaggerUiConfigProperties;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.cloud.client.ServiceInstance;
@@ -24,15 +21,15 @@ import java.util.Set;
 /**
  * 网关 OpenAPI 聚合配置。
  *
- * <p>下游服务在 Nacos 实例 metadata 中声明 {@code spring-doc=<alias>} 即可被聚合，无需在网关侧维护服务清单。
+ * <p>下游服务在注册中心实例 metadata 中声明 {@code spring-doc=<alias>} 即可被聚合，无需在网关侧维护服务清单。
  * 聚合 URL 形如 {@code /v3/api-docs/{alias}}，由 {@link OpenApiRouteLocator} 转发到
  * {@code lb://<serviceId>/v3/api-docs}。
  *
  * <p>双触发刷新策略：
  * <ul>
  *   <li>{@link ApplicationReadyEvent} —— 启动后扫描一次，保证冷启动可见</li>
- *   <li>Nacos {@link InstancesChangeEvent} —— 实例上下线时实时刷新（参考 merchant-service 的
- *       {@code SwaggerDocRegister}）</li>
+ *   <li>{@link HeartbeatEvent} —— 注册中心实例上下线时实时刷新（注册中心无关，
+ *       Consul / Eureka / Zookeeper 的 DiscoveryClient 均发布此事件）</li>
  * </ul>
  *
  * @author eagle
@@ -46,15 +43,15 @@ import java.util.Set;
 @ConditionalOnProperty(
         name = {"eagle.gateway.openapi.discovery-enabled", "springdoc.swagger-ui.enabled"},
         havingValue = "true", matchIfMissing = true)
-public class GatewayOpenApiConfig implements InitializingBean, ApplicationListener<ApplicationReadyEvent> {
+public class GatewayOpenApiConfig implements ApplicationListener<ApplicationReadyEvent> {
 
     /**
-     * Nacos 实例 metadata 中声明 OpenAPI alias 的 key
+     * 实例 metadata 中声明 OpenAPI alias 的 key
      */
     public static final String METADATA_KEY = "spring-doc";
 
     /**
-     * Nacos 实例 metadata 中可选的展示名 key（缺省按 alias 首字母大写）
+     * 实例 metadata 中可选的展示名 key（缺省按 alias 首字母大写）
      */
     public static final String METADATA_DISPLAY_NAME_KEY = "spring-doc-name";
 
@@ -67,11 +64,17 @@ public class GatewayOpenApiConfig implements InitializingBean, ApplicationListen
     private final SwaggerUiConfigProperties swaggerUiConfigProperties;
 
     /**
-     * 注册 Nacos InstancesChangeEvent 订阅者，实现实例上下线后的 Swagger URL 实时刷新。
+     * 注册中心状态变化时刷新 Swagger URL。
+     *
+     * <p>{@link HeartbeatEvent} 是 Spring Cloud 的注册中心无关事件 —— Consul / Eureka /
+     * Zookeeper 的 DiscoveryClient 在探测到注册表变更时都会发布它，
+     * 取代了原先绑死 Nacos 的 {@code NotifyCenter} + {@code InstancesChangeEvent} 订阅。
+     *
+     * @param event 心跳事件，仅作触发信号，不读取其内容
      */
-    @Override
-    public void afterPropertiesSet() {
-        NotifyCenter.registerSubscriber(new InstancesChangeSubscriber());
+    @EventListener(HeartbeatEvent.class)
+    public void onHeartbeat(HeartbeatEvent event) {
+        refresh();
     }
 
     /**
@@ -120,22 +123,4 @@ public class GatewayOpenApiConfig implements InitializingBean, ApplicationListen
         return Character.toUpperCase(alias.charAt(0)) + alias.substring(1);
     }
 
-    /**
-     * Nacos 实例变化订阅者，触发 Swagger URL 刷新。
-     *
-     * <p>{@link NotifyCenter} 全局广播 InstancesChangeEvent，订阅 type 即可收到所有 serviceId 的事件，
-     * 无需自行注册具体 service listener。
-     */
-    private final class InstancesChangeSubscriber extends Subscriber<InstancesChangeEvent> {
-
-        @Override
-        public void onEvent(InstancesChangeEvent event) {
-            refresh();
-        }
-
-        @Override
-        public Class<? extends Event> subscribeType() {
-            return InstancesChangeEvent.class;
-        }
-    }
 }

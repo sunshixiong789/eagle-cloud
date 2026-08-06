@@ -1,2 +1,0 @@
-com.eagle.rocketmq.config.RocketMqAutoConfiguration
-com.eagle.rocketmq.idempotency.IdempotencyAutoConfiguration

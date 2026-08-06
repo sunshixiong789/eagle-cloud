@@ -1,0 +1,2 @@
+com.eagle.amqp.config.EagleAmqpAutoConfiguration
+com.eagle.amqp.idempotency.IdempotencyAutoConfiguration

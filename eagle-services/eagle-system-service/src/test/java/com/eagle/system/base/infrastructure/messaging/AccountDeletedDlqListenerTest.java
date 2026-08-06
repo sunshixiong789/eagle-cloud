@@ -3,7 +3,7 @@ package com.eagle.system.base.infrastructure.messaging;
 import com.eagle.common.alert.AlertEvent;
 import com.eagle.common.alert.AlertService;
 import com.eagle.common.alert.AlertSeverity;
-import com.eagle.rocketmq.properties.RocketMqProperties;
+import com.eagle.amqp.properties.AmqpProperties;
 import com.eagle.system.base.domain.model.DeadLetterRecord;
 import com.eagle.system.base.domain.repository.DeadLetterRecordRepository;
 import com.eagle.system.base.infrastructure.messaging.event.AccountDeletedMessage;
@@ -33,12 +33,13 @@ class AccountDeletedDlqListenerTest {
     @BeforeEach
     void setUp() {
         listener = new AccountDeletedDlqListener(
-                new RocketMqProperties(), alertService, deadLetterRepository, new ObjectMapper());
+                new AmqpProperties(), alertService, deadLetterRepository, new ObjectMapper());
     }
 
     @Test
-    @DisplayName("originalConsumerGroup 应指向原 Consumer 组")
+    @DisplayName("originalTopic/originalConsumerGroup 应指向原 Consumer 的 topic/组")
     void originalConsumerGroupMatches() {
+        assertThat(listener.getOriginalTopic()).isEqualTo(AccountDeletedConsumer.TOPIC);
         assertThat(listener.getOriginalConsumerGroup())
                 .isEqualTo(AccountDeletedConsumer.CONSUMER_GROUP);
     }

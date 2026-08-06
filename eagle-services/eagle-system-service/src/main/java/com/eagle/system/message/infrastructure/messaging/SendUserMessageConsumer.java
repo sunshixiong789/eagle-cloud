@@ -1,13 +1,12 @@
 package com.eagle.system.message.infrastructure.messaging;
 
-import com.eagle.rocketmq.events.CommonMessageTopics;
-import com.eagle.rocketmq.events.SendUserMessageIntegrationEvent;
-import com.eagle.rocketmq.listener.AbstractRocketMqListener;
-import com.eagle.rocketmq.properties.RocketMqProperties;
+import com.eagle.amqp.events.CommonMessageTopics;
+import com.eagle.amqp.events.SendUserMessageIntegrationEvent;
+import com.eagle.amqp.listener.AbstractAmqpListener;
+import com.eagle.amqp.properties.AmqpProperties;
 import com.eagle.system.message.application.service.SendMessageApplicationService;
 import com.eagle.system.message.domain.model.MessageCategory;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 /**
@@ -22,19 +21,18 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class SendUserMessageConsumer extends AbstractRocketMqListener<SendUserMessageIntegrationEvent> {
+public class SendUserMessageConsumer extends AbstractAmqpListener<SendUserMessageIntegrationEvent> {
 
     static final String CONSUMER_GROUP = "system_user_message_send";
 
     private final SendMessageApplicationService sendMessageApplicationService;
     private final String topicPrefix;
 
-    public SendUserMessageConsumer(RocketMqProperties props,
-                                   SendMessageApplicationService sendMessageApplicationService,
-                                   Environment env) {
+    public SendUserMessageConsumer(AmqpProperties props,
+                                   SendMessageApplicationService sendMessageApplicationService) {
         super(props);
         this.sendMessageApplicationService = sendMessageApplicationService;
-        this.topicPrefix = env.getProperty("eagle.rocketmq.topic-env-prefix", "dev_");
+        this.topicPrefix = props.getExchangePrefix();
     }
 
     @Override

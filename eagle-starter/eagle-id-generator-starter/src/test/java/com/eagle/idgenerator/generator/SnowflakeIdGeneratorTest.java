@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * {@link SnowflakeIdGenerator} 单元测试（基于 Hutool 实现）。
+ * {@link SnowflakeIdGenerator} 单元测试。
  */
 @DisplayName("SnowflakeIdGenerator")
 class SnowflakeIdGeneratorTest {

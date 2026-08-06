@@ -3,7 +3,7 @@ package com.eagle.auth.core.infrastructure.security;
 import com.eagle.auth.core.infrastructure.event.AuthLoginLogPublisher;
 import com.eagle.auth.core.infrastructure.event.LoginLogIntegrationEvent;
 import com.eagle.common.dto.EagleUser;
-import com.eagle.rocketmq.publisher.DomainEventPublisher;
+import com.eagle.amqp.publisher.DomainEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

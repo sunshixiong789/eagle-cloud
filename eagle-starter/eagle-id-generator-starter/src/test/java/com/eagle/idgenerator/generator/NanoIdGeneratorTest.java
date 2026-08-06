@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * {@link NanoIdGenerator} 单元测试（基于 Hutool {@code IdUtil.nanoId}）。
+ * {@link NanoIdGenerator} 单元测试。
  */
 @DisplayName("NanoIdGenerator")
 class NanoIdGeneratorTest {

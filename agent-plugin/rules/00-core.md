@@ -38,7 +38,7 @@ public class PaymentProperties {
 
 **JPA 实体禁止 `@Data` 和 `@Builder`。**
 
-例外：`AbstractRocketMqListener` / `AbstractDlqListener` 子类**禁用 `@RequiredArgsConstructor`** —— 基类是构造器注入，Lombok 生成的构造器不会调用带参 `super`，必须手写构造器显式 `super(rocketMqProperties)`。
+例外：`AbstractAmqpListener` / `AbstractDlqListener` 子类**禁用 `@RequiredArgsConstructor`** —— 基类是构造器注入，Lombok 生成的构造器不会调用带参 `super`，必须手写构造器显式 `super(amqpProperties)`。
 
 ## 空安全
 
@@ -97,7 +97,7 @@ class OrderApplicationServiceTest {
 - 新增第三方依赖先进 BOM 再引用
 - **禁止业务 PR 夹带依赖升级**（独立 PR + 独立评审）
 - starter 依赖范围：核心用 `api`，可选用 `compileOnly`（配 `@ConditionalOnClass`）
-- **禁止**业务模块自行集成 Redisson / RocketMQ Client / MinIO Client —— 收敛到对应 starter
+- **禁止**业务模块自行集成 Redisson / RabbitMQ Client / MinIO Client —— 收敛到对应 starter
 
 ## Git
 

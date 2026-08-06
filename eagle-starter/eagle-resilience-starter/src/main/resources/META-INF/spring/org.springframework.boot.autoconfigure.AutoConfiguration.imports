@@ -1,1 +1,2 @@
 com.eagle.resilience.config.EagleResilienceAutoConfiguration
+com.eagle.resilience.config.EagleRateLimitAutoConfiguration

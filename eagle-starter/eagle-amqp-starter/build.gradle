@@ -1,0 +1,21 @@
+dependencies {
+    api project(':eagle-starter:eagle-common-starter')
+
+    // Spring AMQP / RabbitMQ —— 取代 RocketMQ。
+    // amqp-client 依赖极轻（只要 slf4j），不引入 netty / grpc，
+    // 这正是本次替换的目的：移除 rocketmq 链上强制 io.netty 构建期初始化的 4 个 jar。
+    api 'org.springframework.boot:spring-boot-starter-amqp'
+
+    // 消息体 JSON 序列化走 Jackson 3（Boot 4 基线），运行时由消费方提供
+    compileOnly 'tools.jackson.core:jackson-databind'
+
+    // IdempotencyChecker 的 Redis 实现（可选能力，缺 Redis 时不装配）
+    compileOnly 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'tools.jackson.core:jackson-databind'
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-redis'
+}

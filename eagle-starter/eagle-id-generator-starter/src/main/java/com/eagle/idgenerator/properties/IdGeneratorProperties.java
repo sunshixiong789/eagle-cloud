@@ -38,7 +38,7 @@ public class IdGeneratorProperties {
     /**
      * 默认 {@code IdGenerator} Bean 选用的实现。
      * <ul>
-     *   <li>{@link Type#SNOWFLAKE}（默认）— Hutool Snowflake，long 主键</li>
+     *   <li>{@link Type#SNOWFLAKE}（默认）— 雪花算法，long 主键</li>
      *   <li>{@link Type#UUID} — UUID v7（time-ordered Unix Epoch）</li>
      *   <li>{@link Type#TSID} — TSID（Time-Sorted Unique Identifier）</li>
      * </ul>
@@ -53,7 +53,7 @@ public class IdGeneratorProperties {
      */
     private long datacenterId = 1;
     /**
-     * 序列号起始值（Hutool Snowflake 不使用此项，保留以兼容旧配置）
+     * 序列号起始值（当前 Snowflake 实现不使用此项，保留以兼容旧配置）
      */
     private long sequence = 0L;
     /**
