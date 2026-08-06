@@ -5,6 +5,38 @@
 
 ## [Unreleased]
 
+### Removed — ⚠️ 破坏性变更：`eagle-audit-log-starter` 移除多租户字段
+
+随 `eagle-tenant-starter` 下线，审计日志的租户维度已无写入方，一并移除：
+
+| 位置 | 移除内容 |
+|---|---|
+| `AuditLogRecord` | `tenantId` 字段、`tenant_id` 列、`idx_audit_log_tenant` 索引 |
+| `AuditLogEntry` | `tenantId` 字段 |
+| `AuditLogUserProvider` | `getCurrentTenantId()` 默认方法 |
+| `AuditLogQueryRequest` | `tenantId` 查询条件 |
+| `AuditLogResponse` | `tenantId` 组件（**record 组件 15 → 14，按位置构造的调用方需同步改**） |
+| `AuditLogSpecification` | `tenantIdEquals(String)` |
+
+**存量库需手工执行**（JPA `ddl-auto=update` 只加不删，不会自动清理）：
+
+```sql
+ALTER TABLE eagle_audit_log DROP INDEX idx_audit_log_tenant;
+ALTER TABLE eagle_audit_log DROP COLUMN tenant_id;
+```
+
+生产是 `ddl-auto=validate`：**必须先执行上面的 DDL 再发布新版本**，否则实体与表结构不匹配会启动失败。
+
+### Changed — 规则与 skill 同步 starter 移除
+
+- 9 个 starter 移出构建（`tenant` / `rocketmq`→`amqp` / `dynamic-datasource` / `elasticsearch` /
+  `excel` / `notification` / `seata` / `sentinel` / `ai`），对应 8 个 skill 目录已删除
+- `rules/` 全量同步：多租户、分布式事务、限流、注册中心（Nacos→Consul）、错误码号段
+- 新增 `rules/08-quality.md`（内聚 / 耦合 / 可维护性判据）
+- `interfaces/dto/` 全量 record 化（45 个 `@Data` class → 0）
+- `check-java-conventions.sh` 新增拦截：DTO 用 `@Data`、`eagle.xxx.enabled` 总开关、引用已移除能力
+- `verify-rules.sh` 修复配置键校验假阳性（仅比 prefix 会让 `eagle.{prefix}.*` 全部误通过）
+
 ## [1.0.0] — 2026-04-30
 
 ### Added — 初始版本

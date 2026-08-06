@@ -63,10 +63,45 @@ ObjectMapper mapper = new ObjectMapper();   // tools.jackson.databind.ObjectMapp
 
 - 自动配置类用 **`@AutoConfiguration`**，不是 `@Configuration`
 - 排序用 `@AutoConfiguration(after = OtherConfig.class)`
-- 条件注解：`@ConditionalOnClass`（必加，防缺依赖报错）、`@ConditionalOnProperty(name = "eagle.xxx.enabled", havingValue = "true", matchIfMissing = true)`、`@ConditionalOnMissingBean`（允许使用方覆盖）
+- 条件注解：`@ConditionalOnClass`（必加，防缺依赖报错）、`@ConditionalOnMissingBean`（允许使用方覆盖）
 - 可选依赖用 `@ConditionalOnClass(name = "全限定名")` 字符串形式避免编译期依赖，注入用 `ObjectProvider<T>`
 
-**注意**：`META-INF/spring.factories` 并未完全废弃 —— `EnableAutoConfiguration` 这一项迁到了 `.imports`，但 `ApplicationListener` / `EnvironmentPostProcessor` / `ApplicationContextInitializer` 仍走 `spring.factories`。本仓库 `eagle-elasticsearch-starter` 和 `eagle-seata-starter` 保留 `spring.factories` 就是这个用途，**不要删**。
+### 禁止 `eagle.xxx.enabled` 总开关
+
+**starter 引入即生效**——依赖坐标本身就是开关，不要求使用方额外写 yml 才能用。
+
+```java
+// ❌ 禁：引入了 starter 却因为没写 yml 而不生效，是最常见的"配了没用"投诉来源
+@ConditionalOnProperty(name = "eagle.redis.enabled", havingValue = "true", matchIfMissing = true)
+
+// ✅ 全仓 6 处 @ConditionalOnProperty 都是这三类，没有一处总开关
+@ConditionalOnProperty(prefix = "spring.cache", name = "type", havingValue = "redis")    // 选实现
+@ConditionalOnProperty(prefix = "eagle.id-generator", name = "type", havingValue = "tsid") // 选提供商
+@ConditionalOnProperty(name = "eagle.tracing.zipkin.endpoint")                            // 配了才装
+```
+
+判据：条件应表达「**装配哪一种**」或「**配了这个才有意义**」，而不是「**要不要装**」。
+使用方要禁用某个 starter，正确做法是移除依赖，或用 `spring.autoconfigure.exclude`。
+
+### util 类必须显式 `@Bean` 注册
+
+starter 里的工具类只标 `@Component` **不会**被业务服务扫到（业务服务的 `@ComponentScan`
+根包是自己的 `com.eagle.{svc}`，扫不到 `com.eagle.redis.util`）。必须在 `@AutoConfiguration` 里显式注册：
+
+```java
+// ❌ 只有 @Component —— 业务 service 注入时报 NoSuchBeanDefinitionException
+@Component
+public class CacheProtectionUtil { ... }
+
+// ✅ 在自动配置类里显式 @Bean
+@Bean
+@ConditionalOnMissingBean
+public CacheProtectionUtil cacheProtectionUtil(RedisTemplate<String, Object> redisTemplate) {
+    return new CacheProtectionUtil(redisTemplate);
+}
+```
+
+**注意**：`META-INF/spring.factories` 并未完全废弃 —— `EnableAutoConfiguration` 这一项迁到了 `.imports`，但 `ApplicationListener` / `EnvironmentPostProcessor` / `ApplicationContextInitializer` 仍走 `spring.factories`。原先靠它的 `eagle-elasticsearch-starter` / `eagle-seata-starter` 已移除，但这条机制本身有效：**新 starter 若要注册这三类扩展点，仍必须用 `spring.factories`，不能只写 `.imports`。**
 
 ## HTTP 客户端：`RestTemplate` 已退场
 
@@ -82,7 +117,7 @@ public interface InventoryClient {
 
 客户端接口放调用方 `infrastructure/remote/`，Bean 由 `EagleRestServiceClientFactory` 创建。下游 HTTP 错误由 `EagleResponseErrorHandler` 自动转成项目异常体系（400→`DomainException`、404→`NotFoundException`、409→`ConflictException`、其余→`ServiceException`），**调用方无需 try-catch**。
 
-JWT / 租户 ID / Seata XID 由拦截器自动透传，**禁止手动拼装**。
+JWT 由拦截器自动透传，**禁止手动拼装** `Authorization` 头（租户 ID 与 Seata XID 的透传已随对应 starter 移除）。
 
 ## Spring Security 7：只有 lambda DSL
 

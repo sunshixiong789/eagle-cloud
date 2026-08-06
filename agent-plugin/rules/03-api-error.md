@@ -135,21 +135,24 @@ public enum OrderErrorCode implements ErrorCode {
 
 错误码是**对外 API 契约**，已发布的号不可变更。当前占用：
 
-| 号段 | 归属 |
+| 号段 | 归属（括号内为实际占用区间） |
 |---|---|
-| 10000–10999 | 用户域 `UserErrorCode` |
-| 11000–11999 | 认证域 `AuthErrorCode` |
-| 12000–15999 | common-starter：`DataErrorCode` / `OperationErrorCode` / `FileErrorCode` / `ExternalErrorCode` |
-| 16000–16999 | amqp-starter |
-| 17000–17999 | notification-starter |
-| 20000–29999 | 系统管理域 `SystemErrorCode` |
-| 30500–30599 | 消息 / 公告域 |
-| 40000–40999 | ⚠️ **撞号 `40001-40003`**：`FileErrorCode`(system) 与 `IdempotencyErrorCode`(starter) |
-| 90000–90999 | ⚠️ **撞号 `90001-90004`**：`LockErrorCode` 与 `AiErrorCode` |
+| 10000–10999 | 用户域 `UserErrorCode`（10001–10014） |
+| 11000–11999 | 认证域 `AuthErrorCode`（11001–11062） |
+| 12000–15999 | common-starter：`DataErrorCode`(12001–12006) / `OperationErrorCode`(13001–13006) / `FileErrorCode`(14001–14005) / `ExternalErrorCode`(15001–15003) |
+| 16000–16999 | `AmqpErrorCode`（16001–16003，继承自原 rocketmq-starter 号段） |
+| 20000–29999 | 系统管理域 `SystemErrorCode`（20001–20010） |
+| 30500–30599 | `MessageErrorCode`(30501–30502) / `AnnouncementErrorCode`(30551–30553) |
+| 40000–40999 | ⚠️ **撞号 `40001-40003`**：`FileErrorCode`(system，40001–40008) 与 `IdempotencyErrorCode`(starter，40001–40003) |
+| 90000–90999 | `LockErrorCode`（90001–90004） |
 
 **新增取号**：starter 用 `18000–19999`；业务域用 `50000–89999`。**禁止**复用上表号段。
 
-两组历史撞号（`40001-40003`、`90001-90004`）需单独评估修复，**不要在无关 PR 里顺手改号**。
+**已随 starter 移除而释放**：`17000–17999`（notification）、`90001-90004` 的 ai 那一半。
+释放的号**不要立刻复用** —— 老客户端可能仍按旧码分支处理。
+
+仅存一组撞号 `40001-40003`，需单独评估修复，**不要在无关 PR 里顺手改号**。
+原 `90001-90004` 撞号已随 `eagle-ai-starter` 移除自动消除。
 
 ## i18n
 

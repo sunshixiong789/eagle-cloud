@@ -10,13 +10,13 @@
 | 2 | `BaseEntity` 无软删除字段 | 只有 `id/createBy/updateBy/createTime/updateTime/version`；要 `deleted` 得自己声明 |
 | 3 | 表名前缀 | `sys_` / `auth_` / `user_` / `eagle_`，**不是** `t_` |
 | 4 | 异步执行器 Bean 名 | `taskExecutor`（**不是** `eagleTaskExecutor`） |
-| 5 | 租户上下文 API | `TenantContextHolder.getTenantId()` / `setTenantId()` / `clear()`（**没有** `getCurrentTenantId()`） |
+| 5 | **多租户已整体移除** | `eagle-tenant-starter` 源码已清空并移出 `settings.gradle`。**`TenantContextHolder` / `@TenantFilter` / `eagle.tenant.*` 全部不存在**，`ContextPropagationConfig` 也不再传播租户。不要写任何租户相关代码 |
 | 6 | 分布式锁签名 | `tryLock(String key, long waitTime, long leaseTime, Supplier<T>)` —— **`long` 秒，不是 `Duration`**；简写 `tryLock(key, supplier)` 默认 3s/30s |
 | 7 | 缓存击穿防护 | `getWithMutex(String key, Duration ttl, Supplier<T> loader, Class<T> type)` —— **4 个参数** |
-| 8 | 数据权限 | `eagle-row-security-starter` **已移除**，无 `@DataPermission` / `DataPermissionProvider`。只剩 `Role` 上的业务枚举 `DataScope`：`ALL` / `SELF` / `DEPT` / `DEPT_AND_CHILD` / `CUSTOM`（**没有** `DEPT_ONLY` / `SELF_ONLY`），需手写过滤 |
-| 9 | AMQP 消费者 | 继承 `AbstractAmqpListener<T>` 实现 `getTopic()` / `getEventClass()` / `handle(T)`，**不用** `@RabbitListener`；**必须手写构造器显式 `super(amqpProperties)`，禁用 `@RequiredArgsConstructor`**（`AbstractDlqListener` 同理） |
-| 10 | 多租户装配条件 | 由 `eagle.tenant.mode` 决定（`column`/`database`，默认 `COLUMN`）。**不存在 `eagle.tenant.enabled`** |
-| 11 | 读写分离装配条件 | 由 `eagle.datasource.master.url` 是否配置决定。**不存在 `eagle.datasource.enabled`** |
+| 8 | 数据权限 | 无 `@DataPermission` / `DataPermissionProvider`。只剩 `Role` 上的业务枚举 `DataScope`：`ALL` / `SELF` / `DEPT` / `DEPT_AND_CHILD` / `CUSTOM`（**没有** `DEPT_ONLY` / `SELF_ONLY`），需手写过滤 |
+| 9 | AMQP 消费者 | 继承 `AbstractAmqpListener<T>` 实现 `getTopic()` / `getEventClass()` / `handle(T)`，**不用** `@RabbitListener`（exchange 名运行时才定，注解常量表达不了）；**必须手写构造器显式 `super(amqpProperties)`，禁用 `@RequiredArgsConstructor`**（`AbstractDlqListener` 同理）。容器由 `AmqpListenerRegistrar` 启动期注册 |
+| 10 | AMQP 通配 routing key | 用 `#`（零或多个单词），**不是** RocketMQ 的 `*` —— AMQP 里 `*` 只匹配**恰好一个**单词，照搬会静默收不到消息。常量 `ExchangeNaming.MATCH_ALL_ROUTING_KEY` |
+| 11 | 读写分离 / 分库分表 | `eagle-dynamic-datasource-starter` **已移除**，无 `@ReadOnly` / `DataSourceContextHolder`。分库分表用 `eagle-sharding-starter`（`eagle.sharding.*`） |
 | 12 | 脱敏 | **无 `@Sensitive` 注解**；日志用 `LogMask.phone/email/idCard/token`，响应体无统一机制 |
 | 13 | 审计表名 | `eagle_audit_log`（**不是** `t_audit_log`） |
 | 14 | Token 撤销 key | `token:blacklist:{jti}` + `account:online:{accountId}` |
@@ -24,6 +24,12 @@
 | 16 | 幂等 key | 用 `BaseEvent.eventId`，**不用** MQ 的 `MsgId`（重投递会变） |
 | 17 | 生产必改的默认值 | `eagle.storage.type` 默认 `local`；`eagle.tracing.sampling-probability` 默认 `1.0`（全采样） |
 | 18 | 开虚拟线程前 | 必须先设 `eagle.async.concurrency-limit` 正数，否则无背压打爆下游 |
+| 19 | 自定义 `SecurityFilterChain` | 一旦自定义 chain 取代 starter 默认 chain，`oauth2ResourceServer.jwt` **必须显式接 `EagleJwtAuthenticationConverter`**，否则 principal 不是 `EagleUser`，所有 `hasRole(...)` 静默失效（不报错、全部 403） |
+| 20 | starter 里的 util 类 | 只标 `@Component` 业务服务扫不到（跨根包），必须在 `@AutoConfiguration` 里显式 `@Bean` 注册（见 `06-boot4.md`） |
+| 21 | starter 装配开关 | **不存在** `eagle.xxx.enabled` 总开关，引入依赖即生效；条件注解只用于「选实现」而非「要不要装」 |
+| 22 | dom4j 传递依赖 | `dom4j 2.1.3` 会传递 `pull-parser:2`（含 `org.gjt.xpp.*`），曾导致启动期 SAX 解析器冲突崩溃，引入 dom4j 的服务必须 `exclude group: 'pull-parser'` |
+| 23 | **9 个 starter 已移除** | `tenant` / `rocketmq`（→ `amqp`）/ `dynamic-datasource` / `elasticsearch` / `excel` / `notification` / `seata` / `sentinel` / `ai` —— 目录还在但 `src` 已清空且不在 `settings.gradle`。**不要 import 这些包，也不要照抄它们的 skill 文档** |
+| 24 | 注册中心是 Consul | `spring-cloud-starter-consul-discovery`，**不是 Nacos**。配置走 `spring.cloud.consul.*` |
 
 ---
 
@@ -33,6 +39,7 @@
 
 | 规则 | 存量违例 | 位置 |
 |---|---|---|
+| Controller 不注入 `Repository` | **3 处** | 见 ArchUnit 冻结基线 |
 | 禁 `@PreAuthorize("isAuthenticated()")` | **13 处** | 各 Controller |
 | 禁 `@PreAuthorize("permitAll()")` | **4 处** | 各 Controller |
 | 禁 `@Value` 注入配置 | **2 处** | `BlacklistCacheWarmer`、`EagleAuditLogJpaAutoConfiguration` |
@@ -43,8 +50,12 @@
 
 ## ArchUnit 冻结基线（`LayeredArchitectureTest`）
 
-分层违例已冻结在 `eagle-services/eagle-system-service/archunit_store/`，**新增违例会让测试失败，存量不阻塞**。
-修好一处基线自动少一处，不会倒退。当前冻结 22 条：
+两个服务各有一份同规则的 `LayeredArchitectureTest`，分层违例冻结在各自的 `archunit_store/`，
+**新增违例会让测试失败，存量不阻塞**。修好一处基线自动少一处，不会倒退。
+
+**改规则时两个测试文件要一起改**，否则规则只在一边生效，另一边会悄悄腐化。
+
+### eagle-system-service —— 冻结 22 条
 
 | 违例 | 条数 | 典型案例 / 成因 |
 |---|---|---|
@@ -54,6 +65,17 @@
 | 聚合根暴露 public setter | 1 | `Role.setDataScope` |
 | Controller 含 try-catch | 1 | `FileController.parseMediaType`（私有解析辅助方法） |
 
+### eagle-auth-service —— 冻结 29 条
+
+| 违例 | 条数 | 典型案例 / 成因 |
+|---|---|---|
+| `interfaces` 依赖 `infrastructure` | 27 | 5 个 Controller（`WechatWebLoginController` 8、`SmsController` 6、`LoginController` 6、`AccountController` 4、`AccountInternalController` 3）直接注入 `infrastructure/config/*Properties` 与 `infrastructure/security/`（`SmsSendRateLimiter` / `BlacklistChecker` / `ClientIpHolder`） |
+| 应用服务命名不符 | 1 | `WechatWebUserService` → 应为 `WechatWebUserApplicationService` |
+| Controller 含 try-catch | 1 | `WechatWebLoginController.authenticateAndRedirect` |
+
+auth 侧 27 条集中在**同一个成因**：Controller 需要限流器/黑名单/配置，就直接注入了 infrastructure 实现。
+正确解法是把这些能力收进应用服务，或让 Controller 依赖 domain 侧接口（见 `08-quality.md` 各层厚度）。
+
 **注意**：子实体（继承 `BaseEntity`）按 `00-core.md` **允许** `@Setter`，该规则只查聚合根。
 
 复核台账：
@@ -62,6 +84,10 @@
 grep -rc '@PreAuthorize("isAuthenticated()")' --include='*.java' eagle-services | grep -v ':0'
 grep -rc '@PreAuthorize("permitAll()")'      --include='*.java' eagle-services | grep -v ':0'
 grep -rE '@Value\("\$\{' --include='*.java' eagle-services eagle-starter | grep -v /build/
+
+# 非 record 的 DTO 数量（已全量迁移完毕，基线 0 —— 出现任何非 0 都是新增违例）
+find eagle-services -path '*interfaces/dto/*.java' -not -path '*/build/*' -not -name '*Test.java' \
+  -exec grep -L '^public record ' {} + | wc -l
 ```
 
 ---
@@ -139,16 +165,27 @@ done
 - [ ] 消费方自己声明 `XxxMessage`，未 import 生产方 `XxxIntegrationEvent`
 - [ ] `ThreadLocal` / MDC 有 `try/finally` 清理
 
-## 安全 / 租户
+## 安全
 - [ ] 当前用户走 `SecurityUtils.getCurrentUser()` 或 `@AuthenticationPrincipal EagleUser`，**未用 `Jwt`**
 - [ ] 无明文密码 / 密钥 / Token；敏感配置 `ENC()`
 - [ ] 日志中手机号、邮箱等经 `LogMask` 处理
-- [ ] `@TenantFilter` 标在 Service/Repository 而非 Entity；跨租户操作有 reason + 审计
+- [ ] 未引用已移除的能力（`TenantContextHolder` / `@DataPermission` / `@GlobalTransactional` / Sentinel / RocketMQ）
+- [ ] 自定义 `SecurityFilterChain` 已显式接 `EagleJwtAuthenticationConverter`
 
 ## Starter / 配置 / 依赖
 - [ ] `@AutoConfiguration` + `AutoConfiguration.imports` 注册；条件注解齐全
+- [ ] 无 `eagle.xxx.enabled` 总开关；starter 内 util 类已显式 `@Bean` 注册
 - [ ] 配置走 `@ConfigurationProperties`，无 `@Value`
 - [ ] 新依赖先进 BOM；本 PR 未夹带依赖升级
+
+## 质量 / 内聚耦合（详见 `08-quality.md`）
+- [ ] 新 DTO 是 `record`；无「new 空对象 + 逐字段 set」的分步装配
+- [ ] 应用服务未做聚合内部状态判断（业务规则在领域层）
+- [ ] Controller 未注入 `Repository`，方法体 ≤ 5 行
+- [ ] 类 / 方法 / 参数未超规模硬上限（12 方法 / 50 行 / 5 参数）
+- [ ] 未为单实现抽接口、未为"以后可能需要"预留参数或配置项
+- [ ] 进 starter 的代码不含业务领域名词
+- [ ] 本次改动删净了不再被调用的方法 / 字段 / import
 
 ---
 

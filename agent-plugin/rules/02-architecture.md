@@ -189,21 +189,43 @@ public class OrderPaidMessage extends BaseEvent {
   字段改名由 `docs/contracts/*.json` 契约测试兜底（生产方 auth-service + 消费方 system-service 双向）
 - 新增字段直接加；**删除 / 重命名 / 改类型 → 升 `eventVersion` 并灰度**（双发 → 切换 → 下线），过渡期 ≥ 3 个月
 
-## Topic / Tag
+## Topic / Exchange / Queue 命名（AMQP）
 
-Topic 用**下划线**分隔：`{prefix}_{domain}_{event}`，如实际在用的 `eagle_auth_events`。Tag 用业务动作：`created` / `paid` / `cancelled`。消息体**禁止**含密码、Token、密钥、完整证件号。
+消息中间件是 **RabbitMQ**（`eagle-amqp-starter`），RocketMQ 已移除。命名由
+[ExchangeNaming](eagle-starter/eagle-amqp-starter/src/main/java/com/eagle/amqp/support/ExchangeNaming.java) 统一拼装，
+业务侧只提供 `getTopic()` 的逻辑名（下划线分隔，如 `user_message_send`）：
+
+| 对象 | 拼法 | 示例 |
+|---|---|---|
+| exchange | `{eagle.amqp.exchange-prefix}{topic}` | `dev_user_message_send` |
+| queue | `{exchange}.{consumerGroup}` | `dev_user_message_send.system_inbox` |
+| DLX / DLQ | `{exchange}.dlx` / `{queue}.dlq` | `dev_user_message_send.dlx` |
+
+**每个消费者必须有自己的 `getConsumerGroup()`** —— 共用默认 group 会让多个消费者竞争消费同一条消息
+（迁移前的线上缺陷）。
+
+通配 routing key 用 `#`（`ExchangeNaming.MATCH_ALL_ROUTING_KEY`），**不是** RocketMQ 的 `*`：
+AMQP 的 `*` 只匹配恰好一个单词，照搬会静默收不到消息。
+
+消息体**禁止**含密码、Token、密钥、完整证件号。
 
 ## 幂等
 
-幂等 key 用 `BaseEvent.eventId`（时间有序 UUID），**不用** MQ 的 `MsgId`（重投递会变）。
+幂等 key 用 `BaseEvent.eventId`（时间有序 UUID），**不用** broker 的 message id（重投递会变）。
+`eagle-amqp-starter` 自带 `IdempotencyChecker`（Redis 实现），配置前缀 `eagle.amqp.idempotency`。
 
 优先级：创建型 → 业务表唯一约束；状态机推进 → 条件 UPDATE + 二次 SELECT；累加型 → 业务事实表记 eventId；纯副作用 → Redis SETNX 守卫。
 
 **禁止**用通用 inbox 表替代业务幂等。
 
-## Saga
+## 跨服务一致性（无分布式事务）
 
-多步骤跨聚合流程用**编排器**统一控制步骤与补偿，**禁止**用链式 `@EventListener`（状态难追踪、补偿无保证）。超时未收敛的 Saga 由定时补偿任务扫描处理。
+`eagle-seata-starter` 已移除，**不存在 `@GlobalTransactional`**。跨服务一致性只有一条路径：
+
+> 本地事务内 `registerEvent()` → AFTER_COMMIT 发集成事件 → 消费方幂等处理 → 失败由补偿任务收敛
+
+多步骤跨聚合流程用**编排器**统一控制步骤与补偿，**禁止**用链式 `@EventListener`（状态难追踪、补偿无保证）。
+超时未收敛的流程由定时任务（`eagle-scheduler-starter`）扫描处理。
 
 Event Sourcing 仅用于需完整历史审计的少数聚合，**禁止**全业务铺开。
 

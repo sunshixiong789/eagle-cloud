@@ -8,7 +8,7 @@
 
 ## 项目栈定位
 
-业务项目依赖 `eagle-cloud` 基础架子（BOM + 27 个 starter），遵循以下技术栈与约定：
+业务项目依赖 `eagle-cloud` 基础架子（BOM + 19 个 starter），遵循以下技术栈与约定：
 
 - **Java 25** / Gradle 8.x（Groovy DSL）
 - **Spring Boot 4.0.6** / Spring Cloud 2025.1.1 / Spring Cloud Alibaba 2025.1.0.0
@@ -42,10 +42,11 @@
 | `rules/04-data.md`          | JPA 实体、禁物理外键、索引唯一性、事务与并发、线程池、Flyway 迁移                               |
 | `rules/05-security.md`      | OAuth2/JWT 取当前用户、脱敏、多租户与数据权限、审计日志、日志规范                               |
 | `rules/06-boot4.md`   | **必看**：Jackson 3 分包、`@AutoConfiguration`、`RestClient`、Security 7 DSL |
-| `rules/07-checklist.md`     | **必看**：高频陷阱速查（Eagle 特有 API）+ PR 前自检清单                                |
+| `rules/07-checklist.md`     | **必看**：高频陷阱速查（Eagle 特有 API）+ 存量违例台账 + PR 前自检清单                      |
+| `rules/08-quality.md`       | **必看**：规模红线、贫血模型、抽象最小化、复用归属、各层厚度、AI 特有坏味道                          |
 
 缓存、消息队列、分布式事务、定时任务、对象存储、韧性等主题**不设常驻规则文件**，规范随对应 starter skill
-（`eagle-redis` / `eagle-amqp` / `eagle-seata` / `eagle-scheduler` / `eagle-oss-minio` / `eagle-resilience`）按需自动加载。
+（`eagle-redis` / `eagle-amqp` / `eagle-scheduler` / `eagle-oss-minio` / `eagle-resilience`）按需自动加载。
 
 ### 前端：`rules-frontend/`（React Web / React Native / Taro 多端）
 
@@ -70,37 +71,35 @@
 
 ## Starter 使用（按需 skill 加载）
 
-27 个 starter 各有独立 skill（另有 eagle-feature-flow 等手写 skill），AI 在编码时会按场景自动加载相关 skill。手动列表见 `skills/` 目录：
+**19 个 starter** 各有独立 skill（另有 eagle-feature-flow 手写 skill），AI 在编码时按场景自动加载。列表见 `skills/`：
 
 | Skill                      | 何时触发                                      |
 |----------------------------|-------------------------------------------|
 | `eagle-common`             | DDD 基类、异常、领域事件、分布式锁接口                     |
 | `eagle-data-jpa`           | JPA Auditing + Hibernate 配置               |
 | `eagle-data-r2dbc`         | 响应式 R2DBC 持久化、BaseR2dbcAggregateRoot      |
-| `eagle-dynamic-datasource` | 主从读写分离、@ReadOnly                          |
 | `eagle-sharding`           | 分库分表、ShardingSphere YAML 配置               |
-| `eagle-elasticsearch`      | ES 检索 / 聚合 / 高亮                           |
 | `eagle-redis`              | 缓存 / 锁 / 限流 / 布隆                          |
-| `eagle-amqp`                | 事件发布 / 死信                                 |
+| `eagle-amqp`               | RabbitMQ 事件发布 / 消费 / 死信 / 消息幂等            |
 | `eagle-id-generator`       | 雪花 / TSID / NanoId / 业务单号                 |
 | `eagle-idempotency`        | 接口幂等                                      |
-| `eagle-tenant`             | 多租户上下文                                    |
 | `eagle-resource-server`    | OAuth2 资源服务器                              |
 | `eagle-restclient`         | Servlet 服务 HTTP Service + 自动透传（阻塞 RestClient）|
 | `eagle-webclient`          | WebFlux 服务 HTTP Service + 自动透传（响应式 WebClient）|
 | `eagle-tracing`            | 链路追踪                                      |
 | `eagle-openapi`            | SpringDoc 3                               |
 | `eagle-oss-minio`          | 对象存储                                      |
-| `eagle-notification`       | 短信 / 邮件 / 站内信                             |
 | `eagle-scheduler`          | XXL-JOB                                   |
-| `eagle-seata`              | 分布式事务                                     |
-| `eagle-sentinel`           | 限流 / 熔断                                   |
 | `eagle-websocket`          | WS / SSE / 离线消息                           |
-| `eagle-excel`              | Excel 导入导出、@ExcelColumn                   |
-| `eagle-resilience`         | 熔断器 / 重试 / 超时，Fallback                    |
+| `eagle-resilience`         | 熔断器 / 重试 / 超时 / `@RateLimit`，Fallback     |
 | `eagle-encrypt`            | 字段级加密，@Convert 注解                         |
 | `eagle-audit-log`          | 操作审计日志，@AuditLog                          |
-| `eagle-ai`                 | ChatClient / EmbeddingClient、AI Advisors  |
+
+**已移除的 9 个 starter**（skill 已同步删除，不要再引用）：
+`tenant`（多租户）、`rocketmq`（→ `amqp`）、`dynamic-datasource`（读写分离）、`elasticsearch`、
+`excel`、`notification`（短信/邮件）、`seata`（分布式事务）、`sentinel`（限流熔断 → `resilience`）、`ai`。
+
+对应能力的替代方案见 `rules/07-checklist.md` 陷阱 5 / 11 / 23 与 `rules/05-security.md`。
 
 ## 项目级 Commands
 
@@ -137,10 +136,12 @@
 
 ## 重要约定（高频陷阱）
 
-完整的 12 条高频陷阱速查表见 **`rules/07-checklist.md`**（单一维护点，勿在此处重复）。
+完整的 22 条高频陷阱速查表见 **`rules/07-checklist.md`**（单一维护点，勿在此处重复）。
 写代码前务必扫一遍——都是 Eagle 特有 API 与命名，凭直觉写必然出错，例如：
 
 - 审计字段是 `createBy / createTime`，**不是** `createdBy / createdAt`
 - `CacheProtectionUtil.getWithMutex(...)` 是 **4 参数**，最后一个是 `Class<T>`
 - `DistributedLock.tryLock(...)` 收 **`long` 秒**，不是 `Duration`
 - Jackson 核心类在 `tools.jackson.*`，注解仍在 `com.fasterxml.jackson.annotation.*`（详见 `rules/06-boot4.md`）
+- 自定义 `SecurityFilterChain` 必须显式接 `EagleJwtAuthenticationConverter`，否则 `hasRole` 静默全废
+- **不存在** `eagle.xxx.enabled` 总开关，starter 引入即生效

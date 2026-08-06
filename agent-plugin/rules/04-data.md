@@ -87,7 +87,8 @@ H2 / PostgreSQL / Oracle 要求索引名在 schema 内唯一（MySQL 只要表�
 })
 ```
 
-多租户表必须有 `tenant_id`，且**索引以 `tenant_id` 为前导列**，创建后不可更新。
+多租户能力已整体移除（见 `05-security.md`），**新表不要再加 `tenant_id` 列**。
+`eagle_audit_log` 上残留的 `tenant_id` 列与 `idx_audit_log_tenant` 索引已无写入方，属历史遗留。
 
 ## 读查询
 
@@ -116,7 +117,8 @@ Page<OrderSummary> findOrderSummaries(Pageable pageable);
 - 写操作加 `@Transactional(rollbackFor = Exception.class)`；只读加 `@Transactional(readOnly = true)`
 - **禁止**在 `@Transactional` 内调用远程服务 —— 远程慢会长期持有 DB 连接，远程失败不该触发 DB 回滚
   - 拆法：事务内 `registerEvent()`，由 AFTER_COMMIT 异步触发远程
-  - 例外：`@GlobalTransactional`（Seata）模式下必须在事务内调用远程
+  - `eagle-seata-starter` 已移除，**不存在** `@GlobalTransactional`；跨服务一致性走
+    「本地事务 + `registerEvent` + AFTER_COMMIT 发集成事件 + 消费方幂等」，失败靠补偿任务收敛
 - 事务方法不得被同类内部调用（Spring AOP 代理限制）
 
 ## 锁
@@ -141,7 +143,7 @@ Page<OrderSummary> findOrderSummaries(Pageable pageable);
 | 平台线程（默认） | 有界队列 + `CallerRunsPolicy` |
 | 虚拟线程（`spring.threads.virtual.enabled=true`） | `eagle.async.concurrency-limit`，**默认无界，开虚拟线程前必须设正数** |
 
-异步任务必须传递 trace / tenant / 安全上下文（由 `ContextPropagationConfig` 统一处理）。详见 `01-java25.md` 的虚拟线程注意事项。
+异步任务必须传递 trace 与安全上下文（由 `ContextPropagationConfig` 统一处理；租户传播已随 tenant-starter 移除）。详见 `01-java25.md` 的虚拟线程注意事项。
 
 ---
 

@@ -22,6 +22,29 @@ String token = request.getHeader("Authorization").substring(7);
 
 接口权限声明见 `03-api-error.md`。
 
+## 自定义 `SecurityFilterChain` 的强制动作
+
+starter 默认 chain 已经接好了 JWT → `EagleUser` 的转换。一旦业务服务自定义 chain **取代**默认 chain，
+这个转换就没了，而且**不会报错** —— principal 退化成原生 `Jwt`，权限集合为空，
+所有 `hasRole(...)` 静默失效变成 403，排查成本极高。
+
+```java
+// ✅ 自定义 chain 时必须显式接回 Converter
+@Bean
+SecurityFilterChain filterChain(HttpSecurity http, EagleJwtAuthenticationConverter converter) {
+    return http
+            .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/internal/**").permitAll()
+                    .anyRequest().authenticated())
+            .oauth2ResourceServer(oauth2 -> oauth2
+                    .jwt(jwt -> jwt.jwtAuthenticationConverter(converter)))   // ← 漏了它 = hasRole 全废
+            .build();
+}
+```
+
+自检：自定义 chain 后跑一个带 `@PreAuthorize("hasRole('admin')")` 的接口，403 就是漏了 Converter。
+能不自定义就不自定义 —— 公开路径优先走 yml `eagle.resource-server.permit-paths`（见 `03-api-error.md`）。
+
 ## Token
 
 - 有效期由 auth-service 配置：`access-token-ttl-seconds: 3600`（1 小时）、`refresh-token-ttl-seconds: 2592000`（30 天）
@@ -73,28 +96,38 @@ log.info("用户注册 username={}, phone={}, email={}",
 
 ## 速率限制
 
-登录 / 注册 / 短信验证码用 `eagle-redis-starter` 的 `RedisRateLimiter`；业务接口走网关 Sentinel。**禁止**自行实现限流计数器。
+`eagle-sentinel-starter` **已移除**，当前有两条限流路径：
+
+| 场景 | 手段 |
+|---|---|
+| 声明式（方法级） | `eagle-resilience-starter` 的 `@RateLimit`（配 `RateLimitBehavior`），配置前缀 `eagle.resilience` |
+| 编程式（登录 / 注册 / 短信验证码） | `eagle-redis-starter` 的 `RedisRateLimiter`；auth 侧另有 `eagle.security.login-rate-limit` |
+
+**禁止**自行实现限流计数器。
 
 ---
 
-# 多租户与数据权限
+# 数据权限
 
-## 租户上下文
+## 多租户能力已整体移除
 
-- API：`TenantContextHolder.getTenantId()` / `setTenantId()` / `clear()`（**没有** `getCurrentTenantId()`）
-- 装配条件是 `eagle.tenant.mode`（`column` / `database`，默认 `COLUMN`）—— **不存在 `eagle.tenant.enabled`**
-- 跨线程传递由 `ContextPropagationConfig` 统一处理；异步任务结束必须 `clear()`
-- 路由 key 只来自可信上下文，**不信任前端传的 tenantId / deptId / userId**
+`eagle-tenant-starter` 源码已清空并移出 `settings.gradle`。**以下全部不存在，不要写、也不要"顺手补回来"**：
 
-## 隔离
+- `TenantContextHolder`、`@TenantFilter`、`TenantIdFilter`
+- 配置键 `eagle.tenant.*`（含 `mode` / `enabled`）
+- `ContextPropagationConfig` 的租户传播（现仅传播 MDC `requestId` 与 `PressureTestContext`）
+- `TenantAwareSecurityAuditLogUserProvider`
 
-- COLUMN 模式：业务表带 `tenant_id`，**应用层禁止手动拼 `WHERE tenant_id = ?`**，由 starter 注入
-- `@TenantFilter` 标在 **Service / Repository** 上，**不标在 `@Entity` 上**
-- DATABASE 模式走 starter 数据源路由，不在业务代码手选 DataSource
+残留痕迹**不代表能力还在**：`AuditLogRecord` 仍有 `tenant_id` 列与 `idx_audit_log_tenant` 索引，
+但已无写入方，恒为 null；少数类的 Javadoc 里还提到 `TenantContextHolder`，那是历史说明。
+新表**不要**再加 `tenant_id` 列。
+
+若将来要恢复多租户，须重新引入 starter 并同步重写本节 —— 在那之前，
+任何"租户隔离"需求都要先和需求方确认，不要自行用 `WHERE tenant_id = ?` 土法实现。
 
 ## 行级数据权限
 
-**`eagle-row-security-starter` 已移除**（源码已删，`@DataPermission` / `DataPermissionProvider` / `DataPermissionContext` 均不存在）——**不要再按注解式数据权限写代码**。
+无 `@DataPermission` / `DataPermissionProvider` / `DataPermissionContext` —— **不要按注解式数据权限写代码**。
 
 当前只剩业务侧的范围枚举 [DataScope](eagle-services/eagle-system-service/src/main/java/com/eagle/system/base/domain/model/enums/DataScope.java)，作为 `Role` 的普通字段（默认 `SELF`）：
 
@@ -102,11 +135,7 @@ log.info("用户注册 username={}, phone={}, email={}",
 private DataScope dataScope = DataScope.SELF;   // ALL / SELF / DEPT / DEPT_AND_CHILD / CUSTOM
 ```
 
-需要按范围过滤时，在应用服务或 Repository 查询条件里**显式**处理，并保证先租户隔离、再行级过滤。若要恢复注解式能力，需重新引入 starter 并同步更新本节。
-
-## 跨租户操作
-
-必须显式提供 reason + 写审计日志 + `try/finally` 恢复上下文。**禁止**普通业务路径隐式跨租户查询或批量操作。
+需要按范围过滤时，在应用服务或 Repository 查询条件里**显式**处理。
 
 ---
 
@@ -120,9 +149,8 @@ private DataScope dataScope = DataScope.SELF;   // ALL / SELF / DEPT / DEPT_AND_
 - 角色 / 权限分配
 - 敏感数据导出（用户列表、订单列表）
 - 删除聚合根
-- 跨租户管理操作
 
-多租户项目用 `TenantAwareSecurityAuditLogUserProvider`（普通的 `SecurityAuditLogUserProvider` 不带 tenantId）。
+用户身份由 `SecurityAuditLogUserProvider` 提供（多租户版本已随 tenant-starter 一并移除）。
 
 ---
 

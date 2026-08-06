@@ -29,8 +29,9 @@
 | JPA / 索引 / 事务 / 并发 / Flyway | `rules/04-data.md` |
 | 安全 / 租户 / 数据权限 / 日志 | `rules/05-security.md` |
 | Spring Boot 4 / Jackson 3 / starter / HTTP 客户端 | `rules/06-boot4.md` |
-| 高频陷阱 / PR 自检 | `rules/07-checklist.md` |
-| 缓存 / 消息 / 分布式事务 / 调度 / 存储 / 韧性 | 对应 starter skill（`eagle-redis` / `eagle-amqp` / `eagle-seata` / `eagle-scheduler` / `eagle-oss-minio` / `eagle-resilience`） |
+| 高频陷阱 / 存量违例台账 / PR 自检 | `rules/07-checklist.md` |
+| 内聚与耦合 / 规模红线 / 抽象与复用决策 / 各层厚度 | `rules/08-quality.md` |
+| 缓存 / 消息 / 调度 / 存储 / 韧性 | 对应 starter skill（`eagle-redis` / `eagle-amqp` / `eagle-scheduler` / `eagle-oss-minio` / `eagle-resilience`） |
 
 只保留和当前任务相关的规则上下文。通用编程常识由模型默认能力和现有代码风格处理；Eagle 专有 API、starter 用法、
 模块边界、配置键、迁移策略和踩坑记录必须按规则执行。
@@ -40,10 +41,13 @@
 编码触及 starter 时读取对应 skill，而不是凭记忆写 API：
 
 - 基础：`eagle-common`、`eagle-id-generator`、`eagle-resilience`、`eagle-audit-log`
-- 数据：`eagle-data-jpa`、`eagle-dynamic-datasource`、`eagle-sharding`、`eagle-elasticsearch`
-- 基础设施：`eagle-redis`、`eagle-amqp`、`eagle-oss-minio`、`eagle-scheduler`、`eagle-seata`
-- 安全与治理：`eagle-tenant`、`eagle-resource-server`、`eagle-openapi`、`eagle-tracing`
-- 业务能力：`eagle-notification`、`eagle-websocket`、`eagle-excel`、`eagle-encrypt`、`eagle-ai`
+- 数据：`eagle-data-jpa`、`eagle-data-r2dbc`、`eagle-sharding`
+- 基础设施：`eagle-redis`、`eagle-amqp`、`eagle-oss-minio`、`eagle-scheduler`
+- 安全与治理：`eagle-resource-server`、`eagle-openapi`、`eagle-tracing`、`eagle-idempotency`
+- 业务能力：`eagle-websocket`、`eagle-encrypt`、`eagle-restclient`、`eagle-webclient`
+
+**已移除的 9 个 starter**（skill 已删，不要引用）：`tenant`、`rocketmq`（→ `amqp`）、
+`dynamic-datasource`、`elasticsearch`、`excel`、`notification`、`seata`、`sentinel`（→ `resilience`）、`ai`。
 
 ## 验证
 
@@ -59,11 +63,25 @@ gradle :path:to:module:test --tests "*.ModulithArchitectureTest"
 
 1. 审计字段名：`createBy / updateBy / createTime / updateTime`，不是 `createdBy / updatedBy / createdAt / updatedAt`。
 2. `AsyncConfig` Bean 名：`taskExecutor`，不是 `eagleTaskExecutor`。
-3. `TenantContextHolder` API：`getTenantId() / setTenantId() / clear()`，不是 `getCurrentTenantId()`。
+3. **多租户能力已整体移除**：`TenantContextHolder` / `@TenantFilter` / `eagle.tenant.*` 全部不存在，
+   `ContextPropagationConfig` 也不再传播租户。新表不要加 `tenant_id`。
 4. AMQP 消费者继承 `AbstractAmqpListener<T>`，实现 `getTopic() / getEventClass() / handle(T event)`；不要用
    `@RabbitListener`。子类构造器必须显式调用 `super(amqpProperties)`，不要用 `@RequiredArgsConstructor` 代替。
+   每个消费者要有自己的 `getConsumerGroup()`，否则多消费者竞争消费同一条消息。
+   通配 routing key 用 `#` 不是 `*`（AMQP 的 `*` 只匹配恰好一个单词）。
 5. `DistributedLock.tryLock(key, waitSec, leaseSec, Supplier)` 的时间参数是 `long` 秒，不是 `Duration`。
 6. `CacheProtectionUtil.getWithMutex(key, ttl, loader, type)` 需要 4 个参数，包含返回类型 `Class<T>`。
-7. `DataScope` 枚举：`ALL / SELF / DEPT / DEPT_AND_CHILD / CUSTOM`。
-8. `eagle.tenant.enabled`、`eagle.datasource.enabled` 默认 `false`；生产环境不要沿用 `eagle.storage.type=local` 或
-   `eagle.tracing.sampling-probability=1.0`。
+7. `DataScope` 枚举：`ALL / SELF / DEPT / DEPT_AND_CHILD / CUSTOM`（无注解式数据权限，需手写过滤）。
+8. **不存在** `eagle.xxx.enabled` 总开关 —— starter 引入即生效，依赖坐标本身就是开关；
+   条件注解只用于「选哪种实现」，不用于「要不要装」。要禁用就移除依赖或用 `spring.autoconfigure.exclude`。
+9. 生产环境必改的默认值：`eagle.storage.type=local`、`eagle.tracing.sampling-probability=1.0`（全采样）。
+10. Jackson 3 分包：核心类在 `tools.jackson.*`，注解仍在 `com.fasterxml.jackson.annotation.*`；
+    `JsonProcessingException`（checked）已换成 `JacksonException`（unchecked）。
+11. 自定义 `SecurityFilterChain` 取代 starter 默认 chain 时，`oauth2ResourceServer.jwt` 必须显式接
+    `EagleJwtAuthenticationConverter`，否则 principal 不是 `EagleUser`，所有 `hasRole(...)` 静默失效。
+12. starter 里的 util 类只标 `@Component` 业务服务扫不到，必须在 `@AutoConfiguration` 里显式 `@Bean` 注册。
+13. **9 个 starter 已移除**（目录空壳仍在，但不在 `settings.gradle`）：`tenant` / `rocketmq`（→ `amqp`）/
+    `dynamic-datasource` / `elasticsearch` / `excel` / `notification` / `seata` / `sentinel` / `ai`。
+    对应地：无 `@GlobalTransactional`、无 `@ReadOnly`、限流走 `eagle-resilience` 的 `@RateLimit` 或
+    `RedisRateLimiter`、短信由 auth-service 自己实现。
+14. 注册中心是 **Consul**（`spring-cloud-starter-consul-discovery`），不是 Nacos。

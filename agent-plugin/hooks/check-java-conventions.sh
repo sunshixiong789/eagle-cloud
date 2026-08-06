@@ -85,6 +85,36 @@ if printf '%s' "$content" | grep -q 'StructuredTaskScope'; then
       "Java 25 中它仍是 preview，本项目未开 --enable-preview，编译会失败。见 rules/01-java25.md"
 fi
 
+# --- 01-java25.md / 08-quality.md：DTO 必须是 record（存量 45 处 @Data class，止血用） ---
+case "$file_path" in
+  */interfaces/dto/*)
+    if printf '%s' "$content" | grep -qE '^\s*@(Data|Builder|Setter)\b'; then
+      add "DTO 用了 @Data / @Builder / @Setter" \
+          "请求/响应 DTO 一律 record，不加 Lombok。存量 45 个 @Data class 是待偿技术债，不要照抄。见 rules/01-java25.md、rules/08-quality.md"
+    fi
+    ;;
+esac
+
+# --- 06-boot4.md：starter 禁止 eagle.xxx.enabled 总开关 ---
+if printf '%s' "$content" | grep -qE '@ConditionalOnProperty[^)]*"eagle\.[a-z0-9.-]*enabled"'; then
+  add "使用了 eagle.xxx.enabled 总开关" \
+      "starter 引入即生效，依赖坐标本身就是开关。条件注解只用于「选哪种实现」（mode / provider / 是否配了 url），不用于「要不要装」。见 rules/06-boot4.md"
+fi
+
+# --- 07-checklist.md 陷阱 23：引用已随 9 个 starter 移除的能力 ---
+if printf '%s' "$content" | grep -qE '\bTenantContextHolder\b|@TenantFilter\b'; then
+  add "引用了已移除的多租户 API" \
+      "eagle-tenant-starter 已清空并移出 settings.gradle，TenantContextHolder / @TenantFilter 均不存在。新表也不要加 tenant_id。见 rules/05-security.md"
+fi
+if printf '%s' "$content" | grep -qE '\bAbstractRocketMqListener\b|@RocketMQMessageListener\b|import org\.apache\.rocketmq'; then
+  add "引用了已移除的 RocketMQ API" \
+      "消息中间件已换成 RabbitMQ：继承 AbstractAmqpListener<T>，构造器显式 super(amqpProperties)，并实现 getConsumerGroup()。见 rules/02-architecture.md"
+fi
+if printf '%s' "$content" | grep -qE '@GlobalTransactional\b|import io\.seata\.|import com\.alibaba\.csp\.sentinel|import com\.alibaba\.cloud\.nacos'; then
+  add "引用了已移除的 Seata / Sentinel / Nacos" \
+      "无分布式事务（走本地事务 + AFTER_COMMIT 集成事件 + 消费方幂等）；限流用 eagle-resilience 的 @RateLimit 或 RedisRateLimiter；注册中心是 Consul。见 rules/07-checklist.md 陷阱 23"
+fi
+
 if [ -n "$VIOLATIONS" ]; then
   {
     printf 'Eagle 规范检查未通过（%s）：\n\n' "$(basename "$file_path")"
