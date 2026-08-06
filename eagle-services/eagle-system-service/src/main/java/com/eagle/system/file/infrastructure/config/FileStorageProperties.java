@@ -48,12 +48,6 @@ public class FileStorageProperties {
             "jpg", "jpeg", "png", "gif", "webp", "pdf", "docx", "xlsx", "txt"
     );
 
-    /**
-     * 单租户部署的默认租户 ID（与 t_file.tenant_id 对应）
-     */
-    @NotBlank
-    private String defaultTenantId = "default";
-
     public long getMaxSizeBytes() {
         return (long) maxSizeMb * 1024 * 1024;
     }

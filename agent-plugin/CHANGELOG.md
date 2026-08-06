@@ -27,6 +27,26 @@ ALTER TABLE eagle_audit_log DROP COLUMN tenant_id;
 
 生产是 `ddl-auto=validate`：**必须先执行上面的 DDL 再发布新版本**，否则实体与表结构不匹配会启动失败。
 
+### Removed — `sys_file` 移除 tenant_id（system-service）
+
+文件模块的租户字段同样已无来源（恒为配置里的 `"default"`），一并移除：
+
+| 位置 | 移除内容 |
+|---|---|
+| `FileMetadata` | `tenantId` 字段、`tenant_id` 列、`idx_file_tenant_uploader` 索引 |
+| `FileMetadata.create(...)` | 首个 `tenantId` 参数（8 → 7 个） |
+| `FileStorageProperties` | `defaultTenantId` |
+| `application.yml` | `eagle.file.default-tenant-id` |
+
+**objectKey 路径规则同步变更**：`{tenant}/{uploadedBy}/{yyyy/MM/dd}/{uuid}.{ext}`
+→ `{uploadedBy}/{yyyy/MM/dd}/{uuid}.{ext}`。该功能尚未上线、无存量对象，不需要迁移；
+若已有存量数据则**不可直接套用本次变更**。
+
+```sql
+ALTER TABLE sys_file DROP INDEX idx_file_tenant_uploader;
+ALTER TABLE sys_file DROP COLUMN tenant_id;
+```
+
 ### Changed — 规则与 skill 同步 starter 移除
 
 - 9 个 starter 移出构建（`tenant` / `rocketmq`→`amqp` / `dynamic-datasource` / `elasticsearch` /

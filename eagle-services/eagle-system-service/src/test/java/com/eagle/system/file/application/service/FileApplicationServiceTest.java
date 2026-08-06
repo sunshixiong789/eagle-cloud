@@ -144,7 +144,7 @@ class FileApplicationServiceTest {
         @Test
         @DisplayName("应返回Metadata")
         void shouldReturnMetadata() {
-            FileMetadata metadata = FileMetadata.create("default", BUCKET, "default/1024/2026/05/16/abc.pdf",
+            FileMetadata metadata = FileMetadata.create(BUCKET, "1024/2026/05/16/abc.pdf",
                     "report.pdf", 100L, "application/pdf", null, USER_ID.toString());
             when(fileRepository.findByIdAndDeletedFalse(1L)).thenReturn(Optional.of(metadata));
 
@@ -170,7 +170,7 @@ class FileApplicationServiceTest {
         @Test
         @DisplayName("所有者Can删除")
         void ownerCanDelete() {
-            FileMetadata metadata = FileMetadata.create("default", BUCKET, "key",
+            FileMetadata metadata = FileMetadata.create(BUCKET, "key",
                     "x.pdf", 10L, "application/pdf", null, USER_ID.toString());
             when(fileRepository.findByIdAndDeletedFalse(1L)).thenReturn(Optional.of(metadata));
             when(fileRepository.save(any(FileMetadata.class)))
@@ -185,7 +185,7 @@ class FileApplicationServiceTest {
         @DisplayName("管理员Can删除")
         void adminCanDelete() {
             securityMock.when(() -> SecurityUtils.hasRole("admin")).thenReturn(true);
-            FileMetadata metadata = FileMetadata.create("default", BUCKET, "key",
+            FileMetadata metadata = FileMetadata.create(BUCKET, "key",
                     "x.pdf", 10L, "application/pdf", null, OTHER_USER_ID);
             when(fileRepository.findByIdAndDeletedFalse(1L)).thenReturn(Optional.of(metadata));
             when(fileRepository.save(any(FileMetadata.class)))
@@ -199,7 +199,7 @@ class FileApplicationServiceTest {
         @Test
         @DisplayName("other用户Cannot删除")
         void otherUserCannotDelete() {
-            FileMetadata metadata = FileMetadata.create("default", BUCKET, "key",
+            FileMetadata metadata = FileMetadata.create(BUCKET, "key",
                     "x.pdf", 10L, "application/pdf", null, OTHER_USER_ID);
             when(fileRepository.findByIdAndDeletedFalse(1L)).thenReturn(Optional.of(metadata));
 

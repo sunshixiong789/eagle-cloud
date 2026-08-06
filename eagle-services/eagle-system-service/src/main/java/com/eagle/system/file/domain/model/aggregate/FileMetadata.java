@@ -27,20 +27,15 @@ import lombok.NoArgsConstructor;
                 @UniqueConstraint(name = "uk_file_bucket_key", columnNames = {"bucket", "object_key"})
         },
         indexes = {
-                @Index(name = "idx_file_tenant_uploader", columnList = "tenant_id, uploaded_by"),
                 @Index(name = "idx_file_uploaded_by", columnList = "uploaded_by")
         })
 public class FileMetadata extends BaseAggregateRoot<FileMetadata> {
-
-    @Column(name = "tenant_id", nullable = false, updatable = false, length = 64,
-            comment = "租户 ID（单租户部署默认 default）")
-    private String tenantId;
 
     @Column(name = "bucket", nullable = false, updatable = false, length = 64, comment = "存储桶")
     private String bucket;
 
     @Column(name = "object_key", nullable = false, updatable = false, length = 512,
-            comment = "对象 Key（{tenant}/{yyyy/MM/dd}/{uuid}.{ext}）")
+            comment = "对象 Key（{uploadedBy}/{yyyy/MM/dd}/{uuid}.{ext}）")
     private String objectKey;
 
     @Column(name = "original_name", length = 255, comment = "上传时的原始文件名")
@@ -61,9 +56,8 @@ public class FileMetadata extends BaseAggregateRoot<FileMetadata> {
     @Column(name = "deleted", nullable = false, comment = "软删除标记（0=可用，1=已删除）")
     private boolean deleted;
 
-    private FileMetadata(String tenantId, String bucket, String objectKey, String originalName,
+    private FileMetadata(String bucket, String objectKey, String originalName,
                          Long size, String contentType, String md5, String uploadedBy) {
-        this.tenantId = tenantId;
         this.bucket = bucket;
         this.objectKey = objectKey;
         this.originalName = originalName;
@@ -74,10 +68,10 @@ public class FileMetadata extends BaseAggregateRoot<FileMetadata> {
         this.deleted = false;
     }
 
-    public static FileMetadata create(String tenantId, String bucket, String objectKey,
+    public static FileMetadata create(String bucket, String objectKey,
                                       String originalName, long size, String contentType,
                                       String md5, String uploadedBy) {
-        return new FileMetadata(tenantId, bucket, objectKey, originalName, size,
+        return new FileMetadata(bucket, objectKey, originalName, size,
                 contentType, md5, uploadedBy);
     }
 

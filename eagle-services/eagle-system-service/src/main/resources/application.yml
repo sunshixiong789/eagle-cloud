@@ -190,7 +190,6 @@ eagle:
   file:
     bucket: ${EAGLE_FILE_BUCKET:eagle-dev-files}
     max-size-mb: ${EAGLE_FILE_MAX_SIZE_MB:50}
-    default-tenant-id: default
     allowed-extensions:
       - jpg
       - jpeg

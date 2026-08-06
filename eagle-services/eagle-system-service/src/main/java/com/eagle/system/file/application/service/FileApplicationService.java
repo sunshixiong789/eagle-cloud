@@ -63,7 +63,6 @@ public class FileApplicationService {
         }
 
         FileMetadata metadata = FileMetadata.create(
-                properties.getDefaultTenantId(),
                 bucket,
                 objectKey,
                 file.getOriginalFilename(),
@@ -158,8 +157,8 @@ public class FileApplicationService {
         String date = LocalDate.now().format(DATE_PATH);
         String uuid = UUID.randomUUID().toString().replace("-", "");
         return ext.isEmpty()
-                ? String.format("%s/%s/%s/%s", properties.getDefaultTenantId(), uploadedBy, date, uuid)
-                : String.format("%s/%s/%s/%s.%s", properties.getDefaultTenantId(), uploadedBy, date, uuid, ext);
+                ? String.format("%s/%s/%s", uploadedBy, date, uuid)
+                : String.format("%s/%s/%s.%s", uploadedBy, date, uuid, ext);
     }
 
     private String resolveContentType(MultipartFile file) {
