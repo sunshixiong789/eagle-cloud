@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 public class TaobaoAppProperties {
 
     /**
-     * 是否启用淘宝登录（false 时不装配 TaobaoClient，grant 解析直接报 upstream）
+     * 是否启用淘宝登录（false 时 TaobaoServiceImpl 直接报 upstream，不发起 TOP 调用）
      */
     private boolean enabled = false;
 
