@@ -6,7 +6,7 @@
 ## 插件能力
 
 - `rules/`：按场景读取，不要一次性展开全部规则。
-- `skills/`：涉及具体 starter 时读取对应 `SKILL.md`，例如 Redis、RocketMQ、JPA、Tenant、Resource Server、OpenAPI、MinIO。
+- `skills/`：涉及具体 starter 时读取对应 `SKILL.md`，例如 Redis、AMQP、JPA、Tenant、Resource Server、OpenAPI、MinIO。
 - `commands/`：可参考 `/check-arch`、`/new-module`、`/new-aggregate`、`/new-starter`、`/add-error-code` 的脚手架规范。
 
 ## 技术栈定位
@@ -30,7 +30,7 @@
 | 安全 / 租户 / 数据权限 / 日志 | `rules/05-security.md` |
 | Spring Boot 4 / Jackson 3 / starter / HTTP 客户端 | `rules/06-boot4.md` |
 | 高频陷阱 / PR 自检 | `rules/07-checklist.md` |
-| 缓存 / 消息 / 分布式事务 / 调度 / 存储 / 韧性 | 对应 starter skill（`eagle-redis` / `eagle-rocketmq` / `eagle-seata` / `eagle-scheduler` / `eagle-oss-minio` / `eagle-resilience`） |
+| 缓存 / 消息 / 分布式事务 / 调度 / 存储 / 韧性 | 对应 starter skill（`eagle-redis` / `eagle-amqp` / `eagle-seata` / `eagle-scheduler` / `eagle-oss-minio` / `eagle-resilience`） |
 
 只保留和当前任务相关的规则上下文。通用编程常识由模型默认能力和现有代码风格处理；Eagle 专有 API、starter 用法、
 模块边界、配置键、迁移策略和踩坑记录必须按规则执行。
@@ -41,7 +41,7 @@
 
 - 基础：`eagle-common`、`eagle-id-generator`、`eagle-resilience`、`eagle-audit-log`
 - 数据：`eagle-data-jpa`、`eagle-dynamic-datasource`、`eagle-sharding`、`eagle-elasticsearch`
-- 基础设施：`eagle-redis`、`eagle-rocketmq`、`eagle-oss-minio`、`eagle-scheduler`、`eagle-seata`、`eagle-sentinel`
+- 基础设施：`eagle-redis`、`eagle-amqp`、`eagle-oss-minio`、`eagle-scheduler`、`eagle-seata`
 - 安全与治理：`eagle-tenant`、`eagle-resource-server`、`eagle-openapi`、`eagle-tracing`
 - 业务能力：`eagle-notification`、`eagle-websocket`、`eagle-excel`、`eagle-encrypt`、`eagle-ai`
 
@@ -60,8 +60,8 @@ gradle :path:to:module:test --tests "*.ModulithArchitectureTest"
 1. 审计字段名：`createBy / updateBy / createTime / updateTime`，不是 `createdBy / updatedBy / createdAt / updatedAt`。
 2. `AsyncConfig` Bean 名：`taskExecutor`，不是 `eagleTaskExecutor`。
 3. `TenantContextHolder` API：`getTenantId() / setTenantId() / clear()`，不是 `getCurrentTenantId()`。
-4. RocketMQ 消费者继承 `AbstractRocketMqListener<T>`，实现 `getTopic() / getEventClass() / handle(T event)`；不要用
-   `@RocketMQMessageListener`。子类构造器必须显式调用 `super(rocketMqProperties)`，不要用 `@RequiredArgsConstructor` 代替。
+4. AMQP 消费者继承 `AbstractAmqpListener<T>`，实现 `getTopic() / getEventClass() / handle(T event)`；不要用
+   `@RabbitListener`。子类构造器必须显式调用 `super(amqpProperties)`，不要用 `@RequiredArgsConstructor` 代替。
 5. `DistributedLock.tryLock(key, waitSec, leaseSec, Supplier)` 的时间参数是 `long` 秒，不是 `Duration`。
 6. `CacheProtectionUtil.getWithMutex(key, ttl, loader, type)` 需要 4 个参数，包含返回类型 `Class<T>`。
 7. `DataScope` 枚举：`ALL / SELF / DEPT / DEPT_AND_CHILD / CUSTOM`。

@@ -2,7 +2,7 @@
 # Eagle Gateway · 基线配置（承载全部默认）
 # 设计原则：
 #   - application.yml 承载完整配置；profile 文件只声明"开发/线上不一样"的差异
-#   - 环境变量仅暴露外部接入字段：Nacos 地址、CORS 白名单、Sentinel dashboard 等
+#   - 环境变量仅暴露外部接入字段：Consul 地址、CORS 白名单等
 #   - 默认值取"生产安全"基线（CORS 默认 *，prod 覆盖；Swagger 默认开，prod 关闭）
 # ===========================================
 
@@ -25,67 +25,29 @@ spring:
 
   cloud:
     # Spring Cloud LoadBalancer 缓存：默认 TTL 35s 偏长，
-    # 在"gateway 启动早于下游服务注册到 Nacos"的场景下会缓存空实例列表 35s，
+    # 在“gateway 启动早于下游服务注册到注册中心”的场景下会缓存空实例列表 35s，
     # 期间所有 lb:// 路由返回 "Unable to find instance for X" 503。
-    # 缩短到 5s 让 LB 快速感知 Nacos 实例变化；Spring Cloud Alibaba Nacos
-    # discovery 不会向 LoadBalancer 主动推送事件，只能靠 TTL 过期重拉。
+    # 缩短到 5s 让 LB 快速感知实例变化。
     loadbalancer:
       cache:
         enabled: true
         ttl: 5s
         capacity: 256
 
-    nacos:
+    consul:
+      host: ${CONSUL_HOST:localhost}
+      port: ${CONSUL_PORT:8500}
       discovery:
-        server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
-        namespace: ${NACOS_NAMESPACE:}
-        group: ${NACOS_GROUP:DEFAULT_GROUP}
-        # Nacos 3.0+ 默认开启鉴权（nacos.core.auth.enabled=true），客户端必须传账号密码
-        username: ${NACOS_USERNAME:nacos}
-        password: ${NACOS_PASSWORD:}
-        # 多机部署时显式注入宿主机/可达 IP；单机 docker 部署留空，客户端自动取容器 IP
-        ip: ${NACOS_REGISTER_IP:}
+        enabled: ${CONSUL_DISCOVERY_ENABLED:true}
+        register: true
+        # 多机部署时显式注入宿主机/可达 IP；单机 docker 留空则自动探测网卡
+        prefer-ip-address: true
+        ip-address: ${CONSUL_INSTANCE_IP:}
+        service-name: ${spring.application.name}
+        health-check-path: /actuator/health
+        health-check-interval: 10s
+        health-check-critical-timeout: 30s
 
-    # Sentinel：dashboard 留空时不连接，避免无意义超时；prod 注入并 eager=true
-    sentinel:
-      transport:
-        dashboard: ${SENTINEL_DASHBOARD:}
-      eager: false
-      filter:
-        enabled: false                          # Gateway 用 SentinelGatewayFilter，关闭 Servlet Filter
-      # Sentinel 规则持久化到 Nacos：客户端启动时从 Nacos 拉取规则，Dashboard 修改后实时下发
-      # 需要在 Nacos 中预创建对应 dataId 的 JSON 配置（首次启动会因找不到配置 warn 一次，可忽略）
-      datasource:
-        ds-flow:
-          nacos:
-            server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
-            namespace: ${NACOS_NAMESPACE:}
-            username: ${NACOS_USERNAME:nacos}
-            password: ${NACOS_PASSWORD:}
-            group-id: SENTINEL_GROUP
-            data-id: ${spring.application.name}-flow-rules
-            data-type: json
-            rule-type: gw-flow
-        ds-api-group:
-          nacos:
-            server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
-            namespace: ${NACOS_NAMESPACE:}
-            username: ${NACOS_USERNAME:nacos}
-            password: ${NACOS_PASSWORD:}
-            group-id: SENTINEL_GROUP
-            data-id: ${spring.application.name}-api-groups
-            data-type: json
-            rule-type: gw-api-group
-        ds-degrade:
-          nacos:
-            server-addr: ${NACOS_SERVER_ADDR:localhost:8848}
-            namespace: ${NACOS_NAMESPACE:}
-            username: ${NACOS_USERNAME:nacos}
-            password: ${NACOS_PASSWORD:}
-            group-id: SENTINEL_GROUP
-            data-id: ${spring.application.name}-degrade-rules
-            data-type: json
-            rule-type: degrade
 
     gateway:
       # Spring Cloud Gateway 4.3+：spring.cloud.gateway.server.webflux.*
@@ -230,24 +192,3 @@ eagle:
       allowed-headers: "*"
       allow-credentials: true
       max-age: 3600
-    sentinel:
-      enabled: ${EAGLE_GATEWAY_SENTINEL_ENABLED:true}
-      rules:
-        # 单机 8G 默认高并发基线：保护 system 服务，同时给短时突发留余量。
-        - resource: global-api
-          resource-mode: api
-          path-prefixes: /
-          qps: ${EAGLE_SENTINEL_GLOBAL_QPS:1800}
-          burst: ${EAGLE_SENTINEL_GLOBAL_BURST:300}
-        # OAuth2 / 登录相关接口较重，单独收紧，避免拖垮授权链路。
-        - resource: auth-sensitive-api
-          resource-mode: api
-          path-prefixes: /oauth2/,/.well-known/,/userinfo,/auth/userinfo,/logout,/connect/,/login
-          qps: ${EAGLE_SENTINEL_AUTH_QPS:600}
-          burst: ${EAGLE_SENTINEL_AUTH_BURST:100}
-        # 短信 / 注册 / 重置密码牵涉 Redis、DB 和外部短信商，不能跟普通查询同阈值。
-        - resource: sms-api
-          resource-mode: api
-          path-prefixes: /sms/,/accounts/register,/accounts/password/reset
-          qps: ${EAGLE_SENTINEL_SMS_QPS:80}
-          burst: ${EAGLE_SENTINEL_SMS_BURST:20}

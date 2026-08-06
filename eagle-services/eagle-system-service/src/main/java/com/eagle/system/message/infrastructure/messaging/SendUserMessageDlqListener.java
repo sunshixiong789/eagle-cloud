@@ -1,13 +1,14 @@
 package com.eagle.system.message.infrastructure.messaging;
 
-import com.eagle.rocketmq.events.SendUserMessageIntegrationEvent;
-import com.eagle.rocketmq.listener.AbstractDlqListener;
-import com.eagle.rocketmq.properties.RocketMqProperties;
+import com.eagle.amqp.events.CommonMessageTopics;
+import com.eagle.amqp.events.SendUserMessageIntegrationEvent;
+import com.eagle.amqp.listener.AbstractDlqListener;
+import com.eagle.amqp.properties.AmqpProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
- * SendUserMessage DLQ 兜底——重试 16 次仍失败时进入此处。
+ * SendUserMessage DLQ 兜底——重试耗尽（{@code eagle.amqp.consumer.max-attempts}）仍失败时进入此处。
  *
  * <p>本期记录 ERROR 日志（告警 stub），后续接入运维告警系统。
  *
@@ -17,8 +18,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class SendUserMessageDlqListener extends AbstractDlqListener<SendUserMessageIntegrationEvent> {
 
-    public SendUserMessageDlqListener(RocketMqProperties props) {
+    private final String topicPrefix;
+
+    public SendUserMessageDlqListener(AmqpProperties props) {
         super(props);
+        this.topicPrefix = props.getExchangePrefix();
+    }
+
+    @Override
+    protected String getOriginalTopic() {
+        return topicPrefix + CommonMessageTopics.USER_MESSAGE_SEND;
     }
 
     @Override

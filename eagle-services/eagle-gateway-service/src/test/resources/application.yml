@@ -1,13 +1,19 @@
 spring:
   cloud:
-    nacos:
+    # Consul 自动注册由 4 个属性的 OR 条件共同门控（任一缺省即视为 true），测试环境
+    # 必须全部显式关闭，否则 ConsulAutoRegistration bean 仍会在上下文刷新期构造，
+    # 此时 RANDOM_PORT 尚未分配真实端口，实例 ID 归一化失败直接报错。
+    consul:
       discovery:
         enabled: false
-    sentinel:
+      service-registry:
+        enabled: false
+        auto-registration:
+          enabled: false
+    service-registry:
       enabled: false
-
-seata:
-  enabled: false
+      auto-registration:
+        enabled: false
 
 eagle:
   gateway:

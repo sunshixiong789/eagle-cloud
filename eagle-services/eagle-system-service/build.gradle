@@ -2,9 +2,8 @@
 dependencies {
     implementation project(':eagle-starter:eagle-data-jpa-starter')
     implementation project(':eagle-starter:eagle-resource-server-starter')
-    implementation project(':eagle-starter:eagle-notification-starter')
     implementation project(':eagle-starter:eagle-websocket-starter')
-    implementation project(':eagle-starter:eagle-rocketmq-starter')
+    implementation project(':eagle-starter:eagle-amqp-starter')
     implementation project(':eagle-starter:eagle-resilience-starter')
     implementation project(':eagle-starter:eagle-oss-minio-starter')
     implementation project(':eagle-starter:eagle-openapi-starter')
@@ -17,13 +16,11 @@ dependencies {
     // Schema 暂由 Hibernate ddl-auto=update 同步;Flyway 后期统一引入。
 
     // Nacos 服务注册与发现
-    implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery'
+    implementation 'org.springframework.cloud:spring-cloud-starter-consul-discovery'
 
     implementation "com.github.ben-manes.caffeine:caffeine"
     implementation "org.apache.poi:poi-ooxml"
 
-    // message 模块的 AnnouncementCache / TargetFilter 直接用 fastjson2 做 JSON 序列化
-    implementation "com.alibaba.fastjson2:fastjson2"
 
     // 本地开发:自动加载项目根目录的 .env.prod 文件到 Spring Environment
     runtimeOnly 'me.paulschwarz:spring-dotenv:5.1.0'

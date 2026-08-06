@@ -3,7 +3,7 @@ package com.eagle.auth.core.infrastructure.event;
 import com.eagle.auth.core.domain.event.AccountPhoneChangedEvent;
 import com.eagle.auth.core.infrastructure.event.integration.AccountPhoneChangedIntegrationEvent;
 import com.eagle.auth.core.infrastructure.remote.SystemUserSyncClient;
-import com.eagle.rocketmq.publisher.DomainEventPublisher;
+import com.eagle.amqp.publisher.DomainEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;

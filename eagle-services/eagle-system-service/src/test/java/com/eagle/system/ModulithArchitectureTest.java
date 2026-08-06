@@ -40,11 +40,9 @@ class ModulithArchitectureTest {
 
     /** 断言模块的(直接或传递)依赖中不包含目标模块。 */
     private static void assertModuleNotDependsOn(ApplicationModule module, String forbiddenModule) {
-        boolean depends = module.getDependencies(MODULES).stream()
-                .map(dep -> dep.getTargetModule().getName())
-                .anyMatch(forbiddenModule::equals);
+        boolean depends = module.getAllDependencies(MODULES).containsModuleNamed(forbiddenModule);
         if (depends) {
-            fail(module.getName() + " 不应依赖 " + forbiddenModule + " 模块;"
+            fail(module.getIdentifier() + " 不应依赖 " + forbiddenModule + " 模块;"
                     + "请检查 import 语句和 package-info.java 的 allowedDependencies");
         }
     }
@@ -113,7 +111,7 @@ class ModulithArchitectureTest {
         @DisplayName("modules 集合应包含 base + message,且不应再含 auth(已拆分为独立服务)")
         void shouldContainExpectedModules() {
             List<String> moduleNames = MODULES.stream()
-                    .map(ApplicationModule::getName)
+                    .map(module -> module.getIdentifier().toString())
                     .toList();
             assertTrue(moduleNames.contains("base"), "实际模块: " + moduleNames);
             assertTrue(moduleNames.contains("message"), "实际模块: " + moduleNames);

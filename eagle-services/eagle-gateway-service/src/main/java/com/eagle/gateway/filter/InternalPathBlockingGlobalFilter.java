@@ -21,7 +21,7 @@ import java.nio.charset.StandardCharsets;
  * 网关层禁止外部访问 {@code /internal/**} 内部 API。
  *
  * <p><strong>背景</strong>:服务发现路由({@code gateway.discovery.locator.enabled=true})开启后,
- * 任何注册到 Nacos 的服务路径都可通过 {@code https://gateway/{service-id}/**} 被外部访问;
+ * 任何注册到注册中心的服务路径都可通过 {@code https://gateway/{service-id}/**} 被外部访问;
  * 业务方手写的 {@code @RequestMapping("/internal/**")} 端点(本意仅供同集群其他服务调用)
  * 会被一并暴露,产生敏感数据泄露风险。
  *

@@ -23,7 +23,7 @@ import java.util.Set;
  * 网关 OpenAPI 转发路由：把 {@code /v3/api-docs/{alias}} 转发到 {@code lb://<serviceId>/v3/api-docs}。
  *
  * <p>{@link GatewayOpenApiConfig} 负责把聚合 URL 写入 Swagger UI；本类负责让这些 URL 真的能拉到下游 JSON。
- * 路由项基于 Nacos 实例 metadata 中的 {@code spring-doc=<alias>} 动态生成，配置由下游服务声明，
+ * 路由项基于注册中心实例 metadata 中的 {@code spring-doc=<alias>} 动态生成，配置由下游服务声明，
  * 网关侧无需维护服务清单。
  *
  * <p>SCG {@link RouteDefinitionLocator} 在每次匹配请求时被读取，因此实例上下线后无需手动刷新路由表。

@@ -1,14 +1,14 @@
 # -------- 线上部署:应用层 (auth / system / gateway) ----------
 #
-# 本文件**只部署无状态 / 轻状态应用**;有状态基础设施(PG / Redis / Nacos / RocketMQ)
+# 本文件**只部署无状态 / 轻状态应用**;有状态基础设施(PG / Redis / Consul / RabbitMQ)
 # **不**在本文件,理由见下方"为什么不用 docker 跑基础设施"。
 #
 # 配套外部基础设施清单(必须在启动前准备好,通过 .env.prod 把端点 / 凭据写进对应 *_HOST / *_PASSWORD):
 #   ┌──────────────┬──────────────────────────────────────────────────────────────┐
 #   │ PostgreSQL16+│ 阿里云 RDS for PostgreSQL / 腾讯云 TDSQL-PG / 自建 Patroni    │
 #   │ Redis 7+     │ 阿里云 Tair / 腾讯云 Redis / 自建 Sentinel 或 Cluster        │
-#   │ Nacos 3.x    │ 阿里云 MSE Nacos / 3 节点集群 + MySQL 后端 (config 持久化)     │
-#   │ RocketMQ 5.x │ 阿里云 MQ / 腾讯云 TDMQ-RocketMQ / K8s + RocketMQ Operator   │
+#   │ Consul 1.x   │ 阿里云 MSE / 自建 3 节点集群 (Raft 多数派容错)                │
+#   │ RabbitMQ 4.x │ 阿里云 MQ for RabbitMQ / 腾讯云 TDMQ-RabbitMQ / 自建镜像队列 │
 #   │ MinIO / OSS  │ 阿里云 OSS / 腾讯云 COS / 自建 MinIO 集群(4+ 节点 EC 模式)    │
 #   └──────────────┴──────────────────────────────────────────────────────────────┘
 #
@@ -17,22 +17,22 @@
 #   1. 数据持久化:named volume 绑定在宿主机磁盘;宿主机盘故障 = 数据全丢。
 #      托管服务: 多副本 + PITR + 跨可用区备份,RPO 通常 ≤ 5 分钟。
 #
-#   2. 高可用:PG streaming replication / Redis Sentinel / Nacos raft / RocketMQ DLedger
+#   2. 高可用:PG streaming replication / Redis Sentinel / Consul raft / RabbitMQ 镜像队列
 #      都要多节点协同;单机 docker 跑等于"高可用协议假装在运行",真宕机就完蛋。
 #
 #   3. 性能:大页内存 / 网络栈 / IO scheduler / NUMA 绑核等 OS 级调优在容器化场景损失 5~20%,
 #      对吞吐 / 延迟敏感的有状态服务尤其明显。
 #
 #   4. 备份恢复:托管自带 PITR / 快照 / 跨区域备份;docker 自建要自己维护 wal-g / restic /
-#      RocketMQ 异地灾备,出事时回滚链路极长。
+#      RabbitMQ 异地灾备,出事时回滚链路极长。
 #
 #   5. 升级:托管支持小版本滑动升级 + 跨大版本迁移工具;docker 自建大概率要停机 + 手工迁数据。
 #
 #   6. 监控:托管自带控制台 / 慢日志 / 自动告警;docker 自建要自搭 Prometheus + Grafana +
 #      Alertmanager,且容易和应用监控混在一起。
 #
-#   Sentinel Dashboard 已移至 docker-compose.middleware.yml(与 Redis/Nacos/RocketMQ 同机),
-#   本文件不再包含它;gateway 通过 SENTINEL_DASHBOARD 环境变量指向其地址即可。
+#   限流已由 Sentinel 迁移为 Spring Cloud Gateway 内置 RequestRateLimiter(Redis 令牌桶,集群级计数),
+#   不再需要独立的规则管理面板容器。
 #
 # ── env 文件(prod 自包含,与 dev 完全独立)──
 #   .env.prod —— prod 全套值 + 机密(外部端点/凭据/对外 URL),gitignore
@@ -77,7 +77,7 @@ x-logging: &default-logging
 
 services:
   # 认证服务 (OAuth2 Authorization Server)
-  # 基础设施依赖: PG (eagle_auth 库) / Redis / Nacos / RocketMQ 全部走 .env.prod.prod 配置的外部端点
+  # 基础设施依赖: PG (eagle_auth 库) / Redis / Consul / RabbitMQ 全部走 .env.prod.prod 配置的外部端点
   auth:
     build:
       context: ./eagle-auth-service
@@ -95,13 +95,11 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - SERVER_PORT=${AUTH_SERVER_PORT:-9090}
-      # Nacos (外部集群端点,无默认值 → fail-fast)
-      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:?NACOS_SERVER_ADDR must be set in .env.prod.prod}
-      - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
-      - NACOS_GROUP=${NACOS_GROUP:-DEFAULT_GROUP}
-      - NACOS_USERNAME=${NACOS_USERNAME:?NACOS_USERNAME must be set in .env.prod.prod}
-      - NACOS_PASSWORD=${NACOS_PASSWORD:?NACOS_PASSWORD must be set in .env.prod.prod}
-      - NACOS_REGISTER_IP=${NACOS_REGISTER_IP:-}
+      # Consul (外部集群端点,无默认值 → fail-fast)
+      - CONSUL_HOST=${CONSUL_HOST:?CONSUL_HOST must be set in .env.prod.prod}
+      - CONSUL_PORT=${CONSUL_PORT:-8500}
+      - CONSUL_DISCOVERY_ENABLED=${CONSUL_DISCOVERY_ENABLED:-true}
+      - CONSUL_INSTANCE_IP=${CONSUL_INSTANCE_IP:-}
       # PostgreSQL (外部 RDS,auth 用独立库 eagle_auth)
       - DB_HOST=${DB_HOST:?DB_HOST must be set in .env.prod.prod}
       - DB_PORT=${DB_PORT:-5432}
@@ -119,9 +117,13 @@ services:
       - REDIS_POOL_MAX_IDLE=${REDIS_POOL_MAX_IDLE:-32}
       - REDIS_POOL_MIN_IDLE=${REDIS_POOL_MIN_IDLE:-8}
       - REDIS_POOL_MAX_WAIT=${REDIS_POOL_MAX_WAIT:-2000ms}
-      # RocketMQ 5.x gRPC → Proxy:8081 (外部托管)
-      - ROCKETMQ_ENDPOINTS=${ROCKETMQ_ENDPOINTS:?ROCKETMQ_ENDPOINTS must be set in .env.prod.prod}
-      - ROCKETMQ_TOPIC_ENV_PREFIX=${ROCKETMQ_TOPIC_ENV_PREFIX:-prod_}
+      # RabbitMQ (外部托管)
+      - RABBITMQ_HOST=${RABBITMQ_HOST:?RABBITMQ_HOST must be set in .env.prod.prod}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME:?RABBITMQ_USERNAME must be set in .env.prod.prod}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD must be set in .env.prod.prod}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST:-/}
+      - RABBITMQ_EXCHANGE_PREFIX=${RABBITMQ_EXCHANGE_PREFIX:-prod_}
       # 初始管理员
       - EAGLE_ADMIN_USERNAME=${EAGLE_ADMIN_USERNAME:-admin}
       - EAGLE_ADMIN_PASSWORD=${EAGLE_ADMIN_PASSWORD:?EAGLE_ADMIN_PASSWORD must be set in .env.prod.prod}
@@ -186,7 +188,7 @@ services:
       start_period: 90s
 
   # 系统服务
-  # 基础设施依赖: PG (eagle_system 库) / Redis / Nacos / RocketMQ 走 .env.prod.prod 配置的外部端点
+  # 基础设施依赖: PG (eagle_system 库) / Redis / Consul / RabbitMQ 走 .env.prod.prod 配置的外部端点
   system:
     build:
       context: ./eagle-system-service
@@ -204,13 +206,11 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - SERVER_PORT=${SERVER_PORT:-8082}
-      # Nacos
-      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:?NACOS_SERVER_ADDR must be set in .env.prod.prod}
-      - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
-      - NACOS_GROUP=${NACOS_GROUP:-DEFAULT_GROUP}
-      - NACOS_USERNAME=${NACOS_USERNAME:?NACOS_USERNAME must be set in .env.prod.prod}
-      - NACOS_PASSWORD=${NACOS_PASSWORD:?NACOS_PASSWORD must be set in .env.prod.prod}
-      - NACOS_REGISTER_IP=${NACOS_REGISTER_IP:-}
+      # Consul
+      - CONSUL_HOST=${CONSUL_HOST:?CONSUL_HOST must be set in .env.prod.prod}
+      - CONSUL_PORT=${CONSUL_PORT:-8500}
+      - CONSUL_DISCOVERY_ENABLED=${CONSUL_DISCOVERY_ENABLED:-true}
+      - CONSUL_INSTANCE_IP=${CONSUL_INSTANCE_IP:-}
       # PostgreSQL
       - DB_HOST=${DB_HOST:?DB_HOST must be set in .env.prod.prod}
       - DB_PORT=${DB_PORT:-5432}
@@ -228,9 +228,13 @@ services:
       - REDIS_POOL_MAX_IDLE=${REDIS_POOL_MAX_IDLE:-32}
       - REDIS_POOL_MIN_IDLE=${REDIS_POOL_MIN_IDLE:-8}
       - REDIS_POOL_MAX_WAIT=${REDIS_POOL_MAX_WAIT:-2000ms}
-      # RocketMQ
-      - ROCKETMQ_ENDPOINTS=${ROCKETMQ_ENDPOINTS:?ROCKETMQ_ENDPOINTS must be set in .env.prod.prod}
-      - ROCKETMQ_TOPIC_ENV_PREFIX=${ROCKETMQ_TOPIC_ENV_PREFIX:-prod_}
+      # RabbitMQ
+      - RABBITMQ_HOST=${RABBITMQ_HOST:?RABBITMQ_HOST must be set in .env.prod.prod}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME:?RABBITMQ_USERNAME must be set in .env.prod.prod}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD must be set in .env.prod.prod}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST:-/}
+      - RABBITMQ_EXCHANGE_PREFIX=${RABBITMQ_EXCHANGE_PREFIX:-prod_}
       # 初始管理员 username (与 auth 共用同一值)
       - EAGLE_ADMIN_USERNAME=${EAGLE_ADMIN_USERNAME:-admin}
       # JWT keystore
@@ -292,22 +296,11 @@ services:
     mem_reservation: 768m
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
-      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:?NACOS_SERVER_ADDR must be set in .env.prod.prod}
-      - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
-      - NACOS_GROUP=${NACOS_GROUP:-DEFAULT_GROUP}
-      - NACOS_USERNAME=${NACOS_USERNAME:?NACOS_USERNAME must be set in .env.prod.prod}
-      - NACOS_PASSWORD=${NACOS_PASSWORD:?NACOS_PASSWORD must be set in .env.prod.prod}
-      - NACOS_REGISTER_IP=${NACOS_REGISTER_IP:-}
+      - CONSUL_HOST=${CONSUL_HOST:?CONSUL_HOST must be set in .env.prod.prod}
+      - CONSUL_PORT=${CONSUL_PORT:-8500}
+      - CONSUL_DISCOVERY_ENABLED=${CONSUL_DISCOVERY_ENABLED:-true}
+      - CONSUL_INSTANCE_IP=${CONSUL_INSTANCE_IP:-}
       - AUTH_SERVER_URL=${AUTH_SERVER_URL:-http://auth:9090}
-      - SENTINEL_DASHBOARD=${SENTINEL_DASHBOARD:-sentinel-dashboard:8858}
-      - EAGLE_GATEWAY_SENTINEL_ENABLED=${EAGLE_GATEWAY_SENTINEL_ENABLED:-true}
-      - EAGLE_SENTINEL_GLOBAL_QPS=${EAGLE_SENTINEL_GLOBAL_QPS:-3600}
-      - EAGLE_SENTINEL_GLOBAL_BURST=${EAGLE_SENTINEL_GLOBAL_BURST:-600}
-      - EAGLE_SENTINEL_AUTH_QPS=${EAGLE_SENTINEL_AUTH_QPS:-1200}
-      - EAGLE_SENTINEL_AUTH_BURST=${EAGLE_SENTINEL_AUTH_BURST:-200}
-      - EAGLE_SENTINEL_SMS_QPS=${EAGLE_SENTINEL_SMS_QPS:-120}
-      - EAGLE_SENTINEL_SMS_BURST=${EAGLE_SENTINEL_SMS_BURST:-30}
-      - ROCKETMQ_NAME_SERVER=${ROCKETMQ_NAME_SERVER:?ROCKETMQ_NAME_SERVER must be set in .env.prod.prod}
       # 生产 CORS 不允许通配符:必须显式列出业务前端域名
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS must be set in .env.prod.prod (no wildcard allowed)}
       - JAVA_OPTS=${GATEWAY_JAVA_OPTS:--server -XX:+UseG1GC -Xms768m -Xmx1g -XX:MaxMetaspaceSize=320m -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/app/logs/heapdump -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}

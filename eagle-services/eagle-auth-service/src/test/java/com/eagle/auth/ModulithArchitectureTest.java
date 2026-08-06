@@ -72,7 +72,7 @@ class ModulithArchitectureTest {
         @DisplayName("只应识别出一个业务模块 core")
         void shouldHaveSingleCoreModule() {
             List<String> moduleNames = MODULES.stream()
-                    .map(ApplicationModule::getName)
+                    .map(module -> module.getIdentifier().toString())
                     .toList();
             assertTrue(moduleNames.contains("core"),
                     "core 模块未被识别;实际: " + moduleNames);

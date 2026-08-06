@@ -4,6 +4,11 @@ dependencies {
     // Resilience4J Spring Boot 4 starter
     api 'io.github.resilience4j:resilience4j-spring-boot4'
 
+    // @RateLimit 声明式限流：切面需要 AspectJ 注解，异常处理器需要 Servlet API
+    api 'org.springframework.boot:spring-boot-starter-aspectj'
+    compileOnly 'org.springframework:spring-webmvc'
+    compileOnly 'jakarta.servlet:jakarta.servlet-api'
+
     // Micrometer 指标集成（可选，消费方按需引入 micrometer-core）
     compileOnly 'io.github.resilience4j:resilience4j-micrometer'
     compileOnly 'org.springframework.boot:spring-boot-starter-actuator'

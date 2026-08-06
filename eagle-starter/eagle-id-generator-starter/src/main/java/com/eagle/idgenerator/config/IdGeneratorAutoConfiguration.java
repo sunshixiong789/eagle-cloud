@@ -21,10 +21,10 @@ import org.springframework.context.annotation.Primary;
  *
  * <p>注册以下 Bean：
  * <ul>
- *   <li>{@link SnowflakeIdGenerator} — 雪花算法（Hutool）</li>
+ *   <li>{@link SnowflakeIdGenerator} — 雪花算法</li>
  *   <li>{@link UuidIdGenerator} — UUID v7（uuid-creator）</li>
  *   <li>{@link TsidIdGenerator} — TSID（tsid-creator）</li>
- *   <li>{@link NanoIdGenerator} — NanoId 短字符串（Hutool）</li>
+ *   <li>{@link NanoIdGenerator} — NanoId 短字符串</li>
  *   <li>{@link IdGenerator} — 默认 long ID 生成器，由 {@code eagle.id-generator.type} 决定</li>
  *   <li>{@link IdGeneratorUtil} — 静态工具类</li>
  *   <li>{@link OrderNoGenerator} / {@link IdGeneratorFacade} — 业务门面（可关闭）</li>

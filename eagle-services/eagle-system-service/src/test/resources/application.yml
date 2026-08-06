@@ -2,10 +2,17 @@ spring:
   # 不再激活 local profile（已删除）。剩余 @SpringBootTest 默认 @Disabled，
   # 其它 Mockito 单测不依赖此文件，但保留下方防御性配置作为未来集成测试的兜底。
   cloud:
-    nacos:
+    # Consul 自动注册由 4 个属性的 OR 条件共同门控（任一缺省即视为 true），需全部显式关闭。
+    consul:
       discovery:
         enabled: false
-      config:
+      service-registry:
+        enabled: false
+        auto-registration:
+          enabled: false
+    service-registry:
+      enabled: false
+      auto-registration:
         enabled: false
 
   # 测试期排除会拉起外部资源的自动配置(Redisson 等)。

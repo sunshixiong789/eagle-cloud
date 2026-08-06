@@ -1,7 +1,7 @@
 package com.eagle.system.base.infrastructure.messaging;
 
-import com.eagle.rocketmq.listener.AbstractRocketMqListener;
-import com.eagle.rocketmq.properties.RocketMqProperties;
+import com.eagle.amqp.listener.AbstractAmqpListener;
+import com.eagle.amqp.properties.AmqpProperties;
 import com.eagle.system.base.application.service.SystemLogRecorder;
 import com.eagle.system.base.infrastructure.messaging.event.AuthLoginMessage;
 import org.springframework.stereotype.Component;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
  * 消费 auth-service 发布的登录日志事件，写入 system-service 系统日志表。
  */
 @Component
-public class AuthLoginConsumer extends AbstractRocketMqListener<AuthLoginMessage> {
+public class AuthLoginConsumer extends AbstractAmqpListener<AuthLoginMessage> {
 
     static final String TOPIC = "eagle_auth_events";
     static final String TAG = "auth.login";
@@ -18,7 +18,7 @@ public class AuthLoginConsumer extends AbstractRocketMqListener<AuthLoginMessage
 
     private final SystemLogRecorder recorder;
 
-    public AuthLoginConsumer(RocketMqProperties props, SystemLogRecorder recorder) {
+    public AuthLoginConsumer(AmqpProperties props, SystemLogRecorder recorder) {
         super(props);
         this.recorder = recorder;
     }
@@ -39,7 +39,7 @@ public class AuthLoginConsumer extends AbstractRocketMqListener<AuthLoginMessage
     }
 
     @Override
-    protected String getTagExpression() {
+    protected String getRoutingKey() {
         return TAG;
     }
 

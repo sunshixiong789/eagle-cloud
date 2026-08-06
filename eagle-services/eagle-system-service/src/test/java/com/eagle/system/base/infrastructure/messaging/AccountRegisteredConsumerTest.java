@@ -1,6 +1,6 @@
 package com.eagle.system.base.infrastructure.messaging;
 
-import com.eagle.rocketmq.properties.RocketMqProperties;
+import com.eagle.amqp.properties.AmqpProperties;
 import com.eagle.system.base.application.service.AccountEventApplicationService;
 import com.eagle.system.base.infrastructure.messaging.event.AccountRegisteredMessage;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,14 +26,14 @@ class AccountRegisteredConsumerTest {
     void setUp() {
         // Consumer 基类构造器必须调 super(props),不能用 @InjectMocks(Mockito 不调 super);
         // 也不能让 Consumer 子类用 @RequiredArgsConstructor(详见 CLAUDE.md 高频陷阱)。
-        consumer = new AccountRegisteredConsumer(new RocketMqProperties(), accountEventService);
+        consumer = new AccountRegisteredConsumer(new AmqpProperties(), accountEventService);
     }
 
     @Test
     @DisplayName("topic/tag/consumerGroup 与常量对齐")
     void wiringMatchesConstants() {
         assertThat(consumer.getTopic()).isEqualTo("eagle_auth_events");
-        assertThat(consumer.getTagExpression()).isEqualTo("account.registered");
+        assertThat(consumer.getRoutingKey()).isEqualTo("account.registered");
         assertThat(consumer.getConsumerGroup()).isEqualTo("system_account_registered");
         assertThat(consumer.getEventClass()).isEqualTo(AccountRegisteredMessage.class);
     }

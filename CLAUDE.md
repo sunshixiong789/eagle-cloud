@@ -15,7 +15,7 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 - **Hibernate 7.2.6** (JPA) / MySQL 9.6.0 / PostgreSQL 42.7.10 / Druid 1.2.28
 - **Spring Security + OAuth2 Authorization Server**
 - Lombok / SpringDoc OpenAPI 3.0.2
-- **Redisson 4.3.0** / RocketMQ 2.3.5 / XXL-JOB 2.4.2 / Seata 2.2.0 / MinIO 8.5.17
+- **Redisson 4.3.0** / RabbitMQ (Spring AMQP, amqp-client 5.27.1) / XXL-JOB 2.4.2 / Seata 2.2.0 / MinIO 8.5.17
 
 ## PR 前必跑（速查）
 
@@ -72,7 +72,7 @@ Port 接口隔离，拆分时只需替换 `infrastructure/` 层实现。
 | `eagle-restclient-starter`         | 同步阻塞 RestClient + `@HttpExchange`（servlet 服务用，含 JWT / 租户 / Seata XID 透传）                       |
 | `eagle-webclient-starter`          | 反应式 WebClient + `@HttpExchange`（WebFlux 服务用，同套透传 + 统一错误处理）                                  |
 | `eagle-tracing-starter`            | 分布式链路追踪（Brave/Zipkin）                                                                          |
-| `eagle-rocketmq-starter`           | RocketMQ v5 消息队列（事务消息、DLQ、AbstractRocketMqListener）                                            |
+| `eagle-amqp-starter`               | RabbitMQ 消息队列（Spring AMQP、DLQ、AbstractAmqpListener）                                              |
 | `eagle-dynamic-datasource-starter` | 多数据源动态路由（主从切换、@ReadOnly、轮询负载均衡）                                                                |
 | `eagle-tenant-starter`             | 多租户支持（COLUMN/DATABASE 隔离模式、TenantContextHolder）                                                |
 | `eagle-oss-minio-starter`          | 对象存储（MinIO 8.x，签名 URL、分片上传）                                                                    |
@@ -146,7 +146,7 @@ Starter 模块设置 `bootJar.enabled = false`、`jar.enabled = true`，依赖�
 | `.claude/rules/07-checklist.md`        | **必看**：高频陷阱速查（Eagle 特有 API）+ PR 前自检清单                           |
 
 缓存、消息队列、分布式事务、定时任务、对象存储、韧性等主题**不设常驻规则文件**，
-规范随对应 starter skill（`eagle-redis` / `eagle-rocketmq` / `eagle-seata` / `eagle-scheduler` /
+规范随对应 starter skill（`eagle-redis` / `eagle-amqp` / `eagle-seata` / `eagle-scheduler` /
 `eagle-oss-minio` / `eagle-resilience`）按需自动加载。
 
 ## 项目级 Commands（slash command）
@@ -171,7 +171,7 @@ OpenSpec）：
 |----|------------|----------------------------------------------|---------------------------------------------------------------------------------|
 | 1  | Brainstorm | `superpowers:brainstorming`                  | （无，聚焦需求澄清）                                                                      |
 | 2  | Plan       | `superpowers:writing-plans`                  | ★ 必读相关 `.claude/rules/*` + 在 plan 中预定要触发的 commands（`/new-module` 等）             |
-| 3  | TDD        | `superpowers:test-driven-development`        | ★ 加载相关 starter skills（`eagle-common` / `eagle-rocketmq` 等）+ 执行 plan 中的 commands |
+| 3  | TDD        | `superpowers:test-driven-development`        | ★ 加载相关 starter skills（`eagle-common` / `eagle-amqp` 等）+ 执行 plan 中的 commands |
 | 4  | Verify     | `superpowers:verification-before-completion` | ★ 强制 `/check-arch`                                                              |
 | 5  | Review     | `superpowers:requesting-code-review`         | ★ 对照 `.claude/rules/07-checklist.md`（高频陷阱 + 自检清单）                            |
 | 6  | Finish     | `superpowers:finishing-a-development-branch` | 按 `.claude/rules/00-core.md` 整理 commit + PR 描述                                   |

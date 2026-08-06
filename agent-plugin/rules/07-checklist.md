@@ -14,7 +14,7 @@
 | 6 | 分布式锁签名 | `tryLock(String key, long waitTime, long leaseTime, Supplier<T>)` —— **`long` 秒，不是 `Duration`**；简写 `tryLock(key, supplier)` 默认 3s/30s |
 | 7 | 缓存击穿防护 | `getWithMutex(String key, Duration ttl, Supplier<T> loader, Class<T> type)` —— **4 个参数** |
 | 8 | 数据权限 | `eagle-row-security-starter` **已移除**，无 `@DataPermission` / `DataPermissionProvider`。只剩 `Role` 上的业务枚举 `DataScope`：`ALL` / `SELF` / `DEPT` / `DEPT_AND_CHILD` / `CUSTOM`（**没有** `DEPT_ONLY` / `SELF_ONLY`），需手写过滤 |
-| 9 | RocketMQ 消费者 | 继承 `AbstractRocketMqListener<T>` 实现 `getTopic()` / `getEventClass()` / `handle(T)`，**不用** `@RocketMQMessageListener`；**必须手写构造器显式 `super(rocketMqProperties)`，禁用 `@RequiredArgsConstructor`**（`AbstractDlqListener` 同理） |
+| 9 | AMQP 消费者 | 继承 `AbstractAmqpListener<T>` 实现 `getTopic()` / `getEventClass()` / `handle(T)`，**不用** `@RabbitListener`；**必须手写构造器显式 `super(amqpProperties)`，禁用 `@RequiredArgsConstructor`**（`AbstractDlqListener` 同理） |
 | 10 | 多租户装配条件 | 由 `eagle.tenant.mode` 决定（`column`/`database`，默认 `COLUMN`）。**不存在 `eagle.tenant.enabled`** |
 | 11 | 读写分离装配条件 | 由 `eagle.datasource.master.url` 是否配置决定。**不存在 `eagle.datasource.enabled`** |
 | 12 | 脱敏 | **无 `@Sensitive` 注解**；日志用 `LogMask.phone/email/idCard/token`，响应体无统一机制 |

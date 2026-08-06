@@ -15,11 +15,11 @@ import org.springframework.boot.test.context.SpringBootTest;
  * （{@code *Test.java}）保证。
  *
  * <p>需要做完整启动验证时（升级 Spring Boot、调整自动配置、排查 Bean 冲突），先用
- * Testcontainers 或本地 docker 起 PostgreSQL + Redis + Nacos，再去掉 {@code @Disabled} 跑这个。
+ * Testcontainers 或本地 docker 起 PostgreSQL + Redis + Consul，再去掉 {@code @Disabled} 跑这个。
  *
  * @author sunshixiong
  */
-@Disabled("启动完整 Spring 上下文需 DB/Redis/Nacos；Mockito 单测已覆盖业务逻辑，仅在做集成冒烟时手工启用")
+@Disabled("启动完整 Spring 上下文需 DB/Redis/Consul；Mockito 单测已覆盖业务逻辑，仅在做集成冒烟时手工启用")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class EagleSystemApplicationTests {
 

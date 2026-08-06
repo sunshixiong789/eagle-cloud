@@ -45,7 +45,7 @@
 | `rules/07-checklist.md`     | **必看**：高频陷阱速查（Eagle 特有 API）+ PR 前自检清单                                |
 
 缓存、消息队列、分布式事务、定时任务、对象存储、韧性等主题**不设常驻规则文件**，规范随对应 starter skill
-（`eagle-redis` / `eagle-rocketmq` / `eagle-seata` / `eagle-scheduler` / `eagle-oss-minio` / `eagle-resilience`）按需自动加载。
+（`eagle-redis` / `eagle-amqp` / `eagle-seata` / `eagle-scheduler` / `eagle-oss-minio` / `eagle-resilience`）按需自动加载。
 
 ### 前端：`rules-frontend/`（React Web / React Native / Taro 多端）
 
@@ -81,7 +81,7 @@
 | `eagle-sharding`           | 分库分表、ShardingSphere YAML 配置               |
 | `eagle-elasticsearch`      | ES 检索 / 聚合 / 高亮                           |
 | `eagle-redis`              | 缓存 / 锁 / 限流 / 布隆                          |
-| `eagle-rocketmq`           | 事件发布 / 事务消息 / 死信                          |
+| `eagle-amqp`                | 事件发布 / 死信                                 |
 | `eagle-id-generator`       | 雪花 / TSID / NanoId / 业务单号                 |
 | `eagle-idempotency`        | 接口幂等                                      |
 | `eagle-tenant`             | 多租户上下文                                    |
@@ -123,7 +123,7 @@
 |----|------------|----------------------------------------------|------------------------------------------------------------------------------|
 | 1  | Brainstorm | `superpowers:brainstorming`                  | (无,聚焦需求澄清)                                                                   |
 | 2  | Plan       | `superpowers:writing-plans`                  | ★ 必读相关 `rules/*` + 在 plan 中预定要触发的 commands(`/new-module` 等)                  |
-| 3  | TDD        | `superpowers:test-driven-development`        | ★ 加载相关 starter skills(eagle-common / eagle-rocketmq 等) + 触发 plan 中的 commands |
+| 3  | TDD        | `superpowers:test-driven-development`        | ★ 加载相关 starter skills(eagle-common / eagle-amqp 等) + 触发 plan 中的 commands |
 | 4  | Verify     | `superpowers:verification-before-completion` | ★ 强制 `/check-arch`                                                           |
 | 5  | Review     | `superpowers:requesting-code-review`         | ★ 对照 `rules/07-checklist.md`(高频陷阱 + 自检清单)                                 |
 | 6  | Finish     | `superpowers:finishing-a-development-branch` | 按 `rules/00-core.md` 整理 commit + PR 描述                                        |

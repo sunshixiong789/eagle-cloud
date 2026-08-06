@@ -4,7 +4,6 @@ import com.eagle.common.http.HttpClientProperties;
 import com.eagle.http.client.error.EagleResponseErrorHandler;
 import com.eagle.http.client.interceptor.PropagatingHeadersClientHttpRequestInterceptor;
 import com.eagle.http.client.interceptor.SeataXidClientHttpRequestInterceptor;
-import com.eagle.http.client.interceptor.TenantClientHttpRequestInterceptor;
 import com.eagle.http.client.support.EagleRestClientCustomizer;
 import com.eagle.http.client.support.EagleRestServiceClientFactory;
 import tools.jackson.databind.ObjectMapper;
@@ -60,13 +59,11 @@ public class EagleRestClientAutoConfiguration {
     public EagleRestClientCustomizer eagleRestClientCustomizer(
             HttpClientProperties properties,
             ObjectProvider<PropagatingHeadersClientHttpRequestInterceptor> propagatingHeadersInterceptor,
-            ObjectProvider<TenantClientHttpRequestInterceptor> tenantInterceptor,
             ObjectProvider<SeataXidClientHttpRequestInterceptor> seataInterceptor,
             EagleResponseErrorHandler errorHandler) {
         return new EagleRestClientCustomizer(
                 properties,
                 propagatingHeadersInterceptor.stream().<ClientHttpRequestInterceptor>map(i -> i).toList(),
-                tenantInterceptor.stream().toList(),
                 seataInterceptor.stream().toList(),
                 errorHandler);
     }
@@ -140,19 +137,4 @@ public class EagleRestClientAutoConfiguration {
         }
     }
 
-    /**
-     * 租户 ID 透传（仅在 eagle-tenant-starter 存在于类路径时注册）。
-     */
-    @Slf4j
-    @Configuration(proxyBeanMethods = false)
-    @ConditionalOnClass(name = "com.eagle.tenant.TenantContextHolder")
-    static class TenantConfiguration {
-
-        @Bean
-        @ConditionalOnMissingBean
-        public TenantClientHttpRequestInterceptor tenantClientHttpRequestInterceptor() {
-            log.info("RestClient tenant ID propagation enabled");
-            return new TenantClientHttpRequestInterceptor();
-        }
-    }
 }

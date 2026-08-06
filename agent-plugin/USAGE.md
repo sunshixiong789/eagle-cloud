@@ -129,7 +129,7 @@ eagle-feature-flow 激活(本 plugin) ← 仅手动触发,不识别普通需求�
 | 情况            | 模型自动做                                |
 |---------------|--------------------------------------|
 | 启动会话          | 读 plugin 的 CLAUDE.md → 知道 Eagle 平台规范 |
-| 写 RocketMQ 代码 | 自动激活 `eagle-rocketmq` skill,使用正确 API |
+| 写 AMQP 代码    | 自动激活 `eagle-amqp` skill,使用正确 API   |
 | 写缓存 / 锁代码     | 自动激活 `eagle-redis` skill             |
 | 用户问"怎么做幂等"    | 自动激活 `eagle-idempotency` skill       |
 
@@ -138,12 +138,12 @@ eagle-feature-flow 激活(本 plugin) ← 仅手动触发,不识别普通需求�
 **例子**:
 
 ```
-> 帮我在 OrderService 加一个超时取消逻辑
+> 帮我在 OrderService 加一个订单创建后跨服务通知
 
 [模型]
 1. 读 CLAUDE.md → 知道用 DDD + 模块化单体
-2. 涉及 RocketMQ 延迟消息 → 自动加载 eagle-rocketmq skill
-3. 用 publishDelayed() API 实现 → 写测试 → 写实现
+2. 涉及跨服务集成事件发布 → 自动加载 eagle-amqp skill
+3. 用 DomainEventPublisher.publish() API 实现 → 写测试 → 写实现
 ```
 
 但模型 **不会** 主动跑 `/check-arch`、不会主动对照 review-checklist。这些得你手动要求。
@@ -215,7 +215,7 @@ eagle-feature-flow 激活(本 plugin) ← 仅手动触发,不识别普通需求�
 
 [Eagle Flow] Phase 3/6: TDD
   调用 superpowers:test-driven-development
-  加载 skills: eagle-common, eagle-data-jpa, eagle-rocketmq, eagle-tenant
+  加载 skills: eagle-common, eagle-data-jpa, eagle-amqp, eagle-tenant
   执行 commands: /new-module points → /new-aggregate ×2 → /add-error-code
   逐 step 红→绿→重构
   → 测试全绿 ✅
@@ -356,7 +356,7 @@ L1 模式即可:模型读 CLAUDE.md → 知道 Eagle 用乐观锁(`@Version`)→
 | 多数据源主从分离                     | `eagle-dynamic-datasource` |
 | Elasticsearch 检索             | `eagle-elasticsearch`      |
 | Redis 缓存 / 分布式锁 / 限流 / 布隆    | `eagle-redis`              |
-| RocketMQ 发布 / 消费 / 事务消息 / 死信 | `eagle-rocketmq`           |
+| RabbitMQ 发布 / 消费 / 死信          | `eagle-amqp`               |
 | ID 生成(雪花/TSID/订单号)           | `eagle-id-generator`       |
 | 接口幂等                         | `eagle-idempotency`        |
 | 多租户隔离                        | `eagle-tenant`             |
@@ -422,8 +422,8 @@ L3 流程的 Phase 4 / Phase 5 已自动包含以上;L1 / L2 必须手动。
 
 可能原因:
 
-1. 描述不够明确 → 提及具体 starter 名(如"用 eagle-rocketmq 发个消息")
-2. 模型选了别的 skill → 显式说"加载 eagle-rocketmq skill"
+1. 描述不够明确 → 提及具体 starter 名(如"用 eagle-amqp 发个消息")
+2. 模型选了别的 skill → 显式说"加载 eagle-amqp skill"
 3. Plugin 没正确装 → 见[故障排查](#故障排查)
 
 ---

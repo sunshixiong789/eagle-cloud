@@ -36,10 +36,8 @@ networks:
 volumes:
   postgres-data:
   redis-data:
-  nacos-data:
-  rocketmq-namesrv-logs:
-  rocketmq-broker-logs:
-  rocketmq-broker-store:
+  consul-data:
+  rabbitmq-data:
   # system-service 本地上传文件落盘目录(对应 Dockerfile 的 /data/eagle/storage)。
   # 命名卷首次创建继承镜像内该目录的 spring:spring owner,非 root 用户可写。
   system-storage:
@@ -103,216 +101,55 @@ services:
       retries: 5
       start_period: 10s
 
-  # Nacos 注册中心
-  nacos:
-    image: nacos/nacos-server:v3.2.1
-    container_name: eagle-nacos
+  # Consul 注册中心（单节点 dev-friendly server；取代 Nacos）
+  consul:
+    image: hashicorp/consul:1.20
+    container_name: eagle-consul
     restart: always
     ports:
-      # Nacos v3 新版控制台容器内端口 8080；为避免与 gateway 主机 8080 冲突，主机映射为 8090
-      - "8090:8080"
-      - "8848:8848"
-      - "9848:9848"
+      - "8500:8500"       # HTTP API + Web UI
+      - "8600:8600/udp"   # DNS
     networks:
       - eagle-network
     environment:
-      - PREFER_HOST_MODE=${NACOS_PREFER_HOST_MODE:-hostname}
-      - MODE=${NACOS_MODE:-standalone}
-      - NACOS_AUTH_IDENTITY_KEY=${NACOS_AUTH_IDENTITY_KEY:-serverIdentity}
-      - NACOS_AUTH_IDENTITY_VALUE=${NACOS_AUTH_IDENTITY_VALUE:-security}
-      - NACOS_AUTH_TOKEN=${NACOS_AUTH_TOKEN:-VGhpc0lzTXlDdXN0b21TZWNyZXRLZXkwMTIzNDU2Nzg=}
-      # Nacos v3 默认 -Xms2g -Xmx2g 偏大,开发期收紧到 512m
-      - JVM_XMS=${NACOS_JVM_XMS:-512m}
-      - JVM_XMX=${NACOS_JVM_XMX:-512m}
-      - JVM_XMN=${NACOS_JVM_XMN:-256m}
       - TZ=${TZ:-Asia/Shanghai}
-    mem_limit: 1024m
-    mem_reservation: 512m
+    command: agent -server -bootstrap-expect=1 -ui -client=0.0.0.0 -data-dir=/consul/data
+    mem_limit: 512m
+    mem_reservation: 256m
     volumes:
-      - nacos-data:/home/nacos/data
+      - consul-data:/consul/data
     healthcheck:
-      # Nacos v3.x 把控制台拆成独立 Tomcat：
-      #   - 容器内 8080：新版 Console（context path 是 /，无 /nacos 前缀）
-      #   - 容器内 8848：Server OpenAPI（保留 /nacos 前缀）
-      # 旧的 /nacos/v1/console/health/readiness 在 v3 已移除（启动日志：No mapping for GET ...）；
-      # actuator 端点默认未暴露（启动日志：Exposing 0 endpoints beneath base path '/actuator'）。
-      # healthcheck 在容器内执行，必须用容器内端口（不是 ports 映射出去的主机端口 8090）。
-      # 直接探容器内 8080 的根路径——Tomcat 启动后稳定返回 200，且 standalone 模式下
-      # Console 与 Server 同进程同启动，Console 就绪即代表 Nacos 可用。
-      test: [ "CMD-SHELL", "curl -fsS -o /dev/null -m 3 http://127.0.0.1:8080/ || exit 1" ]
+      test: [ "CMD", "wget", "-qO-", "http://127.0.0.1:8500/v1/status/leader" ]
       interval: 10s
       timeout: 5s
-      retries: 20
-      start_period: 60s
+      retries: 10
+      start_period: 20s
 
-  # Sentinel Dashboard（开发环境单机，控制台 8858；默认账号 sentinel/sentinel）
-  # 客户端通过 SENTINEL_DASHBOARD=sentinel-dashboard:8858 上报心跳与拉取规则
-  # 镜像来源：本地 Dockerfile 拉取 Alibaba 官方发布的 fat jar（不依赖第三方 docker hub 镜像）
-  sentinel-dashboard:
-    build:
-      context: ./sentinel-dashboard
-      args:
-        SENTINEL_VERSION: 1.8.9
-    image: eagle-sentinel-dashboard:1.8.9
-    pull_policy: build           # 本地构建镜像，禁止 docker compose up 时去 registry 拉
-    container_name: eagle-sentinel
+  # RabbitMQ（开发环境单机；management 插件自带可视化控制台 http://localhost:15672）
+  rabbitmq:
+    image: rabbitmq:4.2-management
+    container_name: eagle-rabbitmq
     restart: always
     ports:
-      - "8858:8858"
+      - "5672:5672"    # AMQP
+      - "15672:15672"  # management 控制台
     networks:
       - eagle-network
     environment:
-      # 启动参数：固定监听 8858 + dashboard 自监控地址 + project.name 区分集群
-      # 1.8.6+ 默认开启鉴权（账号/密码 sentinel/sentinel），如需自定义加：
-      # -Dsentinel.dashboard.auth.username=xxx -Dsentinel.dashboard.auth.password=xxx
-      - JAVA_OPTS=${SENTINEL_JAVA_OPTS:--server -Xms128m -Xmx256m -Dserver.port=8858 -Dcsp.sentinel.dashboard.server=localhost:8858 -Dproject.name=sentinel-dashboard}
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-guest}
+      - RABBITMQ_DEFAULT_VHOST=${RABBITMQ_VHOST:-/}
       - TZ=${TZ:-Asia/Shanghai}
-    mem_limit: 384m
-    mem_reservation: 192m
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    mem_limit: 512m
+    mem_reservation: 256m
     healthcheck:
-      # Sentinel Dashboard 是 Spring Boot 应用，根路径返回 200 即视为就绪
-      test: [ "CMD-SHELL", "wget -qO- http://127.0.0.1:8858/ > /dev/null 2>&1 || exit 1" ]
-      interval: 30s
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
-
-  # RocketMQ NameServer（开发环境单机，9876）
-  # 仅做路由注册；Broker 启动后向其汇报，客户端通过它发现 Broker 地址
-  rocketmq-namesrv:
-    image: apache/rocketmq:5.3.2
-    container_name: eagle-rocketmq-namesrv
-    restart: always
-    # user: root —— 与 broker 同理:named volume 默认属主 root,rocketmq 用户(uid=3000)
-    # 无权在 /home/rocketmq/logs/ 下创建 rocketmqlogs 子目录,namesrv_traffic.log 等
-    # FileAppender 启动期就抛 FileNotFoundException
-    user: root
-    ports:
-      - "9876:9876"
-    networks:
-      - eagle-network
-    environment:
-      # NameServer 仅做路由查询,开发期 256m 完全够
-      - JAVA_OPT_EXT=${ROCKETMQ_NAMESRV_JAVA_OPT_EXT:--server -Xms256m -Xmx256m -Xmn128m}
-      - TZ=${TZ:-Asia/Shanghai}
-    # 启动前确保 logback FileAppender 写日志的子目录存在
-    command:
-      - sh
-      - -c
-      - |
-        set -e
-        mkdir -p /home/rocketmq/logs/rocketmqlogs
-        exec sh mqnamesrv
-    mem_limit: 384m
-    mem_reservation: 192m
-    volumes:
-      - rocketmq-namesrv-logs:/home/rocketmq/logs
-
-  # RocketMQ Broker（开发环境单机 master，无 slave）
-  # brokerIP1 必须指定为容器服务名（rocketmq-broker），否则其他容器拿到默认宿主 IP 后无法连上
-  # autoCreateTopicEnable=true：开发环境允许首次发送时自动建 Topic（生产应关闭，由运维预创建）
-  rocketmq-broker:
-    image: apache/rocketmq:5.3.2
-    container_name: eagle-rocketmq-broker
-    restart: always
-    # user: root —— named volume 首次挂载属主是 root:root,镜像内默认 rocketmq 用户(uid=3000)
-    # 无法写入 /home/rocketmq/store,会触发"createBrokerController 失败 → shutdown NPE"假象
-    user: root
-    ports:
-      - "10909:10909"   # VIP channel
-      - "10911:10911"   # Broker 主端口（客户端读写）
-      - "10912:10912"   # HA 同步端口（单机也开放，便于后续扩主从）
-    networks:
-      - eagle-network
-    depends_on:
-      - rocketmq-namesrv
-    environment:
-      - NAMESRV_ADDR=${ROCKETMQ_NAMESRV_ADDR:-rocketmq-namesrv:9876}
-      # Broker 默认堆 8g 太大;开发机收紧到 512m(消息吞吐很小时够用,容量不够再调)
-      - JAVA_OPT_EXT=${ROCKETMQ_BROKER_JAVA_OPT_EXT:--server -Xms512m -Xmx512m -Xmn256m}
-      - TZ=${TZ:-Asia/Shanghai}
-    # broker.conf 用 YAML `|` 字面块 + bash heredoc 在容器启动时写出
-    # 不挂 bind mount(macOS Docker Desktop 单文件 bind 有缓存怪问题,会被当目录)
-    # 不用 YAML `>` 折叠 + printf '\n'(\n 在多层嵌套下会被吞成字面 n)
-    # heredoc 用真实换行,最稳
-    # brokerIP1=rocketmq-broker 必须指向容器服务名,否则其他容器拿到默认宿主 IP 后连不上
-    # storePathRootDir 必须显式声明,否则某些代码路径派生 null → shutdown NPE
-    # autoCreateTopicEnable=true:开发环境允许首次发送时自动建 Topic(生产应关闭)
-    command:
-      - sh
-      - -c
-      - |
-        set -e
-        mkdir -p /home/rocketmq/store /home/rocketmq/logs/rocketmqlogs
-        cat > /home/rocketmq/broker.conf <<'EOF'
-        brokerIP1=rocketmq-broker
-        brokerName=broker-a
-        brokerId=0
-        brokerClusterName=DefaultCluster
-        namesrvAddr=rocketmq-namesrv:9876
-        storePathRootDir=/home/rocketmq/store
-        autoCreateTopicEnable=true
-        autoCreateSubscriptionGroup=true
-        EOF
-        exec sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/broker.conf
-    mem_limit: 768m
-    mem_reservation: 384m
-    volumes:
-      - rocketmq-broker-logs:/home/rocketmq/logs
-      - rocketmq-broker-store:/home/rocketmq/store
-
-  # RocketMQ Proxy（5.x gRPC 接入层，必装）
-  # rocketmq-client-java 5.x 是 gRPC 协议，业务客户端不再直连 broker/namesrv，统一走 Proxy:8081。
-  # 没有 Proxy 时 Consumer/Producer 启动会以 "Connection refused: localhost:8081" 失败。
-  rocketmq-proxy:
-    image: apache/rocketmq:5.3.2
-    container_name: eagle-rocketmq-proxy
-    restart: always
-    user: root
-    ports:
-      # 容器内 8081 是固定值（RocketMQ Proxy gRPC 默认端口）；宿主机映射到 18081
-      # 避开与 auth-service 的 8081 冲突，仅供本机调试连接 rocketmq-proxy 使用
-      # 业务容器之间走 docker 内网 rocketmq-proxy:8081，不经过宿主机映射
-      - "8081:8081"
-    networks:
-      - eagle-network
-    depends_on:
-      - rocketmq-namesrv
-      - rocketmq-broker
-    environment:
-      - NAMESRV_ADDR=${ROCKETMQ_NAMESRV_ADDR:-rocketmq-namesrv:9876}
-      - JAVA_OPT_EXT=${ROCKETMQ_PROXY_JAVA_OPT_EXT:--server -Xms256m -Xmx256m -Xmn128m}
-      - TZ=${TZ:-Asia/Shanghai}
-    # Cluster 模式（proxy 独立进程）；通过 NAMESRV_ADDR 发现 broker
-    # logs 子目录预创建逻辑与 namesrv/broker 一致
-    command:
-      - sh
-      - -c
-      - |
-        set -e
-        mkdir -p /home/rocketmq/logs/rocketmqlogs
-        exec sh mqproxy -n rocketmq-namesrv:9876
-    mem_limit: 384m
-    mem_reservation: 192m
-
-  # RocketMQ Dashboard（开发环境可视化控制台，浏览器访问 http://localhost:8180）
-  # 通过容器名 rocketmq-namesrv:9876 连 NameServer；关闭 VIP channel 避免与 broker 端口冲突
-  rocketmq-dashboard:
-    image: apacherocketmq/rocketmq-dashboard:1.0.0
-    container_name: eagle-rocketmq-dashboard
-    restart: always
-    ports:
-      - "8180:8080"
-    networks:
-      - eagle-network
-    depends_on:
-      - rocketmq-namesrv
-      - rocketmq-broker
-    environment:
-      - JAVA_OPTS=${ROCKETMQ_DASHBOARD_JAVA_OPTS:--server -Xms128m -Xmx256m -Drocketmq.namesrv.addr=rocketmq-namesrv:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false}
-      - TZ=${TZ:-Asia/Shanghai}
-    mem_limit: 384m
-    mem_reservation: 192m
 
   # 认证服务（OAuth2 Authorization Server + 微信/短信登录）
   # 独立库 eagle_auth（由 postgres-init/01-create-auth-db.sh 首次启动时创建）
@@ -338,15 +175,12 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - SERVER_PORT=${AUTH_SERVER_PORT:-9090}
-      # Nacos 注册中心
-      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
-      - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
-      - NACOS_GROUP=${NACOS_GROUP:-DEFAULT_GROUP}
-      # Nacos 3.0+ 默认开启鉴权，客户端必须传账号密码
-      - NACOS_USERNAME=${NACOS_USERNAME:-nacos}
-      - NACOS_PASSWORD=${NACOS_PASSWORD:-}
+      # Consul 注册中心
+      - CONSUL_HOST=${CONSUL_HOST:-consul}
+      - CONSUL_PORT=${CONSUL_PORT:-8500}
+      - CONSUL_DISCOVERY_ENABLED=${CONSUL_DISCOVERY_ENABLED:-true}
       # 多机部署时改为宿主机/公网 IP；单机留空，客户端自动取容器 IP
-      - NACOS_REGISTER_IP=${NACOS_REGISTER_IP:-}
+      - CONSUL_INSTANCE_IP=${CONSUL_INSTANCE_IP:-}
       # PostgreSQL 数据源（auth 用独立的 eagle_auth 库）
       - DB_HOST=${DB_HOST:-postgres}
       - DB_PORT=${DB_PORT:-5432}
@@ -364,9 +198,13 @@ services:
       - REDIS_POOL_MAX_IDLE=${REDIS_POOL_MAX_IDLE:-32}
       - REDIS_POOL_MIN_IDLE=${REDIS_POOL_MIN_IDLE:-8}
       - REDIS_POOL_MAX_WAIT=${REDIS_POOL_MAX_WAIT:-2000ms}
-      # RocketMQ 5.x gRPC 客户端必须连 Proxy:8081（不是 namesrv:9876）
-      - ROCKETMQ_ENDPOINTS=${ROCKETMQ_ENDPOINTS:-rocketmq-proxy:8081}
-      - ROCKETMQ_TOPIC_ENV_PREFIX=${ROCKETMQ_TOPIC_ENV_PREFIX:-}
+      # RabbitMQ 连接
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST:-/}
+      - RABBITMQ_EXCHANGE_PREFIX=${RABBITMQ_EXCHANGE_PREFIX:-}
       # 初始管理员（AdminProperties.password 无默认值，缺失即 fail-fast；AdminInitializer 启动时创建管理员账号）
       - EAGLE_ADMIN_USERNAME=${EAGLE_ADMIN_USERNAME:-admin}
       - EAGLE_ADMIN_PASSWORD=${EAGLE_ADMIN_PASSWORD}
@@ -451,20 +289,17 @@ services:
     mem_limit: 1536m
     mem_reservation: 768m
     # environment 显式枚举所有关键变量，统一 ${VAR:-default} 插值
-    # 默认值已包含容器网络约束（postgres:5432 / redis:6379 / nacos:8848 / SERVER_PORT=8082），.env.prod 可整体覆盖
+    # 默认值已包含容器网络约束（postgres:5432 / redis:6379 / consul:8500 / SERVER_PORT=8082），.env.prod 可整体覆盖
     # 注意：.env.prod 文件中的变量仅用于 compose.yml 的 ${VAR} 插值，必须在此 environment 段显式声明才会注入容器
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
       - SERVER_PORT=${SERVER_PORT:-8082}
-      # Nacos 注册中心
-      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
-      - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
-      - NACOS_GROUP=${NACOS_GROUP:-DEFAULT_GROUP}
-      # Nacos 3.0+ 默认开启鉴权，客户端必须传账号密码
-      - NACOS_USERNAME=${NACOS_USERNAME:-nacos}
-      - NACOS_PASSWORD=${NACOS_PASSWORD:-}
+      # Consul 注册中心
+      - CONSUL_HOST=${CONSUL_HOST:-consul}
+      - CONSUL_PORT=${CONSUL_PORT:-8500}
+      - CONSUL_DISCOVERY_ENABLED=${CONSUL_DISCOVERY_ENABLED:-true}
       # 多机部署时改为宿主机/公网 IP；单机留空，客户端自动取容器 IP
-      - NACOS_REGISTER_IP=${NACOS_REGISTER_IP:-}
+      - CONSUL_INSTANCE_IP=${CONSUL_INSTANCE_IP:-}
       # PostgreSQL 数据源（system-service 在 9550fdb 已切 PG;application.yml 占位符：
       # ${DB_HOST}/${DB_PORT}/${DB_NAME}/${DB_USERNAME}/${DB_PASSWORD}）
       - DB_HOST=${DB_HOST:-postgres}
@@ -483,10 +318,13 @@ services:
       - REDIS_POOL_MAX_IDLE=${REDIS_POOL_MAX_IDLE:-32}
       - REDIS_POOL_MIN_IDLE=${REDIS_POOL_MIN_IDLE:-8}
       - REDIS_POOL_MAX_WAIT=${REDIS_POOL_MAX_WAIT:-2000ms}
-      # RocketMQ 5.x gRPC 客户端必须连 Proxy:8081（不是 namesrv:9876）
-      # application.yml 占位符：${ROCKETMQ_ENDPOINTS:localhost:8081}
-      - ROCKETMQ_ENDPOINTS=${ROCKETMQ_ENDPOINTS:-rocketmq-proxy:8081}
-      - ROCKETMQ_TOPIC_ENV_PREFIX=${ROCKETMQ_TOPIC_ENV_PREFIX:-}
+      # RabbitMQ 连接
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST:-/}
+      - RABBITMQ_EXCHANGE_PREFIX=${RABBITMQ_EXCHANGE_PREFIX:-}
       # 初始管理员 username —— system-service 端 AccountEventApplicationService 据此判定哪个
       # User 应被赋予 admin 角色,与 auth-service 共用同一 EAGLE_ADMIN_USERNAME 保持两侧一致。
       # PASSWORD/NAME/EMAIL 仅 auth-service 使用,system 侧不读,故此处不注入。
@@ -536,7 +374,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-  # 网关服务（放在最后：依赖 auth + system 注册到 Nacos 后才能完成路由 lb）
+  # 网关服务（放在最后：依赖 auth + system 注册到 Consul 后才能完成路由 lb）
   gateway:
     build:
       context: ./eagle-gateway-service
@@ -551,32 +389,21 @@ services:
       - "5107:5107"
     networks:
       - eagle-network
-    # 开发本地最低配:gateway 是 WebFlux 反应式,堆需求小;512m 上限够路由 + Sentinel
+    # 开发本地最低配:gateway 是 WebFlux 反应式,堆需求小;512m 上限够路由 + 限流
     mem_limit: 512m
     mem_reservation: 256m
     # environment 显式枚举所有关键变量，统一 ${VAR:-default} 插值
-    # 默认值已包含容器网络约束（nacos:8848 / auth:9090 / system:8082 / sentinel-dashboard:8858），.env.prod 可整体覆盖
+    # 默认值已包含容器网络约束（consul:8500 / auth:9090 / system:8082），.env.prod 可整体覆盖
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
-      - NACOS_SERVER_ADDR=${NACOS_SERVER_ADDR:-nacos:8848}
-      - NACOS_NAMESPACE=${NACOS_NAMESPACE:-}
-      - NACOS_GROUP=${NACOS_GROUP:-DEFAULT_GROUP}
-      # Nacos 3.0+ 默认开启鉴权，客户端必须传账号密码
-      - NACOS_USERNAME=${NACOS_USERNAME:-nacos}
-      - NACOS_PASSWORD=${NACOS_PASSWORD:-}
+      # Consul 注册中心
+      - CONSUL_HOST=${CONSUL_HOST:-consul}
+      - CONSUL_PORT=${CONSUL_PORT:-8500}
+      - CONSUL_DISCOVERY_ENABLED=${CONSUL_DISCOVERY_ENABLED:-true}
       # 多机部署时改为宿主机/公网 IP；单机留空，客户端自动取容器 IP
-      - NACOS_REGISTER_IP=${NACOS_REGISTER_IP:-}
-      # AUTH_SERVER_URL: gateway 走 Nacos lb://auth，此处仅为兼容历史显式直连
+      - CONSUL_INSTANCE_IP=${CONSUL_INSTANCE_IP:-}
+      # AUTH_SERVER_URL: gateway 走 Consul lb://auth，此处仅为兼容历史显式直连
       - AUTH_SERVER_URL=${AUTH_SERVER_URL:-http://auth:9090}
-      - SENTINEL_DASHBOARD=${SENTINEL_DASHBOARD:-sentinel-dashboard:8858}
-      - EAGLE_GATEWAY_SENTINEL_ENABLED=${EAGLE_GATEWAY_SENTINEL_ENABLED:-true}
-      - EAGLE_SENTINEL_GLOBAL_QPS=${EAGLE_SENTINEL_GLOBAL_QPS:-1800}
-      - EAGLE_SENTINEL_GLOBAL_BURST=${EAGLE_SENTINEL_GLOBAL_BURST:-300}
-      - EAGLE_SENTINEL_AUTH_QPS=${EAGLE_SENTINEL_AUTH_QPS:-600}
-      - EAGLE_SENTINEL_AUTH_BURST=${EAGLE_SENTINEL_AUTH_BURST:-100}
-      - EAGLE_SENTINEL_SMS_QPS=${EAGLE_SENTINEL_SMS_QPS:-80}
-      - EAGLE_SENTINEL_SMS_BURST=${EAGLE_SENTINEL_SMS_BURST:-20}
-      - ROCKETMQ_NAME_SERVER=${ROCKETMQ_NAME_SERVER:-rocketmq-namesrv:9876}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-}
       - JAVA_OPTS=${GATEWAY_JAVA_OPTS:--server -XX:+UseG1GC -Xms192m -Xmx320m -XX:MaxMetaspaceSize=192m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
       # JDWP 调试参数:JVM 标准变量,启动时自动与 JAVA_OPTS 合并,设空字符串即可关闭调试

@@ -1,1 +1,0 @@
-org.springframework.context.ApplicationListener = com.eagle.es.config.ElasticSearchEnvironmentPostProcessor

@@ -4,7 +4,6 @@ import com.eagle.common.http.HttpClientProperties;
 import com.eagle.webclient.error.EagleWebClientErrorFilter;
 import com.eagle.webclient.interceptor.PropagatingHeadersExchangeFilterFunction;
 import com.eagle.webclient.interceptor.SeataXidExchangeFilterFunction;
-import com.eagle.webclient.interceptor.TenantExchangeFilterFunction;
 import com.eagle.webclient.support.EagleReactiveServiceClientFactory;
 import com.eagle.webclient.support.EagleWebClientCustomizer;
 import tools.jackson.databind.ObjectMapper;
@@ -69,13 +68,11 @@ public class EagleWebClientAutoConfiguration {
     public EagleWebClientCustomizer eagleWebClientCustomizer(
             HttpClientProperties properties,
             ObjectProvider<PropagatingHeadersExchangeFilterFunction> propagatingHeadersFilter,
-            ObjectProvider<TenantExchangeFilterFunction> tenantFilter,
             ObjectProvider<SeataXidExchangeFilterFunction> seataFilter,
             EagleWebClientErrorFilter errorFilter) {
         return new EagleWebClientCustomizer(
                 properties,
                 propagatingHeadersFilter.stream().<ExchangeFilterFunction>map(f -> f).toList(),
-                tenantFilter.stream().<ExchangeFilterFunction>map(f -> f).toList(),
                 seataFilter.stream().<ExchangeFilterFunction>map(f -> f).toList(),
                 errorFilter);
     }
@@ -135,19 +132,4 @@ public class EagleWebClientAutoConfiguration {
         }
     }
 
-    /**
-     * Reactive 租户 ID 透传 filter。
-     */
-    @Slf4j
-    @Configuration(proxyBeanMethods = false)
-    @ConditionalOnClass(name = "com.eagle.tenant.TenantContextHolder")
-    static class ReactiveTenantConfiguration {
-
-        @Bean
-        @ConditionalOnMissingBean
-        public TenantExchangeFilterFunction tenantExchangeFilterFunction() {
-            log.info("WebClient tenant ID propagation enabled");
-            return new TenantExchangeFilterFunction();
-        }
-    }
 }

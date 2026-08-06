@@ -3,8 +3,8 @@ package com.eagle.system.base.infrastructure.messaging;
 import com.eagle.common.alert.AlertEvent;
 import com.eagle.common.alert.AlertService;
 import com.eagle.common.alert.AlertSeverity;
-import com.eagle.rocketmq.listener.AbstractDlqListener;
-import com.eagle.rocketmq.properties.RocketMqProperties;
+import com.eagle.amqp.listener.AbstractDlqListener;
+import com.eagle.amqp.properties.AmqpProperties;
 import com.eagle.system.base.domain.model.DeadLetterRecord;
 import com.eagle.system.base.domain.repository.DeadLetterRecordRepository;
 import com.eagle.system.base.infrastructure.messaging.event.AccountDeletedMessage;
@@ -15,7 +15,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.Map;
 
 /**
- * AccountDeleted DLQ 兜底 —— RocketMQ 重试 16 次仍失败时进入此处。
+ * AccountDeleted DLQ 兜底 —— 重试耗尽（{@code eagle.amqp.consumer.max-attempts}）仍失败时进入此处。
  * <p>
  * 业务影响:auth-service 已删除 Account,但 base 域 User 未级联删除 — 残留孤儿数据,
  * 用户列表会显示已经销户的账号信息。
@@ -34,7 +34,7 @@ public class AccountDeletedDlqListener extends AbstractDlqListener<AccountDelete
     private final DeadLetterRecordRepository deadLetterRepository;
     private final ObjectMapper objectMapper;
 
-    public AccountDeletedDlqListener(RocketMqProperties props,
+    public AccountDeletedDlqListener(AmqpProperties props,
                                      AlertService alertService,
                                      DeadLetterRecordRepository deadLetterRepository,
                                      ObjectMapper objectMapper) {
@@ -42,6 +42,11 @@ public class AccountDeletedDlqListener extends AbstractDlqListener<AccountDelete
         this.alertService = alertService;
         this.deadLetterRepository = deadLetterRepository;
         this.objectMapper = objectMapper;
+    }
+
+    @Override
+    protected String getOriginalTopic() {
+        return AccountDeletedConsumer.TOPIC;
     }
 
     @Override

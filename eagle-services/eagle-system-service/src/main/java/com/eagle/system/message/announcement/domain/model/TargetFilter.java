@@ -1,9 +1,7 @@
 package com.eagle.system.message.announcement.domain.model;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.annotation.JSONField;
+import tools.jackson.databind.json.JsonMapper;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -22,6 +20,8 @@ import java.util.Set;
  * @author sunshixiong
  */
 public record TargetFilter(List<String> roles, List<String> tags) {
+
+    private static final JsonMapper MAPPER = JsonMapper.builder().build();
 
     public TargetFilter {
         roles = roles == null ? List.of() : List.copyOf(roles);
@@ -43,7 +43,6 @@ public record TargetFilter(List<String> roles, List<String> tags) {
     /**
      * 当前用户的角色集合是否命中本过滤器。
      */
-    @JSONField(serialize = false)
     public boolean matchesRoles(Set<String> userRoles) {
         if (roles.isEmpty() || userRoles == null || userRoles.isEmpty()) {
             return false;
@@ -54,7 +53,6 @@ public record TargetFilter(List<String> roles, List<String> tags) {
     /**
      * 当前用户的标签集合是否命中本过滤器。
      */
-    @JSONField(serialize = false)
     public boolean matchesTags(Set<String> userTags) {
         if (tags.isEmpty() || userTags == null || userTags.isEmpty()) {
             return false;
@@ -63,14 +61,14 @@ public record TargetFilter(List<String> roles, List<String> tags) {
     }
 
     public String toJson() {
-        return JSON.toJSONString(this);
+        return MAPPER.writeValueAsString(this);
     }
 
     public static TargetFilter fromJson(String json) {
         if (json == null || json.isBlank()) {
             return empty();
         }
-        TargetFilter parsed = JSON.parseObject(json, TargetFilter.class);
+        TargetFilter parsed = MAPPER.readValue(json, TargetFilter.class);
         return parsed != null ? parsed : empty();
     }
 }

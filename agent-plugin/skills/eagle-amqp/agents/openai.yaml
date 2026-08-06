@@ -1,0 +1,3 @@
+interface:
+  display_name: "Eagle Amqp"
+  short_description: "Use when working with RabbitMQ/Spring AMQP in eagle-cloud projects — DomainEventPublish"

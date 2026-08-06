@@ -5,15 +5,13 @@ dependencies {
     // SpringDoc OpenAPI 网关聚合
     implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui'
 
-    // Nacos 服务发现（接入动态路由）
-    implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-nacos-discovery'
+    // Consul 服务发现（接入动态路由，取代 Nacos）
+    implementation 'org.springframework.cloud:spring-cloud-starter-consul-discovery'
 
-    // Sentinel 网关限流 + Nacos 持久化规则
-    // sentinel-datasource-nacos 自动激活 spring.cloud.sentinel.datasource.* 配置,
-    // 实现流控/降级规则从 Nacos 热加载与刷新,避免 Dashboard 推送的规则在客户端重启后丢失。
-    implementation 'com.alibaba.cloud:spring-cloud-alibaba-sentinel-gateway'
-    implementation 'com.alibaba.cloud:spring-cloud-starter-alibaba-sentinel'
-    implementation 'com.alibaba.csp:sentinel-datasource-nacos'
+    // 网关限流：Spring Cloud Gateway 内置 RequestRateLimiter + RedisRateLimiter（取代 Sentinel）。
+    // 令牌桶算法由 Redis Lua 脚本执行，是集群级限流 —— 比原 Sentinel 的单机计数更准确，
+    // 副本数变化时总阈值不会漂移。
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
 
     // 链路追踪
     implementation project(':eagle-starter:eagle-tracing-starter')
