@@ -74,6 +74,17 @@ services:
       - eagle-network
     environment:
       - TZ=${TZ:-Asia/Shanghai}
+      # ACL 开启。本文件头部已写明「这些端口绝不能暴露公网」，但 8500 实际可从公网访问
+      # （139.155.104.132:8500），不开 ACL 等于把服务目录和 KV（含全部生产凭据）
+      # 匿名开放读写。default_policy=deny 后：
+      #   · 6 个服务必须带 token（spring.cloud.consul.{discovery,config}.acl-token）
+      #   · Web UI 也要在右上角 "Log in" 填 token 才看得到数据
+      #   · consul agent 自身也需要 agent token（bootstrap 后由脚本 PUT /v1/agent/token/agent 设置）
+      # down_policy=extend-cache：与 server 失联时沿用缓存的 ACL 结果，避免抖动导致全量 deny。
+      # enable_token_persistence：agent token 落盘到 /consul/data，重启不丢。
+      # 首次启用后需 bootstrap 生成 token，详见 docs/consul-config.md。
+      # ⚠️ ACL 与网络收口是两件事，都要做：仍应在安全组把 8500/8600 限制为仅应用机内网可达。
+      - 'CONSUL_LOCAL_CONFIG={"acl":{"enabled":true,"default_policy":"deny","down_policy":"extend-cache","enable_token_persistence":true}}'
     command: agent -server -bootstrap-expect=1 -ui -client=0.0.0.0 -data-dir=/consul/data
     mem_limit: 512m
     mem_reservation: 256m

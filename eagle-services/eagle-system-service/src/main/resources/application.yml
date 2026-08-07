@@ -41,16 +41,56 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 30s
 
+  # 配置中心：启动期从 Consul KV 拉取本环境配置。KV 里的键沿用环境变量名（DB_HOST 等），
+  # 于是本文件所有 ${VAR:default} 占位符可直接被 KV 的值填上，yml 结构与默认值一行都不用改。
+  # optional: 前缀 —— Consul 不可达时跳过该 location 而非启动失败，此时回落到各占位符默认值。
+  # 地址取下方 spring.cloud.consul.host/port，此处不重复写。
+  config:
+    import: "optional:consul:"
+
   cloud:
     consul:
       host: ${CONSUL_HOST:localhost}
       port: ${CONSUL_PORT:8500}
+      # 配置中心（KV）。format=YAML 时每个 context 只读 `data` 这一个键，值是整份 YAML 文档：
+      #   config/application/data            六服务共享 · 跨环境
+      #   config/application,<profile>/data  六服务共享 · 按环境
+      #   config/<app>/data                  单服务   · 跨环境
+      #   config/<app>,<profile>/data        单服务   · 按环境（优先级最高）
+      # <app> 即 spring.application.name —— 本服务是 system。注意 gateway 的 app 名是
+      # gateway-server（不是 gateway），KV 路径按 app 名而非 compose 服务名。
+      # 共享层只放 6 服务通用的 Redis / RabbitMQ 连接；DB、OAuth、SMS 等按服务下沉，
+      # 避免 ease-mind 侧三服务读到本仓库的库凭据。键位清单见 docs/consul-config.md。
+      # ⚠️ 真实环境变量优先级高于 Consul —— compose 里仍注入的同名变量会盖掉 KV 值。
+      #    （.env 文件已于 2026-08-07 删除，现在只剩 compose 这一个覆盖来源。）
+      config:
+        enabled: ${CONSUL_CONFIG_ENABLED:true}
+        format: YAML
+        prefix: config
+        default-context: application
+        profile-separator: ','
+        data-key: data
+        # ACL token。Spring Cloud Consul 5.x 把 token 拆成 discovery / config 两处独立配置
+        # （4.x 的 spring.cloud.consul.token 在 5.x 的 ConsulProperties 里已不存在，
+        #  写了不报错但完全不生效），两处都要给，否则 ACL 开启后一侧 403。
+        acl-token: ${CONSUL_TOKEN:}
+        # 热更新关闭：配置只在启动期读一次，改完 KV 需重启服务才生效（与 ease-mind 侧口径一致）。
+        # 本项为 false 时 ConfigWatch 根本不注册，不会有 RefreshEvent 发出。
+        watch:
+          enabled: false
       discovery:
+        acl-token: ${CONSUL_TOKEN:}
         enabled: ${CONSUL_DISCOVERY_ENABLED:true}
         register: true
-        # 多机部署时显式注入宿主机/可达 IP；单机 docker 部署留空，客户端自动取容器 IP
+        # 多机部署时显式注入宿主机/可达 IP；不注入则回落到 InetUtils 探测出的容器 IP。
         prefer-ip-address: true
-        ip-address: ${CONSUL_INSTANCE_IP:}
+        # ⚠️ 回落仅在该变量「未定义」时生效 —— Spring 的 ${VAR:default} 对空串不回落，
+        #    空串会原样绑定。而 prefer-ip-address=true 时 getHostname() 直接返回 ipAddress，
+        #    空串会让注册 Address 和健康检查 URL 双双缺 host（http://:8082/actuator/health），
+        #    Consul 判 critical，再按 health-check-critical-timeout 注销实例 ——
+        #    现象是服务压根没注册上。compose 无法条件性省略 environment 键，
+        #    故由 Dockerfile entrypoint 把空串 unset 掉，让这里的回落真正生效。
+        ip-address: ${CONSUL_INSTANCE_IP:${spring.cloud.client.ip-address}}
         service-name: ${spring.application.name}
         instance-id: ${spring.application.name}-${random.value}
         health-check-path: /actuator/health

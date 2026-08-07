@@ -7,6 +7,9 @@ dependencies {
 
     // Consul 服务发现（接入动态路由，取代 Nacos）
     implementation 'org.springframework.cloud:spring-cloud-starter-consul-discovery'
+    // Consul 配置中心(KV)。由 application.yml 的 spring.config.import=optional:consul: 触发,
+    // 启动期把 config/{application,gateway-server}[,profile]/data 的 YAML 注入 Environment。
+    implementation 'org.springframework.cloud:spring-cloud-starter-consul-config'
 
     // 网关限流：Spring Cloud Gateway 内置 RequestRateLimiter + RedisRateLimiter（取代 Sentinel）。
     // 令牌桶算法由 Redis Lua 脚本执行，是集群级限流 —— 比原 Sentinel 的单机计数更准确，

@@ -74,4 +74,8 @@ ENV JAVA_OPTS="-server \
     -Dfile.encoding=UTF-8" \
     JAVA_OPTS_APPEND=""
 
-ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS $JAVA_OPTS_APPEND -jar application.jar"]
+# CONSUL_INSTANCE_IP 空串归一化为「未定义」：compose 的 environment 无法条件性省略键，
+# 不填时注入的是空串而非缺省。空串会顶掉 application.yml 里
+# ${CONSUL_INSTANCE_IP:${spring.cloud.client.ip-address}} 的回落（Spring 的 :default
+# 只在变量未定义时生效），使注册 Address 和健康检查 URL 都缺 host，实例被 Consul 注销。
+ENTRYPOINT ["sh", "-c", "[ -n \"$CONSUL_INSTANCE_IP\" ] || unset CONSUL_INSTANCE_IP; exec java $JAVA_OPTS $JAVA_OPTS_APPEND -jar application.jar"]

@@ -19,6 +19,9 @@ dependencies {
 
     // Nacos 服务注册与发现
     implementation 'org.springframework.cloud:spring-cloud-starter-consul-discovery'
+    // Consul 配置中心(KV)。由 application.yml 的 spring.config.import=optional:consul: 触发,
+    // 启动期把 config/{application,auth}[,profile]/data 的 YAML 注入 Environment。
+    implementation 'org.springframework.cloud:spring-cloud-starter-consul-config'
 
     // 微信小程序登录只用 sns/jscode2session 一个接口，已改为 RestClient 直调
     // （WechatMiniProgramServiceImpl），与 WechatWebServiceImpl 走同一套手写实现，
