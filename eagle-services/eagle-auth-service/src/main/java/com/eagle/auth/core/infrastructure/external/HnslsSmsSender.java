@@ -4,6 +4,7 @@ import com.eagle.auth.core.domain.AuthErrorCode;
 import com.eagle.auth.core.infrastructure.config.SmsProperties;
 import com.eagle.common.util.LogMask;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -72,11 +73,21 @@ public class HnslsSmsSender {
     private final RestClient restClient;
     private final Clock clock;
 
+    /**
+     * 容器装配入口。
+     *
+     * <p>{@code @Autowired} 不能省：本类有两个构造函数，Spring 在多构造函数且无标注时
+     * 会回退去找无参构造函数，直接以 {@code No default constructor found} 启动失败。
+     */
+    @Autowired
     public HnslsSmsSender(SmsProperties properties,
                           @Qualifier("smsRestClient") RestClient restClient) {
         this(properties, restClient, Clock.systemDefaultZone());
     }
 
+    /**
+     * 供测试注入固定 {@link Clock} —— seed 参与网关签名，必须可控才能断言。
+     */
     HnslsSmsSender(SmsProperties properties, RestClient restClient, Clock clock) {
         this.properties = properties;
         this.restClient = restClient;
