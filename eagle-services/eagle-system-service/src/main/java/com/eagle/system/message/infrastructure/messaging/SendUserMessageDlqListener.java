@@ -18,16 +18,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class SendUserMessageDlqListener extends AbstractDlqListener<SendUserMessageIntegrationEvent> {
 
-    private final String topicPrefix;
-
     public SendUserMessageDlqListener(AmqpProperties props) {
         super(props);
-        this.topicPrefix = props.getExchangePrefix();
     }
 
+    /** 逻辑 topic 名，环境前缀由基类拼 —— 与 {@link SendUserMessageConsumer#getTopic()} 保持一致。 */
     @Override
     protected String getOriginalTopic() {
-        return topicPrefix + CommonMessageTopics.USER_MESSAGE_SEND;
+        return CommonMessageTopics.USER_MESSAGE_SEND;
     }
 
     @Override

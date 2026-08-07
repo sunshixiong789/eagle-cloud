@@ -26,18 +26,25 @@ public class SendUserMessageConsumer extends AbstractAmqpListener<SendUserMessag
     static final String CONSUMER_GROUP = "system_user_message_send";
 
     private final SendMessageApplicationService sendMessageApplicationService;
-    private final String topicPrefix;
 
     public SendUserMessageConsumer(AmqpProperties props,
                                    SendMessageApplicationService sendMessageApplicationService) {
         super(props);
         this.sendMessageApplicationService = sendMessageApplicationService;
-        this.topicPrefix = props.getExchangePrefix();
     }
 
+    /**
+     * 只返回<b>逻辑</b> topic 名，环境前缀由 {@code resolveExchangeName()} 统一拼。
+     *
+     * <p>此处曾手动拼 {@code props.getExchangePrefix()} —— 那是 RocketMQ 基类的遗留写法
+     * （旧基类把 {@code getTopic()} 原样当最终 topic，不补前缀，故子类必须自己拼）。
+     * 迁到 {@code AbstractAmqpListener} 后前缀由基类补，再手动拼一次会让本消费者
+     * 绑到 {@code dev_dev_user_message_send}，而生产方发往 {@code dev_user_message_send} ——
+     * 站内信集成事件会全部投进无队列绑定的 exchange 被静默丢弃。
+     */
     @Override
     protected String getTopic() {
-        return topicPrefix + CommonMessageTopics.USER_MESSAGE_SEND;
+        return CommonMessageTopics.USER_MESSAGE_SEND;
     }
 
     @Override
