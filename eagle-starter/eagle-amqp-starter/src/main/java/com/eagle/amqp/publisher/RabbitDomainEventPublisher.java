@@ -11,6 +11,7 @@ import org.springframework.amqp.core.ExchangeBuilder;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import tools.jackson.core.JacksonException;
@@ -74,7 +75,9 @@ public class RabbitDomainEventPublisher implements DomainEventPublisher {
             messageProperties.setCorrelationId(event.getEventId());
             Message message = MessageBuilder.withBody(body).andProperties(messageProperties).build();
 
-            rabbitTemplate.send(exchange, key, message);
+            // 带上 CorrelationData：broker 的 confirm/nack 是异步回调，
+            // 没有它就只知道"有消息没进 broker"，不知道是哪一条（见 PublishConfirmLogger）。
+            rabbitTemplate.send(exchange, key, message, new CorrelationData(event.getEventId()));
             log.info("[AMQP] published: exchange={}, routingKey={}, eventId={}",
                     exchange, key, event.getEventId());
         } catch (JacksonException e) {

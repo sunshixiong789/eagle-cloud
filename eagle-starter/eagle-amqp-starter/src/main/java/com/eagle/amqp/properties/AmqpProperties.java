@@ -1,6 +1,7 @@
 package com.eagle.amqp.properties;
 
 import lombok.Data;
+import org.jspecify.annotations.Nullable;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.time.Duration;
@@ -95,5 +96,21 @@ public class AmqpProperties {
          * 退避倍率。
          */
         private double multiplier = 2.0;
+
+        /**
+         * 死信队列的消息保留时长（{@code x-message-ttl}）。
+         *
+         * <p>默认 14 天：死信是待人工处理的证据，太短会让证据在排查前就消失，
+         * 不设上限则队列会无限增长、最终拖垮 broker 磁盘。
+         * 设为 {@code null} 表示不限制。
+         */
+        private @Nullable Duration dlqTtl = Duration.ofDays(14);
+
+        /**
+         * 死信队列的最大消息条数（{@code x-max-length}）。
+         *
+         * <p>超出后 broker 丢弃<b>最旧</b>的死信。设为 {@code null} 表示不限制。
+         */
+        private @Nullable Integer dlqMaxLength = 100_000;
     }
 }

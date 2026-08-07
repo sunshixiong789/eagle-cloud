@@ -122,20 +122,30 @@ public abstract class AbstractAmqpListener<T extends BaseEvent> {
      * 投递次数达到该阈值时触发 {@link #onRetryAlert}。
      *
      * @return 告警阈值
+     * @deprecated 重试已交给容器的 retry advice，本方法不再被调用。
+     *             重试过程的可见性改由框架承担：失败重试由 Spring AMQP 记日志，
+     *             重试耗尽由 {@code EagleRepublishRecoverer} 投 DLQ 并附
+     *             {@code x-exception-message} / {@code x-exception-stacktrace}，
+     *             最终告警落在对应的 {@code AbstractDlqListener} 上。
      */
+    @Deprecated(since = "1.6.0", forRemoval = true)
     protected int getRetryAlertThreshold() {
         return amqpProperties.getConsumer().getRetryAlertThreshold();
     }
 
     /**
-     * 重试次数达到告警阈值时的回调，默认记 ERROR 日志。
+     * 重试次数达到告警阈值时的回调。
      *
      * @param message  原始 AMQP 消息
      * @param rawBody  原始报文
      * @param event    反序列化成功时的载荷，失败时为 null
      * @param cause    本次失败原因
      * @param attempts 已尝试次数
+     * @deprecated 同 {@link #getRetryAlertThreshold()} —— 不再被调用。
+     *             需要在重试耗尽时告警，请实现对应的 {@code AbstractDlqListener}。
+     *             当前两个仓库中无任何子类覆盖本方法。
      */
+    @Deprecated(since = "1.6.0", forRemoval = true)
     protected void onRetryAlert(Message message, String rawBody,
                                 @Nullable T event, Exception cause, int attempts) {
         log.error("[AMQP RETRY ALERT] queue={}, attempts={}, eventId={}, body={}",

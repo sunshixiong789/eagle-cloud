@@ -127,12 +127,4 @@ public abstract class AbstractDlqListener<T extends BaseEvent> extends AbstractA
         }
         return 0;
     }
-
-    @Override
-    protected void onRetryAlert(Message message, String rawBody,
-                                @Nullable T event, Exception cause, int attempts) {
-        log.error("[DLQ CRITICAL] queue={}, attempts={}, eventId={}, body={}",
-                resolveDlqName(), attempts,
-                event == null ? "unknown" : event.getEventId(), rawBody, cause);
-    }
 }
