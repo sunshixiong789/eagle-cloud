@@ -1,6 +1,6 @@
 package com.eagle.system.message.announcement.interfaces.controller;
 
-import com.eagle.system.message.announcement.application.service.AnnouncementAdminService;
+import com.eagle.system.message.announcement.application.service.AnnouncementAdminApplicationService;
 import com.eagle.system.message.announcement.interfaces.dto.AnnouncementAdminView;
 import com.eagle.system.message.announcement.interfaces.dto.PublishAnnouncementRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,7 +32,7 @@ import java.util.Map;
 @PreAuthorize("hasRole('admin')")
 public class AnnouncementAdminController {
 
-    private final AnnouncementAdminService adminService;
+    private final AnnouncementAdminApplicationService adminService;
 
     @Operation(summary = "发布公告（持久化 + 失效缓存 + 触发跨实例 WebSocket 广播）")
     @PostMapping

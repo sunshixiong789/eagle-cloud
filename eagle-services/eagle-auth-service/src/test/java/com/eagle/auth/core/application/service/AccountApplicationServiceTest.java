@@ -12,7 +12,8 @@ import com.eagle.auth.core.domain.model.valueobject.ProfileHints;
 import com.eagle.auth.core.domain.port.OnlineUserPort;
 import com.eagle.auth.core.domain.repository.AccountRepository;
 import com.eagle.auth.core.domain.service.SmsService;
-import com.eagle.auth.core.infrastructure.config.AdminProperties;
+import com.eagle.auth.core.config.AdminProperties;
+import com.eagle.auth.core.infrastructure.security.BlacklistChecker;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -56,6 +57,8 @@ class AccountApplicationServiceTest {
     private AdminProperties adminProperties;
     @Mock
     private OnlineUserPort onlineUserPort;
+    @Mock
+    private BlacklistChecker blacklistChecker;
     @InjectMocks
     private AccountApplicationService service;
 

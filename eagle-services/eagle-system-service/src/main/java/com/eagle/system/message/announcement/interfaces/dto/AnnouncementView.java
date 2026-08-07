@@ -1,7 +1,7 @@
 package com.eagle.system.message.announcement.interfaces.dto;
 
 import com.eagle.system.message.announcement.domain.model.AnnouncementCategory;
-import com.eagle.system.message.announcement.infrastructure.cache.AnnouncementSnapshot;
+import com.eagle.system.message.announcement.application.dto.AnnouncementSnapshot;
 
 import java.time.LocalDateTime;
 

@@ -5,7 +5,7 @@ import com.eagle.system.base.domain.model.SysLog;
 import com.eagle.system.base.domain.model.enums.LogStatus;
 import com.eagle.system.base.domain.model.enums.LogType;
 import com.eagle.system.base.domain.repository.LogRepository;
-import com.eagle.system.base.infrastructure.messaging.event.AuthLoginMessage;
+import com.eagle.system.base.application.event.AuthLoginMessage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -28,18 +28,18 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class SystemLogRecorderTest {
+class SystemLogApplicationServiceTest {
 
     @Mock
     private LogRepository logRepository;
 
-    private SystemLogRecorder recorder;
+    private SystemLogApplicationService recorder;
 
     @BeforeEach
     void setUp() {
         MockEnvironment env = new MockEnvironment();
         env.setProperty("spring.application.name", "eagle-system-service");
-        recorder = new SystemLogRecorder(logRepository, env);
+        recorder = new SystemLogApplicationService(logRepository, env);
     }
 
     @Nested

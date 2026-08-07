@@ -122,9 +122,9 @@ public class Role extends BaseAggregateRoot<Role> {
     }
 
     /**
-     * 设置数据范围
+     * 变更数据范围
      */
-    public void setDataScope(DataScope dataScope) {
+    public void changeDataScope(DataScope dataScope) {
         this.dataScope = dataScope;
     }
 

@@ -7,7 +7,7 @@ import com.eagle.amqp.listener.AbstractDlqListener;
 import com.eagle.amqp.properties.AmqpProperties;
 import com.eagle.system.base.domain.model.DeadLetterRecord;
 import com.eagle.system.base.domain.repository.DeadLetterRecordRepository;
-import com.eagle.system.base.infrastructure.messaging.event.AccountDeletedMessage;
+import com.eagle.system.base.application.event.AccountDeletedMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;

@@ -43,7 +43,7 @@ public class EagleAuthApplication {
         this.env = env;
     }
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         SpringApplication.run(EagleAuthApplication.class, args);
     }
 

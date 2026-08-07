@@ -1,6 +1,6 @@
 package com.eagle.auth.core.infrastructure.security;
 
-import com.eagle.auth.core.application.service.WechatWebUserService;
+import com.eagle.auth.core.application.service.WechatWebUserApplicationService;
 import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.model.enums.SocialProvider;
 import com.eagle.auth.core.domain.model.enums.WechatChannel;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
 class WechatMiniProgramAuthenticationProviderTest {
 
     private WechatService wechatService;
-    private WechatWebUserService wechatWebUserService;
+    private WechatWebUserApplicationService wechatWebUserApplicationService;
     private BindTicketStore bindTicketStore;
     private BlacklistChecker blacklistChecker;
     private WechatMiniProgramAuthenticationProvider provider;
@@ -37,14 +37,14 @@ class WechatMiniProgramAuthenticationProviderTest {
     @BeforeEach
     void setUp() {
         wechatService = mock(WechatService.class);
-        wechatWebUserService = mock(WechatWebUserService.class);
+        wechatWebUserApplicationService = mock(WechatWebUserApplicationService.class);
         bindTicketStore = mock(BindTicketStore.class);
         blacklistChecker = mock(BlacklistChecker.class);
         provider = new WechatMiniProgramAuthenticationProvider(
                 mock(OAuth2AuthorizationService.class),
                 mock(OAuth2TokenGenerator.class),
                 mock(UserDetailsService.class),
-                wechatService, wechatWebUserService, bindTicketStore, blacklistChecker);
+                wechatService, wechatWebUserApplicationService, bindTicketStore, blacklistChecker);
     }
 
     private WechatMiniProgramAuthenticationToken token() {
@@ -58,7 +58,7 @@ class WechatMiniProgramAuthenticationProviderTest {
         Account existing = Account.createFromPhone("13800138000");
         when(wechatService.getUserInfo("js-code"))
                 .thenReturn(new WechatUserInfo("oid-1", "uid-1", "sk"));
-        when(wechatWebUserService.findWechatAccount(
+        when(wechatWebUserApplicationService.findWechatAccount(
                 WechatChannel.MINI_PROGRAM, "oid-1", "uid-1"))
                 .thenReturn(Optional.of(existing));
 
@@ -73,7 +73,7 @@ class WechatMiniProgramAuthenticationProviderTest {
     void unboundIdentityRequiresBinding() {
         when(wechatService.getUserInfo("js-code"))
                 .thenReturn(new WechatUserInfo("oid-1", "uid-1", "sk"));
-        when(wechatWebUserService.findWechatAccount(
+        when(wechatWebUserApplicationService.findWechatAccount(
                 WechatChannel.MINI_PROGRAM, "oid-1", "uid-1"))
                 .thenReturn(Optional.empty());
         when(bindTicketStore.save(BindTicket.ofWechat(

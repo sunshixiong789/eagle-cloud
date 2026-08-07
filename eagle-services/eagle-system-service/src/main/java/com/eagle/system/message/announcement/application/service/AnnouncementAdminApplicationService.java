@@ -5,7 +5,7 @@ import com.eagle.system.message.announcement.domain.repository.AnnouncementRepos
 import com.eagle.system.message.announcement.infrastructure.cache.AnnouncementCache;
 import com.eagle.system.message.announcement.interfaces.dto.AnnouncementAdminView;
 import com.eagle.system.message.announcement.interfaces.dto.PublishAnnouncementRequest;
-import com.eagle.system.message.announcement.interfaces.exception.AnnouncementErrorCode;
+import com.eagle.system.message.announcement.domain.model.AnnouncementErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -31,7 +31,7 @@ import java.time.LocalDateTime;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AnnouncementAdminService {
+public class AnnouncementAdminApplicationService {
 
     private final AnnouncementRepository announcementRepository;
     private final AnnouncementCache announcementCache;

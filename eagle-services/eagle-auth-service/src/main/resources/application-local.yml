@@ -1,0 +1,101 @@
+# ===========================================
+# 本地开发差异(auth-service)
+#
+# 【定位】在本机跑 auth,中间件全部复用开发环境(118.24.138.189)。
+# 凭据不写在本文件里 —— 照常从开发环境的 Consul KV(config/auth,dev/data)读,
+# 本文件只负责把 KV 里那些"仅容器网络内可达"的地址换成公网地址。
+#
+# 与基线相比的覆盖:
+#   - Consul 指向 118.24.138.189;config 开(取凭据) / discovery 关(不注册进 dev)
+#   - 数据源 / Redis / RabbitMQ 地址覆盖为 118.24.138.189
+#   - OAuth issuer 指向本机,本地签发的 token 才自洽
+#   - RabbitMQ 消费组加 _local 后缀,避免与 dev 的 auth 抢同一条队列
+#   - Actuator 暴露调试端点 + details=always
+#   - 日志 com.eagle=DEBUG,SQL=DEBUG,参数绑定=TRACE
+#
+# ⚠️【CONSUL_TOKEN 必填】dev 的 Consul 已开 ACL,匿名读 KV 返回 403。未提供 token 时
+#    基线的 optional:consul: 会**静默跳过**,凭据一个都取不到,启动即
+#    Could not resolve placeholder 'EAGLE_ADMIN_PASSWORD' —— 看到这个错就是 token 没给。
+#    本文件刻意不给这些凭据兜底默认值:宁可在启动期明确报缺,也好过用错值连上 dev 的真库。
+#    启动前务必:
+#      export CONSUL_TOKEN=<service token>   # 权限只需只读 config/ 前缀
+#
+# ⚠️【连的是开发环境的真库】ddl-auto=update 意味着本机的实体改动会直接改 dev 的表结构,
+#    本地写入的数据也进 dev 库。改实体前先确认影响,或把 LOCAL_DDL_AUTO 设成 validate。
+#
+# 【不想用 token】把 KV 关掉,凭据自己给(值同 config/auth,dev/data):
+#   CONSUL_CONFIG_ENABLED=false DB_USERNAME=eagle DB_PASSWORD=... REDIS_PASSWORD=...
+#   EAGLE_ADMIN_PASSWORD=... EAGLE_JWT_KEYSTORE_PASSWORD=eagle-jwt-dev-2026
+#   EAGLE_REMEMBER_ME_KEY=...
+#
+# 【纯本地模式】改回连本机 compose(docker-compose.pg.yml + middleware.yml),
+# 在上面一组的基础上再加:
+#   LOCAL_DB_HOST=localhost LOCAL_REDIS_HOST=localhost LOCAL_RABBITMQ_HOST=localhost
+# ===========================================
+
+spring:
+  cloud:
+    consul:
+      # 开发环境 Consul,8500 公网可达
+      host: ${CONSUL_HOST:118.24.138.189}
+      port: ${CONSUL_PORT:8500}
+      config:
+        # 开着,凭据(DB_PASSWORD / EAGLE_ADMIN_PASSWORD / 短信账号…)全部从 KV 取,
+        # 本文件因此一个密码都不用写。ACL 开启后需一并给 CONSUL_TOKEN。
+        enabled: ${CONSUL_CONFIG_ENABLED:true}
+      discovery:
+        # 关掉:本机 IP 在 dev 集群内不可达,注册上去只会让 dev 网关把流量路由到一个死实例
+        enabled: false
+
+  # ---- 地址覆盖 ----
+  # KV 里的 DB_HOST=postgres / REDIS_HOST=redis / RABBITMQ_HOST=rabbitmq 是容器名,
+  # 只在 dev 的 compose 网络内可解析,本机 DNS 查不到。
+  #
+  # 注意这里覆盖的是**终值属性**(spring.datasource.url 等)而不是 DB_HOST 这类变量:
+  # KV 提供的正是 DB_HOST 变量本身,若本文件写 ${DB_HOST:118.24.138.189},
+  # 占位符会解析到 KV 的 "postgres" 而不是这里的默认值 —— 反而覆盖不掉。
+  # 改用 KV 中不存在的 LOCAL_* 变量名,才能让本文件的值胜出。
+  datasource:
+    url: jdbc:postgresql://${LOCAL_DB_HOST:118.24.138.189}:${DB_PORT:5432}/${DB_NAME:eagle_auth}
+
+  data:
+    redis:
+      host: ${LOCAL_REDIS_HOST:118.24.138.189}
+
+  rabbitmq:
+    host: ${LOCAL_RABBITMQ_HOST:118.24.138.189}
+
+  # 连的是 dev 的真库,默认仍用 update 以便本地改实体;要保护 dev 表结构就设 validate
+  jpa:
+    hibernate:
+      ddl-auto: ${LOCAL_DDL_AUTO:update}
+
+eagle:
+  # 本机签发的 token 用本机 issuer。KV 里是 http://dev.ai.sx2b2c.com:8080,
+  # 直接沿用会让本地签发的 token 带上 dev 的 iss,资源服务校验不通过。
+  oauth:
+    issuer: ${EAGLE_OAUTH_ISSUER_LOCAL:http://localhost:9090}
+  amqp:
+    # 消费组加后缀,与 dev 的 auth 实例分开 —— 否则两边抢同一条队列,
+    # dev 环境的消息可能被本机消费掉。exchange-prefix 仍是 dev_,收到的是同一批消息副本,
+    # 调试涉及消息副作用的流程时请留意。
+    consumer-group: ${LOCAL_AMQP_CONSUMER_GROUP:auth_consumer_local}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,loggers,env,beans,mappings,prometheus
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+  info:
+    env:
+      enabled: true
+
+logging:
+  level:
+    com.eagle: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE

@@ -2,7 +2,7 @@ package com.eagle.system.base.infrastructure.audit;
 
 import com.eagle.audit.handler.AuditLogHandler;
 import com.eagle.audit.model.AuditLogEntry;
-import com.eagle.system.base.application.service.SystemLogRecorder;
+import com.eagle.system.base.application.service.SystemLogApplicationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class SystemAuditLogHandler implements AuditLogHandler {
 
-    private final SystemLogRecorder recorder;
+    private final SystemLogApplicationService recorder;
 
     @Override
     public void handle(AuditLogEntry entry) {

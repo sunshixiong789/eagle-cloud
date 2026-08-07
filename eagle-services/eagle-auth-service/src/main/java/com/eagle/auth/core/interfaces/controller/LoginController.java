@@ -4,7 +4,7 @@ import com.eagle.common.exception.AppException;
 import com.eagle.auth.core.application.service.AccountApplicationService;
 import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.service.SmsService;
-import com.eagle.auth.core.infrastructure.config.WechatWebProperties;
+import com.eagle.auth.core.config.WechatWebProperties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;

@@ -2,8 +2,8 @@ package com.eagle.system.base.infrastructure.messaging;
 
 import com.eagle.amqp.listener.AbstractAmqpListener;
 import com.eagle.amqp.properties.AmqpProperties;
-import com.eagle.system.base.application.service.SystemLogRecorder;
-import com.eagle.system.base.infrastructure.messaging.event.AuthLoginMessage;
+import com.eagle.system.base.application.service.SystemLogApplicationService;
+import com.eagle.system.base.application.event.AuthLoginMessage;
 import org.springframework.stereotype.Component;
 
 /**
@@ -16,9 +16,9 @@ public class AuthLoginConsumer extends AbstractAmqpListener<AuthLoginMessage> {
     static final String TAG = "auth.login";
     static final String CONSUMER_GROUP = "system_auth_login";
 
-    private final SystemLogRecorder recorder;
+    private final SystemLogApplicationService recorder;
 
-    public AuthLoginConsumer(AmqpProperties props, SystemLogRecorder recorder) {
+    public AuthLoginConsumer(AmqpProperties props, SystemLogApplicationService recorder) {
         super(props);
         this.recorder = recorder;
     }

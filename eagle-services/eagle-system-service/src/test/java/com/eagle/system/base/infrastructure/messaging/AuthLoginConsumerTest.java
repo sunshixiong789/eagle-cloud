@@ -1,8 +1,8 @@
 package com.eagle.system.base.infrastructure.messaging;
 
 import com.eagle.amqp.properties.AmqpProperties;
-import com.eagle.system.base.application.service.SystemLogRecorder;
-import com.eagle.system.base.infrastructure.messaging.event.AuthLoginMessage;
+import com.eagle.system.base.application.service.SystemLogApplicationService;
+import com.eagle.system.base.application.event.AuthLoginMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,7 +18,7 @@ import static org.mockito.Mockito.verify;
 class AuthLoginConsumerTest {
 
     @Mock
-    private SystemLogRecorder recorder;
+    private SystemLogApplicationService recorder;
 
     private AuthLoginConsumer consumer;
 
@@ -37,7 +37,7 @@ class AuthLoginConsumerTest {
     }
 
     @Test
-    @DisplayName("handle 应转发到 SystemLogRecorder.recordLogin")
+    @DisplayName("handle 应转发到 SystemLogApplicationService.recordLogin")
     void delegatesToRecorder() {
         AuthLoginMessage event = new AuthLoginMessage();
         event.setUsername("alice");

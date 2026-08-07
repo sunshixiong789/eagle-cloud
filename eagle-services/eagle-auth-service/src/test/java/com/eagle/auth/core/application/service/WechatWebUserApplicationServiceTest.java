@@ -24,7 +24,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class WechatWebUserServiceTest {
+class WechatWebUserApplicationServiceTest {
 
     private static final String OPENID = "wx_openid_abcdef0123456789";
     private static final String UNIONID = "wx_unionid_xyz";
@@ -32,7 +32,7 @@ class WechatWebUserServiceTest {
     @Mock
     AccountRepository accountRepository;
     @InjectMocks
-    WechatWebUserService service;
+    WechatWebUserApplicationService service;
 
     private WechatWebUserInfo info(String channel, String openid, String unionid) {
         return new WechatWebUserInfo(openid, unionid, "Nick", "https://a.png", channel);

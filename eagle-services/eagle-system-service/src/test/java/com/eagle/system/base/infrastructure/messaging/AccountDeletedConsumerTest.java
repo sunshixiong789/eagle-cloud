@@ -2,7 +2,7 @@ package com.eagle.system.base.infrastructure.messaging;
 
 import com.eagle.amqp.properties.AmqpProperties;
 import com.eagle.system.base.application.service.AccountEventApplicationService;
-import com.eagle.system.base.infrastructure.messaging.event.AccountDeletedMessage;
+import com.eagle.system.base.application.event.AccountDeletedMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

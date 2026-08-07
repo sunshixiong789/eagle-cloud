@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AuthorizationQueryService {
+public class AuthorizationQueryApplicationService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;

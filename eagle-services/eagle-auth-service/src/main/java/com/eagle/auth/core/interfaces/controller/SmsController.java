@@ -1,10 +1,7 @@
 package com.eagle.auth.core.interfaces.controller;
 
 import com.eagle.common.exception.codes.DataErrorCode;
-import com.eagle.auth.core.application.service.AccountApplicationService;
-import com.eagle.auth.core.domain.service.SmsService;
-import com.eagle.auth.core.infrastructure.security.ClientIpHolder;
-import com.eagle.auth.core.infrastructure.security.SmsSendRateLimiter;
+import com.eagle.auth.core.application.service.SmsApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,8 +19,8 @@ import java.util.regex.Pattern;
 /**
  * 短信验证码控制器。
  *
- * <p>所有发送端点必须通过 {@link SmsSendRateLimiter} 做 IP 级频控，再走 SmsService
- * 内部按 phone 的 60 秒频控；避免同一 IP 用大量手机号刷发短信。
+ * <p>频控由 {@link SmsApplicationService} 编排：IP 级频控 + SmsService 内部按 phone 的
+ * 60 秒频控，避免同一 IP 用大量手机号刷发短信。本控制器只做手机号格式校验与响应封装。
  *
  * @author sunshixiong
  */
@@ -36,9 +33,7 @@ public class SmsController {
 
     private static final Pattern PHONE_PATTERN = Pattern.compile("^1[3-9]\\d{9}$");
 
-    private final SmsService smsService;
-    private final AccountApplicationService accountApplicationService;
-    private final SmsSendRateLimiter smsSendRateLimiter;
+    private final SmsApplicationService smsApplicationService;
 
     @Operation(summary = "发送短信验证码", description = "向指定手机号发送验证码（带 IP 级 / 手机号级双重频控）")
     @PostMapping("/code")
@@ -46,8 +41,7 @@ public class SmsController {
     public ResponseEntity<Void> sendCode(@Parameter(description = "手机号", required = true)
                                          @RequestParam String phone) {
         validatePhone(phone);
-        smsSendRateLimiter.checkAndIncrement(ClientIpHolder.get());
-        smsService.sendCode(phone);
+        smsApplicationService.sendCode(phone);
         log.info("sms code sent, phone-suffix={}", maskTail(phone));
         return ResponseEntity.ok().build();
     }
@@ -58,8 +52,7 @@ public class SmsController {
     public ResponseEntity<Void> sendResetCode(@Parameter(description = "手机号", required = true)
                                               @RequestParam String phone) {
         validatePhone(phone);
-        smsSendRateLimiter.checkAndIncrement(ClientIpHolder.get());
-        accountApplicationService.sendResetCode(phone);
+        smsApplicationService.sendResetCode(phone);
         log.info("sms reset code sent, phone-suffix={}", maskTail(phone));
         return ResponseEntity.ok().build();
     }

@@ -22,7 +22,11 @@ ext {
     druidVersion = '1.2.28'
 
     // Redis
-    redissonVersion = '4.5.0'
+    // 4.6.0 起 starter 才改用 redisson-spring-data-41；4.5.0 及以前带的是 -40，
+    // 其 RedissonConnection 按 Spring Data Redis 4.0 编译，在 4.1 上覆盖不到
+    // set(byte[], byte[], SetCondition, Expiration)（4.1 改了参数类型与顺序），
+    // 会落到接口 default 实现自递归 → 任何带 TTL 的 set 都 StackOverflowError。
+    redissonVersion = '4.7.0'
 
     // 工具类
     uuidCreatorVersion = '6.1.1'

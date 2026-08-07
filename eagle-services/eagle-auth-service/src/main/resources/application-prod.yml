@@ -1,16 +1,17 @@
 # ===========================================
 # 生产差异(auth-service)
 # 与基线相比的强制锁定:
-#   - JPA ddl-auto=validate, 禁止生产运行时自动改表
 #   - HikariCP 快速失败 5s + 60s 泄漏检测
 #   - Swagger / api-docs 强制关闭
 #   - Actuator 仅暴露 health/info/prometheus
 #   - 日志 root=WARN, com.eagle=INFO
 #
 # 【schema 策略】当前阶段:
+#   - ddl-auto=update —— Flyway 尚未引入,生产表结构仍由 Hibernate 启动期同步。
+#     ⚠️ 与 system-service 口径不一致(那边 prod 是 validate,要求上线前先手动跑 DDL)。
+#     两者待 Flyway 接管全部 DDL 后一并收敛为 validate。
 #   - JdbcOAuth2AuthorizationService 所需 oauth2_* 表仍由 spring.sql.init 的
 #     IF NOT EXISTS 脚本幂等创建。
-#   - JPA 管理的业务表生产只 validate;后续统一由 Flyway 接管全部 DDL。
 # ===========================================
 
 spring:

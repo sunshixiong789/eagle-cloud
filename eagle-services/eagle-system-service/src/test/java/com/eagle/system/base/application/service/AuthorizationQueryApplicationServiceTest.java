@@ -28,11 +28,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * AuthorizationQueryService 为 auth-service 提供 /internal/authorization/{accountId} 数据,
+ * AuthorizationQueryApplicationService 为 auth-service 提供 /internal/authorization/{accountId} 数据,
  * 单元测试覆盖:找不到用户、无角色、有角色、profile 缺失四种路径。
  */
 @ExtendWith(MockitoExtension.class)
-class AuthorizationQueryServiceTest {
+class AuthorizationQueryApplicationServiceTest {
 
     private static final Long ACCOUNT_ID = 100L;
 
@@ -41,7 +41,7 @@ class AuthorizationQueryServiceTest {
     @Mock
     RoleRepository roleRepository;
     @InjectMocks
-    AuthorizationQueryService service;
+    AuthorizationQueryApplicationService service;
 
     private User sampleUser(Set<Long> roleIds) {
         UserProfile profile = new UserProfile("https://a.png", "Alice", "Alice Real", Gender.FEMALE, "bio");

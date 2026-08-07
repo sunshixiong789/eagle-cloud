@@ -1,7 +1,7 @@
 package com.eagle.system.contract;
 
-import com.eagle.system.base.infrastructure.messaging.event.AccountDeletedMessage;
-import com.eagle.system.base.infrastructure.messaging.event.AccountRegisteredMessage;
+import com.eagle.system.base.application.event.AccountDeletedMessage;
+import com.eagle.system.base.application.event.AccountRegisteredMessage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;

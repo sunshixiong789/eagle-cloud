@@ -4,7 +4,7 @@ import com.eagle.auth.core.domain.AuthErrorCode;
 import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.model.enums.AccountStatus;
 import com.eagle.auth.core.domain.repository.AccountRepository;
-import com.eagle.auth.core.infrastructure.config.AdminProperties;
+import com.eagle.auth.core.config.AdminProperties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;

@@ -1,5 +1,6 @@
 package com.eagle.system.message.announcement.infrastructure.cache;
 
+import com.eagle.system.message.announcement.application.dto.AnnouncementSnapshot;
 import com.eagle.system.message.announcement.domain.model.Announcement;
 import com.eagle.system.message.announcement.domain.repository.AnnouncementRepository;
 import jakarta.annotation.Nullable;

@@ -24,9 +24,9 @@ import java.util.Optional;
  */
 @Service
 @RequiredArgsConstructor
-public class WechatWebUserService {
+public class WechatWebUserApplicationService {
 
-    private static final Logger log = LoggerFactory.getLogger(WechatWebUserService.class);
+    private static final Logger log = LoggerFactory.getLogger(WechatWebUserApplicationService.class);
 
     private final AccountRepository accountRepository;
 

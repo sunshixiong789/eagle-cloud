@@ -1,7 +1,7 @@
 package com.eagle.system.base.interfaces.controller.internal;
 
 import com.eagle.system.base.application.service.AccountEventApplicationService;
-import com.eagle.system.base.infrastructure.messaging.event.AccountRegisteredMessage;
+import com.eagle.system.base.application.event.AccountRegisteredMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

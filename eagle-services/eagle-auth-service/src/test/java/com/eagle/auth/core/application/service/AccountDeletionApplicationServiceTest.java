@@ -3,7 +3,7 @@ package com.eagle.auth.core.application.service;
 import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.repository.AccountRepository;
 import com.eagle.auth.core.domain.service.AppleIdentityService;
-import com.eagle.auth.core.infrastructure.config.AdminProperties;
+import com.eagle.auth.core.config.AdminProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;

@@ -3,6 +3,7 @@ package com.eagle.system.file.interfaces.controller;
 import com.eagle.system.file.application.service.FileApplicationService;
 import com.eagle.system.file.application.service.FileApplicationService.DownloadResource;
 import com.eagle.system.file.interfaces.dto.response.FileMetadataResponse;
+import com.eagle.system.file.interfaces.support.MediaTypes;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -79,7 +80,7 @@ public class FileController {
         String encodedName = URLEncoder.encode(resource.filename(), StandardCharsets.UTF_8)
                 .replace("+", "%20");
 
-        MediaType mediaType = parseMediaType(resource.metadata().getContentType());
+        MediaType mediaType = MediaTypes.parseOrOctetStream(resource.metadata().getContentType());
 
         return ResponseEntity.ok()
                 .contentType(mediaType)
@@ -110,17 +111,6 @@ public class FileController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         fileApplicationService.delete(id);
-    }
-
-    private MediaType parseMediaType(String contentType) {
-        if (contentType == null || contentType.isBlank()) {
-            return MediaType.APPLICATION_OCTET_STREAM;
-        }
-        try {
-            return MediaType.parseMediaType(contentType);
-        } catch (IllegalArgumentException ex) {
-            return MediaType.APPLICATION_OCTET_STREAM;
-        }
     }
 
     /**

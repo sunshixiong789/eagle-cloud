@@ -3,7 +3,7 @@ package com.eagle.system.message.application.service;
 import com.eagle.system.message.domain.model.UserMessage;
 import com.eagle.system.message.domain.repository.UserMessageRepository;
 import com.eagle.system.message.interfaces.dto.UserMessageResponse;
-import com.eagle.system.message.interfaces.exception.MessageErrorCode;
+import com.eagle.system.message.domain.model.MessageErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

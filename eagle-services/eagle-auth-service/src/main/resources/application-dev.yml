@@ -1,0 +1,35 @@
+# ===========================================
+# 开发/测试差异(auth-service)
+# 与基线相比的覆盖:
+#   - Actuator 暴露调试端点 + details=always
+#   - 日志 SQL=DEBUG,参数绑定=TRACE(com.eagle 基线已是 INFO,这里提到 DEBUG)
+#
+# 数据源 / Redis / RabbitMQ / OAuth / 短信等连接信息与凭据全部走 Consul KV
+# (config/auth,dev/data),KV 里的键沿用环境变量名,直接填进基线的 ${VAR:default} 占位符。
+# 键位清单与改配置流程见 docs/consul-config.md。
+#
+# 基线默认值已适用于 dev,故不重复覆盖:
+#   - ddl-auto=update(基线即 update,Flyway 引入前由 Hibernate 同步 schema)
+#   - eagle.amqp.exchange-prefix=dev_
+#   - org.springframework.security=DEBUG / ...oauth2.server.authorization=TRACE
+#     (排查 /oauth2/token 400 用,prod 已覆盖为 WARN)
+# ===========================================
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,loggers,env,beans,mappings,prometheus
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+  info:
+    env:
+      enabled: true
+
+logging:
+  level:
+    com.eagle: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
