@@ -301,14 +301,12 @@ eagle:
       code: ${SMS_MOCK_CODE:123456}
       phones: ${SMS_MOCK_PHONES:}
   message:
+    # 短信网关（SmsProperties）：provider=hnsls 且 username/password/sign-name 三者齐全时
+    # 才真实下发，否则验证码只打印到日志（开发态兜底）。启动日志会明确告知当前处于哪种模式。
+    # 阿里云/腾讯云 provider 尚未实现，配 provider=aliyun 只会回落到日志兜底。
     sms:
       provider: ${SMS_PROVIDER:hnsls}
-      access-key-id: ${SMS_ACCESS_KEY_ID:}
-      access-key-secret: ${SMS_ACCESS_KEY_SECRET:}
       sign-name: ${SMS_SIGN_NAME:}
-      template-id: ${SMS_TEMPLATE_ID:}
-      sdk-app-id: ${TENCENT_SMS_SDK_APP_ID:}
-      region: ${TENCENT_SMS_REGION:ap-guangzhou}
       username: ${HNSLS_SMS_USERNAME:}
       password: ${HNSLS_SMS_PASSWORD:}
       content-template: ${HNSLS_SMS_CONTENT_TEMPLATE:您的验证码是{code}，5分钟内有效。}

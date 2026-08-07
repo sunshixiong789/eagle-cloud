@@ -135,6 +135,38 @@ curl -s -H "X-Consul-Token: $MGMT" "$C/v1/kv/config/auth,dev/data?raw"
 先读 `?raw` 的同时取 `ModifyIndex`（去掉 `?raw` 读元数据），写回时带 `?cas=<index>`，
 返回 `false` 说明期间被人改过，重读再来。
 
+## 短信真实下发（auth）
+
+短信走手拉手 HTTP 网关，配置前缀 `eagle.message.sms`，由 `SmsProperties` 绑定。
+application.yml 用 `${VAR}` 占位符消费，所以 KV 里写的是**变量名（扁平）**，
+与本文其余键一致，写进 `config/auth,<profile>/data`：
+
+```yaml
+SMS_PROVIDER: "hnsls"        # 必须是 hnsls，其他值一律回落日志兜底
+SMS_SIGN_NAME: "<短信签名>"   # 不含【】，代码会自动包
+HNSLS_SMS_USERNAME: "<网关账号>"
+HNSLS_SMS_PASSWORD: "<网关密码>"
+```
+
+**四个缺一不可**。dev / prod 目前均已配全。
+
+`HNSLS_SMS_SEND_URL` / `HNSLS_SMS_CHARSET` / `HNSLS_SMS_CONNECT_TIMEOUT_MS` /
+`HNSLS_SMS_READ_TIMEOUT_MS` 有 yml 默认值（UTF-8 接口、5s/10s），只在网关给的是
+GBK 接口时才需同时覆盖 `HNSLS_SMS_CHARSET: "GBK"` 和 `HNSLS_SMS_SEND_URL`。
+
+判定是否生效**看启动日志**，不用等到发短信：
+
+- `短信真实下发已启用: provider=hnsls, sendUrl=..., signName=...` → 真实下发
+- `短信真实下发未启用（provider=..., 凭据齐全=false）` → 仍是日志兜底，验证码只打日志
+
+四个键任一为空都会退回兜底，且**空值不能靠写空串占位**（见下方坑 7）——不配就整条不写。
+
+排查发送失败：网关错误码已翻译成中文原因打在 `hnsls sms failed: ... reason=...`，
+其中 `seed 错误` 是容器时区与网关相差超 30 分钟，`key 错误` 是密码或编码不对。
+
+⚠️ 短信配置**不要写回 compose 的 environment 段** —— 环境变量优先级高于 KV，
+会静默盖掉 KV 里的值（auth 的 compose 注释里也标了这条）。
+
 ## 迁移中踩到并已修掉的坑
 
 1. **`import: optional:consul:` 是非法 YAML** —— 结尾冒号被解析成嵌套映射，服务直接起不来。
