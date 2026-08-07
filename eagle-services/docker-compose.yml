@@ -207,7 +207,7 @@ services:
       # dev 专用：E2E 自动化脚本（ease-mind-servers/scripts/e2e）依赖这两个号登录。
       # 环境变量优先级高于 Consul KV，勿再写进 KV 以免互相覆盖；prod 的白名单由 prod KV 管理，此处不生效。
       - SMS_MOCK_PHONES=${SMS_MOCK_PHONES:-17708080863,18583250221}
-      - JAVA_OPTS=${AUTH_JAVA_OPTS:--server -XX:+UseG1GC -Xms384m -Xmx640m -XX:+MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -XX:+HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
+      - JAVA_OPTS=${AUTH_JAVA_OPTS:--server -XX:+UseG1GC -Xms384m -Xmx640m -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
       # JDWP 调试参数:JVM 标准变量,启动时自动与 JAVA_OPTS 合并,设空字符串即可关闭调试
       - JAVA_TOOL_OPTIONS=${AUTH_DEBUG_OPTS:--agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5105}
       # ⚠️ 其余配置（数据源 / Redis / RabbitMQ 连接与凭据、OAuth、短信、第三方登录…）
