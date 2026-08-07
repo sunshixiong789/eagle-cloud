@@ -4,7 +4,7 @@ import com.eagle.audit.model.AuditLogEntry;
 import com.eagle.system.base.domain.model.SysLog;
 import com.eagle.system.base.domain.model.enums.LogStatus;
 import com.eagle.system.base.domain.repository.LogRepository;
-import com.eagle.system.base.infrastructure.messaging.event.AuthLoginMessage;
+import com.eagle.system.base.application.event.AuthLoginMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Slf4j
 @Service
-public class SystemLogRecorder {
+public class SystemLogApplicationService {
 
     private static final int TITLE_MAX_LENGTH = 255;
     private static final int USERNAME_MAX_LENGTH = 64;
@@ -31,7 +31,7 @@ public class SystemLogRecorder {
     private final LogRepository logRepository;
     private final String serviceId;
 
-    public SystemLogRecorder(LogRepository logRepository, Environment environment) {
+    public SystemLogApplicationService(LogRepository logRepository, Environment environment) {
         this.logRepository = logRepository;
         this.serviceId = truncate(
                 environment.getProperty("spring.application.name", "unknown"),

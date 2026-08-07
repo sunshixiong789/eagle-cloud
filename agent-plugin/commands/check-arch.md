@@ -22,8 +22,9 @@ argument-hint: "[模块路径，可选；默认 eagle-services:eagle-system-serv
    ./gradlew :{module}:test --tests "*LayeredArchitectureTest"
    ```
 
-   `LayeredArchitectureTest` 用 ArchUnit 冻结基线：存量违例不阻塞，**新增违例即失败**。
-   若因合理重构导致基线条目消失，直接提交更新后的 `archunit_store/`。
+   `LayeredArchitectureTest` 是**硬门禁**：10 条分层规则均无冻结基线，任何违例直接失败。
+   若某条规则确因合理重构不再适用，改规则定义本身（两个服务的测试文件要一起改），
+   不要为个例开豁免；包放置约定见 `07-checklist.md`。
 
 3. **（原）Modulith 细节**
 

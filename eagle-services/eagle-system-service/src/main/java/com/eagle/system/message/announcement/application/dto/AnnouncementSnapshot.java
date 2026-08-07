@@ -1,4 +1,4 @@
-package com.eagle.system.message.announcement.infrastructure.cache;
+package com.eagle.system.message.announcement.application.dto;
 
 import com.eagle.system.message.announcement.domain.model.Announcement;
 import com.eagle.system.message.announcement.domain.model.AnnouncementCategory;

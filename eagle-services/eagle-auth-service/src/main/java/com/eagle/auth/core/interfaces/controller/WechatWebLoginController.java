@@ -1,10 +1,10 @@
 package com.eagle.auth.core.interfaces.controller;
 
-import com.eagle.auth.core.application.service.WechatWebUserService;
+import com.eagle.auth.core.application.service.WechatWebUserApplicationService;
 import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.service.WechatWebService;
 import com.eagle.auth.core.domain.service.WechatWebService.WechatWebUserInfo;
-import com.eagle.auth.core.infrastructure.config.WechatWebProperties;
+import com.eagle.auth.core.config.WechatWebProperties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +24,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -56,7 +57,7 @@ public class WechatWebLoginController {
     private static final String STATE_SESSION_KEY = "WECHAT_OAUTH_STATE";
 
     private final WechatWebService wechatWebService;
-    private final WechatWebUserService wechatWebUserService;
+    private final WechatWebUserApplicationService wechatWebUserApplicationService;
     private final UserDetailsService userDetailsService;
     private final SecurityContextRepository securityContextRepository;
     private final WechatWebProperties wechatWebProperties;
@@ -174,43 +175,53 @@ public class WechatWebLoginController {
     private void authenticateAndRedirect(WechatWebUserInfo info,
                                          HttpServletRequest request,
                                          HttpServletResponse response) throws IOException {
-        try {
-            Account account = wechatWebUserService.findOrCreateWechatWebAccount(info);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(account.getUsername());
+        Account account = wechatWebUserApplicationService.findOrCreateWechatWebAccount(info);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(account.getUsername());
 
-            // SAS 7.0 OIDC id_token 生成要求 Authentication 携带 FactorGrantedAuthority 以提供 auth_time；
-            // 微信扫码/授权属于一次性凭证（One-Time-Token）因子。
-            Set<GrantedAuthority> authorities = new LinkedHashSet<>(userDetails.getAuthorities());
-            authorities.add(FactorGrantedAuthority.fromAuthority(FactorGrantedAuthority.OTT_AUTHORITY));
+        // SAS 7.0 OIDC id_token 生成要求 Authentication 携带 FactorGrantedAuthority 以提供 auth_time；
+        // 微信扫码/授权属于一次性凭证（One-Time-Token）因子。
+        Set<GrantedAuthority> authorities = new LinkedHashSet<>(userDetails.getAuthorities());
+        authorities.add(FactorGrantedAuthority.fromAuthority(FactorGrantedAuthority.OTT_AUTHORITY));
 
-            UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
-            SecurityContext context = SecurityContextHolder.createEmptyContext();
-            context.setAuthentication(authToken);
-            SecurityContextHolder.setContext(context);
-            securityContextRepository.saveContext(context, request, response);
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authToken);
+        SecurityContextHolder.setContext(context);
+        securityContextRepository.saveContext(context, request, response);
 
-            log.info("微信 Web 登录成功, username: {}, channel: {}",
-                    account.getUsername(), info.channel());
+        log.info("微信 Web 登录成功, username: {}, channel: {}",
+                account.getUsername(), info.channel());
 
-            // 获取原始请求地址（通常是 /oauth2/authorize?...）
-            HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
-            SavedRequest savedRequest = requestCache.getRequest(request, response);
-            String targetUrl = savedRequest != null ? savedRequest.getRedirectUrl() : "/";
+        // 获取原始请求地址（通常是 /oauth2/authorize?...）
+        HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
+        SavedRequest savedRequest = requestCache.getRequest(request, response);
+        String targetUrl = savedRequest != null ? savedRequest.getRedirectUrl() : "/";
 
-            // 账号未绑定手机号，引导绑定（携带原始重定向地址）
-            if (account.getPhone() == null || account.getPhone().isBlank()) {
-                String bindUrl = "/login/bind-phone?accountId=" + account.getId()
-                        + "&redirectUrl=" + URLEncoder.encode(targetUrl, StandardCharsets.UTF_8);
-                response.sendRedirect(bindUrl);
-                return;
-            }
-
-            response.sendRedirect(targetUrl);
-
-        } catch (Exception e) {
-            log.error("微信 Web 登录失败, channel: {}, error: {}", info.channel(), e.getMessage(), e);
-            response.sendRedirect("/login?error");
+        // 账号未绑定手机号，引导绑定（携带原始重定向地址）
+        if (account.getPhone() == null || account.getPhone().isBlank()) {
+            String bindUrl = "/login/bind-phone?accountId=" + account.getId()
+                    + "&redirectUrl=" + URLEncoder.encode(targetUrl, StandardCharsets.UTF_8);
+            response.sendRedirect(bindUrl);
+            return;
         }
+
+        response.sendRedirect(targetUrl);
+    }
+
+    /**
+     * 本控制器的失败兜底：微信 Web 登录任一环节出错都跳回登录页。
+     * <p>
+     * 本类是 Session 流程的 {@code @Controller}（非 REST），而全局
+     * {@code GlobalExceptionHandler} 是 {@code @RestControllerAdvice}、返回 JSON ——
+     * 对浏览器重定向流程不适用。本类内的 {@code @ExceptionHandler} 优先级高于全局
+     * advice，因此在这里把异常收敛成重定向。
+     */
+    @ExceptionHandler(Exception.class)
+    public void handleLoginFailure(Exception e, HttpServletRequest request,
+                                   HttpServletResponse response) throws IOException {
+        log.error("微信 Web 登录失败, uri: {}, error: {}",
+                request.getRequestURI(), e.getMessage(), e);
+        response.sendRedirect("/login?error");
     }
 }

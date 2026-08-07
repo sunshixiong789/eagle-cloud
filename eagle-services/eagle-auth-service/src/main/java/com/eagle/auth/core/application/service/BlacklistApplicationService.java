@@ -10,7 +10,7 @@ import com.eagle.auth.core.domain.model.enums.BlacklistType;
 import com.eagle.auth.core.domain.repository.AccountRepository;
 import com.eagle.auth.core.domain.repository.BlacklistRepository;
 import com.eagle.auth.core.infrastructure.cache.BlacklistCacheStore;
-import com.eagle.auth.core.infrastructure.config.AdminProperties;
+import com.eagle.auth.core.config.AdminProperties;
 import com.eagle.auth.core.interfaces.dto.response.BlacklistResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

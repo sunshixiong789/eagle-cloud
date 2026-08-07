@@ -7,7 +7,7 @@ import com.eagle.system.base.domain.model.User;
 import com.eagle.system.base.domain.model.enums.DataScope;
 import com.eagle.system.base.domain.repository.RoleRepository;
 import com.eagle.system.base.domain.repository.UserRepository;
-import com.eagle.system.base.infrastructure.messaging.event.AccountRegisteredMessage;
+import com.eagle.system.base.application.event.AccountRegisteredMessage;
 import com.eagle.system.base.infrastructure.remote.AuthAccountClient;
 import com.eagle.system.base.infrastructure.remote.dto.AccountSnapshot;
 import lombok.RequiredArgsConstructor;

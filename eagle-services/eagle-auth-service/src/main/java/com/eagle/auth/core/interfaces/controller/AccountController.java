@@ -46,15 +46,12 @@ public class AccountController {
 
     private final AccountApplicationService accountApplicationService;
     private final AccountDeletionApplicationService accountDeletionApplicationService;
-    private final com.eagle.auth.core.infrastructure.security.BlacklistChecker blacklistChecker;
 
     @Operation(summary = "用户自主注册")
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("permitAll()")
     public Map<String, Long> register(@Valid @RequestBody RegisterAccountRequest request) {
-        blacklistChecker.checkRegister(request.phone(), request.email(),
-                com.eagle.auth.core.infrastructure.security.ClientIpHolder.get());
         Long accountId = accountApplicationService.register(
                 request.username(), request.password(), request.phone(),
                 request.email(), request.nickname());

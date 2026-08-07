@@ -11,7 +11,7 @@ import com.eagle.auth.core.domain.model.enums.BlacklistType;
 import com.eagle.auth.core.domain.repository.AccountRepository;
 import com.eagle.auth.core.domain.repository.BlacklistRepository;
 import com.eagle.auth.core.infrastructure.cache.BlacklistCacheStore;
-import com.eagle.auth.core.infrastructure.config.AdminProperties;
+import com.eagle.auth.core.config.AdminProperties;
 import com.eagle.common.exception.AppException;
 import com.eagle.common.exception.DomainException;
 import org.junit.jupiter.api.DisplayName;

@@ -1,7 +1,7 @@
 package com.eagle.system.message.announcement.interfaces.controller;
 
 import com.eagle.resource.server.util.SecurityUtils;
-import com.eagle.system.message.announcement.application.service.AnnouncementQueryService;
+import com.eagle.system.message.announcement.application.service.AnnouncementQueryApplicationService;
 import com.eagle.system.message.announcement.interfaces.dto.AnnouncementView;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,7 +31,7 @@ import java.util.Set;
 @PreAuthorize("isAuthenticated()")
 public class UserAnnouncementController {
 
-    private final AnnouncementQueryService queryService;
+    private final AnnouncementQueryApplicationService queryService;
 
     @Operation(summary = "公告列表（按 publish_time 降序，含已读标记）")
     @GetMapping

@@ -6,7 +6,7 @@ import com.eagle.system.message.announcement.domain.model.TargetType;
 import com.eagle.system.message.announcement.domain.model.UserAnnouncementCursor;
 import com.eagle.system.message.announcement.domain.repository.UserAnnouncementCursorRepository;
 import com.eagle.system.message.announcement.infrastructure.cache.AnnouncementCache;
-import com.eagle.system.message.announcement.infrastructure.cache.AnnouncementSnapshot;
+import com.eagle.system.message.announcement.application.dto.AnnouncementSnapshot;
 import com.eagle.system.message.announcement.interfaces.dto.AnnouncementView;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,8 +28,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("AnnouncementQueryService")
-class AnnouncementQueryServiceTest {
+@DisplayName("AnnouncementQueryApplicationService")
+class AnnouncementQueryApplicationServiceTest {
 
     private static final Long USER_ID = 100L;
     private static final LocalDateTime T1 = LocalDateTime.of(2026, 5, 1, 10, 0);
@@ -43,7 +43,7 @@ class AnnouncementQueryServiceTest {
     private UserAnnouncementCursorRepository cursorRepository;
 
     @InjectMocks
-    private AnnouncementQueryService service;
+    private AnnouncementQueryApplicationService service;
 
     @Nested
     @DisplayName("listForUser")

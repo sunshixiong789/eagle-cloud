@@ -1,4 +1,4 @@
-package com.eagle.system.message.interfaces.exception;
+package com.eagle.system.message.domain.model;
 
 import com.eagle.common.exception.ErrorCode;
 

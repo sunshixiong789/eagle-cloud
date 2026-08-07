@@ -1,4 +1,4 @@
-package com.eagle.auth.core.infrastructure.config;
+package com.eagle.auth.core.config;
 
 import lombok.Getter;
 import lombok.Setter;

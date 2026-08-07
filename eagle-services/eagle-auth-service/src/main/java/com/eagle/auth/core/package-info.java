@@ -11,6 +11,8 @@
  *   <li>{@code core.domain}         — 聚合根 / 值对象 / 领域事件 / Driven Port</li>
  *   <li>{@code core.infrastructure} — JPA、远程客户端、安全适配器、事件处理器</li>
  * </ul>
+ * 另有 {@code core.config} 与四层平级，存放 {@code @ConfigurationProperties} 配置契约：
+ * 配置是应用输入而非基础设施实现，各层都可直接读取。
  *
  * <p><strong>对外公开的命名接口</strong>（其他服务/模块通过远程 API 访问，仅作历史标识）：
  * <ul>

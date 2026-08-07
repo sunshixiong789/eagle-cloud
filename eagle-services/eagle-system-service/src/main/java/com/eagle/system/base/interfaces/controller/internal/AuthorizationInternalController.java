@@ -1,6 +1,6 @@
 package com.eagle.system.base.interfaces.controller.internal;
 
-import com.eagle.system.base.application.service.AuthorizationQueryService;
+import com.eagle.system.base.application.service.AuthorizationQueryApplicationService;
 import com.eagle.system.base.interfaces.dto.response.AuthorizationView;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AuthorizationInternalController {
 
-    private final AuthorizationQueryService authorizationQueryService;
+    private final AuthorizationQueryApplicationService authorizationQueryApplicationService;
 
     /**
      * 按 accountId 查询授权信息。
@@ -34,7 +34,7 @@ public class AuthorizationInternalController {
      */
     @GetMapping("/{accountId}")
     public ResponseEntity<AuthorizationView> findByAccountId(@PathVariable Long accountId) {
-        return authorizationQueryService.findByAccountId(accountId)
+        return authorizationQueryApplicationService.findByAccountId(accountId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

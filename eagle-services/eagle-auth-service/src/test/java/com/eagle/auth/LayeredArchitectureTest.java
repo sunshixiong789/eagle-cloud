@@ -11,7 +11,6 @@ import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
-import com.tngtech.archunit.library.freeze.FreezingArchRule;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -53,13 +52,11 @@ class LayeredArchitectureTest {
             .importPackages("com.eagle.auth");
 
     /**
-     * 冻结存量违例:基线记录在 {@code archunit_store/},此后只有 <b>新增</b> 违例才会让测试失败。
-     * <p>
-     * 存量清理进度见 {@code agent-plugin/rules/07-checklist.md} 的违例台账;
-     * 修好一处就从 store 里消失一处,不会倒退。
+     * 对 {@link #CLASSES} 求值。<b>不设冻结基线</b>:任何违例都直接让测试失败,
+     * 存量已清零,新违例必须当场修掉而不是记进台账。
      */
-    private static void freeze(ArchRule rule) {
-        FreezingArchRule.freeze(rule).check(CLASSES);
+    private static void check(ArchRule rule) {
+        rule.check(CLASSES);
     }
 
     @Nested
@@ -69,7 +66,7 @@ class LayeredArchitectureTest {
         @Test
         @DisplayName("domain 层不得依赖 application / interfaces / infrastructure")
         void domainShouldNotDependOnOuterLayers() {
-            freeze(noClasses().that().resideInAPackage("..domain..")
+            check(noClasses().that().resideInAPackage("..domain..")
                     .should().dependOnClassesThat()
                     .resideInAnyPackage("..application..", "..interfaces..", "..infrastructure..")
                     .because("领域层必须保持稳定,不能反向依赖外层(见 rules/02-architecture.md)")
@@ -79,7 +76,7 @@ class LayeredArchitectureTest {
         @Test
         @DisplayName("interfaces 层不得直接依赖 infrastructure")
         void interfacesShouldNotDependOnInfrastructure() {
-            freeze(noClasses().that().resideInAPackage("..interfaces..")
+            check(noClasses().that().resideInAPackage("..interfaces..")
                     .should().dependOnClassesThat().resideInAPackage("..infrastructure..")
                     .because("Controller 应经 application 编排,不直接触碰基础设施实现")
                     );
@@ -88,7 +85,7 @@ class LayeredArchitectureTest {
         @Test
         @DisplayName("domain 层不得依赖 Web / Servlet 框架")
         void domainShouldNotDependOnWebFramework() {
-            freeze(noClasses().that().resideInAPackage("..domain..")
+            check(noClasses().that().resideInAPackage("..domain..")
                     .should().dependOnClassesThat()
                     .resideInAnyPackage("org.springframework.web..", "jakarta.servlet..")
                     .because("领域模型不应与传输层耦合")
@@ -103,7 +100,7 @@ class LayeredArchitectureTest {
         @Test
         @DisplayName("JPA 实体不得标注 @Data 或 @Builder")
         void entitiesShouldNotUseDataOrBuilder() {
-            freeze(noClasses().that().areAnnotatedWith(ENTITY)
+            check(noClasses().that().areAnnotatedWith(ENTITY)
                     .should().beAnnotatedWith("lombok.Data")
                     .orShould().beAnnotatedWith("lombok.Builder")
                     .because("实体需静态工厂 + 业务方法改状态,不暴露 setter(见 rules/00-core.md)")
@@ -114,7 +111,7 @@ class LayeredArchitectureTest {
         @Test
         @DisplayName("领域模型不得暴露 public setter")
         void domainModelsShouldNotExposeSetters() {
-            freeze(classes().that().areAssignableTo(AGGREGATE_ROOT)
+            check(classes().that().areAssignableTo(AGGREGATE_ROOT)
                     .should(new ArchCondition<JavaClass>("不含 public setXxx 方法") {
                         @Override
                         public void check(JavaClass item, ConditionEvents events) {
@@ -133,7 +130,7 @@ class LayeredArchitectureTest {
         @Test
         @DisplayName("@Enumerated 字段必须用 EnumType.STRING")
         void enumFieldsShouldUseStringType() {
-            freeze(fields().that().areAnnotatedWith(ENUMERATED)
+            check(fields().that().areAnnotatedWith(ENUMERATED)
                     .should(new ArchCondition<JavaField>("标注 EnumType.STRING") {
                         @Override
                         public void check(JavaField item, ConditionEvents events) {
@@ -160,7 +157,7 @@ class LayeredArchitectureTest {
         @Test
         @DisplayName("Mapper 不得依赖 Repository")
         void mappersShouldNotDependOnRepositories() {
-            freeze(noClasses().that().resideInAPackage("..application.mapper..")
+            check(noClasses().that().resideInAPackage("..application.mapper..")
                     .should().dependOnClassesThat().haveSimpleNameEndingWith("Repository")
                     .because("Mapper 只做字段映射,不做跨聚合查询(见 rules/02-architecture.md)")
                     .allowEmptyShould(true)
@@ -170,7 +167,7 @@ class LayeredArchitectureTest {
         @Test
         @DisplayName("禁止使用 BeanUtils 反射拷贝")
         void shouldNotUseBeanUtils() {
-            freeze(noClasses().should().dependOnClassesThat()
+            check(noClasses().should().dependOnClassesThat()
                     .haveFullyQualifiedName("org.springframework.beans.BeanUtils")
                     .because("禁止反射式映射,用 record 静态工厂或 @Component Mapper(见 rules/02-architecture.md)")
                     );
@@ -179,7 +176,7 @@ class LayeredArchitectureTest {
         @Test
         @DisplayName("应用服务命名为 XxxApplicationService")
         void applicationServicesShouldBeNamedCorrectly() {
-            freeze(classes().that().resideInAPackage("..application.service..")
+            check(classes().that().resideInAPackage("..application.service..")
                     .and().areNotNestedClasses()
                     .should().haveSimpleNameEndingWith("ApplicationService")
                     .because("见 rules/00-core.md 的 DDD 命名约定")
@@ -190,7 +187,7 @@ class LayeredArchitectureTest {
         @Test
         @DisplayName("Controller 不得捕获异常")
         void controllersShouldNotCatchExceptions() {
-            freeze(methods().that().areDeclaredInClassesThat().haveSimpleNameEndingWith("Controller")
+            check(methods().that().areDeclaredInClassesThat().haveSimpleNameEndingWith("Controller")
                     .should(new ArchCondition<JavaMethod>("不出现 try-catch") {
                         @Override
                         public void check(JavaMethod item, ConditionEvents events) {

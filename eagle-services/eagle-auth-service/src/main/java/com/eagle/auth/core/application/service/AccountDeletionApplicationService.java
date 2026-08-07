@@ -5,7 +5,7 @@ import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.model.valueobject.AppleBinding;
 import com.eagle.auth.core.domain.repository.AccountRepository;
 import com.eagle.auth.core.domain.service.AppleIdentityService;
-import com.eagle.auth.core.infrastructure.config.AdminProperties;
+import com.eagle.auth.core.config.AdminProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

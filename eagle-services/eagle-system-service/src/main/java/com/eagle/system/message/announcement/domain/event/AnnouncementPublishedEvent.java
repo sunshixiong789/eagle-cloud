@@ -8,7 +8,7 @@ import lombok.Getter;
 /**
  * 公告发布领域事件。
  *
- * <p>由 {@code AnnouncementAdminService.publish} 注册到聚合根，事务提交后由
+ * <p>由 {@code AnnouncementAdminApplicationService.publish} 注册到聚合根，事务提交后由
  * {@code AnnouncementBroadcastPublisher} 监听并通过 Redis pub/sub 触发跨实例 WebSocket 广播。
  *
  * <p>携带 {@link #targetType}：实时广播投递策略在基础设施层据此决定——仅 {@link TargetType#ALL}

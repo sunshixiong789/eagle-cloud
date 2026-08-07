@@ -6,7 +6,7 @@ import com.eagle.common.alert.AlertSeverity;
 import com.eagle.amqp.properties.AmqpProperties;
 import com.eagle.system.base.domain.model.DeadLetterRecord;
 import com.eagle.system.base.domain.repository.DeadLetterRecordRepository;
-import com.eagle.system.base.infrastructure.messaging.event.AccountRegisteredMessage;
+import com.eagle.system.base.application.event.AccountRegisteredMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

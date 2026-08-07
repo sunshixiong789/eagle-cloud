@@ -1,4 +1,4 @@
-package com.eagle.system.base.infrastructure.messaging.event;
+package com.eagle.system.base.application.event;
 
 import com.eagle.common.event.BaseEvent;
 import lombok.Getter;

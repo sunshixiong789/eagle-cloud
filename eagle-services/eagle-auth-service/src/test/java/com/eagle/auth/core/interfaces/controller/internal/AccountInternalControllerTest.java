@@ -3,7 +3,7 @@ package com.eagle.auth.core.interfaces.controller.internal;
 import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.model.enums.AccountStatus;
 import com.eagle.auth.core.domain.repository.AccountRepository;
-import com.eagle.auth.core.infrastructure.config.AdminProperties;
+import com.eagle.auth.core.config.AdminProperties;
 import com.eagle.common.exception.NotFoundException;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;

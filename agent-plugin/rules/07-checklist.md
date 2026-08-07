@@ -39,7 +39,7 @@
 
 | 规则 | 存量违例 | 位置 |
 |---|---|---|
-| Controller 不注入 `Repository` | **3 处** | 见 ArchUnit 冻结基线 |
+| Controller 不注入 `Repository` | **1 处** | `AccountInternalController.accountRepository`（`LoginController` / `WechatWebLoginController` 的 `SecurityContextRepository` 是 Spring Security 的上下文存储，非数据仓储，不计入） |
 | 禁 `@PreAuthorize("isAuthenticated()")` | **13 处** | 各 Controller |
 | 禁 `@PreAuthorize("permitAll()")` | **4 处** | 各 Controller |
 | 禁 `@Value` 注入配置 | **2 处** | `BlacklistCacheWarmer`、`EagleAuditLogJpaAutoConfiguration` |
@@ -48,33 +48,28 @@
 | 资源不存在用 `toNotFoundException()` | `toDomainException` 98 次 vs `toNotFoundException` 4 次，存在语义漂移 | 全局 |
 | `sealed` + 模式匹配建模 | 使用数 0（本轮新引入） | 仅约束新代码 |
 
-## ArchUnit 冻结基线（`LayeredArchitectureTest`）
+## ArchUnit 分层门禁（`LayeredArchitectureTest`）
 
-两个服务各有一份同规则的 `LayeredArchitectureTest`，分层违例冻结在各自的 `archunit_store/`，
-**新增违例会让测试失败，存量不阻塞**。修好一处基线自动少一处，不会倒退。
+两个服务各有一份**同规则**的 `LayeredArchitectureTest`，各 10 条。
+**无冻结基线——任何违例直接让测试失败。**
 
 **改规则时两个测试文件要一起改**，否则规则只在一边生效，另一边会悄悄腐化。
 
-### eagle-system-service —— 冻结 22 条
+### 存量已清零（2026-08-07）
 
-| 违例 | 条数 | 典型案例 / 成因 |
+原先冻结在 `archunit_store/` 的 51 条存量违例（system 22 + auth 29）已全部修复，
+`FreezingArchRule`、`archunit_store/`、`archunit.properties` 一并移除。
+
+清理过程中确立了三条**包放置约定**——原违例大多不是真的架构错误，而是类放错了层：
+
+| 约定 | 落地位置 | 理由 |
 |---|---|---|
-| `interfaces` 依赖 `infrastructure` | 10 | `AnnouncementView.of(AnnouncementSnapshot)` —— DTO 直接吃 infrastructure 的缓存快照 |
-| `domain` 依赖 `interfaces` | 6 | `UserMessage` / `Announcement` 调 `MessageErrorCode`，而该 ErrorCode 放在了 `interfaces/exception/` —— **ErrorCode 应下沉到 domain** |
-| 应用服务命名不符 | 4 | `AuthorizationQueryService`、`SystemLogRecorder`、`AnnouncementAdminService`、`AnnouncementQueryService`（CQRS 查询服务是否该另立命名，待定） |
-| 聚合根暴露 public setter | 1 | `Role.setDataScope` |
-| Controller 含 try-catch | 1 | `FileController.parseMediaType`（私有解析辅助方法） |
+| `@ConfigurationProperties` 配置契约与四层平级 | `auth: core/config` | 配置是应用输入而非基础设施实现，同一个 `AdminProperties` application 和 interfaces 都要读；Controller 读配置不该算分层违例 |
+| 集成事件契约（MQ 消息体）放 application 层 | `system: base/application/event` | 它是 application 用例方法的入参（`onAccountRegistered` 等），infrastructure 的 consumer 与 HTTP 降级端点都只是它的驱动适配器 |
+| ErrorCode 枚举放 domain 层 | `system: */domain/model`、`auth: core/domain` | 领域规则的错误语义属于领域；放 `interfaces/exception` 会让聚合根反向依赖外层。`UserErrorCode` / `SystemErrorCode` / `FileErrorCode` 本就在 domain，那两个是异类 |
 
-### eagle-auth-service —— 冻结 29 条
-
-| 违例 | 条数 | 典型案例 / 成因 |
-|---|---|---|
-| `interfaces` 依赖 `infrastructure` | 27 | 5 个 Controller（`WechatWebLoginController` 8、`SmsController` 6、`LoginController` 6、`AccountController` 4、`AccountInternalController` 3）直接注入 `infrastructure/config/*Properties` 与 `infrastructure/security/`（`SmsSendRateLimiter` / `BlacklistChecker` / `ClientIpHolder`） |
-| 应用服务命名不符 | 1 | `WechatWebUserService` → 应为 `WechatWebUserApplicationService` |
-| Controller 含 try-catch | 1 | `WechatWebLoginController.authenticateAndRedirect` |
-
-auth 侧 27 条集中在**同一个成因**：Controller 需要限流器/黑名单/配置，就直接注入了 infrastructure 实现。
-正确解法是把这些能力收进应用服务，或让 Controller 依赖 domain 侧接口（见 `08-quality.md` 各层厚度）。
+Controller 确实需要限流器 / 黑名单这类**真**基础设施能力时，收进应用服务
+（见 `SmsApplicationService`、`AccountApplicationService.register`），不要直接注入。
 
 **注意**：子实体（继承 `BaseEntity`）按 `00-core.md` **允许** `@Setter`，该规则只查聚合根。
 

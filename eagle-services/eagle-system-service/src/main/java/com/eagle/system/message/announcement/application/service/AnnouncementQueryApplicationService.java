@@ -3,7 +3,7 @@ package com.eagle.system.message.announcement.application.service;
 import com.eagle.system.message.announcement.domain.model.UserAnnouncementCursor;
 import com.eagle.system.message.announcement.domain.repository.UserAnnouncementCursorRepository;
 import com.eagle.system.message.announcement.infrastructure.cache.AnnouncementCache;
-import com.eagle.system.message.announcement.infrastructure.cache.AnnouncementSnapshot;
+import com.eagle.system.message.announcement.application.dto.AnnouncementSnapshot;
 import com.eagle.system.message.announcement.interfaces.dto.AnnouncementView;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ import java.util.Set;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AnnouncementQueryService {
+public class AnnouncementQueryApplicationService {
 
     private final AnnouncementCache announcementCache;
     private final UserAnnouncementCursorRepository cursorRepository;

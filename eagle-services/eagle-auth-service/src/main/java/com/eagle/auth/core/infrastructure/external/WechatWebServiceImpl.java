@@ -3,7 +3,7 @@ package com.eagle.auth.core.infrastructure.external;
 import com.eagle.auth.core.domain.AuthErrorCode;
 import com.eagle.auth.core.domain.service.WechatWebService;
 import com.eagle.auth.core.infrastructure.config.WechatAppProperties;
-import com.eagle.auth.core.infrastructure.config.WechatWebProperties;
+import com.eagle.auth.core.config.WechatWebProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

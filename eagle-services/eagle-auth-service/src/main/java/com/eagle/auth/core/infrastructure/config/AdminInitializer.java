@@ -1,5 +1,6 @@
 package com.eagle.auth.core.infrastructure.config;
 
+import com.eagle.auth.core.config.AdminProperties;
 import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.model.valueobject.ProfileHints;
 import com.eagle.auth.core.domain.repository.AccountRepository;

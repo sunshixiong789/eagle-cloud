@@ -1,6 +1,6 @@
 package com.eagle.auth.core.infrastructure.security;
 
-import com.eagle.auth.core.application.service.WechatWebUserService;
+import com.eagle.auth.core.application.service.WechatWebUserApplicationService;
 import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.model.enums.SocialProvider;
 import com.eagle.auth.core.domain.model.enums.WechatChannel;
@@ -30,7 +30,7 @@ public class WechatMiniProgramAuthenticationProvider
         extends AbstractCustomGrantAuthenticationProvider {
 
     private final WechatService wechatService;
-    private final WechatWebUserService wechatWebUserService;
+    private final WechatWebUserApplicationService wechatWebUserApplicationService;
     private final BindTicketStore bindTicketStore;
     private final BlacklistChecker blacklistChecker;
 
@@ -39,12 +39,12 @@ public class WechatMiniProgramAuthenticationProvider
             OAuth2TokenGenerator<? extends OAuth2Token> tokenGenerator,
             UserDetailsService userDetailsService,
             WechatService wechatService,
-            WechatWebUserService wechatWebUserService,
+            WechatWebUserApplicationService wechatWebUserApplicationService,
             BindTicketStore bindTicketStore,
             BlacklistChecker blacklistChecker) {
         super(authorizationService, tokenGenerator, userDetailsService);
         this.wechatService = wechatService;
-        this.wechatWebUserService = wechatWebUserService;
+        this.wechatWebUserApplicationService = wechatWebUserApplicationService;
         this.bindTicketStore = bindTicketStore;
         this.blacklistChecker = blacklistChecker;
     }
@@ -65,7 +65,7 @@ public class WechatMiniProgramAuthenticationProvider
                 (WechatMiniProgramAuthenticationToken) authentication;
         WechatUserInfo info = wechatService.getUserInfo(authToken.getCode());
         blacklistChecker.checkWechat(info.openid(), ClientIpHolder.get());
-        return wechatWebUserService.findWechatAccount(
+        return wechatWebUserApplicationService.findWechatAccount(
                         WechatChannel.MINI_PROGRAM, info.openid(), info.unionid())
                 .orElseThrow(() -> new SocialBindingRequiredException(
                         bindTicketStore.save(BindTicket.ofWechat(

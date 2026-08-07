@@ -12,7 +12,9 @@ import com.eagle.auth.core.domain.model.valueobject.WechatBinding;
 import com.eagle.auth.core.domain.port.OnlineUserPort;
 import com.eagle.auth.core.domain.repository.AccountRepository;
 import com.eagle.auth.core.domain.service.SmsService;
-import com.eagle.auth.core.infrastructure.config.AdminProperties;
+import com.eagle.auth.core.config.AdminProperties;
+import com.eagle.auth.core.infrastructure.security.BlacklistChecker;
+import com.eagle.auth.core.infrastructure.security.ClientIpHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -45,6 +47,7 @@ public class AccountApplicationService {
     private final SmsService smsService;
     private final AdminProperties adminProperties;
     private final OnlineUserPort onlineUserPort;
+    private final BlacklistChecker blacklistChecker;
 
     /**
      * 短信验证码 Web 登录：校验手机号格式 + 验证码后查 / 建账号。
@@ -64,10 +67,14 @@ public class AccountApplicationService {
 
     /**
      * 用户自主注册。
+     *
+     * <p>黑名单校验（IP / 手机号 / 邮箱）属于本用例的一部分，故在此处而非 Controller 中执行；
+     * 管理员创建账号走 {@link #createAccount} 不做此校验。
      */
     @Transactional(rollbackFor = Exception.class)
     public Long register(String username, String rawPassword, String phone,
                          String email, String nickname) {
+        blacklistChecker.checkRegister(phone, email, ClientIpHolder.get());
         return createAccountInternal(username, rawPassword, phone, nickname, null, email);
     }
 

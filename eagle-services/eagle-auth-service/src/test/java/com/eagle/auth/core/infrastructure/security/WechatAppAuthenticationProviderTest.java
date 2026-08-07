@@ -1,6 +1,6 @@
 package com.eagle.auth.core.infrastructure.security;
 
-import com.eagle.auth.core.application.service.WechatWebUserService;
+import com.eagle.auth.core.application.service.WechatWebUserApplicationService;
 import com.eagle.auth.core.domain.model.Account;
 import com.eagle.auth.core.domain.model.enums.SocialProvider;
 import com.eagle.auth.core.domain.model.enums.WechatChannel;
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 class WechatAppAuthenticationProviderTest {
 
     private WechatWebService wechatWebService;
-    private WechatWebUserService wechatWebUserService;
+    private WechatWebUserApplicationService wechatWebUserApplicationService;
     private BindTicketStore bindTicketStore;
     private BlacklistChecker blacklistChecker;
     private WechatAppAuthenticationProvider provider;
@@ -36,14 +36,14 @@ class WechatAppAuthenticationProviderTest {
     @BeforeEach
     void setUp() {
         wechatWebService = mock(WechatWebService.class);
-        wechatWebUserService = mock(WechatWebUserService.class);
+        wechatWebUserApplicationService = mock(WechatWebUserApplicationService.class);
         bindTicketStore = mock(BindTicketStore.class);
         blacklistChecker = mock(BlacklistChecker.class);
         provider = new WechatAppAuthenticationProvider(
                 mock(OAuth2AuthorizationService.class),
                 mock(OAuth2TokenGenerator.class),
                 mock(UserDetailsService.class),
-                wechatWebService, wechatWebUserService, bindTicketStore, blacklistChecker);
+                wechatWebService, wechatWebUserApplicationService, bindTicketStore, blacklistChecker);
     }
 
     private WechatAppAuthenticationToken token() {
@@ -60,7 +60,7 @@ class WechatAppAuthenticationProviderTest {
     void boundIdentityLogsInDirectly() {
         Account existing = Account.createFromPhone("13800138000");
         when(wechatWebService.exchangeAppCode("app-code")).thenReturn(info());
-        when(wechatWebUserService.findWechatAccount(WechatChannel.APP, "oid-1", "uid-1"))
+        when(wechatWebUserApplicationService.findWechatAccount(WechatChannel.APP, "oid-1", "uid-1"))
                 .thenReturn(Optional.of(existing));
 
         Account result = provider.authenticateGrant(token());
@@ -72,7 +72,7 @@ class WechatAppAuthenticationProviderTest {
     @DisplayName("未命中 → 发放含昵称头像的 BindTicket 并抛 binding_required")
     void unboundIdentityRequiresBinding() {
         when(wechatWebService.exchangeAppCode("app-code")).thenReturn(info());
-        when(wechatWebUserService.findWechatAccount(WechatChannel.APP, "oid-1", "uid-1"))
+        when(wechatWebUserApplicationService.findWechatAccount(WechatChannel.APP, "oid-1", "uid-1"))
                 .thenReturn(Optional.empty());
         when(bindTicketStore.save(BindTicket.ofWechat(
                 WechatChannel.APP, "oid-1", "uid-1", "Nick", "https://a.png")))

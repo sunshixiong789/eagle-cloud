@@ -64,14 +64,14 @@ class RoleTest {
     }
 
     @Nested
-    @DisplayName("setDataScope")
+    @DisplayName("changeDataScope")
     class SetDataScope {
 
         @Test
         @DisplayName("应替换Scope")
         void shouldReplaceScope() {
             Role role = Role.create("Op", "op", "operator", 5);
-            role.setDataScope(DataScope.DEPT_AND_CHILD);
+            role.changeDataScope(DataScope.DEPT_AND_CHILD);
             assertEquals(DataScope.DEPT_AND_CHILD, role.getDataScope());
         }
     }

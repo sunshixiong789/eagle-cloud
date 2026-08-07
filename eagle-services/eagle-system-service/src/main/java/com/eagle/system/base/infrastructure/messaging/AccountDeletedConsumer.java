@@ -3,7 +3,7 @@ package com.eagle.system.base.infrastructure.messaging;
 import com.eagle.amqp.listener.AbstractAmqpListener;
 import com.eagle.amqp.properties.AmqpProperties;
 import com.eagle.system.base.application.service.AccountEventApplicationService;
-import com.eagle.system.base.infrastructure.messaging.event.AccountDeletedMessage;
+import com.eagle.system.base.application.event.AccountDeletedMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
