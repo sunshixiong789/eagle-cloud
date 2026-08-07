@@ -1,9 +1,8 @@
 package com.eagle.system.message.infrastructure.messaging;
 
-import com.eagle.amqp.events.CommonMessageTopics;
-import com.eagle.amqp.events.SendUserMessageIntegrationEvent;
 import com.eagle.amqp.listener.AbstractDlqListener;
 import com.eagle.amqp.properties.AmqpProperties;
+import com.eagle.system.message.application.event.SendUserMessageMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +15,7 @@ import org.springframework.stereotype.Component;
  */
 @Slf4j
 @Component
-public class SendUserMessageDlqListener extends AbstractDlqListener<SendUserMessageIntegrationEvent> {
+public class SendUserMessageDlqListener extends AbstractDlqListener<SendUserMessageMessage> {
 
     public SendUserMessageDlqListener(AmqpProperties props) {
         super(props);
@@ -25,7 +24,7 @@ public class SendUserMessageDlqListener extends AbstractDlqListener<SendUserMess
     /** 逻辑 topic 名，环境前缀由基类拼 —— 与 {@link SendUserMessageConsumer#getTopic()} 保持一致。 */
     @Override
     protected String getOriginalTopic() {
-        return CommonMessageTopics.USER_MESSAGE_SEND;
+        return SendUserMessageConsumer.USER_MESSAGE_SEND_TOPIC;
     }
 
     @Override
@@ -34,12 +33,12 @@ public class SendUserMessageDlqListener extends AbstractDlqListener<SendUserMess
     }
 
     @Override
-    protected Class<SendUserMessageIntegrationEvent> getEventClass() {
-        return SendUserMessageIntegrationEvent.class;
+    protected Class<SendUserMessageMessage> getEventClass() {
+        return SendUserMessageMessage.class;
     }
 
     @Override
-    protected void handleDeadLetter(SendUserMessageIntegrationEvent event, int totalAttempts) {
+    protected void handleDeadLetter(SendUserMessageMessage event, int totalAttempts) {
         log.error("[DLQ ALERT] send-user-message dead-letter: eventId={}, userId={}, bizKey={}, attempts={}",
                 event.getEventId(), event.getUserId(), event.getBizKey(), totalAttempts);
         // TODO 接入告警系统（钉钉/企微/邮件）

@@ -20,8 +20,22 @@ import org.jspecify.annotations.Nullable;
  * <p><strong>schema 稳定性</strong>：本类是跨服务 ABI，新增字段必须有默认值；
  * 删除/重命名字段属破坏性变更，需协调所有发布方/消费方同步发布。
  *
+
+ * <p><b>⚠️ 已废弃</b>：本类是跨服务共享的集成事件载荷，违反
+ * {@code 02-architecture.md}「集成事件契约：字段名是唯一契约」——
+ * 生产方与消费方必须各自声明载荷类，禁止共享 Java 类型或抽 shared-events.jar。
+ * 共享的实际代价：改一个字段要发 starter 到 Nexus，再让 ease-mind-servers 与
+ * eagle-cloud 两个仓库同步升级。
+ *
+ * <p>各方已改为自行声明：trade-service 的 {@code wallet} / {@code withdrawal}、
+ * user-service 的 {@code invitation} 各有一份 {@code SendUserMessageIntegrationEvent}，
+ * 消费方 eagle-system-service 为 {@code SendUserMessageMessage}，
+ * 字段对齐由 {@code contract-test} 模块校验。本类下个版本移除。
+ *
  * @author eagle
+ * @deprecated 跨服务共享载荷/常量，改由各方自行声明，下个版本移除。
  */
+@Deprecated(since = "1.6.0", forRemoval = true)
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
