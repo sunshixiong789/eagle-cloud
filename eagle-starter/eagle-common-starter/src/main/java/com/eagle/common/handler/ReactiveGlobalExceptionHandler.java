@@ -4,6 +4,7 @@ import com.eagle.common.dto.ErrorResult;
 import com.eagle.common.exception.AppException;
 import com.eagle.common.exception.ConflictException;
 import com.eagle.common.exception.DomainException;
+import com.eagle.common.exception.ForbiddenException;
 import com.eagle.common.exception.NotFoundException;
 import com.eagle.common.exception.ServiceException;
 import com.eagle.common.observability.RequestIdWebFilter;
@@ -17,6 +18,8 @@ import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.util.StringUtils;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.support.WebExchangeBindException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebExceptionHandler;
@@ -56,9 +59,15 @@ public class ReactiveGlobalExceptionHandler implements WebExceptionHandler, Orde
         return exchange.getResponse().writeWith(Mono.just(buffer));
     }
 
+    /**
+     * 比 Spring Boot 默认的 {@code DefaultErrorWebExceptionHandler(-1)} 优先，但**刻意留出
+     * {@link Ordered#HIGHEST_PRECEDENCE} 这一档**给应用自己的基础设施级处理器
+     * （如网关的下游不可达 / 超时 → 502 / 503 / 504 映射）。
+     * 那类处理器识别不了的异常回抛 {@code Mono.error} 即可落到本处理器。
+     */
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE;
+        return Ordered.HIGHEST_PRECEDENCE + 10;
     }
 
     private ErrorResult buildErrorResult(ServerWebExchange exchange, Throwable ex) {
@@ -78,6 +87,10 @@ public class ReactiveGlobalExceptionHandler implements WebExceptionHandler, Orde
             result = appError(HttpStatus.BAD_REQUEST, domainException, path, locale);
             log.warn("Domain exception [{}]: {}", domainException.getErrorCode().getCode(),
                     result.getMessage(), ex);
+        } else if (ex instanceof ForbiddenException forbiddenException) {
+            result = appError(HttpStatus.FORBIDDEN, forbiddenException, path, locale);
+            log.warn("Forbidden [{}]: {} {}", forbiddenException.getErrorCode().getCode(),
+                    exchange.getRequest().getMethod(), path);
         } else if (ex instanceof ServiceException serviceException) {
             result = appError(HttpStatus.INTERNAL_SERVER_ERROR, serviceException, path, locale);
             log.error("Service exception [{}]: {}", serviceException.getErrorCode().getCode(),
@@ -92,10 +105,22 @@ public class ReactiveGlobalExceptionHandler implements WebExceptionHandler, Orde
             String message = resolveMessage(ex.getMessage(), locale);
             log.warn("Bad request: {}", message, ex);
             result = ErrorResult.of(HttpStatus.BAD_REQUEST, message, path);
-        } else if (ACCESS_DENIED_EXCEPTION.equals(ex.getClass().getName())) {
+        } else if (isAccessDenied(ex)) {
             String message = resolveMessage("error.common.forbidden", locale);
             log.warn("Access denied: {} {}", exchange.getRequest().getMethod(), path);
             result = ErrorResult.of(HttpStatus.FORBIDDEN, message, path);
+        } else if (ex instanceof ErrorResponse errorResponse) {
+            // Spring 内建 Web 异常（含 DispatcherHandler 对未匹配路由抛的 ResponseStatusException(404)、
+            // Gateway 的 NotFoundException(503)）自带语义状态码，不能落进下面的兜底 500
+            HttpStatus status = HttpStatus.valueOf(errorResponse.getStatusCode().value());
+            String detail = errorResponse.getBody().getDetail();
+            String message = StringUtils.hasText(detail) ? detail : status.getReasonPhrase();
+            if (status.is5xxServerError()) {
+                log.error("Web exception [{} {}]: {}", status.value(), path, message, ex);
+            } else {
+                log.warn("Web exception [{} {}]: {}", status.value(), path, message);
+            }
+            result = ErrorResult.of(status, message, path);
         } else {
             String message = resolveMessage("error.server.internal_error", locale);
             log.error("Unhandled WebFlux exception: {}", ex.getMessage(), ex);
@@ -109,6 +134,22 @@ public class ReactiveGlobalExceptionHandler implements WebExceptionHandler, Orde
     private ErrorResult appError(HttpStatus status, AppException exception, String path, Locale locale) {
         String message = exception.getLocalizedMessage(messageSource, locale);
         return ErrorResult.of(status, message, exception.getErrorCode().getCode(), path);
+    }
+
+    /**
+     * 判断是否为 Spring Security 的 {@code AccessDeniedException}（含其子类）。
+     *
+     * <p>用类名逐级上溯而非 {@code instanceof}，是为了让 common-starter 在不引入 spring-security
+     * 的 WebFlux 应用里也能装配。<strong>必须遍历父类</strong>：{@code @PreAuthorize} 实际抛的是
+     * 子类 {@code AuthorizationDeniedException}，只比对自身类名会漏判并退化成 500。
+     */
+    private boolean isAccessDenied(Throwable ex) {
+        for (Class<?> type = ex.getClass(); type != null; type = type.getSuperclass()) {
+            if (ACCESS_DENIED_EXCEPTION.equals(type.getName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String resolveMessage(String messageOrKey, Locale locale) {

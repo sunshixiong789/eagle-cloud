@@ -139,6 +139,11 @@ spring:
           # Spring Authorization Server 用 docker 容器内网 host:port 拼 302 Location，
           # 导致 /oauth2/authorize 未登录跳转到 172.x.x.x:8082/login 跳出反代范围。
           # 与 system 侧 server.forward-headers-strategy=framework 配套生效。
+          # *-append 必须为 true（=SCG 默认）：网关把自己这一跳「追加」到最外层反代已写的值之后，
+          # 得到 `X-Forwarded-Proto: https,http`。下游 Spring 的 ForwardedHeaderUtils 取**第一个** token，
+          # 即最外层 nginx 的 https。一旦被改成 false，写法变成 set 覆盖，
+          # 下游只会看到网关自己的 http/80，302 Location 就退化成 http:// 并被 nginx 再 301 升级（多一跳）。
+          # 这里显式声明，防止被 Consul KV 或环境变量悄悄关掉。
           x-forwarded:
             enabled: true
             for-enabled: true
@@ -146,6 +151,11 @@ spring:
             port-enabled: true
             proto-enabled: true
             prefix-enabled: true
+            for-append: true
+            host-append: true
+            port-append: true
+            proto-append: true
+            prefix-append: true
 
           # 协议固定路径：OAuth2 / OIDC 规范要求客户端按 discovery 中发布的
           # 字面 URL（authorization_endpoint / token_endpoint / jwks_uri 等）发起请求，

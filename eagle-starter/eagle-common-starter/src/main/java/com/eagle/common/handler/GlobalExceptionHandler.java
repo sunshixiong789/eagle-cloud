@@ -3,6 +3,7 @@ package com.eagle.common.handler;
 import com.eagle.common.dto.ErrorResult;
 import com.eagle.common.exception.ConflictException;
 import com.eagle.common.exception.DomainException;
+import com.eagle.common.exception.ForbiddenException;
 import com.eagle.common.exception.NotFoundException;
 import com.eagle.common.exception.ServiceException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,7 +11,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.util.StringUtils;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -75,6 +79,19 @@ public class GlobalExceptionHandler {
         String msg = e.getLocalizedMessage(messageSource, locale);
         log.warn("领域异常 [{}]: {}", e.getErrorCode().getCode(), msg, e);
         return ErrorResult.of(HttpStatus.BAD_REQUEST, msg, e.getErrorCode().getCode(), request.getRequestURI());
+    }
+
+    /**
+     * 处理 ForbiddenException — HTTP 403，携带数字 errorCode
+     */
+    @ExceptionHandler(ForbiddenException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ResponseBody
+    public ErrorResult handleForbiddenException(ForbiddenException e,
+                                                HttpServletRequest request, Locale locale) {
+        String msg = e.getLocalizedMessage(messageSource, locale);
+        log.warn("越权访问 [{}]: {} {}", e.getErrorCode().getCode(), request.getMethod(), request.getRequestURI());
+        return ErrorResult.of(HttpStatus.FORBIDDEN, msg, e.getErrorCode().getCode(), request.getRequestURI());
     }
 
     /**
@@ -148,14 +165,39 @@ public class GlobalExceptionHandler {
 
     /**
      * 处理其他未捕获异常 - 500
+     *
+     * <p><strong>Spring MVC 标准异常必须先按自带状态码返回</strong>：本方法是 {@code @ControllerAdvice}
+     * 的兜底分支，而 {@code ExceptionHandlerExceptionResolver} 的优先级高于
+     * {@code DefaultHandlerExceptionResolver}。若不在此显式识别，缺请求头 / 请求体不可读 /
+     * 路径无映射 / 方法不支持等本应是 4xx 的异常会被这里统一吞成 500
+     * （典型症状：缺 {@code Idempotency-Key} 返回 500 而非 400，访问未映射路径返回 500 而非 404）。
+     *
+     * <p>{@link ErrorResponse} 是 Spring 6 起所有内建 Web 异常实现的接口，自带
+     * {@code getStatusCode()} 与安全的 {@code detail} 文案（不含堆栈 / SQL / 表名）。
      */
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
-    public ErrorResult handleException(Exception e, HttpServletRequest request, Locale locale) {
+    public ResponseEntity<ErrorResult> handleException(Exception e,
+                                                       HttpServletRequest request, Locale locale) {
+        if (e instanceof ErrorResponse errorResponse) {
+            HttpStatus status = HttpStatus.valueOf(errorResponse.getStatusCode().value());
+            String detail = errorResponse.getBody().getDetail();
+            String message = StringUtils.hasText(detail) ? detail : status.getReasonPhrase();
+            if (status.is5xxServerError()) {
+                log.error("Web 异常 [{} {} {}]：{}", status.value(), request.getMethod(),
+                        request.getRequestURI(), message, e);
+            } else {
+                log.warn("Web 异常 [{} {} {}]：{}", status.value(), request.getMethod(),
+                        request.getRequestURI(), message);
+            }
+            return ResponseEntity.status(status)
+                    .body(ErrorResult.of(status, message, request.getRequestURI()));
+        }
+
         log.error("服务器异常：{}", e.getMessage(), e);
         String message = resolveMessage("error.server.internal_error", locale);
-        return ErrorResult.of(HttpStatus.INTERNAL_SERVER_ERROR, message, request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResult.of(HttpStatus.INTERNAL_SERVER_ERROR, message, request.getRequestURI()));
     }
 
     /**

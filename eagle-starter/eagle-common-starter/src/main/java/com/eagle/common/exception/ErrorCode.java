@@ -121,6 +121,18 @@ public interface ErrorCode {
     }
 
     /**
+     * 创建 HTTP 403 Forbidden 异常（已认证但无权操作该资源，如访问他人数据）
+     *
+     * <p>注意与 {@link #toNotFoundException(Object...)} 的取舍：若「资源存在与否」本身敏感，
+     * 应返回 404 避免存在性泄漏；若资源归属对调用方已知（如后台按 ID 操作），用本方法返回 403。
+     *
+     * @param args 消息占位符参数（可选）
+     */
+    default ForbiddenException toForbiddenException(Object... args) {
+        return new ForbiddenException(this, args);
+    }
+
+    /**
      * 创建 HTTP 500 Internal Server Error 异常（基础设施、外部服务故障）
      *
      * @param args 消息占位符参数（可选）

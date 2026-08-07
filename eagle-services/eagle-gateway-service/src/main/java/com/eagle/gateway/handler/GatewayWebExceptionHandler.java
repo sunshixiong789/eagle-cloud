@@ -5,13 +5,14 @@ import com.eagle.gateway.filter.RequestEnrichmentGlobalFilter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebExceptionHandler;
 import reactor.core.publisher.Mono;
@@ -24,15 +25,19 @@ import java.util.concurrent.TimeoutException;
 /**
  * 网关全局异常处理器。
  *
- * <p>处理路由过程中的基础设施级异常（下游不可达、超时、连接中断等），
- * 统一返回与 {@link ErrorResult} 格式一致的 JSON 响应，替代 Spring Boot 默认的 Whitelabel Error Page。
+ * <p><strong>只处理路由过程中的基础设施级异常</strong>（下游不可达、超时、连接中断），
+ * 统一返回与 {@link ErrorResult} 格式一致的 JSON 响应。识别不了的异常一律回抛，
+ * 交给 common-starter 的 {@code ReactiveGlobalExceptionHandler}
+ * （{@code HIGHEST_PRECEDENCE + 10}）按业务语义处理——未匹配路由的 404 就走那条路径。
  *
- * <p>{@code @Order(-2)} 优先于 Spring Boot 默认的 {@code DefaultErrorWebExceptionHandler(-1)} 执行。
+ * <p>{@code @Order(HIGHEST_PRECEDENCE)} 让本处理器排在 {@code ReactiveGlobalExceptionHandler} 之前。
+ * 历史上本类为 {@code @Order(-2)}，被后者的 {@code HIGHEST_PRECEDENCE} 完全遮蔽，
+ * 下面的 502 / 503 / 504 映射从未生效，下游故障一律呈现为 500。
  *
  * @author eagle
  */
 @Slf4j
-@Order(-2)
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @Component
 @RequiredArgsConstructor
 public class GatewayWebExceptionHandler implements WebExceptionHandler {
@@ -48,6 +53,10 @@ public class GatewayWebExceptionHandler implements WebExceptionHandler {
         }
 
         HttpStatus status = resolveStatus(ex);
+        if (status == null) {
+            // 非基础设施异常：回抛给 ReactiveGlobalExceptionHandler
+            return Mono.error(ex);
+        }
         String path = exchange.getRequest().getURI().getPath();
 
         if (status.is5xxServerError()) {
@@ -76,12 +85,12 @@ public class GatewayWebExceptionHandler implements WebExceptionHandler {
     }
 
     /**
-     * 根据异常类型推断 HTTP 状态码。
+     * 根据异常类型推断 HTTP 状态码，本处理器不负责的异常返回 {@code null}（由调用方回抛）。
      *
      * <p>注意：{@code ConnectTimeoutException} 是 {@code ConnectException} 的子类，
      * 需先判断超时类异常，避免被父类 catch 覆盖。
      */
-    private HttpStatus resolveStatus(Throwable ex) {
+    private @Nullable HttpStatus resolveStatus(Throwable ex) {
         // 504：各类超时（先于 ConnectException 判断，因为 ConnectTimeoutException extends ConnectException）
         if (ex instanceof TimeoutException
                 || ex instanceof io.netty.channel.ConnectTimeoutException
@@ -96,11 +105,9 @@ public class GatewayWebExceptionHandler implements WebExceptionHandler {
         if (ex instanceof reactor.netty.http.client.PrematureCloseException) {
             return HttpStatus.BAD_GATEWAY;
         }
-        // 透传 ResponseStatusException 携带的状态码（如路由找不到 404）
-        if (ex instanceof ResponseStatusException rse) {
-            return HttpStatus.valueOf(rse.getStatusCode().value());
-        }
-        return HttpStatus.INTERNAL_SERVER_ERROR;
+        // 其余（含 ResponseStatusException / AppException / 未匹配路由的 404）交给
+        // ReactiveGlobalExceptionHandler，避免在网关重复一套业务语义映射
+        return null;
     }
 
     /**
@@ -111,7 +118,6 @@ public class GatewayWebExceptionHandler implements WebExceptionHandler {
             case 502 -> "上游服务异常中断";
             case 503 -> "服务暂时不可用，请稍后重试";
             case 504 -> "上游服务响应超时";
-            case 404 -> "请求的资源不存在";
             default -> "服务器内部错误";
         };
     }

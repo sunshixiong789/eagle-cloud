@@ -5,6 +5,26 @@
 
 ## [Unreleased]
 
+### Added — `ForbiddenException`（HTTP 403）
+
+`eagle-common-starter` 的异常体系新增第五种：`ForbiddenException` + `ErrorCode.toForbiddenException(Object...)`。
+用于「已认证但无权操作该资源」的**业务判定**（访问他人订单 / 消息 / 收款账号），
+与 Spring Security 声明式拒绝的 `AccessDeniedException` 并列映射到 403，区别是本异常携带业务 `errorCode`。
+在此之前这类场景只能抛 `DomainException`，对外呈现为 400，前端无法按状态码区分越权。
+规范见 `rules/03-api-error.md`。
+
+### Fixed — 状态码语义：多类异常被兜底吞成 500
+
+| 位置 | 症状 | 修复 |
+|---|---|---|
+| `GlobalExceptionHandler`（Servlet） | 缺必填请求头返回 500 而非 400；路径无映射返回 500 而非 404 | 兜底分支先识别 `ErrorResponse`（Spring 6 起所有内建 Web 异常都实现），按其 `getStatusCode()` 返回 |
+| `ReactiveGlobalExceptionHandler` | 网关未匹配路由返回 500 而非 404 | 新增 `ErrorResponse` 分支，透传 `ResponseStatusException` 的状态码 |
+| `ReactiveGlobalExceptionHandler` | `@PreAuthorize` 拒绝返回 500 而非 403 | `AccessDeniedException` 判定由「类名精确相等」改为沿父类上溯——实际抛的是子类 `AuthorizationDeniedException` |
+| `ReactiveGlobalExceptionHandler` | order 由 `HIGHEST_PRECEDENCE` 降为 `HIGHEST_PRECEDENCE + 10` | 让出最高优先级给应用自己的基础设施级处理器（网关的 502/503/504 映射此前被完全遮蔽，是死代码） |
+
+根因是 `@ExceptionHandler(Exception.class)` 的优先级高于 Spring 的 `DefaultHandlerExceptionResolver`，
+写了兜底 advice 就必须自己处理内建 Web 异常，否则所有本该 4xx 的框架异常统一变 500。
+
 ### Removed — ⚠️ 破坏性变更：`eagle-audit-log-starter` 移除多租户字段
 
 随 `eagle-tenant-starter` 下线，审计日志的租户维度已无写入方，一并移除：

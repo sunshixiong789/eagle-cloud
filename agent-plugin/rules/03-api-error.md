@@ -83,6 +83,7 @@ config.setAllowCredentials(true);
 ```text
 AppException（抽象基类，持有 ErrorCode）
 ├── NotFoundException    → 404
+├── ForbiddenException   → 403（已认证但无权操作该资源）
 ├── ConflictException    → 409
 ├── DomainException      → 400（领域验证失败）
 └── ServiceException     → 500（基础设施故障）
@@ -101,6 +102,11 @@ throw PaymentErrorCode.GATEWAY_ERROR.toServiceException(cause);
 ```
 
 **选型注意**：现状 `toDomainException` 98 次、`toNotFoundException` 仅 4 次 —— 存在"查不到也抛 400"的语义漂移。**资源不存在必须用 `toNotFoundException()`**，让前端能按 404 区分，不要一律 `DomainException`。
+
+**越权同理**：访问 / 操作他人的资源用 `toForbiddenException()`（403），不要用 `toDomainException()` 把越权混进 400。
+若「资源存在与否」本身敏感（枚举 ID 可探测他人数据是否存在），改用 `toNotFoundException()` 返回 404 避免存在性泄漏。
+`ForbiddenException` 与 Spring Security 的 `AccessDeniedException` 分工：前者是**业务判定**的越权（带 `errorCode`），
+后者是 `@PreAuthorize` / filter chain 的**声明式**拒绝（无 `errorCode`），两者都由全局处理器映射到 403。
 
 ## 各层职责
 

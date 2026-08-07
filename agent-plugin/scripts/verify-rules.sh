@@ -122,7 +122,9 @@ key_ignored() {
 
 check_key() {
   local key="$1"
-  key_ignored "$key" && { ok "$key（反例/框架键，跳过）"; return; }
+  # 必须写 ${key} 而非 $key —— macOS 自带 bash 3.2 会把紧随其后的多字节中文
+  # 当作标识符的一部分，在 set -u 下报 "unbound variable" 直接中断整个脚本
+  key_ignored "$key" && { ok "${key}（反例/框架键，跳过）"; return; }
 
   local prefix="${key%.*}" leaf="${key##*.}"
   # kebab-case → camelCase，对应 Properties 字段名。
