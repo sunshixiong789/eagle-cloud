@@ -37,6 +37,14 @@ import org.springframework.amqp.core.Message;
  * }
  * }</pre>
  *
+ * <p><b>子类可以被 AOP 代理</b>（{@code @Transactional} / {@code @RateLimit} / {@code @Async} …）。
+ * 但这有个不显眼的前提：CGLIB 代理实例经 Objenesis 绕过构造器创建，
+ * 它自己的 {@code amqpProperties} 恒为 null，而本类的 {@code resolveXxx()} 是 final、
+ * CGLIB 覆盖不了，只能在这个"空壳"代理实例上执行。因此
+ * <b>本类的 final 方法一律不得直接访问 {@code amqpProperties}</b>，
+ * 必须经 {@link #getExchangePrefix()} 这类可覆盖方法取值（会被代理转发到真正的 target）。
+ * {@code AmqpProxySafetyTest} 守着这条约束。
+ *
  * <p><b>容器注册</b>不在本类内完成 —— exchange / queue 名是运行时由
  * {@link #getTopic()} 决定的，无法用 {@code @RabbitListener} 注解常量。
  * 由 {@code AmqpListenerRegistrar} 在启动期遍历所有本类的 bean，
@@ -154,12 +162,33 @@ public abstract class AbstractAmqpListener<T extends BaseEvent> {
     // ---------------------------------------------------------------------
 
     /**
+     * exchange 名的环境前缀（{@code dev_} / {@code test_} / {@code prod_}）。
+     *
+     * <p><b>刻意做成可覆盖的实例方法，而不是在下面的 final 方法里直读 {@code amqpProperties}。</b>
+     * 子类一旦因为任何 AOP 注解（{@code @Transactional} / {@code @RateLimit} /
+     * {@code @Cacheable} / {@code @Async} …）被 Spring 包成 CGLIB 代理，
+     * 代理实例是经 Objenesis <b>绕过构造器</b>创建的，它自己的 {@code amqpProperties} 恒为 null；
+     * 而 {@code resolveXxx()} 是 final、CGLIB 覆盖不了，只能在这个字段为 null 的代理实例上执行。
+     * 直读字段 → 启动期 {@code AmqpListenerRegistrar} 注册 listener 时 NPE，整个应用起不来。
+     * 走这个可覆盖方法则会被代理转发到真正的 target 实例，取到正确的值。
+     *
+     * <p>⚠️ 因此：<b>本类中任何 final 方法都不得直接访问 {@code amqpProperties}</b>，
+     * 一律经由可覆盖的实例方法（本方法、{@link #getConsumerGroup()}、
+     * {@link #getRetryAlertThreshold()}）取值。{@code AmqpProxySafetyTest} 守着这条约束。
+     *
+     * @return exchange 名前缀
+     */
+    protected String getExchangePrefix() {
+        return amqpProperties.getExchangePrefix();
+    }
+
+    /**
      * 解析最终 exchange 名（含环境前缀）。
      *
      * @return exchange 名
      */
     public final String resolveExchangeName() {
-        return ExchangeNaming.exchange(amqpProperties.getExchangePrefix(), getTopic());
+        return ExchangeNaming.exchange(getExchangePrefix(), getTopic());
     }
 
     /**
