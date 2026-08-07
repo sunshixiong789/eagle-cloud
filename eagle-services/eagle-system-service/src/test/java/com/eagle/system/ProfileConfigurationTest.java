@@ -32,11 +32,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("profile 配置文件")
 class ProfileConfigurationTest {
 
+    /**
+     * 一并关掉 Consul 配置中心：local profile 把它指向了开发环境的真实地址
+     * （118.24.138.189:8500），不关的话每跑一次测试都要走一趟外网，还会因 ACL 返回 403。
+     */
     private void withProfile(String profile, Consumer<Environment> assertions) {
         new ApplicationContextRunner()
                 .withInitializer(new ConfigDataApplicationContextInitializer())
                 .withConfiguration(AutoConfigurations.of())
-                .withPropertyValues("spring.profiles.active=" + profile)
+                .withPropertyValues(
+                        "spring.profiles.active=" + profile,
+                        "spring.cloud.consul.config.enabled=false")
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     assertions.accept(((AssertableApplicationContext) context).getEnvironment());
@@ -57,21 +63,31 @@ class ProfileConfigurationTest {
         }
 
         @Test
-        @DisplayName("关闭 Consul 服务发现与配置中心")
-        void disablesConsul() {
+        @DisplayName("关闭服务发现：本机 IP 在 dev 集群内不可达，注册上去只会制造死实例")
+        void disablesDiscovery() {
+            withProfile("local", env ->
+                    assertThat(env.getProperty("spring.cloud.consul.discovery.enabled"))
+                            .isEqualTo("false"));
+        }
+
+        @Test
+        @DisplayName("中间件地址覆盖为开发环境公网地址，绕开 KV 里的容器名")
+        void overridesAddressesToDevHost() {
             withProfile("local", env -> {
-                assertThat(env.getProperty("spring.cloud.consul.discovery.enabled")).isEqualTo("false");
-                assertThat(env.getProperty("spring.cloud.consul.config.enabled")).isEqualTo("false");
+                assertThat(env.getProperty("spring.datasource.url"))
+                        .isEqualTo("jdbc:postgresql://118.24.138.189:5432/eagle_system");
+                assertThat(env.getProperty("spring.data.redis.host")).isEqualTo("118.24.138.189");
+                assertThat(env.getProperty("spring.rabbitmq.host")).isEqualTo("118.24.138.189");
             });
         }
 
         @Test
-        @DisplayName("凭据默认值对齐本地 compose，开箱即跑")
-        void usesLocalDefaults() {
-            withProfile("local", env -> {
-                assertThat(env.getProperty("spring.datasource.username")).isEqualTo("eagle");
-                assertThat(env.getProperty("spring.data.redis.password")).isEqualTo("redis123456");
-            });
+        @DisplayName("消费组带 _local 后缀，不与 dev 的 system 抢同一条队列")
+        void isolatesAmqpConsumerGroup() {
+            withProfile("local", env ->
+                    assertThat(env.getProperty("eagle.amqp.consumer-group"))
+                            .isEqualTo("system_consumer_local")
+                            .isNotEqualTo("system_consumer"));
         }
     }
 

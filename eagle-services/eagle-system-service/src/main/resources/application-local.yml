@@ -1,49 +1,82 @@
 # ===========================================
 # 本地开发差异(system-service)
+#
+# 【定位】在本机跑 system,中间件全部复用开发环境(118.24.138.189)。
+# 凭据不写在本文件里 —— 照常从开发环境的 Consul KV(config/system,dev/data)读,
+# 本文件只负责把 KV 里那些"仅容器网络内可达"的地址换成公网地址。
+#
 # 与基线相比的覆盖:
-#   - 关闭 Consul 服务发现与配置中心(本地不起 Consul)
-#   - ddl-auto=update:基线是生产安全的 validate,本地首次启动需由 Hibernate 建表
-#   - 数据源 / Redis 凭据默认值对齐本地 compose,开箱即跑
+#   - Consul 指向 118.24.138.189;config 开(取凭据) / discovery 关(不注册进 dev)
+#   - 数据源 / Redis / RabbitMQ 地址覆盖为 118.24.138.189
+#   - ddl-auto=update:基线是生产安全的 validate
+#   - RabbitMQ 消费组加 _local 后缀,避免与 dev 的 system 抢同一条队列
 #   - Actuator 暴露调试端点 + details=always
 #   - 日志 com.eagle=DEBUG,SQL=DEBUG,参数绑定=TRACE
 #
-# 【本地依赖】
-#   docker compose -f docker-compose.pg.yml up -d          # PostgreSQL(eagle_system)
-#   docker compose -f docker-compose.middleware.yml up -d  # Redis / RabbitMQ / Consul
-# 只跑 system 时 middleware 里的 Consul 可以不启 —— 本 profile 已关掉对它的依赖。
+# ⚠️【CONSUL_TOKEN 必填】dev 的 Consul 已开 ACL,匿名读 KV 返回 403。未提供 token 时
+#    基线的 optional:consul: 会**静默跳过**,凭据一个都取不到 —— system 基线的占位符都带
+#    默认值(DB_USERNAME:postgres / DB_PASSWORD 空),不会立刻报错,而是拿着错凭据去连
+#    dev 的库,最终失败在认证失败上。看到 password authentication failed 先查 token。
+#    启动前务必:
+#      export CONSUL_TOKEN=<service token>   # 权限只需只读 config/ 前缀
 #
-# 【安全】本文件的默认凭据仅供本地,全部沿用仓库既有 compose 的默认值,不新增机密;
-# dev/prod 都不读本文件,那两个环境的凭据一律走 Consul KV。
+# ⚠️【连的是开发环境的真库】ddl-auto=update 意味着本机的实体改动会直接改 dev 的表结构,
+#    本地写入的数据也进 dev 库。改实体前先确认影响,或把 LOCAL_DDL_AUTO 设成 validate。
 #
-# 文件存储沿用基线的 eagle.oss.type=local(本地文件系统),无需起 MinIO。
+# 【不想用 token】把 KV 关掉,凭据自己给(值同 config/system,dev/data):
+#   CONSUL_CONFIG_ENABLED=false DB_USERNAME=eagle DB_PASSWORD=... REDIS_PASSWORD=...
+#
+# 【纯本地模式】改回连本机 compose,在上面一组的基础上再加:
+#   LOCAL_DB_HOST=localhost LOCAL_REDIS_HOST=localhost LOCAL_RABBITMQ_HOST=localhost
+#
+# 文件存储沿用基线的 eagle.oss.type=local(本地文件系统),不依赖 MinIO。
 # ===========================================
 
 spring:
   cloud:
     consul:
-      # 本地不起 Consul:config 关掉后基线的 spring.config.import=optional:consul: 直接跳过;
-      # discovery 关掉后不再反复重试注册(否则启动日志被连接失败刷屏)。
+      # 开发环境 Consul,8500 公网可达
+      host: ${CONSUL_HOST:118.24.138.189}
+      port: ${CONSUL_PORT:8500}
       config:
-        enabled: false
+        # 开着,凭据全部从 KV 取,本文件因此一个密码都不用写。
+        # ACL 开启后需一并给 CONSUL_TOKEN。
+        enabled: ${CONSUL_CONFIG_ENABLED:true}
       discovery:
+        # 关掉:本机 IP 在 dev 集群内不可达,注册上去只会让 dev 网关把流量路由到一个死实例
         enabled: false
 
-  # 仅覆盖凭据 —— host/port/库名的基线默认值(localhost:5432/eagle_system)本地已适用。
-  # 默认值对齐 docker-compose.pg.yml 的 POSTGRES_USER / POSTGRES_PASSWORD。
+  # ---- 地址覆盖 ----
+  # KV 里的 DB_HOST=postgres / REDIS_HOST=redis / RABBITMQ_HOST=rabbitmq 是容器名,
+  # 只在 dev 的 compose 网络内可解析,本机 DNS 查不到。
+  #
+  # 注意这里覆盖的是**终值属性**(spring.datasource.url 等)而不是 DB_HOST 这类变量:
+  # KV 提供的正是 DB_HOST 变量本身,若本文件写 ${DB_HOST:118.24.138.189},
+  # 占位符会解析到 KV 的 "postgres" 而不是这里的默认值 —— 反而覆盖不掉。
+  # 改用 KV 中不存在的 LOCAL_* 变量名,才能让本文件的值胜出。
   datasource:
-    username: ${DB_USERNAME:eagle}
-    password: "${DB_PASSWORD:W2kL9@mZ5&nR4*bJ6^y}"
+    url: jdbc:postgresql://${LOCAL_DB_HOST:118.24.138.189}:${DB_PORT:5432}/${DB_NAME:eagle_system}
 
-  # 默认值对齐 docker-compose.middleware.yml 的 --requirepass
   data:
     redis:
-      password: ${REDIS_PASSWORD:redis123456}
+      host: ${LOCAL_REDIS_HOST:118.24.138.189}
 
-  # 基线是 validate(生产安全默认),本地空库起不来,交给 Hibernate 建表 —— 与 dev 一致
+  rabbitmq:
+    host: ${LOCAL_RABBITMQ_HOST:118.24.138.189}
+
+  # 基线是 validate(生产安全默认),本地开发需要 Hibernate 同步 schema;
+  # 连的是 dev 的真库,要保护 dev 表结构就把 LOCAL_DDL_AUTO 设成 validate
   jpa:
     show-sql: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${LOCAL_DDL_AUTO:update}
+
+eagle:
+  amqp:
+    # 消费组加后缀,与 dev 的 system 实例分开 —— 否则两边抢同一条队列,
+    # dev 环境的消息可能被本机消费掉。exchange-prefix 仍是 dev_,收到的是同一批消息副本,
+    # 调试涉及消息副作用的流程时请留意。
+    consumer-group: ${LOCAL_AMQP_CONSUMER_GROUP:system_consumer_local}
 
 management:
   endpoints:

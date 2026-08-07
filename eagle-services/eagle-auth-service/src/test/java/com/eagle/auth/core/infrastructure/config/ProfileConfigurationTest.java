@@ -31,24 +31,19 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class ProfileConfigurationTest {
 
     /**
-     * 基线里故意无默认值的必填项，local 必须逐一补上默认值。
-     * 新增同类占位符时请同步扩充本清单。
-     */
-    private static final String[] REQUIRED_KEYS = {
-            "eagle.admin.password",
-            "eagle.jwt.keystore-password",
-            "eagle.remember-me.key",
-            "eagle.oauth.issuer",
-    };
-
-    /**
      * 只跑配置解析：不注册自动配置，避免连数据库 / Redis。
+     *
+     * <p>一并关掉 Consul 配置中心：local profile 把它指向了开发环境的真实地址
+     * （118.24.138.189:8500），不关的话每跑一次测试都要走一趟外网，还会因 ACL 返回 403。
+     * 代价是 {@code consul.config.enabled} 自身的取值无法在此断言——要断言它就必须真连。
      */
     private void withProfile(String profile, Consumer<Environment> assertions) {
         new ApplicationContextRunner()
                 .withInitializer(new ConfigDataApplicationContextInitializer())
                 .withConfiguration(AutoConfigurations.of())
-                .withPropertyValues("spring.profiles.active=" + profile)
+                .withPropertyValues(
+                        "spring.profiles.active=" + profile,
+                        "spring.cloud.consul.config.enabled=false")
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     assertions.accept(((AssertableApplicationContext) context).getEnvironment());
@@ -60,43 +55,72 @@ class ProfileConfigurationTest {
     class Local {
 
         @Test
-        @DisplayName("基线所有无默认值的必填项都已补上默认值，本地可直接启动")
-        void resolvesEveryRequiredPlaceholder() {
+        @DisplayName("中间件地址覆盖为开发环境公网地址，绕开 KV 里的容器名")
+        void overridesAddressesToDevHost() {
             withProfile("local", env -> {
-                for (String key : REQUIRED_KEYS) {
-                    assertThat(env.getProperty(key))
-                            .as("local 缺少必填项默认值：%s —— 本地启动会 Could not resolve placeholder", key)
-                            .isNotBlank();
-                }
+                // KV 里 DB_HOST=postgres / REDIS_HOST=redis / RABBITMQ_HOST=rabbitmq 都是容器名，
+                // 只在 dev 的 compose 网络内可解析；覆盖终值属性才能压过它们。
+                assertThat(env.getProperty("spring.datasource.url"))
+                        .isEqualTo("jdbc:postgresql://118.24.138.189:5432/eagle_auth");
+                assertThat(env.getProperty("spring.data.redis.host")).isEqualTo("118.24.138.189");
+                assertThat(env.getProperty("spring.rabbitmq.host")).isEqualTo("118.24.138.189");
             });
         }
 
         @Test
-        @DisplayName("关闭 Consul 服务发现与配置中心")
-        void disablesConsul() {
-            withProfile("local", env -> {
-                assertThat(env.getProperty("spring.cloud.consul.discovery.enabled")).isEqualTo("false");
-                assertThat(env.getProperty("spring.cloud.consul.config.enabled")).isEqualTo("false");
-            });
+        @DisplayName("地址覆盖用 LOCAL_* 变量名，避免被 KV 的同名键顶掉")
+        void addressOverrideUsesDistinctVariableNames() {
+            // 若写成 ${DB_HOST:118.24.138.189}，KV 提供的 DB_HOST=postgres 会赢，覆盖失效。
+            // 这里验证 LOCAL_DB_HOST 确实是生效的那个入口。
+            new ApplicationContextRunner()
+                    .withInitializer(new ConfigDataApplicationContextInitializer())
+                    .withConfiguration(AutoConfigurations.of())
+                    .withPropertyValues(
+                            "spring.profiles.active=local",
+                            "spring.cloud.consul.config.enabled=false",
+                            "LOCAL_DB_HOST=localhost",
+                            "DB_HOST=postgres")
+                    .run(context -> assertThat(((AssertableApplicationContext) context)
+                            .getEnvironment().getProperty("spring.datasource.url"))
+                            .isEqualTo("jdbc:postgresql://localhost:5432/eagle_auth"));
         }
 
         @Test
-        @DisplayName("issuer 指向本地端口，凭据默认值对齐本地 compose")
-        void usesLocalDefaults() {
-            withProfile("local", env -> {
-                assertThat(env.getProperty("eagle.oauth.issuer")).isEqualTo("http://localhost:9090");
-                assertThat(env.getProperty("spring.datasource.username")).isEqualTo("eagle");
-                assertThat(env.getProperty("spring.data.redis.password")).isEqualTo("redis123456");
-            });
-        }
-
-        @Test
-        @DisplayName("keystore 密码与仓库内 jwt-keystore.p12 的实际密码一致")
-        void keystorePasswordMatchesBundledKeystore() {
+        @DisplayName("关闭服务发现：本机 IP 在 dev 集群内不可达，注册上去只会制造死实例")
+        void disablesDiscovery() {
             withProfile("local", env ->
-                    assertThat(env.getProperty("eagle.jwt.keystore-password"))
-                            .as("改这个值会导致本地打不开 classpath:jwt-keystore.p12")
-                            .isEqualTo("eagle-jwt-dev-2026"));
+                    assertThat(env.getProperty("spring.cloud.consul.discovery.enabled"))
+                            .isEqualTo("false"));
+        }
+
+        @Test
+        @DisplayName("issuer 指向本机，不沿用 KV 里的 dev 域名")
+        void usesLocalIssuer() {
+            withProfile("local", env ->
+                    assertThat(env.getProperty("eagle.oauth.issuer"))
+                            .isEqualTo("http://localhost:9090"));
+        }
+
+        @Test
+        @DisplayName("消费组带 _local 后缀，不与 dev 的 auth 抢同一条队列")
+        void isolatesAmqpConsumerGroup() {
+            withProfile("local", env ->
+                    assertThat(env.getProperty("eagle.amqp.consumer-group"))
+                            .isEqualTo("auth_consumer_local")
+                            .isNotEqualTo("auth_consumer"));
+        }
+
+        @Test
+        @DisplayName("不给机密兜底默认值：没配 CONSUL_TOKEN 时启动期就明确报缺")
+        void keepsSecretsFailFast() {
+            // 连的是 dev 的真库，宁可 fail-fast 报缺 EAGLE_ADMIN_PASSWORD，
+            // 也好过用一个写死的错值连上去。
+            withProfile("local", env -> {
+                assertThatThrownBy(() -> env.getProperty("eagle.admin.password"))
+                        .isInstanceOf(PlaceholderResolutionException.class);
+                assertThatThrownBy(() -> env.getProperty("eagle.remember-me.key"))
+                        .isInstanceOf(PlaceholderResolutionException.class);
+            });
         }
     }
 
@@ -105,11 +129,25 @@ class ProfileConfigurationTest {
     class Dev {
 
         @Test
-        @DisplayName("保持 Consul 开启：连接信息与凭据来自 KV，不写死在 profile 里")
-        void keepsConsulEnabled() {
+        @DisplayName("保持服务注册开启：容器内需要注册进 Consul 供网关路由")
+        void keepsDiscoveryEnabled() {
+            // config.enabled 不在此断言 —— withProfile 为避免测试走外网把它强制关掉了。
+            withProfile("dev", env ->
+                    assertThat(env.getProperty("spring.cloud.consul.discovery.enabled"))
+                            .isEqualTo("true"));
+        }
+
+        @Test
+        @DisplayName("不覆盖任何连接地址：dev 跑在 compose 网络内，容器名可直接解析")
+        void keepsKvSuppliedAddresses() {
+            // 与 local 相反：dev 必须让 KV 的 DB_HOST=postgres 等原样生效，
+            // profile 文件一旦写死地址，KV 就再也改不动了。
+            // 无 KV 时占位符回落到基线默认值；关键是不能出现 local 那个写死的公网地址。
             withProfile("dev", env -> {
-                assertThat(env.getProperty("spring.cloud.consul.discovery.enabled")).isEqualTo("true");
-                assertThat(env.getProperty("spring.cloud.consul.config.enabled")).isEqualTo("true");
+                assertThat(env.getProperty("spring.datasource.url"))
+                        .isEqualTo("jdbc:postgresql://localhost:5432/eagle_auth")
+                        .doesNotContain("118.24.138.189");
+                assertThat(env.getProperty("spring.data.redis.host")).isEqualTo("127.0.0.1");
             });
         }
 
