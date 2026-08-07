@@ -5,9 +5,11 @@ import com.eagle.amqp.properties.AmqpProperties;
 import com.eagle.amqp.publisher.DomainEventPublisher;
 import com.eagle.amqp.publisher.RabbitDomainEventPublisher;
 import com.eagle.amqp.support.AmqpMessageDispatcher;
+import com.eagle.amqp.support.UnroutableMessageLogger;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.boot.amqp.autoconfigure.RabbitTemplateCustomizer;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -42,6 +44,26 @@ public class EagleAmqpAutoConfiguration {
         // 拓扑由 AmqpListenerRegistrar 在启动期显式声明，这里不做全量自动声明
         admin.setAutoStartup(true);
         return admin;
+    }
+
+    /**
+     * 让自动配置的 {@link RabbitTemplate} 开启 mandatory 并挂上退回回调。
+     *
+     * <p>不自己声明 {@code RabbitTemplate} bean —— 那会顶掉 Boot 的自动配置，
+     * 使用方在 {@code spring.rabbitmq.template.*} 下的设置会静默失效。
+     * customizer 是 Boot 提供的定制点，只加东西不夺所有权。
+     *
+     * <p>没有 mandatory，不可路由的消息会被 broker 静默丢弃，
+     * 生产方毫无感知（见 {@link UnroutableMessageLogger} 的事故说明）。
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "eagleUnroutableMessageCustomizer")
+    public RabbitTemplateCustomizer eagleUnroutableMessageCustomizer() {
+        UnroutableMessageLogger callback = new UnroutableMessageLogger();
+        return template -> {
+            template.setMandatory(true);
+            template.setReturnsCallback(callback);
+        };
     }
 
     @Bean
