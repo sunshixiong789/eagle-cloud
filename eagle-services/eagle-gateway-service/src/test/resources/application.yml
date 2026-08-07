@@ -4,6 +4,11 @@ spring:
     # 必须全部显式关闭，否则 ConsulAutoRegistration bean 仍会在上下文刷新期构造，
     # 此时 RANDOM_PORT 尚未分配真实端口，实例 ID 归一化失败直接报错。
     consul:
+      # 测试期不接配置中心：主 application.yml 的 spring.config.import=optional:consul: 被本文件
+      # 屏蔽（test 资源优先于 main），而 consul-config 在 classpath 上时会强制校验该 import 是否存在，
+      # 缺失即抛 ImportException 让上下文启动失败。关掉 config 本身即跳过这项校验。
+      config:
+        enabled: false
       discovery:
         enabled: false
       service-registry:

@@ -1,0 +1,71 @@
+# ===========================================
+# 本地开发差异(auth-service)
+# 与基线相比的覆盖:
+#   - 关闭 Consul 服务发现与配置中心(本地不起 Consul)
+#   - 补齐基线中 4 个"故意无默认值"的必填项(dev/prod 由 Consul KV 注入,local 无 KV 可读)
+#   - 数据源 / Redis 凭据默认值对齐本地 compose,开箱即跑
+#   - Actuator 暴露调试端点 + details=always
+#   - 日志 com.eagle=DEBUG,SQL=DEBUG,参数绑定=TRACE
+#
+# 【本地依赖】
+#   docker compose -f docker-compose.pg.yml up -d          # PostgreSQL(eagle_system + eagle_auth)
+#   docker compose -f docker-compose.middleware.yml up -d  # Redis / RabbitMQ / Consul
+# 只跑 auth 时 middleware 里的 Consul 可以不启 —— 本 profile 已关掉对它的依赖。
+#
+# 【安全】本文件的默认凭据仅供本地,全部沿用仓库既有 compose 的默认值,不新增机密;
+# dev/prod 都不读本文件,那两个环境的凭据一律走 Consul KV。
+# ===========================================
+
+spring:
+  cloud:
+    consul:
+      # 本地不起 Consul:config 关掉后基线的 spring.config.import=optional:consul: 直接跳过;
+      # discovery 关掉后不再反复重试注册(否则启动日志被连接失败刷屏)。
+      config:
+        enabled: false
+      discovery:
+        enabled: false
+
+  # 仅覆盖凭据 —— host/port/库名的基线默认值(localhost:5432/eagle_auth)本地已适用。
+  # 默认值对齐 docker-compose.pg.yml:用户 eagle,eagle_auth 库由 postgres-init 脚本创建。
+  datasource:
+    username: ${DB_USERNAME:eagle}
+    password: "${DB_PASSWORD:W2kL9@mZ5&nR4*bJ6^y}"
+
+  # 默认值对齐 docker-compose.middleware.yml 的 --requirepass
+  data:
+    redis:
+      password: ${REDIS_PASSWORD:redis123456}
+
+eagle:
+  # 下面 4 项在基线里故意无默认值(缺失即 fail-fast,防止生产误用弱默认值)。
+  # local 不读 Consul KV,必须在此补默认值,否则启动直接 Could not resolve placeholder。
+  admin:
+    password: ${EAGLE_ADMIN_PASSWORD:local-admin-123456}
+  jwt:
+    # 必须与仓库内 resources/jwt-keystore.p12 的实际密码一致,改了就打不开 keystore
+    keystore-password: ${EAGLE_JWT_KEYSTORE_PASSWORD:eagle-jwt-dev-2026}
+  remember-me:
+    key: ${EAGLE_REMEMBER_ME_KEY:eagle-remember-me-local-2026}
+  oauth:
+    # 本地签发的 token 用本地 issuer;换端口或走网关时需同步改,否则资源服务校验 iss 不通过
+    issuer: ${EAGLE_OAUTH_ISSUER:http://localhost:9090}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,loggers,env,beans,mappings,prometheus
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+  info:
+    env:
+      enabled: true
+
+logging:
+  level:
+    com.eagle: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE

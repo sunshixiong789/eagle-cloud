@@ -1,6 +1,11 @@
 spring:
-  # 不再激活 local profile（已删除）。剩余 @SpringBootTest 默认 @Disabled，
-  # 其它 Mockito 单测不依赖此文件，但保留下方防御性配置作为未来集成测试的兜底。
+  # 测试不激活任何 profile —— application-local.yml 已于 2026-08-07 重新补回，
+  # 但它面向"本机手工起服务"，会连真实的 localhost 数据库 / Redis，不适合测试期加载。
+  # 剩余 @SpringBootTest 默认 @Disabled，其它 Mockito 单测不依赖此文件，
+  # 下方防御性配置作为未来集成测试的兜底保留。
+  #
+  # ⚠️ 本文件在测试 classpath 上遮蔽 src/main 的同名基线（同名资源只取第一个），
+  #    因此基线里的 ${VAR:default} 占位符在测试期并不存在。详见 ProfileConfigurationTest。
   cloud:
     # Consul 自动注册由 4 个属性的 OR 条件共同门控（任一缺省即视为 true），需全部显式关闭。
     consul:
