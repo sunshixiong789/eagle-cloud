@@ -4,6 +4,7 @@ import com.eagle.encrypt.converter.EncryptedStringConverter;
 import com.eagle.encrypt.properties.EncryptProperties;
 import com.eagle.encrypt.service.AesEncryptionService;
 import com.eagle.encrypt.service.EncryptionService;
+import org.jspecify.annotations.NonNull;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -51,7 +52,7 @@ public class EagleEncryptAutoConfiguration {
     static class OnNonBlankSecretKeyCondition extends SpringBootCondition {
 
         @Override
-        public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
+        public @NonNull ConditionOutcome getMatchOutcome(ConditionContext context, @NonNull AnnotatedTypeMetadata metadata) {
             String secretKey = context.getEnvironment().getProperty("eagle.encrypt.secret-key");
             if (StringUtils.hasText(secretKey)) {
                 return ConditionOutcome.match("eagle.encrypt.secret-key 已配置");
