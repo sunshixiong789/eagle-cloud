@@ -88,9 +88,69 @@ return mapper.toResponse(user)
 
 ---
 
-## 四、抽象的最小化
+## 四、先找现成的，再考虑自己写
 
-模型的默认倾向是**过度抽象**——见到跨类调用就抽接口、见到两处相似就抽基类。本项目反向约束：
+模型的默认倾向是**遇到问题就动手实现**。本项目反向约束：**基础设施类的机制，几乎一定已经有人写好了。**
+
+### 4.1 判据
+
+**如果这段代码在实现「重试 / 退避 / 死信搬运 / 线程池 / 连接管理 / 序列化 / 定时调度 / 限流 / 缓存失效 /
+分页 / 参数校验」中的任何一种通用机制，停下来先找现成的。** 这些都不是业务逻辑，
+自己写的每一行都是要自己维护、自己踩坑、自己补测试的负债。
+
+代码量判据：**能三行解决的不写十行。** 十行手写实现 vs 三行框架配置，后者永远优先 ——
+即使前者看起来"更可控"。可控是错觉：框架那三行背后有社区多年的边界条件修复。
+
+### 4.2 决策顺序（自上而下，命中即停）
+
+| 顺位 | 找什么 | 例 |
+|---|---|---|
+| 1 | 已引入依赖的**扩展点** | `ConnectionFactoryCustomizer`、`RabbitTemplateCustomizer`、`BeanPostProcessor`、各种 `*Configurer` |
+| 2 | **中间件 / broker 自身**的能力 | 队列 `x-dead-letter-exchange` 自动转投、`x-message-ttl`、DB 唯一约束、Redis SETNX |
+| 3 | 框架的**官方可选依赖** | spring-retry（spring-rabbit 的 optional 依赖，按 `00-core.md` 先进 BOM） |
+| 4 | **运维工具，零代码** | RabbitMQ 管理台 "Move messages"、Shovel 插件 |
+| 5 | 自己写 | 前四项都确认没有；在 PR 描述里写明确认过程 |
+
+### 4.3 最贵的代价不是多写代码，是架空框架的配置体系
+
+真实案例（`eagle-amqp-starter`，2026-08）：`AmqpListenerRegistrar` 手动
+`new DirectMessageListenerContainer(...)` 而不走 Boot 的
+`DirectRabbitListenerContainerFactoryConfigurer`，后果是
+**`spring.rabbitmq.listener.direct.*` 整套配置对本项目静默失效** ——
+`prefetch` / `acknowledge-mode` / `default-requeue-rejected` / `retry.*` 配了都不生效。
+
+这比"多写几十行"严重得多：使用方照官方文档配置，行为却纹丝不动，且没有任何报错或警告。
+**手写实现一旦顶替了框架的装配路径，就同时废掉了框架的整个配置面。**
+
+同一个 starter 还手写了两处本可直接复用的机制：
+
+| 手写的 | 现成的 |
+|---|---|
+| `handleWithRetry()` 退避重试循环 | spring-retry 的 `RetryInterceptorBuilder`，`container.setAdviceChain()` 挂上即可 |
+| `sendToDeadLetter()` 死信投递 | `RepublishMessageRecoverer`，还会自动附上 `x-exception-message` / `x-exception-stacktrace` / `x-original-exchange` 等诊断 header |
+
+反例之外的正面对照 —— 同一批可靠性问题，用现成能力每项一行：
+
+| 需求 | 现成方案 |
+|---|---|
+| nack 的消息不要无限 requeue | `container.setDefaultRequeueRejected(false)`，之后由 **broker** 按队列上的 DLX 自动转投，搬运逻辑一行不写 |
+| 停机时正在退避的消息别被推进 DLQ | 抛框架的 `ImmediateRequeueAmqpException`（强制 requeue，不受上一条影响） |
+| DLQ 不要无限增长 | `QueueBuilder.ttl()` / `.maxLength()`，由 broker 执行，不需要清理任务 |
+| 消费线程被阻塞操作占满 | `ConnectionFactoryCustomizer` + `setSharedExecutor(虚拟线程)` |
+| 把死信重投回主队列 | **不写代码** —— RabbitMQ 管理台 / Shovel 插件 |
+
+### 4.4 但「框架提供了接口」不等于「框架替你做了」
+
+反向的坑同样要认：`spring.rabbitmq.publisher-confirm-type=correlated` 只是打开 confirm 通道，
+**不注册 `ConfirmCallback` 等于没开**，消息被 broker 拒收照样静默丢失；
+`mandatory` 与 `ReturnsCallback`、`@Async` 与 `AsyncUncaughtExceptionHandler` 都是同一类。
+
+**判断方法：查清该扩展点的默认行为。默认是「静默忽略」的，就必须自己接落点** ——
+这类实现不算造轮子，是框架明确要求使用方提供的那一半。
+
+### 4.5 抽象的最小化
+
+见到跨类调用就抽接口、见到两处相似就抽基类，同样是"写了不必要的代码"。本项目反向约束：
 
 | 场景 | 抽不抽接口 |
 |---|---|
@@ -100,7 +160,7 @@ return mapper.toResponse(user)
 | 只为"以后可能有第二种实现" | **不抽**，等第二个实现真的出现再抽 |
 | 只为单测好 mock | **先别抽** —— 优先构造器注入真实对象；确实需要隔离外部 IO 时才抽 |
 
-同理约束继承：**只有共享状态 + 共享模板方法时才用抽象基类**（如 `AbstractRocketMqListener`）。
+同理约束继承：**只有共享状态 + 共享模板方法时才用抽象基类**（如 `AbstractAmqpListener`）。
 只共享几个工具方法 → 用无状态静态方法，不要为复用而继承。
 
 ---
@@ -174,6 +234,8 @@ starter 被多个服务依赖，破坏性变更的成本远高于业务代码：
 
 以下是模型倾向做、但在本项目里明确不要的：
 
+- [ ] **手写框架已经提供的机制** —— 重试 / 退避 / 死信搬运 / 线程池 / 序列化 / 调度，
+      动手前按第四节的顺序找扩展点；顺带确认没有绕开框架的装配路径（那会静默废掉整片配置）
 - [ ] **编造不存在的 API** —— Eagle 专有类拿不准先 `grep` 一个已有用法，不要凭记忆写（`06-boot4.md` 末节）
 - [ ] **防御性 null 检查泛滥** —— 已有 23 个 package 标了 `@NullMarked`，参数默认非空，不要层层 `if (x != null)`
 - [ ] **try-catch 让代码"能跑通"** —— 吞异常是 `00-core.md` 禁止清单第一条；不确定异常该不该catch 就上抛

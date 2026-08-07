@@ -43,7 +43,7 @@
 | `rules/05-security.md`      | OAuth2/JWT 取当前用户、脱敏、多租户与数据权限、审计日志、日志规范                               |
 | `rules/06-boot4.md`   | **必看**：Jackson 3 分包、`@AutoConfiguration`、`RestClient`、Security 7 DSL |
 | `rules/07-checklist.md`     | **必看**：高频陷阱速查（Eagle 特有 API）+ 存量违例台账 + PR 前自检清单                      |
-| `rules/08-quality.md`       | **必看**：规模红线、贫血模型、抽象最小化、复用归属、各层厚度、AI 特有坏味道                          |
+| `rules/08-quality.md`       | **必看**：规模红线、贫血模型、**优先用现成能力（不重复造轮子）**、抽象最小化、复用归属、各层厚度、AI 特有坏味道      |
 
 缓存、消息队列、分布式事务、定时任务、对象存储、韧性等主题**不设常驻规则文件**，规范随对应 starter skill
 （`eagle-redis` / `eagle-amqp` / `eagle-scheduler` / `eagle-oss-minio` / `eagle-resilience`）按需自动加载。
