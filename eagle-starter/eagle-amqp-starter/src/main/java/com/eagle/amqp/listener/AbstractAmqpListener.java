@@ -119,41 +119,6 @@ public abstract class AbstractAmqpListener<T extends BaseEvent> {
     }
 
     /**
-     * 投递次数达到该阈值时触发 {@link #onRetryAlert}。
-     *
-     * @return 告警阈值
-     * @deprecated 重试已交给容器的 retry advice，本方法不再被调用。
-     *             重试过程的可见性改由框架承担：失败重试由 Spring AMQP 记日志，
-     *             重试耗尽由 {@code EagleRepublishRecoverer} 投 DLQ 并附
-     *             {@code x-exception-message} / {@code x-exception-stacktrace}，
-     *             最终告警落在对应的 {@code AbstractDlqListener} 上。
-     */
-    @Deprecated(since = "1.6.0", forRemoval = true)
-    protected int getRetryAlertThreshold() {
-        return amqpProperties.getConsumer().getRetryAlertThreshold();
-    }
-
-    /**
-     * 重试次数达到告警阈值时的回调。
-     *
-     * @param message  原始 AMQP 消息
-     * @param rawBody  原始报文
-     * @param event    反序列化成功时的载荷，失败时为 null
-     * @param cause    本次失败原因
-     * @param attempts 已尝试次数
-     * @deprecated 同 {@link #getRetryAlertThreshold()} —— 不再被调用。
-     *             需要在重试耗尽时告警，请实现对应的 {@code AbstractDlqListener}。
-     *             当前两个仓库中无任何子类覆盖本方法。
-     */
-    @Deprecated(since = "1.6.0", forRemoval = true)
-    protected void onRetryAlert(Message message, String rawBody,
-                                @Nullable T event, Exception cause, int attempts) {
-        log.error("[AMQP RETRY ALERT] queue={}, attempts={}, eventId={}, body={}",
-                resolveQueueName(), attempts,
-                event == null ? "unknown" : event.getEventId(), rawBody, cause);
-    }
-
-    /**
      * 反序列化失败时的回调，默认记 ERROR 日志。
      *
      * <p>反序列化失败不重试（重试也不会变好），消息直接进 DLQ ——
@@ -183,8 +148,8 @@ public abstract class AbstractAmqpListener<T extends BaseEvent> {
      * 走这个可覆盖方法则会被代理转发到真正的 target 实例，取到正确的值。
      *
      * <p>⚠️ 因此：<b>本类中任何 final 方法都不得直接访问 {@code amqpProperties}</b>，
-     * 一律经由可覆盖的实例方法（本方法、{@link #getConsumerGroup()}、
-     * {@link #getRetryAlertThreshold()}）取值。{@code AmqpProxySafetyTest} 守着这条约束。
+     * 一律经由可覆盖的实例方法（本方法、{@link #getConsumerGroup()}）取值。
+     * {@code AmqpProxySafetyTest} 守着这条约束。
      *
      * @return exchange 名前缀
      */
@@ -235,29 +200,6 @@ public abstract class AbstractAmqpListener<T extends BaseEvent> {
      */
     public final void dispatch(T event) {
         handle(event);
-    }
-
-    /**
-     * 暴露告警阈值给分发器（{@link #getRetryAlertThreshold()} 是 protected，跨包不可见）。
-     *
-     * @return 告警阈值
-     */
-    public final int resolveRetryAlertThreshold() {
-        return getRetryAlertThreshold();
-    }
-
-    /**
-     * 供分发器触发重试告警回调。
-     *
-     * @param message  原始消息
-     * @param rawBody  原始报文
-     * @param event    载荷，反序列化失败时为 null
-     * @param cause    失败原因
-     * @param attempts 已尝试次数
-     */
-    public final void notifyRetryAlert(Message message, String rawBody,
-                                       @Nullable T event, Exception cause, int attempts) {
-        onRetryAlert(message, rawBody, event, cause, attempts);
     }
 
     /**

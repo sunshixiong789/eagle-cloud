@@ -1,36 +1,39 @@
 package com.eagle.amqp.properties;
 
 import lombok.Data;
-import org.jspecify.annotations.Nullable;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.time.Duration;
-
 /**
- * AMQP（RabbitMQ）消息配置属性。
+ * AMQP（RabbitMQ）拓扑命名配置。
  *
- * <p>取代原 {@code eagle.rocketmq.*}。broker 连接本身走 Spring Boot 原生的
- * {@code spring.rabbitmq.*}，本类只管 eagle 侧的拓扑命名与消费行为。
+ * <p><b>本类只管 eagle 侧的拓扑命名</b>。broker 连接、监听容器行为（prefetch、
+ * acknowledge-mode、退避重试次数与间隔…）一律走 Spring Boot 原生的
+ * {@code spring.rabbitmq.*}，本 starter 不再重复一套自己的键。
  *
- * <p><b>前缀键收敛</b>：原先并存两套互不兼容的键 ——
- * ease-mind 侧的 {@code eagle.rocketmq.topic-prefix}（绑定到 Properties，业务手工拼接）
- * 与 eagle-cloud 侧的 {@code eagle.rocketmq.topic-env-prefix}（Properties 里根本没这个字段，
- * 仅一处 {@code Environment.getProperty} 直读）。两者在容器化 dev 环境下会让生产方与消费方
- * 的 topic 对不上。此处统一为唯一的 {@link #exchangePrefix}。
+ * <p>迁移前这里另有一组 {@code eagle.amqp.consumer.*}（prefetch / max-attempts /
+ * initial-backoff / max-backoff / multiplier / retry-alert-threshold），它们与
+ * {@code spring.rabbitmq.listener.simple.*} 逐一重复，且因为容器是手工 new 的，
+ * Boot 那套反而静默失效。现在容器交由 Boot 的
+ * {@code SimpleRabbitListenerContainerFactoryConfigurer} 装配，标准键真正生效，
+ * eagle 侧的重复键已删除。starter 级默认值（如默认打开重试）见
+ * {@code EagleAmqpDefaultsEnvironmentPostProcessor}。
  *
  * <p>示例（application.yml）：
  * <pre>
+ * spring:
+ *   rabbitmq:
+ *     listener:
+ *       simple:
+ *         prefetch: 32
+ *         retry:
+ *           max-retries: 3
+ *           initial-interval: 1s
+ *           max-interval: 30s
+ *           multiplier: 2.0
  * eagle:
  *   amqp:
  *     exchange-prefix: dev_
  *     consumer-group: user_service_default
- *     consumer:
- *       prefetch: 32
- *       retry-alert-threshold: 3
- *       max-attempts: 4
- *       initial-backoff: 1s
- *       max-backoff: 30s
- *       multiplier: 2.0
  * </pre>
  *
  * @author eagle
@@ -55,62 +58,4 @@ public class AmqpProperties {
      * 退化成竞争消费（这正是迁移前存在的线上缺陷）。
      */
     private String consumerGroup = "eagle_default";
-
-    private final Consumer consumer = new Consumer();
-
-    /**
-     * 消费侧行为配置。
-     */
-    @Data
-    public static class Consumer {
-
-        /**
-         * 每个消费者的预取数量（basic.qos），对应原 RocketMQ 的 maxCachedMessageCount。
-         */
-        private int prefetch = 32;
-
-        /**
-         * 投递次数达到该阈值时触发 {@code onRetryAlert} 告警回调。
-         */
-        private int retryAlertThreshold = 3;
-
-        /**
-         * 单条消息的最大尝试次数（含首次），耗尽后投递到 DLQ。
-         *
-         * <p>RocketMQ 由 Broker 侧重试最多 16 次；RabbitMQ 无 Broker 侧重试，
-         * 这里改由客户端退避重试实现，次数刻意调小以免长时间占用消费者。
-         */
-        private int maxAttempts = 4;
-
-        /**
-         * 首次重试前的退避时长。
-         */
-        private Duration initialBackoff = Duration.ofSeconds(1);
-
-        /**
-         * 退避时长上限。
-         */
-        private Duration maxBackoff = Duration.ofSeconds(30);
-
-        /**
-         * 退避倍率。
-         */
-        private double multiplier = 2.0;
-
-        /**
-         * 死信队列的消息保留时长（{@code x-message-ttl}）。
-         *
-         * <p>默认 14 天：死信是待人工处理的证据，太短会让证据在排查前就消失，
-         * 不设上限则队列会无限增长、最终拖垮 broker 磁盘。
-         * 设为 {@code null} 表示不限制。
-         */
-        private @Nullable Duration dlqTtl = Duration.ofDays(14);
-
-        /**
-         * 死信队列的最大消息条数（{@code x-max-length}）。
-         *
-         * <p>超出后 broker 丢弃<b>最旧</b>的死信。设为 {@code null} 表示不限制。
-         */
-        private @Nullable Integer dlqMaxLength = 100_000;
-    }
 }

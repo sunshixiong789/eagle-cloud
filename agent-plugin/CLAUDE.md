@@ -80,7 +80,7 @@
 | `eagle-data-r2dbc`         | 响应式 R2DBC 持久化、BaseR2dbcAggregateRoot      |
 | `eagle-sharding`           | 分库分表、ShardingSphere YAML 配置               |
 | `eagle-redis`              | 缓存 / 锁 / 限流 / 布隆                          |
-| `eagle-amqp`               | RabbitMQ 事件发布 / 消费 / 死信 / 消息幂等            |
+| `eagle-amqp`               | RabbitMQ 事件发布 / 消费 / 死信                    |
 | `eagle-id-generator`       | 雪花 / TSID / NanoId / 业务单号                 |
 | `eagle-idempotency`        | 接口幂等                                      |
 | `eagle-resource-server`    | OAuth2 资源服务器                              |

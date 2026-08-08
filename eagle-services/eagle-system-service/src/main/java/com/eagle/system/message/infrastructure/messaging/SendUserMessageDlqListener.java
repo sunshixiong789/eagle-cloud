@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
- * SendUserMessage DLQ 兜底——重试耗尽（{@code eagle.amqp.consumer.max-attempts}）仍失败时进入此处。
+ * SendUserMessage DLQ 兜底——重试耗尽（{@code spring.rabbitmq.listener.simple.retry.max-retries}）仍失败时进入此处。
  *
  * <p>本期记录 ERROR 日志（告警 stub），后续接入运维告警系统。
  *

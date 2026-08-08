@@ -15,7 +15,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.Map;
 
 /**
- * AccountRegistered DLQ 兜底 —— 重试耗尽（{@code eagle.amqp.consumer.max-attempts}）仍失败时进入此处。
+ * AccountRegistered DLQ 兜底 —— 重试耗尽（{@code spring.rabbitmq.listener.simple.retry.max-retries}）仍失败时进入此处。
  * <p>
  * 业务影响:auth-service 已创建 Account,但 base 域 User 创建失败 — 数据不一致,
  * 后续登录时 {@code RemoteAuthorizationAdapter} 会查不到 user(返回 empty),

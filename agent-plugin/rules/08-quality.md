@@ -113,21 +113,30 @@ return mapper.toResponse(user)
 
 ### 4.3 最贵的代价不是多写代码，是架空框架的配置体系
 
-真实案例（`eagle-amqp-starter`，2026-08）：`AmqpListenerRegistrar` 手动
-`new DirectMessageListenerContainer(...)` 而不走 Boot 的
-`DirectRabbitListenerContainerFactoryConfigurer`，后果是
-**`spring.rabbitmq.listener.direct.*` 整套配置对本项目静默失效** ——
+真实案例（`eagle-amqp-starter`，2026-08，**已修复**）：`AmqpListenerRegistrar` 曾手动
+`new DirectMessageListenerContainer(...)` 而不走 Boot 的容器工厂，后果是
+**`spring.rabbitmq.listener.*` 整套配置对本项目静默失效** ——
 `prefetch` / `acknowledge-mode` / `default-requeue-rejected` / `retry.*` 配了都不生效。
 
 这比"多写几十行"严重得多：使用方照官方文档配置，行为却纹丝不动，且没有任何报错或警告。
 **手写实现一旦顶替了框架的装配路径，就同时废掉了框架的整个配置面。**
 
-同一个 starter 还手写了两处本可直接复用的机制：
+修法是改实现 `RabbitListenerConfigurer`，把每个 listener 注册成 `SimpleRabbitListenerEndpoint`，
+容器交由 Boot 的 `SimpleRabbitListenerContainerFactoryConfigurer` 创建 ——
+这是框架为「队列名运行时才确定」准备的扩展点，同时白捡了容器生命周期托管
+（`RabbitListenerEndpointRegistry`，可按 endpoint id 单独启停）。
+配套删掉了逐一重复 Boot 标准键的 `eagle.amqp.consumer.*`。
+
+**教训不止于"别自己 new"**：`AmqpAutoConfigurationTest` 那种「标准配置键确实生效」的装配测试
+是这类问题唯一的自动化防线 —— 静默失效不会有任何报错，只能靠断言配了就变来兜住。
+
+同一个 starter 还手写了三处本可直接复用的机制：
 
 | 手写的 | 现成的 |
 |---|---|
-| `handleWithRetry()` 退避重试循环 | spring-retry 的 `RetryInterceptorBuilder`，`container.setAdviceChain()` 挂上即可 |
+| `handleWithRetry()` 退避重试循环 | `spring.rabbitmq.listener.simple.retry.*` + 框架构建的 retry advice |
 | `sendToDeadLetter()` 死信投递 | `RepublishMessageRecoverer`，还会自动附上 `x-exception-message` / `x-exception-stacktrace` / `x-original-exchange` 等诊断 header |
+| 每个 listener 各建一个 recoverer | `RepublishMessageRecoverer` 收 SpEL 表达式的构造器，DLX 与 routing key 逐条消息求值，一个 bean 服务全部 listener |
 
 反例之外的正面对照 —— 同一批可靠性问题，用现成能力每项一行：
 

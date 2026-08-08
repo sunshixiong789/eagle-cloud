@@ -48,8 +48,14 @@ eagle:
       multiplier: 2.0
 ```
 
-⚠️ 此 starter 用 **Spring AMQP 原生 API**（`RabbitTemplate` / `RabbitAdmin` / `DirectMessageListenerContainer`），**不**使用
-`@RabbitListener` 注解——队列名是运行时由 `getTopic()` 推导的，编译期常量注解表达不了。
+⚠️ 此 starter **不**使用 `@RabbitListener` 注解——队列名是运行时由 `getTopic()` 推导的，编译期常量注解表达不了。
+改走框架为这个场景准备的扩展点：`AmqpListenerRegistrar` 实现 `RabbitListenerConfigurer`，
+把每个 listener 注册成 `SimpleRabbitListenerEndpoint`，容器由 Boot 的
+`SimpleRabbitListenerContainerFactoryConfigurer` 创建。
+
+⚠️ **不要改回手动 `new DirectMessageListenerContainer(...)`** —— 那会绕开 Boot 的装配路径，
+让 `spring.rabbitmq.listener.*` 整片配置静默失效（配了不生效、也不报错）。这是踩过的坑，
+`AmqpAutoConfigurationTest` 守着它。
 
 ## 核心 API
 
@@ -60,7 +66,8 @@ eagle:
 | `AbstractAmqpListener<T extends BaseEvent>` | 消费者基类，实现 `getTopic() / getEventClass() / handle(T event)`                        |
 | `AbstractDlqListener<T>`                    | 死信消费者，实现 `getOriginalTopic() / getOriginalConsumerGroup() / getEventClass() / handleDeadLetter(T, totalAttempts)` |
 | `ExchangeNaming`                            | 拓扑命名工具：`exchange()` / `queue()` / `deadLetterExchange()` / `deadLetterQueue()`   |
-| `AmqpListenerRegistrar`                     | `SmartInitializingSingleton`，启动期遍历所有 `AbstractAmqpListener` bean 声明拓扑 + 建监听容器     |
+| `AmqpListenerRegistrar`                     | `RabbitListenerConfigurer`，启动期遍历所有 `AbstractAmqpListener` bean 声明拓扑 + 注册 endpoint |
+| `EagleRepublishRecoverer`                   | 唯一的 `MessageRecoverer` bean，重试耗尽后投 DLX；DLX 与 routing key 按 SpEL 逐条消息求值       |
 | `AmqpErrorCode`                             | 错误码（16001-16003，沿用原 RocketMQ 号段）                                                |
 
 ## AMQP 拓扑（与 RocketMQ 语义的关键差异）
@@ -171,24 +178,47 @@ public class OrderCreatedDlqListener extends AbstractDlqListener<OrderCreatedMes
 
 ## 重试与 DLQ 语义
 
-RabbitMQ 没有 RocketMQ Broker 侧的递增退避重试，本 starter 用**手写指数退避**（非 Spring Retry 拦截器）：
+RabbitMQ 没有 RocketMQ Broker 侧的递增退避重试，改由消费线程内的退避重试实现。
+**这一整套都是框架的**：retry advice 由 Boot 的容器工厂按
+`spring.rabbitmq.listener.simple.retry.*` 构建，starter 一行重试代码都不写，
+只提供一个 `MessageRecoverer` bean 告诉框架「投到哪」。
 
-- `eagle.amqp.consumer.max-attempts`（默认 4）耗尽后投递到 DLX，`x-eagle-attempts` header 记录真实尝试次数
+- `retry.max-retries`（默认 3，即含首次共 4 次）耗尽后由 `EagleRepublishRecoverer` 投递到 DLX，`x-eagle-attempts` header 记录总尝试次数
 - `handleDeadLetter(event, totalAttempts)` 拿到的是真实次数，不再像 RocketMQ 时代恒为 0
-- 反序列化失败直接进 DLQ（不重试），DLQ 侧仍可查原始消息
+- 反序列化失败直接进 DLQ（不重试）：`AmqpMessageDispatcher` 抛 `AmqpRejectAndDontRequeueException`，报文有问题重试多少次都一样
+- DLQ listener 走**不挂 retry advice** 的独立容器工厂 —— 死信重试会在 DLQ 里打转
+
+### DLQ 保留策略走 policy，不写进队列声明
+
+DLQ 声明**不带任何 arguments**。保留策略（`x-message-ttl` / `x-max-length`）由 broker 侧 policy 承担，
+设置方式见 [docs/rabbitmq-dlq-policy.md](../../../docs/rabbitmq-dlq-policy.md)。
+
+原因：队列 arguments 创建后不可变，客户端每次启动都会重声明，broker 做全等比较，不一致就回
+`406 PRECONDITION_FAILED` 关掉 channel —— 在启动期就是**整个服务起不来**。写进声明等于让「调一次 TTL」
+变成「停服务、删光所有 DLQ、再启动」，且每个环境各做一遍。**不要往 DLQ 声明里加 arguments。**
 
 ## 配置项
 
-| key                                     | 类型       | 默认            | 说明                              |
-|------------------------------------------|----------|----------------|---------------------------------|
-| `eagle.amqp.exchange-prefix`              | String   | `""`           | exchange 名环境前缀                  |
-| `eagle.amqp.consumer-group`               | String   | `eagle_default`| 消费者默认分组，**必须被每个消费者覆盖**          |
-| `eagle.amqp.consumer.prefetch`            | int      | `32`           | `basic.qos` 预取数量                |
-| `eagle.amqp.consumer.retry-alert-threshold`| int     | `3`            | 重试告警阈值                         |
-| `eagle.amqp.consumer.max-attempts`        | int      | `4`            | 最大尝试次数（含首次），耗尽后进 DLQ           |
-| `eagle.amqp.consumer.initial-backoff`     | Duration | `1s`           | 首次重试退避时长                       |
-| `eagle.amqp.consumer.max-backoff`         | Duration | `30s`          | 退避时长上限                         |
-| `eagle.amqp.consumer.multiplier`          | double   | `2.0`          | 退避倍率                            |
+`eagle.amqp.*` **只管拓扑命名**，消费行为一律用 Spring Boot 的标准键 ——
+迁移前那套逐一重复的 `eagle.amqp.consumer.*` 已删除。
+
+| key                            | 类型     | 默认             | 说明                      |
+|--------------------------------|--------|----------------|-------------------------|
+| `eagle.amqp.exchange-prefix`   | String | `""`           | exchange 名环境前缀          |
+| `eagle.amqp.consumer-group`    | String | `eagle_default`| 消费者默认分组，**必须被每个消费者覆盖** |
+
+消费行为（下面这些默认值由 starter 的 `EagleAmqpDefaultsEnvironmentPostProcessor` 提供，
+优先级最低，yml / 环境变量 / Consul KV 配了都能盖掉）：
+
+| key                                                     | starter 默认 | 说明                          |
+|---------------------------------------------------------|------------|-----------------------------|
+| `spring.rabbitmq.listener.simple.prefetch`               | `32`       | `basic.qos` 预取数量            |
+| `spring.rabbitmq.listener.simple.retry.enabled`          | `true`     | **Boot 原生默认是 false**，不开重试会静默消失 |
+| `spring.rabbitmq.listener.simple.retry.max-retries`      | `3`        | 重试次数（**不含**首次），耗尽后进 DLQ     |
+| `spring.rabbitmq.listener.simple.retry.initial-interval` | `1s`       | 首次重试退避时长                    |
+| `spring.rabbitmq.listener.simple.retry.max-interval`     | `30s`      | 退避时长上限                      |
+| `spring.rabbitmq.listener.simple.retry.multiplier`       | `2.0`      | 退避倍率                        |
+| `spring.rabbitmq.listener.simple.default-requeue-rejected`| `false`    | 由 starter 设在工厂上，显式配置仍优先     |
 
 ## 常见错误
 
@@ -199,6 +229,7 @@ RabbitMQ 没有 RocketMQ Broker 侧的递增退避重试，本 starter 用**手�
 - ❌ DLQ 子类只覆盖 `getOriginalConsumerGroup()` → ✅ 还必须覆盖 **`getOriginalTopic()`**（新增的抽象方法）
 - ❌ 用 `MsgId` 做幂等 → ✅ 用 `BaseEvent.eventId`
 - ❌ 死信不告警 → ✅ `AbstractDlqListener.handleDeadLetter` 必须告警 + 持久化
+- ❌ 给 DLQ 声明加 `ttl()` / `maxLength()` 等 arguments → ✅ 队列 arguments 不可变，重声明不一致会 406 让**服务起不来**；保留策略走 broker policy
 - ❌ 消息体放敏感字段 → ✅ 仅传 ID
 - ❌ 配置写 `eagle.rocketmq.*` → ✅ 真实前缀是 `eagle.amqp.*`；broker 连接走 Spring Boot 原生 `spring.rabbitmq.*`
 

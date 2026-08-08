@@ -212,9 +212,13 @@ AMQP 的 `*` 只匹配恰好一个单词，照搬会静默收不到消息。
 ## 幂等
 
 幂等 key 用 `BaseEvent.eventId`（时间有序 UUID），**不用** broker 的 message id（重投递会变）。
-`eagle-amqp-starter` 自带 `IdempotencyChecker`（Redis 实现），配置前缀 `eagle.amqp.idempotency`。
 
 优先级：创建型 → 业务表唯一约束；状态机推进 → 条件 UPDATE + 二次 SELECT；累加型 → 业务事实表记 eventId；纯副作用 → Redis SETNX 守卫。
+
+**没有通用的 `IdempotencyChecker`**：`eagle-amqp-starter` 曾内置一个 Redis 实现，
+两个仓库使用数始终为 0，已随 2026-08 的重构删除 —— 它正好是上面优先级里最弱的一档，
+而每条消费链路真正需要的幂等手段都在更前面。纯副作用场景要 SETNX 守卫，
+直接用 `eagle-redis-starter`。
 
 **禁止**用通用 inbox 表替代业务幂等。
 

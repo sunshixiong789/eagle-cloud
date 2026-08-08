@@ -4,13 +4,13 @@ import com.eagle.amqp.exception.AmqpErrorCode;
 import com.eagle.amqp.properties.AmqpProperties;
 import com.eagle.amqp.support.ExchangeNaming;
 import com.eagle.common.event.BaseEvent;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.core.ExchangeBuilder;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -28,17 +28,23 @@ import java.util.concurrent.ConcurrentHashMap;
  * 的约定 —— msgId 在重投递时会变）。
  *
  * <p><b>序列化不走 {@code RabbitTemplate} 的 {@code MessageConverter}</b>，而是用注入的
- * {@link ObjectMapper} 直接序列化成 {@link Message}。原因：Boot 自动配置的 {@code RabbitTemplate}
- * 未挂 converter 时默认走 {@code SimpleMessageConverter}（Java 序列化，不是 JSON）；
- * 而 Spring AMQP 4.x 面向 Jackson 3 的 {@code JacksonJsonMessageConverter} 构造器要求
- * {@code tools.jackson.databind.json.JsonMapper}（{@code ObjectMapper} 的子类），
- * 与消费侧 {@code AmqpMessageDispatcher} 已经在用的通用 {@code ObjectMapper} bean 类型不对等。
- * 两端都用同一个注入的 {@code ObjectMapper} 直接读写字节，行为对称且不依赖隐式类型转换。
+ * {@link ObjectMapper} 直接序列化成 {@link Message}。
+ *
+ * <p>理由<b>不是</b>「装不上 converter」—— {@code JacksonJsonMessageConverter} 有无参构造器，
+ * 挂上去很容易。真正的原因是<b>类型头</b>：该 converter 默认把载荷的全限定类名写进
+ * {@code __TypeId__} header，消费侧据此决定反序列化目标类。而本项目的集成事件契约规定
+ * <b>生产方与每个消费方各自声明自己的类</b>（生产方 {@code XxxIntegrationEvent}、
+ * 消费方 {@code XxxMessage}，靠 JSON 字段名兼容，见 rules/02-architecture.md）——
+ * {@code __TypeId__} 会指向一个消费方 classpath 上<b>根本不存在</b>的类，直接反序列化失败。
+ * 要用 converter 就得再配 {@code TypePrecedence.INFERRED} 或自定义 {@code ClassMapper}，
+ * 比两端各一行 {@code writeValueAsBytes} / {@code readValue} 更绕且更易配错。
+ *
+ * <p>两端都用同一个注入的 {@code ObjectMapper} 直接读写字节，行为对称，
+ * 且与服务自身的 Jackson 定制（日期格式等）保持一致。
  *
  * @author eagle
  */
 @Slf4j
-@RequiredArgsConstructor
 public class RabbitDomainEventPublisher implements DomainEventPublisher {
 
     private final RabbitTemplate rabbitTemplate;
@@ -48,9 +54,23 @@ public class RabbitDomainEventPublisher implements DomainEventPublisher {
 
     /**
      * 进程内已声明过的 exchange，避免每次发送都跑一次 declare。
-     * 对应原实现的 {@code RocketMqTopicAdmin.ensureTopic} 去重逻辑。
      */
     private final Set<String> declaredExchanges = ConcurrentHashMap.newKeySet();
+
+    public RabbitDomainEventPublisher(RabbitTemplate rabbitTemplate, RabbitAdmin rabbitAdmin,
+                                      ConnectionFactory connectionFactory, AmqpProperties properties,
+                                      ObjectMapper objectMapper) {
+        this.rabbitTemplate = rabbitTemplate;
+        this.rabbitAdmin = rabbitAdmin;
+        this.properties = properties;
+        this.objectMapper = objectMapper;
+        // 连接重建 = broker 可能已重启并丢了元数据，缓存必须作废重新声明。
+        // RabbitAdmin 对自己管理的 Declarable bean 本来就会在 onCreate 时重声明，
+        // 这里是让本类这份「按需声明」的缓存跟上同一套语义 ——
+        // 少了这一步，broker 重建后本进程会一直认为「已声明过」，
+        // 之后每次 publish 都撞 404 NOT_FOUND，直到重启服务才恢复。
+        connectionFactory.addConnectionListener(connection -> declaredExchanges.clear());
+    }
 
     @Override
     public <T extends BaseEvent> void publish(String topic, T event) {

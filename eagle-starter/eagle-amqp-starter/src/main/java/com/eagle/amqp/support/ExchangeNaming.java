@@ -28,7 +28,12 @@ public final class ExchangeNaming {
      */
     public static final String MATCH_ALL_ROUTING_KEY = "#";
 
-    private static final String DLX_SUFFIX = ".dlx";
+    /**
+     * DLX 名后缀。公开是因为 {@code EagleRepublishRecoverer} 要把它拼进 SpEL 表达式
+     * （DLX 名在那里是逐条消息求值的，拿不到 {@link #deadLetterExchange(String)} 的返回值）。
+     */
+    public static final String DLX_SUFFIX = ".dlx";
+
     private static final String DLQ_SUFFIX = ".dlq";
 
     private ExchangeNaming() {

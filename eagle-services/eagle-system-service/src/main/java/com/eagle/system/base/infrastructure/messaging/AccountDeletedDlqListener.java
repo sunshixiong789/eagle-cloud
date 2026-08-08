@@ -15,7 +15,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.Map;
 
 /**
- * AccountDeleted DLQ 兜底 —— 重试耗尽（{@code eagle.amqp.consumer.max-attempts}）仍失败时进入此处。
+ * AccountDeleted DLQ 兜底 —— 重试耗尽（{@code spring.rabbitmq.listener.simple.retry.max-retries}）仍失败时进入此处。
  * <p>
  * 业务影响:auth-service 已删除 Account,但 base 域 User 未级联删除 — 残留孤儿数据,
  * 用户列表会显示已经销户的账号信息。

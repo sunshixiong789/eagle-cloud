@@ -134,8 +134,6 @@ class AmqpProxySafetyTest {
         assertThat(proxy.resolveExchangeName()).isEqualTo(PREFIX + TOPIC);
         assertThat(proxy.resolveQueueName()).isEqualTo(PREFIX + TOPIC + "." + GROUP);
         assertThat(proxy.resolveEventClass()).isEqualTo(SampleMessage.class);
-        assertThat(proxy.resolveRetryAlertThreshold())
-                .isEqualTo(props().getConsumer().getRetryAlertThreshold());
 
         SampleMessage event = new SampleMessage();
         proxy.dispatch(event);
