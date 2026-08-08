@@ -29,7 +29,7 @@ import org.springframework.amqp.core.Message;
 public abstract class AbstractDlqListener<T extends BaseEvent> extends AbstractAmqpListener<T> {
 
     /**
-     * 重试耗尽时由 {@code DeadLetterPublishingRecoverer} 写入的尝试次数 header。
+     * 重试耗尽时由 {@code EagleRepublishRecoverer} 写入的尝试次数 header。
      */
     public static final String ATTEMPTS_HEADER = "x-eagle-attempts";
 

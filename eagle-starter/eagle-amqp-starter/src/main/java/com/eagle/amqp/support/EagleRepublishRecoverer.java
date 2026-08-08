@@ -30,6 +30,11 @@ import java.util.Map;
  * recoverer 只在<b>重试耗尽</b>时被调用，所以此刻的总尝试次数恒等于
  * {@code spring.rabbitmq.listener.simple.retry.max-retries + 1}（+1 是首次投递）。
  *
+ * <p><b>这个恒等式依赖「重试策略不区分异常类型」</b>——当前 Boot 4 默认如此，dev 实测坏报文
+ * 与业务异常都跑满 4 次。若将来按 {@code AmqpMessageDispatcher} 的说明加上
+ * {@code exceptionPredicate} 让某类异常跳过重试，本类必须同步改成按异常类型返回真实次数，
+ * 否则 DLQ 日志里的 {@code attempts} 会虚报。
+ *
  * @author eagle
  */
 public class EagleRepublishRecoverer extends RepublishMessageRecoverer {

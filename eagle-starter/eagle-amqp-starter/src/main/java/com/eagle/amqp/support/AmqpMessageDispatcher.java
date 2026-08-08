@@ -14,13 +14,22 @@ import java.nio.charset.StandardCharsets;
 /**
  * 消息分发器：反序列化 → 交给业务 {@code handle()}。
  *
- * <p><b>重试与 DLQ 投递不在这里</b> —— 由容器上的 retry advice 完成，
- * 见 {@code AmqpListenerRegistrar#buildRetryInterceptor}。本类只做两件事：
+ * <p><b>重试与 DLQ 投递不在这里</b> —— 由容器上的 retry advice 完成。该 advice 由 Boot 的
+ * {@code SimpleRabbitListenerContainerFactoryConfigurer} 按 {@code spring.rabbitmq.listener.simple.retry.*}
+ * 装配（默认值见 {@code EagleAmqpDefaultsEnvironmentPostProcessor}），耗尽后交给
+ * {@code EagleRepublishRecoverer} 投 DLX。本类只做两件事：
  *
  * <ol>
- *   <li><b>反序列化</b>：失败时抛 {@link AmqpRejectAndDontRequeueException}，
- *       重试策略据此跳过重试，直接进 recoverer 投 DLQ 留证
- *       （报文本身有问题，重试多少次都一样）。</li>
+ *   <li><b>反序列化</b>：失败时抛 {@link AmqpRejectAndDontRequeueException}，最终由 recoverer
+ *       投 DLQ 留证（报文本身有问题，重试多少次都一样）。
+ *       <p><b>注意：抛这个异常当前并不能跳过重试。</b>Boot 4 的
+ *       {@code AbstractRabbitListenerContainerFactoryConfigurer} 用
+ *       {@code RetryPolicySettings} 建策略，默认<b>不区分异常类型</b>，坏报文照样退避重试满
+ *       {@code max-retries} 次（dev 实测：坏报文与业务异常端到端耗时同为 ~12s）。
+ *       容器把它包成 {@code ListenerExecutionFailedException} 后才交给重试策略，
+ *       所以按类 {@code exceptionExcludes} 也匹配不上，需要用
+ *       {@code RabbitListenerRetrySettingsCustomizer} + 穿透 cause 链的
+ *       {@code exceptionPredicate} 才能真正跳过。</p></li>
  *   <li><b>DLQ 分支</b>：死信交给 {@code AbstractDlqListener}，失败只记日志 ——
  *       死信再投递会在 DLQ 里打转。</li>
  * </ol>
@@ -72,7 +81,7 @@ public class AmqpMessageDispatcher {
         }
 
         // 业务异常直接上抛：重试与 DLQ 投递由容器的 retry advice 接管
-        // （AmqpListenerRegistrar#buildRetryInterceptor）
+        // （EagleAmqpAutoConfiguration#eagleAmqpListenerContainerFactory）
         listener.dispatch(event);
     }
 
