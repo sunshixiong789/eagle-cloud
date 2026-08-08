@@ -97,6 +97,16 @@ public class AmqpListenerRegistrar implements RabbitListenerConfigurer {
             // 而 policy 可以随时改、立即对存量队列生效，正是 RabbitMQ 为此提供的机制。
             listenQueue = ((AbstractDlqListener<?>) listener).resolveDlqName();
             Queue dlq = QueueBuilder.durable(listenQueue).build();
+            // **只对 DLQ** 放开声明异常：存量 DLQ 可能带着历史 arguments（如某个版本写进去的
+            // x-message-ttl），与这里的无参数声明不等价，broker 会回 406。
+            // 但对 DLQ 而言这不是错误 —— 队列就在那儿、能收能消费，参数差异由 policy 那条路
+            // 去收敛，没有任何理由为此让整个服务起不来（已经发生过两次）。
+            // RabbitAdmin 会打一条 WARN，拓扑漂移仍然可见。
+            //
+            // 注意范围：主 queue、exchange、binding 的声明**照旧 fail fast** ——
+            // 那些位置的不等价意味着真的拓扑写错了（前缀拼错、routing key 不匹配），
+            // 必须当场炸出来，静默跳过会变成消息静默丢失。
+            dlq.setIgnoreDeclarationExceptions(true);
             rabbitAdmin.declareQueue(dlq);
             rabbitAdmin.declareBinding(
                     BindingBuilder.bind(dlq).to(new TopicExchange(dlxName)).with(mainQueueName));
