@@ -97,8 +97,10 @@ public class RedisCacheConfig {
     /**
      * 专用于 Redis 序列化的 ObjectMapper。
      *
-     * <p>开启 {@code DefaultTyping.NON_FINAL}，在 JSON 中写入 {@code @class} 字段，
-     * 反序列化时可还原为原始类型而非 {@code LinkedHashMap}。
+     * <p>开启 {@code DefaultTyping.NON_FINAL_AND_RECORDS}，在 JSON 中写入 {@code @class} 字段，
+     * 反序列化时可还原为原始类型而非 {@code LinkedHashMap}。相比 {@code NON_FINAL}，
+     * 该模式也覆盖作为缓存根值的 record DTO；record 是 final 类，否则第一次回源正常、
+     * 第二次从 Redis 按 {@code Object} 反序列化时会因缺少类型信息失败。
      * 此 bean 与 Spring MVC 的全局 ObjectMapper 隔离，互不影响。
      */
     @Bean("redisObjectMapper")
@@ -109,7 +111,7 @@ public class RedisCacheConfig {
                         BasicPolymorphicTypeValidator.builder()
                                 .allowIfSubType(Object.class)
                                 .build(),
-                        DefaultTyping.NON_FINAL,
+                        DefaultTyping.NON_FINAL_AND_RECORDS,
                         JsonTypeInfo.As.PROPERTY)
                 .findAndAddModules()
                 .build();

@@ -147,6 +147,16 @@ class RedisJsonSerializerTest {
     }
 
     @Test
+    @DisplayName("record 根对象 round-trip 还原类型")
+    void recordRoundTrip() {
+        SampleRecord source = new SampleRecord("eagle", List.of("redis", "cache"));
+        Object back = roundTrip(source);
+
+        assertInstanceOf(SampleRecord.class, back);
+        assertEquals(source, back);
+    }
+
+    @Test
     @DisplayName("老数据兼容:fix 前裸 [] 反序列化为空 List")
     void legacyBareEmptyArray() {
         byte[] legacy = "[]".getBytes(StandardCharsets.UTF_8);
@@ -211,5 +221,8 @@ class RedisJsonSerializerTest {
         public int hashCode() {
             return java.util.Objects.hash(name, age);
         }
+    }
+
+    public record SampleRecord(String name, List<String> tags) {
     }
 }
