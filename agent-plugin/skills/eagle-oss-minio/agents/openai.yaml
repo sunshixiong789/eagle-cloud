@@ -1,3 +1,0 @@
-interface:
-  display_name: "Eagle Oss Minio"
-  short_description: "Use when implementing object storage (MinIO/local) in eagle-cloud projects — Sto"

@@ -1,3 +1,0 @@
-interface:
-  display_name: "Eagle Audit Log"
-  short_description: "Use when recording operation audit logs in eagle-cloud — @AuditLog annotation with SpEL action expressions, JpaAuditLogHandler persists to t_audit_log, async AFTER_COMMIT event dispatch"

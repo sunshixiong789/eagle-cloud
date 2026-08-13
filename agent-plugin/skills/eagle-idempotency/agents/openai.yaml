@@ -1,3 +1,0 @@
-interface:
-  display_name: "Eagle Idempotency"
-  short_description: "Use when implementing API idempotency in eagle-cloud projects — @Idempotent anno"
