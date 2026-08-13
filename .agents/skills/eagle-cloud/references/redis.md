@@ -17,7 +17,7 @@ description: Use when working with Redis in eagle-cloud projects — Spring cach
 
 - 单机本地缓存（直接 Caffeine）
 - 强一致性事务场景（DB + 唯一约束）
-- 持久化消息队列（用 RocketMQ）
+- 持久化消息队列（用 `eagle-amqp-starter`）
 
 ## 依赖与启用
 

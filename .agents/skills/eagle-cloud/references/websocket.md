@@ -14,7 +14,7 @@ description: Use when implementing WebSocket/SSE/offline messaging in eagle-clou
 ## 何时不要使用
 
 - 一次性推送（HTTP 轮询即可）
-- 跨服务异步消息（用 RocketMQ）
+- 跨服务异步消息（用 `eagle-amqp-starter`）
 
 ## 依赖与启用
 

@@ -15,7 +15,7 @@ description: Use when implementing distributed scheduled tasks in eagle-cloud pr
 ## 何时不要使用
 
 - 单机本地任务（用 `@Scheduled`）
-- 业务流程相关延迟（用 RocketMQ 延迟消息 / Redis 延迟队列）
+- 业务流程相关延迟（用 Redis 延迟队列；AMQP 延迟能力需先确认当前项目实现）
 
 ## 依赖与启用
 

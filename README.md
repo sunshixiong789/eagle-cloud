@@ -46,7 +46,7 @@
 | 安全            | Spring Security + OAuth2 Authorization Server | -                     |
 | 网关            | Spring Cloud Gateway + Sentinel               | -                     |
 | 注册中心          | Nacos                                         | v3                    |
-| 消息队列          | Apache RocketMQ                               | 2.3.5                 |
+| 消息队列          | RabbitMQ / Spring AMQP                        | 5.27.1                |
 | 分布式事务         | Seata                                         | 2.2.0                 |
 | 定时任务          | XXL-JOB                                       | 2.4.2                 |
 | 对象存储          | MinIO                                         | 8.5.17                |
@@ -69,7 +69,7 @@ eagle-cloud/
 │   ├── eagle-gateway-service/          # API 网关（路由、JWT 鉴权、限流、链路追踪）
 │   └── docker-compose.yml              # 开发环境容器编排
 │
-└── eagle-starter/                          # 可复用 Starter 库（共 27 个）
+└── eagle-starter/                          # 可复用 Starter 库（共 19 个）
     │
     │   # ── 基础能力 ──────────────────────────────────────────────────
     ├── eagle-common-starter/               # 核心基础设施（基类、异常体系、领域事件、i18n、压测流量标记）
@@ -82,30 +82,23 @@ eagle-cloud/
     ├── eagle-openapi-starter/              # Swagger / OpenAPI 文档集成
     │
     │   # ── 数据访问 ──────────────────────────────────────────────────
-    ├── eagle-dynamic-datasource-starter/   # 多数据源动态路由（主从切换 / 多从轮询 / @ReadOnly）
+    ├── eagle-data-r2dbc-starter/           # WebFlux 响应式 R2DBC 数据访问
     ├── eagle-sharding-starter/             # 分库分表（Apache ShardingSphere YAML 驱动）
-    ├── eagle-elasticsearch-starter/        # Elasticsearch（流式 DSL / 通用 Repository / 高亮 / 聚合）
     │
     │   # ── 消息与任务 ────────────────────────────────────────────────
-    ├── eagle-rocketmq-starter/             # RocketMQ v5 消息队列（事务消息 / DLQ / 消费骨架）
+    ├── eagle-amqp-starter/                 # RabbitMQ / Spring AMQP（领域事件 / 重试 / DLQ）
     ├── eagle-scheduler-starter/            # 分布式定时任务（XXL-JOB 2.4.2）
-    ├── eagle-notification-starter/         # 多渠道消息推送（阿里云 SMS / Spring Mail）
     │
     │   # ── 高并发 ────────────────────────────────────────────────────
     ├── eagle-idempotency-starter/          # 接口幂等（TOKEN / BUSINESS_KEY / RESULT_CACHE 三模式）
     ├── eagle-id-generator-starter/         # 分布式 ID（Snowflake / UUID / 号段 + 订单号语义生成）
-    ├── eagle-sentinel-starter/             # 流量治理（@RateLimit 注解 + 规则动态管理）
-    ├── eagle-seata-starter/                # 分布式事务（AT 自动集成 + TCC 模板 + 编程式事务）
     ├── eagle-resilience-starter/           # 容错弹性（Resilience4J 熔断器 / 重试 / 超时）
     ├── eagle-websocket-starter/            # 实时推送（STOMP WebSocket + SSE + 离线消息存储）
     │
     │   # ── 平台能力 ──────────────────────────────────────────────────
-    ├── eagle-tenant-starter/               # 多租户支持（COLUMN / DATABASE 隔离模式）
     ├── eagle-oss-minio-starter/            # 对象存储（MinIO，签名 URL / 分片上传）
-    ├── eagle-excel-starter/                # Excel 导入导出（@ExcelColumn，流式写入）
     ├── eagle-encrypt-starter/              # 字段级加密（AES-256，JPA @Convert 注解驱动）
-    ├── eagle-audit-log-starter/            # 操作审计日志（@AuditLog，AOP + 异步事件）
-    └── eagle-ai-starter/                   # AI 集成（Spring AI 2.x，ChatClient / EmbeddingClient）
+    └── eagle-audit-log-starter/            # 操作审计日志（@AuditLog，AOP + 异步事件）
 ```
 
 ### Spring Modulith 模块划分
@@ -120,7 +113,7 @@ eagle-cloud/
 | `com.eagle.auth.core`      | **eagle-auth-service** | `{}`（完全隔离）          |
 
 **auth 已从模块化单体拆为独立服务**：system ↔ auth 走 HTTP client（`infrastructure/remote/`）+
-RocketMQ 集成事件（topic `eagle_auth_events`），不再是 Named Interface。
+AMQP 集成事件（exchange `eagle_auth_events`），不再是 Named Interface。
 
 模块内协作通过 **领域事件** 异步解耦，跨域依赖通过 **六边形 Port 接口** 隔离。
 边界由 `ModulithArchitectureTest`（模块间）+ `LayeredArchitectureTest`（模块内 DDD 分层）双重静态验证。
@@ -645,43 +638,16 @@ throw OrderErrorCode.ORDER_DUPLICATE.toConflictException();             // → 4
 throw PaymentErrorCode.GATEWAY_ERROR.toServiceException(cause);        // → 500
 ```
 
-### 编码规范
+### AI 开发规范
 
-项目编码规范定义在 `.claude/rules/` 目录下，涵盖命名、架构分层、RESTful
-API、日志、安全、并发、测试、代码风格、异常处理、数据库、配置注入、模块治理、消息、多租户、数据权限、OpenAPI、i18n、容错弹性、事件驱动、Git
-工作流、性能、部署、审查清单、文件存储、定时任务、迁移、依赖管理等 30 项规范。
+项目内置 Claude Code 与 Codex 共用的开发规范，无需安装插件：
 
-## Agent Plugin（AI 辅助编码，支持 Claude Code + Codex CLI）
+- `AGENTS.md`：两种工具共用的项目规则入口。
+- `.agents/rules/`：按场景读取的规则真源；`.claude/rules/` 指向同一内容。
+- `.agents/skills/eagle-cloud/`：统一 Eagle Cloud Skill 真源，按任务加载对应 reference。
+- `.claude/skills/eagle-cloud`：Claude 的兼容入口，指向同一个 Skill。
 
-本仓库内置 **Eagle Cloud Agent Plugin**——同时面向 **Claude Code** 与 **Codex CLI** 的开发插件，包含 30 份开发规范（rules）、6
-个项目命令（commands）、29 个 starter / 编排 skill，帮助 AI 在编写 Eagle 平台代码时自动遵循架构约定。
-
-### Claude Code 安装
-
-在 Claude Code 会话中：
-
-```
-/plugin marketplace add https://github.com/sunshixiong789/eagle-cloud.git
-/plugin install eagle-cloud@eagle-cloud
-```
-
-### Codex CLI 安装
-
-在 shell 中：
-
-```bash
-codex plugin marketplace add https://github.com/sunshixiong789/eagle-cloud.git
-codex plugin install eagle-cloud@eagle-cloud
-```
-
-> 两者首条命令每台机器只需运行一次（marketplace 全局生效）；第二条命令每个项目运行一次。安装后重启会话即可加载。
-
-### 验证
-
-会话内输入 `/check-arch` 应被识别为本插件提供的命令；写 `SecurityUtils.getCurrentUserId()` 一类 Eagle starter API 时，AI
-会自动加载对应 skill（如 `eagle-resource-server`）。
-
-详细使用说明见 [`agent-plugin/README.md`](agent-plugin/README.md) 与 [`agent-plugin/USAGE.md`](agent-plugin/USAGE.md)。
+开始新的 Claude Code 或 Codex 会话后，工具会从项目目录发现相应规则和 Skill。
 
 ## License
 

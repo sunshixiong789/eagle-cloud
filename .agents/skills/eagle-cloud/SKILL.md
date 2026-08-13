@@ -5,7 +5,7 @@ description: Eagle Cloud 底座项目的统一开发知识入口。用于开发�
 
 # Eagle Cloud 开发知识
 
-这是原 `agent-plugin/skills` 的单一入口。先判断任务涉及哪些底座能力，只读取相应 reference；不要预加载全部文档。
+这是 Eagle Cloud 项目的单一 Skill 入口。先判断任务涉及哪些底座能力，只读取相应 reference；不要预加载全部文档。
 
 ## 使用流程
 

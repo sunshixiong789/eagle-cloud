@@ -18,7 +18,7 @@ description: Use when working with DDD base classes (BaseAggregateRoot, BaseEnti
 - 异步线程池：`@Bean("taskExecutor")`，启用 `@EnableAsync` + `@EnableScheduling`
 - i18n 静态工具：`MessageSourceUtil`
 - 业务指标：`BusinessMetrics`（Micrometer 封装）
-- 分布式锁抽象：`DistributedLock`（实现由 redis / rocketmq starter 提供）
+- 分布式锁抽象：`DistributedLock`（当前实现由 `eagle-redis-starter` 提供）
 - 通用 DTO：`Result<T>`、`ErrorResult`、`EagleUser`
 - 全链路压测上下文：`PressureTestContext` / `PressureTestFilter`
 - Request ID 透传：Servlet 环境加载 `RequestIdMdcFilter`，WebFlux 环境加载 `RequestIdWebFilter`

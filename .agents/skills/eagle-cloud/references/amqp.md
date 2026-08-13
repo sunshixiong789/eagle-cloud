@@ -191,7 +191,7 @@ RabbitMQ 没有 RocketMQ Broker 侧的递增退避重试，改由消费线程内
 ### DLQ 保留策略走 policy，不写进队列声明
 
 DLQ 声明**不带任何 arguments**。保留策略（`x-message-ttl` / `x-max-length`）由 broker 侧 policy 承担，
-设置方式见 [docs/rabbitmq-dlq-policy.md](../../../docs/rabbitmq-dlq-policy.md)。
+设置方式见项目根目录的 `docs/rabbitmq-dlq-policy.md`。
 
 原因：队列 arguments 创建后不可变，客户端每次启动都会重声明，broker 做全等比较，不一致就回
 `406 PRECONDITION_FAILED` 关掉 channel —— 在启动期就是**整个服务起不来**。写进声明等于让「调一次 TTL」

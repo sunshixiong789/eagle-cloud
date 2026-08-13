@@ -9,7 +9,7 @@ description: Use when configuring distributed tracing in eagle-cloud projects �
 
 - 微服务跨服务调用追踪
 - 日志关联（traceId 注入 MDC）
-- 与 Feign / RocketMQ starter 自动协作
+- 与项目 HTTP 客户端自动协作
 
 ## 何时不要使用
 
@@ -35,8 +35,7 @@ eagle.tracing:
 |---------------------------|------------------------------|
 | traceId / spanId 自动生成     | 入口请求自动起 trace；下游延续           |
 | MDC 注入                    | 日志 pattern `%X{traceId}` 可输出 |
-| Feign B3 透传               | 自动注入下游                       |
-| RocketMQ 透传               | 生产者注入、消费者还原                  |
+| HTTP B3 透传                | 自动注入下游                       |
 | HTTP Server 自动 instrument | Web / WebFlux 自动起 Span       |
 
 ## Logback 日志格式（推荐）
