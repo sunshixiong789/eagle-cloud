@@ -217,7 +217,7 @@ Phase 6  Finish        ← superpowers:finishing-a-development-branch
 
 **强制动作**:
 
-1. 打开 `agent-plugin/rules/07-checklist.md`,逐项对照(命名 / 架构 / API / 数据库 / 异常 / 日志 / 并发 / 测试 /
+1. 打开 `../../../.agents/rules/07-checklist.md`,逐项对照(命名 / 架构 / API / 数据库 / 异常 / 日志 / 并发 / 测试 /
    Starter / Feign / 安全 / 缓存 / 消息 / 多租户 / 配置 / 性能,共 16 大类)
 2. 发现的问题 → 修复(回到 Phase 3 局部迭代)或显式记入 PR 描述的"已知风险与跟进项"
 3. 可选:调用 `everything-claude-code:java-reviewer` agent 做第二轮自动评审
@@ -306,8 +306,8 @@ Phase 6: 收尾
 
 | 资源类型               | 路径                                          | 用途                   |
 |--------------------|---------------------------------------------|----------------------|
-| **规范文档(必读)**       | `agent-plugin/rules/00-06*.md`(7 份)              | Phase 2 写 plan 的约束输入 |
-| **PR 自检清单**        | `agent-plugin/rules/07-checklist.md` | Phase 5 评审依据         |
+| **规范文档(必读)**       | `../../../.agents/rules/00-06*.md`(7 份)              | Phase 2 写 plan 的约束输入 |
+| **PR 自检清单**        | `../../../.agents/rules/07-checklist.md` | Phase 5 评审依据         |
 | **Slash Commands** | `agent-plugin/commands/*.md`                | Phase 3 触发的脚手架命令     |
 | **Starter Skills** | `agent-plugin/skills/eagle-*/SKILL.md`      | Phase 3 写代码时按需加载     |
 

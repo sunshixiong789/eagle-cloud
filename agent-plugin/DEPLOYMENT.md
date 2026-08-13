@@ -26,7 +26,7 @@
    └─────────────┘    └─────────────────┘   └──────────────────┘
 ```
 
-## 选项 1：GitLab 部署（推荐，国内最常见）
+## 选项 1：GitLab 部署
 
 ### 1.1 推送 eagle-cloud 仓库
 
@@ -65,14 +65,13 @@ codex plugin install eagle-cloud@eagle-cloud
 安装完成后重启会话即可加载。默认跟踪 `main` 主干。如需冻结版本，可加 `--ref <sha-or-tag>`（Codex）或在 marketplace 配置里指定
 commit SHA（Claude）。
 
-## 选项 2：GitHub Enterprise / GitHub.com（私有仓库）
+## 选项 2：GitHub.com（默认分发方式）
 
 ### 2.1 推送
 
 ```bash
-gh repo create eagle/eagle-cloud --private
-git remote add origin git@github.com:eagle/eagle-cloud.git
-git push origin main
+git remote add github https://github.com/sunshixiong789/eagle-cloud.git
+git push github main
 ```
 
 ### 2.2 业务项目接入
@@ -80,14 +79,14 @@ git push origin main
 **Claude Code**：
 
 ```
-/plugin marketplace add https://github.com/eagle/eagle-cloud.git
+/plugin marketplace add https://github.com/sunshixiong789/eagle-cloud.git
 /plugin install eagle-cloud@eagle-cloud
 ```
 
 **Codex CLI**：
 
 ```bash
-codex plugin marketplace add eagle/eagle-cloud           # GitHub 短形式
+codex plugin marketplace add https://github.com/sunshixiong789/eagle-cloud.git
 codex plugin install eagle-cloud@eagle-cloud
 ```
 
@@ -105,7 +104,7 @@ codex plugin marketplace add https://gitea.your-domain.com/eagle/eagle-cloud.git
 codex plugin install eagle-cloud@eagle-cloud
 ```
 
-## 选项 4：Gitee（国内推荐，访问速度快）
+## 选项 4：Gitee（可选镜像）
 
 Gitee（码云）是国内最常用的 Git 服务之一，免费私有仓库 + 国内 CDN 访问稳定。
 
@@ -141,14 +140,14 @@ git push gitee main
 **Claude Code**：
 
 ```
-/plugin marketplace add https://gitee.com/sunjones/eagle-cloud.git
+/plugin marketplace add https://gitee.com/your-org/eagle-cloud.git
 /plugin install eagle-cloud@eagle-cloud
 ```
 
 **Codex CLI**：
 
 ```bash
-codex plugin marketplace add https://gitee.com/sunjones/eagle-cloud.git
+codex plugin marketplace add https://gitee.com/your-org/eagle-cloud.git
 codex plugin install eagle-cloud@eagle-cloud
 ```
 
@@ -333,7 +332,7 @@ jobs:
 
 ### Plugin 侧（eagle-cloud 维护者）
 
-1. 修改源：`agent-plugin/rules/*` 直接编辑，或修改 `eagle-starter/*/USAGE.md`
+1. 修改源：`../.agents/rules/*` 直接编辑，或修改 `eagle-starter/*/USAGE.md`
 2. 重新生成 skills：`bash ./agent-plugin/scripts/sync.sh`
 3. 更新 `agent-plugin/CHANGELOG.md` 添加新条目
 4. 同步改三处版本号：`.claude-plugin/marketplace.json` / `agent-plugin/.claude-plugin/plugin.json` /

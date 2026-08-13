@@ -1,7 +1,7 @@
 # AGENTS.md
 
 Codex 在本仓库工作时只把本文件当作入口索引。Claude Code 专用说明见 `CLAUDE.md`；Eagle 平台细则按需读取
-`agent-plugin/rules/` 和 `agent-plugin/skills/`，不要一次性展开全部规则。
+`.agents/rules/` 和 `agent-plugin/skills/`，不要一次性展开全部规则。
 
 ## 项目快照
 
@@ -49,7 +49,7 @@ gradle dependencyUpdates
 
 ## 按场景读取规则
 
-后端规则位于 `agent-plugin/rules/`（软链接为 `.claude/rules/`），共 8 份：
+后端规则位于 `.agents/rules/`（软链接为 `.claude/rules/`），共 8 份：
 
 | 场景 | 规则 |
 | --- | --- |

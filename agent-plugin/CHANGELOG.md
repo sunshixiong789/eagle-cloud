@@ -11,7 +11,7 @@
 用于「已认证但无权操作该资源」的**业务判定**（访问他人订单 / 消息 / 收款账号），
 与 Spring Security 声明式拒绝的 `AccessDeniedException` 并列映射到 403，区别是本异常携带业务 `errorCode`。
 在此之前这类场景只能抛 `DomainException`，对外呈现为 400，前端无法按状态码区分越权。
-规范见 `rules/03-api-error.md`。
+规范见 `../.agents/rules/03-api-error.md`。
 
 ### Fixed — 状态码语义：多类异常被兜底吞成 500
 
@@ -71,8 +71,8 @@ ALTER TABLE sys_file DROP COLUMN tenant_id;
 
 - 9 个 starter 移出构建（`tenant` / `rocketmq`→`amqp` / `dynamic-datasource` / `elasticsearch` /
   `excel` / `notification` / `seata` / `sentinel` / `ai`），对应 8 个 skill 目录已删除
-- `rules/` 全量同步：多租户、分布式事务、限流、注册中心（Nacos→Consul）、错误码号段
-- 新增 `rules/08-quality.md`（内聚 / 耦合 / 可维护性判据）
+- `../.agents/rules/` 全量同步：多租户、分布式事务、限流、注册中心（Nacos→Consul）、错误码号段
+- 新增 `../.agents/rules/08-quality.md`（内聚 / 耦合 / 可维护性判据）
 - `interfaces/dto/` 全量 record 化（45 个 `@Data` class → 0）
 - `check-java-conventions.sh` 新增拦截：DTO 用 `@Data`、`eagle.xxx.enabled` 总开关、引用已移除能力
 - `verify-rules.sh` 修复配置键校验假阳性（仅比 prefix 会让 `eagle.{prefix}.*` 全部误通过）

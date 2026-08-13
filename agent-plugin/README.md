@@ -17,7 +17,7 @@
 ### Claude Code
 
 ```
-/plugin marketplace add https://gitee.com/sunjones/eagle-cloud.git
+/plugin marketplace add https://github.com/sunshixiong789/eagle-cloud.git
 /plugin install eagle-cloud@eagle-cloud
 ```
 
@@ -35,15 +35,15 @@
 ### Codex CLI
 
 ```bash
-codex plugin marketplace add https://gitee.com/sunjones/eagle-cloud.git
+codex plugin marketplace add https://github.com/sunshixiong789/eagle-cloud.git
 codex plugin install eagle-cloud@eagle-cloud
 ```
 
 或固定到具体 ref / tag：
 
 ```bash
-codex plugin marketplace add https://gitee.com/sunjones/eagle-cloud.git --ref main
-codex plugin marketplace add sunjones/eagle-cloud@v1.1.0          # GitHub 短形式
+codex plugin marketplace add https://github.com/sunshixiong789/eagle-cloud.git --ref main
+codex plugin marketplace add sunshixiong789/eagle-cloud@v1.1.0   # GitHub 短形式
 ```
 
 本地调试：
@@ -74,7 +74,7 @@ codex plugin install eagle-cloud@eagle-cloud
 
 ```bash
 cd your-business-project
-git submodule add https://gitee.com/sunjones/eagle-cloud.git .eagle-cloud
+git submodule add https://github.com/sunshixiong789/eagle-cloud.git .eagle-cloud
 
 # Claude
 ln -s ../.eagle-cloud/agent-plugin/rules .claude/rules-eagle
@@ -176,7 +176,7 @@ tag。
 
 ## 反馈
 
-发现 USAGE/规则错漏 → 在 `eagle-cloud` 仓库提 PR 修改源（`agent-plugin/rules/` 或 `eagle-starter/{name}/USAGE.md`），CI 跑
+发现 USAGE/规则错漏 → 在 `eagle-cloud` 仓库提 PR 修改源（`../.agents/rules/` 或 `eagle-starter/{name}/USAGE.md`），CI 跑
 `sync.sh` 后合并即可。
 
 ## 许可

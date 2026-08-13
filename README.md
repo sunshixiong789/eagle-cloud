@@ -661,7 +661,7 @@ API、日志、安全、并发、测试、代码风格、异常处理、数据�
 在 Claude Code 会话中：
 
 ```
-/plugin marketplace add https://gitee.com/sunjones/eagle-cloud.git
+/plugin marketplace add https://github.com/sunshixiong789/eagle-cloud.git
 /plugin install eagle-cloud@eagle-cloud
 ```
 
@@ -670,7 +670,7 @@ API、日志、安全、并发、测试、代码风格、异常处理、数据�
 在 shell 中：
 
 ```bash
-codex plugin marketplace add https://gitee.com/sunjones/eagle-cloud.git
+codex plugin marketplace add https://github.com/sunshixiong789/eagle-cloud.git
 codex plugin install eagle-cloud@eagle-cloud
 ```
 

@@ -29,21 +29,21 @@
 
 ## 开发规范（按场景查阅）
 
-后端项目查 `rules/`；前端项目查 `rules-frontend/`。
+后端项目查 `../.agents/rules/`；前端项目查 `rules-frontend/`。
 
-### 后端：`rules/`（Spring Boot 4 + DDD + Modulith）
+### 后端：`../.agents/rules/`（Spring Boot 4 + DDD + Modulith）
 
 | 文件                          | 适用场景                                                                 |
 |-----------------------------|----------------------------------------------------------------------|
-| `rules/00-core.md`          | **必看**：中文回答、禁 `@Value`、Lombok 分角色规则、DDD 命名、测试范围、依赖与 Git              |
-| `rules/01-java25.md`        | **必看**：record / sealed / 模式匹配 / Gatherers / 虚拟线程 / ScopedValue    |
-| `rules/02-architecture.md`  | DDD 分层、Port/Adapter、Modulith 边界、领域事件与集成事件契约、Saga                     |
-| `rules/03-api-error.md`     | RESTful、`@PreAuthorize` 用法、异常体系、ErrorCode 号段、i18n、OpenAPI             |
-| `rules/04-data.md`          | JPA 实体、禁物理外键、索引唯一性、事务与并发、线程池、Flyway 迁移                               |
-| `rules/05-security.md`      | OAuth2/JWT 取当前用户、脱敏、多租户与数据权限、审计日志、日志规范                               |
-| `rules/06-boot4.md`   | **必看**：Jackson 3 分包、`@AutoConfiguration`、`RestClient`、Security 7 DSL |
-| `rules/07-checklist.md`     | **必看**：高频陷阱速查（Eagle 特有 API）+ 存量违例台账 + PR 前自检清单                      |
-| `rules/08-quality.md`       | **必看**：规模红线、贫血模型、**优先用现成能力（不重复造轮子）**、抽象最小化、复用归属、各层厚度、AI 特有坏味道      |
+| `../.agents/rules/00-core.md`          | **必看**：中文回答、禁 `@Value`、Lombok 分角色规则、DDD 命名、测试范围、依赖与 Git              |
+| `../.agents/rules/01-java25.md`        | **必看**：record / sealed / 模式匹配 / Gatherers / 虚拟线程 / ScopedValue    |
+| `../.agents/rules/02-architecture.md`  | DDD 分层、Port/Adapter、Modulith 边界、领域事件与集成事件契约、Saga                     |
+| `../.agents/rules/03-api-error.md`     | RESTful、`@PreAuthorize` 用法、异常体系、ErrorCode 号段、i18n、OpenAPI             |
+| `../.agents/rules/04-data.md`          | JPA 实体、禁物理外键、索引唯一性、事务与并发、线程池、Flyway 迁移                               |
+| `../.agents/rules/05-security.md`      | OAuth2/JWT 取当前用户、脱敏、多租户与数据权限、审计日志、日志规范                               |
+| `../.agents/rules/06-boot4.md`   | **必看**：Jackson 3 分包、`@AutoConfiguration`、`RestClient`、Security 7 DSL |
+| `../.agents/rules/07-checklist.md`     | **必看**：高频陷阱速查（Eagle 特有 API）+ 存量违例台账 + PR 前自检清单                      |
+| `../.agents/rules/08-quality.md`       | **必看**：规模红线、贫血模型、**优先用现成能力（不重复造轮子）**、抽象最小化、复用归属、各层厚度、AI 特有坏味道      |
 
 缓存、消息队列、分布式事务、定时任务、对象存储、韧性等主题**不设常驻规则文件**，规范随对应 starter skill
 （`eagle-redis` / `eagle-amqp` / `eagle-scheduler` / `eagle-oss-minio` / `eagle-resilience`）按需自动加载。
@@ -99,7 +99,7 @@
 `tenant`（多租户）、`rocketmq`（→ `amqp`）、`dynamic-datasource`（读写分离）、`elasticsearch`、
 `excel`、`notification`（短信/邮件）、`seata`（分布式事务）、`sentinel`（限流熔断 → `resilience`）、`ai`。
 
-对应能力的替代方案见 `rules/07-checklist.md` 陷阱 5 / 11 / 23 与 `rules/05-security.md`。
+对应能力的替代方案见 `../.agents/rules/07-checklist.md` 陷阱 5 / 11 / 23 与 `../.agents/rules/05-security.md`。
 
 ## 项目级 Commands
 
@@ -121,11 +121,11 @@
 | 阶段 | 名称         | 主干调用                                         | agent-plugin 注入                                                              |
 |----|------------|----------------------------------------------|------------------------------------------------------------------------------|
 | 1  | Brainstorm | `superpowers:brainstorming`                  | (无,聚焦需求澄清)                                                                   |
-| 2  | Plan       | `superpowers:writing-plans`                  | ★ 必读相关 `rules/*` + 在 plan 中预定要触发的 commands(`/new-module` 等)                  |
+| 2  | Plan       | `superpowers:writing-plans`                  | ★ 必读相关 `../.agents/rules/*` + 在 plan 中预定要触发的 commands(`/new-module` 等)                  |
 | 3  | TDD        | `superpowers:test-driven-development`        | ★ 加载相关 starter skills(eagle-common / eagle-amqp 等) + 触发 plan 中的 commands |
 | 4  | Verify     | `superpowers:verification-before-completion` | ★ 强制 `/check-arch`                                                           |
-| 5  | Review     | `superpowers:requesting-code-review`         | ★ 对照 `rules/07-checklist.md`(高频陷阱 + 自检清单)                                 |
-| 6  | Finish     | `superpowers:finishing-a-development-branch` | 按 `rules/00-core.md` 整理 commit + PR 描述                                        |
+| 5  | Review     | `superpowers:requesting-code-review`         | ★ 对照 `../.agents/rules/07-checklist.md`(高频陷阱 + 自检清单)                                 |
+| 6  | Finish     | `superpowers:finishing-a-development-branch` | 按 `../.agents/rules/00-core.md` 整理 commit + PR 描述                                        |
 
 **设计哲学**:Superpowers 提供工程纪律(brainstorm → plan → TDD → verify → review → finish),
 本 plugin 提供 Eagle 平台的"约束"(rules)和"工具箱"(commands + per-starter skills),后者在主流程的关键节点被嵌入式调用。
@@ -136,12 +136,12 @@
 
 ## 重要约定（高频陷阱）
 
-完整的 22 条高频陷阱速查表见 **`rules/07-checklist.md`**（单一维护点，勿在此处重复）。
+完整的 22 条高频陷阱速查表见 **`../.agents/rules/07-checklist.md`**（单一维护点，勿在此处重复）。
 写代码前务必扫一遍——都是 Eagle 特有 API 与命名，凭直觉写必然出错，例如：
 
 - 审计字段是 `createBy / createTime`，**不是** `createdBy / createdAt`
 - `CacheProtectionUtil.getWithMutex(...)` 是 **4 参数**，最后一个是 `Class<T>`
 - `DistributedLock.tryLock(...)` 收 **`long` 秒**，不是 `Duration`
-- Jackson 核心类在 `tools.jackson.*`，注解仍在 `com.fasterxml.jackson.annotation.*`（详见 `rules/06-boot4.md`）
+- Jackson 核心类在 `tools.jackson.*`，注解仍在 `com.fasterxml.jackson.annotation.*`（详见 `../.agents/rules/06-boot4.md`）
 - 自定义 `SecurityFilterChain` 必须显式接 `EagleJwtAuthenticationConverter`，否则 `hasRole` 静默全废
 - **不存在** `eagle.xxx.enabled` 总开关，starter 引入即生效

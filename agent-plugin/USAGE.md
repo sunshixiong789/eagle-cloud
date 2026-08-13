@@ -26,14 +26,14 @@
 **Claude Code**（会话内）：
 
 ```
-/plugin marketplace add https://gitee.com/sunjones/eagle-cloud.git
+/plugin marketplace add https://github.com/sunshixiong789/eagle-cloud.git
 /plugin install eagle-cloud@eagle-cloud
 ```
 
 **Codex CLI**（shell）：
 
 ```bash
-codex plugin marketplace add https://gitee.com/sunjones/eagle-cloud.git
+codex plugin marketplace add https://github.com/sunshixiong789/eagle-cloud.git
 codex plugin install eagle-cloud@eagle-cloud
 ```
 
@@ -253,9 +253,9 @@ eagle-feature-flow 激活(本 plugin) ← 仅手动触发,不识别普通需求�
 
 模型按 6 阶段走。Phase 2 会读:
 
-- `rules/02-architecture.md`(发票算独立聚合根还是订单子实体?)
-- `rules/03-api-error.md`(URL 设计)
-- `rules/05-security.md`(开票涉及敏感信息脱敏)
+- `../.agents/rules/02-architecture.md`(发票算独立聚合根还是订单子实体?)
+- `../.agents/rules/03-api-error.md`(URL 设计)
+- `../.agents/rules/05-security.md`(开票涉及敏感信息脱敏)
 
 Phase 3 会触发:`/new-aggregate order Invoice` 或 `/new-module invoice`(取决于 Phase 2 决策)。
 
@@ -271,7 +271,7 @@ Phase 3 会触发:`/new-aggregate order Invoice` 或 `/new-module invoice`(取�
 
 Phase 2 plan 重点:
 
-- 读 `rules/02-architecture.md` 的 Port/Adapter 章节
+- 读 `../.agents/rules/02-architecture.md` 的 Port/Adapter 章节
 - 决定 Port 接口放在 `payment::port`,加 `@NamedInterface`
 
 Phase 3 跳过 commands(纯重构),直接 TDD:先确保测试覆盖现有行为 → 重构期间测试保持绿。
@@ -297,7 +297,7 @@ L1 模式即可:模型读 CLAUDE.md → 知道 Eagle 用乐观锁(`@Version`)→
 > 把 OrderController 的日志级别从 info 改成 debug
 ```
 
-直接改即可。模型最多读 `rules/05-security.md` 校对一下。
+直接改即可。模型最多读 `../.agents/rules/05-security.md` 校对一下。
 
 ---
 
@@ -469,7 +469,7 @@ Plugin 团队遵循向后兼容原则，breaking change 会提前在 `CHANGELOG.
 # 应能看到 eagle-cloud
 
 # 2. 如未安装
-/plugin marketplace add https://gitee.com/sunjones/eagle-cloud.git
+/plugin marketplace add https://github.com/sunshixiong789/eagle-cloud.git
 /plugin install eagle-cloud@eagle-cloud
 
 # 3. 重启 Claude Code 会话
@@ -483,7 +483,7 @@ codex plugin list
 # 或会话内 /plugins 浏览
 
 # 2. 如未安装
-codex plugin marketplace add https://gitee.com/sunjones/eagle-cloud.git
+codex plugin marketplace add https://github.com/sunshixiong789/eagle-cloud.git
 codex plugin install eagle-cloud@eagle-cloud
 
 # 3. 重启 Codex CLI
@@ -530,8 +530,8 @@ codex plugin install eagle-cloud@eagle-cloud
 
 | 工具          | 业务项目优先                         | plugin 注入                                        |
 |-------------|--------------------------------|--------------------------------------------------|
-| Claude Code | `CLAUDE.md` + `.claude/rules/` | `agent-plugin/CLAUDE.md` + `agent-plugin/rules/` |
-| Codex CLI   | `AGENTS.md` + `.codex/rules/`  | `agent-plugin/AGENTS.md` + `agent-plugin/rules/` |
+| Claude Code | `CLAUDE.md` + `.claude/rules/` | `agent-plugin/CLAUDE.md` + `../.agents/rules/` |
+| Codex CLI   | `AGENTS.md` + `.codex/rules/`  | `agent-plugin/AGENTS.md` + `../.agents/rules/` |
 
 如果发现规则打架:
 
@@ -559,4 +559,4 @@ codex plugin install eagle-cloud@eagle-cloud
 >
 > 想做新功能 → "我要做 X" → flow 自动启动 → 6 阶段跑完 → PR ready。
 >
-> 不想被流程绑架 → 用 L1 / L2,但 PR 前手动 `/check-arch`,别忘对照 `rules/07-checklist.md`。
+> 不想被流程绑架 → 用 L1 / L2,但 PR 前手动 `/check-arch`,别忘对照 `../.agents/rules/07-checklist.md`。

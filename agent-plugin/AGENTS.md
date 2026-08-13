@@ -5,7 +5,7 @@
 
 ## 插件能力
 
-- `rules/`：按场景读取，不要一次性展开全部规则。
+- `../.agents/rules/`：按场景读取，不要一次性展开全部规则。
 - `skills/`：涉及具体 starter 时读取对应 `SKILL.md`，例如 Redis、AMQP、JPA、Tenant、Resource Server、OpenAPI、MinIO。
 - `commands/`：可参考 `/check-arch`、`/new-module`、`/new-aggregate`、`/new-starter`、`/add-error-code` 的脚手架规范。
 
@@ -22,15 +22,15 @@
 
 | 场景 | 规则 |
 | --- | --- |
-| 命名 / Java 风格 / Lombok / 测试 / 依赖 | `rules/00-core.md` |
-| Java 25 语言基线（record / sealed / 模式匹配 / 虚拟线程） | `rules/01-java25.md` |
-| DDD 分层 / Modulith / 领域事件 / 集成事件 | `rules/02-architecture.md` |
-| REST / OpenAPI / 异常 / 错误码 / i18n | `rules/03-api-error.md` |
-| JPA / 索引 / 事务 / 并发 / Flyway | `rules/04-data.md` |
-| 安全 / 租户 / 数据权限 / 日志 | `rules/05-security.md` |
-| Spring Boot 4 / Jackson 3 / starter / HTTP 客户端 | `rules/06-boot4.md` |
-| 高频陷阱 / 存量违例台账 / PR 自检 | `rules/07-checklist.md` |
-| 内聚与耦合 / 规模红线 / 抽象与复用决策 / 各层厚度 | `rules/08-quality.md` |
+| 命名 / Java 风格 / Lombok / 测试 / 依赖 | `../.agents/rules/00-core.md` |
+| Java 25 语言基线（record / sealed / 模式匹配 / 虚拟线程） | `../.agents/rules/01-java25.md` |
+| DDD 分层 / Modulith / 领域事件 / 集成事件 | `../.agents/rules/02-architecture.md` |
+| REST / OpenAPI / 异常 / 错误码 / i18n | `../.agents/rules/03-api-error.md` |
+| JPA / 索引 / 事务 / 并发 / Flyway | `../.agents/rules/04-data.md` |
+| 安全 / 租户 / 数据权限 / 日志 | `../.agents/rules/05-security.md` |
+| Spring Boot 4 / Jackson 3 / starter / HTTP 客户端 | `../.agents/rules/06-boot4.md` |
+| 高频陷阱 / 存量违例台账 / PR 自检 | `../.agents/rules/07-checklist.md` |
+| 内聚与耦合 / 规模红线 / 抽象与复用决策 / 各层厚度 | `../.agents/rules/08-quality.md` |
 | 缓存 / 消息 / 调度 / 存储 / 韧性 | 对应 starter skill（`eagle-redis` / `eagle-amqp` / `eagle-scheduler` / `eagle-oss-minio` / `eagle-resilience`） |
 
 只保留和当前任务相关的规则上下文。通用编程常识由模型默认能力和现有代码风格处理；Eagle 专有 API、starter 用法、
