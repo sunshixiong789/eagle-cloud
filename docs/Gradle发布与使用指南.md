@@ -15,7 +15,7 @@
 ### 版本管理
 
 - 全部模块 groupId 统一：`com.eagle`
-- 当前版本：`1.0.0-SNAPSHOT`（在根 `build.gradle` 的 `allprojects` 块统一定义）
+- 当前版本：`1.9.0-SNAPSHOT`（在根 `build.gradle` 的 `allprojects` 块统一定义）
 - SNAPSHOT 版本走 snapshot 仓库，正式版走 release 仓库（自动判别）
 
 ### 仓库配置位置
@@ -47,9 +47,9 @@ gradle publishToMavenLocal
 默认在 `~/.m2/repository/com/eagle/`，若 Maven 配置了自定义本地仓库（如 `~/repository/`），产物会落到该目录。每个模块包含：
 
 ```
-com/eagle/eagle-bom/1.0.0-SNAPSHOT/
-├── eagle-bom-1.0.0-SNAPSHOT.pom        # Maven POM
-└── eagle-bom-1.0.0-SNAPSHOT.module     # Gradle Module Metadata
+com/eagle/eagle-bom/1.9.0-SNAPSHOT/
+├── eagle-bom-1.9.0-SNAPSHOT.pom        # Maven POM
+└── eagle-bom-1.9.0-SNAPSHOT.module     # Gradle Module Metadata
 ```
 
 ### 消费方启用
@@ -132,7 +132,7 @@ gradle publish
 
 | 项目 version       | 实际推送仓库             |
 |------------------|--------------------|
-| `1.0.0-SNAPSHOT` | `nexusSnapshotUrl` |
+| `1.9.0-SNAPSHOT` | `nexusSnapshotUrl` |
 | `1.0.0`          | `nexusReleaseUrl`  |
 
 要切换正式版发布，只需修改根 `build.gradle` 的 `version`，无需改其他地方。
@@ -302,7 +302,7 @@ repositories {
 
 dependencies {
     // 关键：先引入 BOM，后续依赖无需写版本
-    implementation platform('com.eagle:eagle-bom:1.0.0-SNAPSHOT')
+    implementation platform('com.eagle:eagle-bom:1.9.0-SNAPSHOT')
 
     // Eagle Starter 按需引入（无版本号）
     implementation 'com.eagle:eagle-redis-starter'
@@ -322,14 +322,14 @@ dependencies {
 
 ```bash
 gradle dependencies --configuration compileClasspath
-# 应能看到 com.eagle:eagle-bom:1.0.0-SNAPSHOT 被解析，所有传递依赖版本由 BOM 决定
+# 应能看到 com.eagle:eagle-bom:1.9.0-SNAPSHOT 被解析，所有传递依赖版本由 BOM 决定
 ```
 
 ### 场景 2：仅使用 BOM 管理版本，不引入 Eagle Starter
 
 ```groovy
 dependencies {
-    implementation platform('com.eagle:eagle-bom:1.0.0-SNAPSHOT')
+    implementation platform('com.eagle:eagle-bom:1.9.0-SNAPSHOT')
 
     // 享受 Eagle BOM 锁定的版本，但不依赖 Eagle 自身代码
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -415,7 +415,7 @@ configurations.all {
 
 发布的是同一个 release 版本两次。Release 仓库不允许覆盖。**升一个版本号或改用 SNAPSHOT**。
 
-### Q5：消费方报 `Could not resolve com.eagle:eagle-bom:1.0.0-SNAPSHOT`
+### Q5：消费方报 `Could not resolve com.eagle:eagle-bom:1.9.0-SNAPSHOT`
 
 依次检查：
 

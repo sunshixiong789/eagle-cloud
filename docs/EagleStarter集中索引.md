@@ -1,36 +1,51 @@
 # Eagle Starter 集中索引
 
-> 本文档是所有 starter 的集中目录。每个 starter 详细使用方法见各自 `USAGE.md`。
+> 本文档是所有 **仍在构建中** 的 starter 目录。每个 starter 的详细用法见各自 `USAGE.md` 或 `README.md`。
 >
-> 业务项目接入基础架子时：
-> 1. 引 `eagle-bom`（管理版本）
-> 2. 按场景挑选下表 starter 引入
-> 3. 详细 API、配置、示例查阅对应 starter 的 `USAGE.md`
+> 业务项目接入：
+> 1. 引 `eagle-bom`（管理版本，当前 `1.9.0-SNAPSHOT`）
+> 2. 按下表按场景挑选 starter
+> 3. 查阅对应 `USAGE.md` / `README.md`
+
+仓库里若还看得到 `eagle-tenant-starter`、`eagle-rocketmq-starter` 等空目录，那是历史残留，**不在 `settings.gradle`，不要 import**。
 
 ## 按场景速查
 
-| 场景                   | Starter                                                                                        | 关键能力                                                 |
-|----------------------|------------------------------------------------------------------------------------------------|------------------------------------------------------|
-| **核心基础（必引）**         | [eagle-common-starter](../eagle-starter/eagle-common-starter/USAGE.md)                         | 基类、异常、领域事件、分布式锁接口、i18n                               |
-| **数据访问（JPA）**        | [eagle-data-jpa-starter](../eagle-starter/eagle-data-jpa-starter/USAGE.md)                     | JPA 配置、审计、多数据库                                       |
-| **多数据源 / 读写分离**      | [eagle-dynamic-datasource-starter](../eagle-starter/eagle-dynamic-datasource-starter/USAGE.md) | `@ReadOnly`、动态路由                                     |
-| **Elasticsearch 检索** | [eagle-elasticsearch-starter](../eagle-starter/eagle-elasticsearch-starter/USAGE.md)           | 文档基类、查询构造器、分页高亮                                      |
-| **缓存 / 锁 / 限流**      | [eagle-redis-starter](../eagle-starter/eagle-redis-starter/USAGE.md)                           | Redisson + Caffeine、击穿/穿透防护、布隆过滤器                    |
-| **消息队列**             | [eagle-rocketmq-starter](../eagle-starter/eagle-rocketmq-starter/USAGE.md)                     | 事件发布、事务消息、死信、分布式锁                                    |
-| **分布式 ID**           | [eagle-id-generator-starter](../eagle-starter/eagle-id-generator-starter/USAGE.md)             | 雪花 / 号段 / TSID / 业务单号                                |
-| **接口幂等**             | [eagle-idempotency-starter](../eagle-starter/eagle-idempotency-starter/USAGE.md)               | `@Idempotent`、Token 模式、Key 模式                        |
-| **多租户**              | [eagle-tenant-starter](../eagle-starter/eagle-tenant-starter/USAGE.md)                         | 租户上下文、`@TenantFilter`、数据源路由                          |
-| **OAuth2 资源服务器**     | [eagle-resource-server-starter](../eagle-starter/eagle-resource-server-starter/USAGE.md)       | JWT 鉴权、`SecurityUtils`、`@PreAuthorize`               |
-| **服务间 RPC（同步）**    | [eagle-restclient-starter](../eagle-starter/eagle-restclient-starter/USAGE.md)                 | 同步 RestClient + `@HttpExchange`、Token / 租户 / XID 自动透传、错误转换 |
-| **服务间 RPC（反应式）**  | [eagle-webclient-starter](../eagle-starter/eagle-webclient-starter/USAGE.md)                   | 反应式 WebClient + `@HttpExchange`、同套透传 + 统一错误处理（WebFlux 用）   |
-| **链路追踪**             | [eagle-tracing-starter](../eagle-starter/eagle-tracing-starter/USAGE.md)                       | Brave / B3 / Zipkin、MDC 注入                           |
-| **OpenAPI 文档**       | [eagle-openapi-starter](../eagle-starter/eagle-openapi-starter/USAGE.md)                       | SpringDoc 3.0、分组、JWT Security Scheme                 |
-| **对象存储**             | [eagle-oss-minio-starter](../eagle-starter/eagle-oss-minio-starter/USAGE.md)                   | MinIO + 本地降级、签名 URL、上传校验                             |
-| **消息通知**             | [eagle-notification-starter](../eagle-starter/eagle-notification-starter/USAGE.md)             | 短信 + 邮件、模板、多渠道                                       |
-| **定时任务**             | [eagle-scheduler-starter](../eagle-starter/eagle-scheduler-starter/USAGE.md)                   | XXL-JOB、分片、调度中心                                      |
-| **分布式事务**            | [eagle-seata-starter](../eagle-starter/eagle-seata-starter/USAGE.md)                           | Seata AT / TCC、XID 透传                                |
-| **限流熔断**             | [eagle-sentinel-starter](../eagle-starter/eagle-sentinel-starter/USAGE.md)                     | `@RateLimit`、Sentinel 控制台                            |
-| **WebSocket / SSE**  | [eagle-websocket-starter](../eagle-starter/eagle-websocket-starter/USAGE.md)                   | STOMP、离线消息、SSE                                       |
+| 场景 | Starter | 关键能力 |
+|---|---|---|
+| **核心基础（必引）** | [eagle-common-starter](../eagle-starter/eagle-common-starter/USAGE.md) | 基类、异常、领域事件、`DistributedLock` 接口、i18n、压测标记 |
+| **数据访问（JPA）** | [eagle-data-jpa-starter](../eagle-starter/eagle-data-jpa-starter/USAGE.md) | JPA 配置、审计字段、多数据库方言 |
+| **数据访问（R2DBC）** | [eagle-data-r2dbc-starter](../eagle-starter/eagle-data-r2dbc-starter/USAGE.md) | WebFlux 响应式仓库、响应式审计 |
+| **缓存 / 锁 / 限流** | [eagle-redis-starter](../eagle-starter/eagle-redis-starter/USAGE.md) | Redisson + Caffeine、击穿 / 穿透防护、布隆过滤器 |
+| **消息队列** | [eagle-amqp-starter](../eagle-starter/eagle-amqp-starter/) | RabbitMQ 领域事件、重试、DLQ |
+| **分布式 ID** | [eagle-id-generator-starter](../eagle-starter/eagle-id-generator-starter/USAGE.md) | Snowflake / UUID v7 / TSID / 业务单号 |
+| **接口幂等** | [eagle-idempotency-starter](../eagle-starter/eagle-idempotency-starter/USAGE.md) | `@Idempotent`：TOKEN / BUSINESS_KEY / RESULT_CACHE |
+| **OAuth2 资源服务器** | [eagle-resource-server-starter](../eagle-starter/eagle-resource-server-starter/USAGE.md) | JWT 鉴权、`SecurityUtils`、`EagleUser` |
+| **服务间 RPC（同步）** | [eagle-restclient-starter](../eagle-starter/eagle-restclient-starter/USAGE.md) | RestClient + `@HttpExchange`、Token 自动透传、错误转换 |
+| **服务间 RPC（反应式）** | [eagle-webclient-starter](../eagle-starter/eagle-webclient-starter/README.md) | WebClient + `@HttpExchange`，WebFlux 用 |
+| **链路追踪** | [eagle-tracing-starter](../eagle-starter/eagle-tracing-starter/USAGE.md) | Brave / B3 / Zipkin、MDC |
+| **OpenAPI 文档** | [eagle-openapi-starter](../eagle-starter/eagle-openapi-starter/USAGE.md) | SpringDoc 3、分组、JWT Security Scheme |
+| **对象存储** | [eagle-oss-minio-starter](../eagle-starter/eagle-oss-minio-starter/USAGE.md) | MinIO + 本地降级、签名 URL、上传校验 |
+| **定时任务** | [eagle-scheduler-starter](../eagle-starter/eagle-scheduler-starter/USAGE.md) | XXL-JOB 3.4 |
+| **分库分表** | [eagle-sharding-starter](../eagle-starter/eagle-sharding-starter/) | ShardingSphere YAML |
+| **限流熔断** | [eagle-resilience-starter](../eagle-starter/eagle-resilience-starter/) | `@RateLimit`、Resilience4J 熔断 / 重试 / 超时 |
+| **字段加密** | [eagle-encrypt-starter](../eagle-starter/eagle-encrypt-starter/) | AES-256 JPA `@Convert` |
+| **操作审计** | [eagle-audit-log-starter](../eagle-starter/eagle-audit-log-starter/) | `@AuditLog`、异步落表 |
+| **WebSocket / SSE** | [eagle-websocket-starter](../eagle-starter/eagle-websocket-starter/USAGE.md) | STOMP、离线消息、SSE |
+
+## 已移除（不要再引用）
+
+| 原 starter | 现状 |
+|---|---|
+| `eagle-tenant-starter` | 多租户整体移除，无 `TenantContextHolder` |
+| `eagle-rocketmq-starter` | 由 `eagle-amqp-starter`（RabbitMQ）替代 |
+| `eagle-dynamic-datasource-starter` | 已移除；分库分表用 `eagle-sharding-starter` |
+| `eagle-elasticsearch-starter` | 已移除 |
+| `eagle-excel-starter` | 已移除；需要 POI 时业务模块直接引 `poi-ooxml` |
+| `eagle-notification-starter` | 已移除；短信由 auth-service 直连 |
+| `eagle-seata-starter` | 已移除；跨服务一致性走本地事务 + AMQP 集成事件 |
+| `eagle-sentinel-starter` | 已移除；方法级限流用 `eagle-resilience-starter`，网关用 Redis 令牌桶 |
+| `eagle-ai-starter` | 已移除 |
 
 ## 推荐组合
 
@@ -39,51 +54,36 @@
 ```gradle
 implementation platform('com.eagle:eagle-bom')
 
-implementation project(':eagle-starter:eagle-common-starter')          // 必引
-implementation project(':eagle-starter:eagle-data-jpa-starter')        // 持久化
-implementation project(':eagle-starter:eagle-redis-starter')           // 缓存 + 锁
-implementation project(':eagle-starter:eagle-resource-server-starter') // 鉴权
-implementation project(':eagle-starter:eagle-openapi-starter')         // 文档
-implementation project(':eagle-starter:eagle-tracing-starter')         // 追踪
-implementation project(':eagle-starter:eagle-restclient-starter')      // 同步 RPC（servlet 服务）
-// 或反应式服务：implementation project(':eagle-starter:eagle-webclient-starter')
-runtimeOnly 'mysql:mysql-connector-j'
+implementation 'com.eagle:eagle-common-starter'
+implementation 'com.eagle:eagle-data-jpa-starter'
+implementation 'com.eagle:eagle-redis-starter'
+implementation 'com.eagle:eagle-resource-server-starter'
+implementation 'com.eagle:eagle-openapi-starter'
+implementation 'com.eagle:eagle-tracing-starter'
+implementation 'com.eagle:eagle-restclient-starter'      // servlet
+// 或反应式：implementation 'com.eagle:eagle-webclient-starter'
 ```
 
-### 多租户 SaaS
-
-```gradle
-// 在标准业务服务基础上叠加
-implementation project(':eagle-starter:eagle-tenant-starter')          // 租户隔离
-```
+运行时数据库：本仓库三个服务只用 PostgreSQL。starter 层仍传递 MySQL / H2 驱动，服务层已排除。
 
 ### 高并发交易服务（订单 / 支付）
 
 ```gradle
-// 在标准业务服务基础上叠加
-implementation project(':eagle-starter:eagle-rocketmq-starter')        // 异步事件
-implementation project(':eagle-starter:eagle-idempotency-starter')     // 接口幂等
-implementation project(':eagle-starter:eagle-id-generator-starter')    // 业务单号
-implementation project(':eagle-starter:eagle-sentinel-starter')        // 限流
-implementation project(':eagle-starter:eagle-seata-starter')           // 分布式事务（按需）
+implementation 'com.eagle:eagle-amqp-starter'
+implementation 'com.eagle:eagle-idempotency-starter'
+implementation 'com.eagle:eagle-id-generator-starter'
+implementation 'com.eagle:eagle-resilience-starter'
 ```
 
-### 检索 / 大数据服务
-
-```gradle
-implementation project(':eagle-starter:eagle-common-starter')
-implementation project(':eagle-starter:eagle-elasticsearch-starter')
-implementation project(':eagle-starter:eagle-resource-server-starter')
-implementation project(':eagle-starter:eagle-scheduler-starter')       // 定时索引同步
-```
+跨服务不要上 Seata。本地事务内 `registerEvent()`，AFTER_COMMIT 发集成事件，消费方按 `eventId` 幂等。
 
 ### 实时推送服务
 
 ```gradle
-implementation project(':eagle-starter:eagle-common-starter')
-implementation project(':eagle-starter:eagle-redis-starter')           // 集群广播 + 离线
-implementation project(':eagle-starter:eagle-websocket-starter')
-implementation project(':eagle-starter:eagle-resource-server-starter')
+implementation 'com.eagle:eagle-common-starter'
+implementation 'com.eagle:eagle-redis-starter'
+implementation 'com.eagle:eagle-websocket-starter'
+implementation 'com.eagle:eagle-resource-server-starter'
 ```
 
 ## Starter 间依赖关系
@@ -93,55 +93,44 @@ implementation project(':eagle-starter:eagle-resource-server-starter')
                               ▲
               ┌───────────────┼────────────────────┐
               │               │                    │
-        eagle-redis      eagle-rocketmq      其他业务 starter
-        (DistributedLock 实现)              (按需)
-              │               │
-              └─── 提供分布式锁 + 事件发布 ───┘
+        eagle-redis      eagle-amqp           其他业务 starter
+        (DistributedLock 实现)  (集成事件)
 ```
 
-- `eagle-common-starter` 是**基础**，所有其他 starter 都依赖
-- `eagle-redis-starter` 提供 `DistributedLock` 默认实现（Redisson）
-- `eagle-rocketmq-starter` 也可作为 `DistributedLock` 备选实现
-- `eagle-tracing-starter` 与 `eagle-restclient-starter` / `eagle-webclient-starter` / `eagle-rocketmq-starter` 自动协作（traceId 透传）
-- `eagle-idempotency-starter` 依赖 `eagle-redis-starter`（Token 存储）
-- `eagle-websocket-starter` 集群部署依赖 `eagle-redis-starter`（跨实例广播 + 离线消息）
+- `eagle-common-starter` 是基础，其他 starter 都依赖它
+- `eagle-redis-starter` 提供 `DistributedLock` 的 Redisson 实现
+- `eagle-tracing-starter` 与 restclient / webclient / amqp 自动协作透传 traceId
+- `eagle-idempotency-starter` 依赖 Redis 存 Token
+- `eagle-websocket-starter` 集群部署依赖 Redis（跨实例广播 + 离线消息）
 
 ## 开发规范联动
 
-每份 `USAGE.md` 末尾都有"关联规则"指向 `.claude/rules/` 中对应规范文件。AI 编程时可按"功能 → starter → 规则"链路深入。
+规则真源在 `.agents/rules/`（`.claude/rules/` 是兼容链接）。AI 编程按「功能 → starter → 规则」深入。
 
-| 规则                                 | 关联 starter                                                        |
-|------------------------------------|-------------------------------------------------------------------|
-| `.claude/rules/02-architecture.md` | `eagle-common-starter` / `eagle-rocketmq-starter`（集成事件契约）           |
-| `.claude/rules/03-api-error.md`    | `eagle-common-starter`（ErrorCode） / `eagle-openapi-starter`         |
-| `.claude/rules/04-data.md`         | `eagle-data-jpa-starter` / `eagle-data-r2dbc-starter` |
-| `.claude/rules/05-security.md`     | `eagle-resource-server-starter` / `eagle-tenant-starter` |
-| `.claude/rules/06-boot4.md`  | `eagle-restclient-starter` / `eagle-webclient-starter`（含所有 starter 的自动配置写法） |
+| 规则 | 关联 starter |
+|---|---|
+| `00-core.md` / `01-java25.md` | 全部 |
+| `02-architecture.md` | `eagle-common-starter` / `eagle-amqp-starter`（集成事件契约） |
+| `03-api-error.md` | `eagle-common-starter`（ErrorCode）/ `eagle-openapi-starter` |
+| `04-data.md` | `eagle-data-jpa-starter` / `eagle-data-r2dbc-starter` |
+| `05-security.md` | `eagle-resource-server-starter` |
+| `06-boot4.md` | `eagle-restclient-starter` / `eagle-webclient-starter`（含自动配置写法） |
 
-缓存、消息、分布式事务、调度、对象存储、韧性等**不再单独设规则文件**，规范随对应 starter 的 skill
-（`eagle-redis` / `eagle-rocketmq` / `eagle-seata` / `eagle-scheduler` / `eagle-oss-minio` / `eagle-resilience`）按需加载。
+缓存、消息、调度、对象存储、韧性的规范在对应 Skill reference（`.agents/skills/eagle-cloud/references/`），不要再去翻已删除 starter 的旧文档。
 
-## 接入新项目快速指南
+## 接入新项目
 
 ```
-新业务项目接入 eagle-cloud 基建的标准动作：
-
 1) 引 BOM
-   build.gradle → implementation platform('com.eagle:eagle-bom:x.y.z')
+   implementation platform('com.eagle:eagle-bom:1.9.0-SNAPSHOT')
 
-2) 按场景挑 starter
-   参照本文档"推荐组合"
+2) 按场景挑 starter（见「推荐组合」）
 
-3) 配置 application.yml
-   每个 starter 的 USAGE.md → 配置项 章节
+3) 配 application.yml
+   JWT 用 jwk-set-uri 指向 auth-service
+   公开路径写 eagle.resource-server.permit-paths
 
-4) 抄最小示例验证
-   每个 starter 的 USAGE.md → 最小示例 章节
+4) 抄 USAGE.md 最小示例验证
 
-5) 阅读关联规则避免常见错误
-   每个 starter 的 USAGE.md → 关联规则 章节
+5) 读关联规则，避免套用已移除的 Tenant / Seata / Sentinel / Nacos / RocketMQ API
 ```
-
-## 反馈与迭代
-
-发现 USAGE.md 错漏 / 想补充新示例 → 提 PR 修改对应 `eagle-starter/{name}/USAGE.md`，CI 通过即合并。

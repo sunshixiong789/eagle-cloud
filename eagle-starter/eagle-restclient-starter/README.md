@@ -5,16 +5,16 @@
 
 > 反应式（WebFlux）服务请使用配套的 **`eagle-webclient-starter`**，避免在 reactive 链路里阻塞 event loop。
 
-模块提供：服务发现 LoadBalancer、声明式 HTTP 接口、入站 Header 自动透传、租户透传、Seata XID 透传、
+模块提供：服务发现 LoadBalancer、声明式 HTTP 接口、入站 Header 自动透传、
 统一错误转换、超时配置和 Spring Boot 观测链路集成。
+类路径上如果还有 Seata，会额外透传 `TX_XID`（`eagle-seata-starter` 已移除，本仓库默认不会装配）。
 
 ## 模块能力
 
 | 组件                                               | 说明                                              |
 |--------------------------------------------------|-------------------------------------------------|
 | `PropagatingHeadersClientHttpRequestInterceptor` | 透传 `Authorization`、`Accept-Language`、请求 ID、压测标记（servlet 入站环境） |
-| `TenantClientHttpRequestInterceptor`             | 透传 `X-Tenant-Id`，仅存在 `eagle-tenant-starter` 时注册 |
-| `SeataXidClientHttpRequestInterceptor`           | 透传 `TX_XID`，仅存在 Seata 时注册                       |
+| `SeataXidClientHttpRequestInterceptor`           | 透传 `TX_XID`，仅类路径存在 Seata 时注册（本仓库默认不引入） |
 | `EagleResponseErrorHandler`                      | 将下游 HTTP 错误转换为项目异常体系                            |
 | `EagleRestClientCustomizer`                      | 为所有自动配置的 `RestClient.Builder` 注入超时、拦截器、错误处理     |
 | `EagleRestServiceClientFactory`                  | 创建 Spring HTTP Service Interface 同步代理           |
@@ -28,8 +28,7 @@ eagle-restclient-starter
 ├── spring-cloud-starter-loadbalancer
 ├── spring-web                        ← 不再拖 Tomcat / Spring MVC
 ├── jakarta.servlet-api               ← compileOnly，运行时由 servlet 服务自身提供
-├── eagle-tenant-starter              ← 可选，compileOnly
-└── seata-spring-boot-starter         ← 可选，compileOnly
+└── seata-spring-boot-starter         ← 可选 compileOnly；本仓库已移除 seata-starter，默认不装配
 ```
 
 ## 快速开始
@@ -108,4 +107,4 @@ eagle:
 - 客户端接口只描述 HTTP 契约，不加 `@Transactional`
 - 不在客户端接口中做 fallback 默认实现；降级由应用服务按业务语义处理
 - **WebFlux 服务禁用** `RestClient`：会阻塞 event loop，请用 `eagle-webclient-starter`
-- 事务内远程调用需明确一致性模型：强一致用 Seata，最终一致用领域事件或 MQ
+- 事务内远程调用需明确一致性模型：不要在 `@Transactional` 里调远程；跨服务走本地事务 + AMQP 集成事件 + 消费方幂等

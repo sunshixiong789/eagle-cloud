@@ -6,16 +6,15 @@
 > 同步阻塞场景请使用 **`eagle-restclient-starter`**。
 
 模块提供：服务发现 LoadBalancer、声明式反应式 HTTP 接口、入站 Header 自动透传（从 Reactor Context
-读取 `ServerWebExchange`）、租户透传（基于 ContextPropagation 桥接的 ThreadLocal）、Seata XID 透传、
-统一错误转换。
+读取 `ServerWebExchange`）、统一错误转换。
+类路径上如果还有 Seata，会额外透传 `TX_XID`（本仓库默认不装配）。
 
 ## 模块能力
 
 | 组件                                            | 说明                                                                       |
 |-----------------------------------------------|--------------------------------------------------------------------------|
 | `PropagatingHeadersExchangeFilterFunction`    | 透传入站请求 Header / 压测标记（reactive 版，从 ServerWebExchange 取入站 header）          |
-| `TenantExchangeFilterFunction`                | 透传 `X-Tenant-Id`，仅存在 `eagle-tenant-starter` 时注册                           |
-| `SeataXidExchangeFilterFunction`              | 透传 `TX_XID`，仅存在 Seata 时注册                                                |
+| `SeataXidExchangeFilterFunction`              | 透传 `TX_XID`，仅类路径存在 Seata 时注册（本仓库默认不引入） |
 | `EagleWebClientErrorFilter`                   | 把下游 4xx/5xx 响应转换为项目异常体系（`ExchangeFilterFunction` 实现）                     |
 | `EagleWebClientCustomizer`                    | 应用上述 filter 到 `WebClient.Builder`                                        |
 | `EagleReactiveServiceClientFactory`           | 创建 Spring HTTP Service Interface 反应式代理（基于 `WebClientAdapter`）            |
@@ -28,8 +27,7 @@ eagle-webclient-starter
 ├── spring-webflux                    ← 提供 WebClient / ExchangeFilterFunction / ServerWebExchange
 ├── spring-cloud-starter-loadbalancer
 ├── reactor-netty-http                ← 默认 reactive HTTP connector
-├── eagle-tenant-starter              ← 可选，compileOnly
-└── seata-spring-boot-starter         ← 可选，compileOnly
+└── seata-spring-boot-starter         ← 可选 compileOnly；本仓库已移除 seata-starter，默认不装配
 ```
 
 ## 快速开始
@@ -73,8 +71,8 @@ class RemoteClientConfiguration {
 
 - **入站 Header**：从 `ServerWebExchange`（由 Spring WebFlux 的 `ServerWebExchangeContextFilter` 自动注入到 Reactor Context）取入站请求头，按 `propagated-headers` 名单复制到下游 ClientRequest。非 web 上下文（独立 reactive 任务）跳过此步骤。
 - **压测标记**：`PressureTestContext` 已通过 `eagle-common-starter` 的 `ContextPropagationConfig` 桥接到 Reactor Context，全场景可用。
-- **租户 ID**：复用同一桥接机制，`TenantContextHolder.getTenantId()` 在 reactive 链路下也能读到正确值。
-- **Seata XID**：复用 `RootContext.getXID()`。
+- **Seata XID**：仅当类路径存在 Seata 时复用 `RootContext.getXID()`；本仓库默认没有这条链路。
+- **多租户**：`eagle-tenant-starter` 已移除，不再透传 `X-Tenant-Id`。
 
 ## 错误处理
 
