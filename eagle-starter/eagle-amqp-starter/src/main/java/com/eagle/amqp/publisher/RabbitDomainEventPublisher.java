@@ -9,6 +9,7 @@ import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.core.ExchangeBuilder;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
+import org.springframework.amqp.core.MessageDeliveryMode;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
@@ -19,6 +20,9 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * {@link DomainEventPublisher} 的 RabbitMQ 实现。
@@ -93,11 +97,12 @@ public class RabbitDomainEventPublisher implements DomainEventPublisher {
             messageProperties.setContentEncoding("UTF-8");
             messageProperties.setMessageId(event.getEventId());
             messageProperties.setCorrelationId(event.getEventId());
+            messageProperties.setDeliveryMode(MessageDeliveryMode.PERSISTENT);
             Message message = MessageBuilder.withBody(body).andProperties(messageProperties).build();
 
-            // 带上 CorrelationData：broker 的 confirm/nack 是异步回调，
-            // 没有它就只知道"有消息没进 broker"，不知道是哪一条（见 PublishConfirmLogger）。
-            rabbitTemplate.send(exchange, key, message, new CorrelationData(event.getEventId()));
+            CorrelationData correlation = new CorrelationData(event.getEventId());
+            rabbitTemplate.send(exchange, key, message, correlation);
+            awaitBrokerAccepted(correlation, exchange, key, event.getEventId());
             log.info("[AMQP] published: exchange={}, routingKey={}, eventId={}",
                     exchange, key, event.getEventId());
         } catch (JacksonException e) {
@@ -108,6 +113,37 @@ public class RabbitDomainEventPublisher implements DomainEventPublisher {
             log.error("[AMQP] publish failed: exchange={}, routingKey={}, eventId={}",
                     exchange, key, event.getEventId(), e);
             throw AmqpErrorCode.PUBLISH_FAILED.toServiceException(e);
+        }
+    }
+
+    /**
+     * 等 broker confirm。return 保证在 future 完成前填好（Spring AMQP {@link CorrelationData}）。
+     * nack / 不可路由 / 超时都抛 {@code PUBLISH_FAILED}，让调用方走 HTTP 降级。
+     */
+    private void awaitBrokerAccepted(CorrelationData correlation, String exchange,
+                                     String routingKey, String eventId) {
+        try {
+            CorrelationData.Confirm confirm = correlation.getFuture()
+                    .get(properties.getPublisherConfirmTimeout().toMillis(), TimeUnit.MILLISECONDS);
+            if (correlation.getReturned() != null) {
+                log.error("[AMQP UNROUTABLE] broker returned the message: exchange={}, routingKey={}, eventId={}",
+                        exchange, routingKey, eventId);
+                throw AmqpErrorCode.PUBLISH_FAILED.toServiceException();
+            }
+            if (!confirm.ack()) {
+                log.error("[AMQP NACK] broker did NOT accept the message: exchange={}, routingKey={}, eventId={}, cause={}",
+                        exchange, routingKey, eventId, confirm.reason());
+                throw AmqpErrorCode.PUBLISH_FAILED.toServiceException();
+            }
+        } catch (TimeoutException e) {
+            log.error("[AMQP CONFIRM TIMEOUT] exchange={}, routingKey={}, eventId={}",
+                    exchange, routingKey, eventId, e);
+            throw AmqpErrorCode.PUBLISH_FAILED.toServiceException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw AmqpErrorCode.PUBLISH_FAILED.toServiceException(e);
+        } catch (ExecutionException e) {
+            throw AmqpErrorCode.PUBLISH_FAILED.toServiceException(e.getCause());
         }
     }
 

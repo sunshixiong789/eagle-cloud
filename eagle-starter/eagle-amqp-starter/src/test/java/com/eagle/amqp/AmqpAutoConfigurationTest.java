@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.retry.MessageRecoverer;
+import org.springframework.boot.amqp.autoconfigure.RabbitListenerRetrySettingsCustomizer;
 import org.springframework.boot.amqp.autoconfigure.RabbitAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -48,7 +49,8 @@ class AmqpAutoConfigurationTest {
             runner.run(context -> assertThat(context)
                     .hasSingleBean(DomainEventPublisher.class)
                     .hasSingleBean(AmqpListenerRegistrar.class)
-                    .hasSingleBean(MessageRecoverer.class));
+                    .hasSingleBean(MessageRecoverer.class)
+                    .hasSingleBean(RabbitListenerRetrySettingsCustomizer.class));
         }
 
         @Test
@@ -111,6 +113,8 @@ class AmqpAutoConfigurationTest {
                     .isEqualTo("true");
             assertThat(environment.getProperty("spring.rabbitmq.listener.simple.retry.max-retries"))
                     .isEqualTo("3");
+            assertThat(environment.getProperty("spring.rabbitmq.template.retry.enabled"))
+                    .isEqualTo("true");
         }
 
         @Test

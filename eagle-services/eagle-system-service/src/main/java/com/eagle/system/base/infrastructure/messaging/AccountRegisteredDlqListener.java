@@ -94,8 +94,8 @@ public class AccountRegisteredDlqListener extends AbstractDlqListener<AccountReg
                     payload,
                     "base 域 User 创建失败 - 详见 MDC traceId 关联的业务异常"));
         } catch (RuntimeException ex) {
-            // 落库失败不能阻塞 AMQP ack —— 至少 ERROR 日志 + 告警还在
             log.error("persist dead letter failed, eventId={}", event.getEventId(), ex);
+            throw ex;
         }
     }
 }

@@ -1,7 +1,9 @@
 package com.eagle.amqp.config;
 
+import com.eagle.amqp.exception.AmqpErrorCode;
 import com.eagle.amqp.listener.AbstractAmqpListener;
 import com.eagle.amqp.listener.AbstractDlqListener;
+import com.eagle.amqp.properties.AmqpProperties;
 import com.eagle.amqp.support.AmqpMessageDispatcher;
 import com.eagle.amqp.support.ExchangeNaming;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +21,9 @@ import org.springframework.amqp.rabbit.listener.RabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistrar;
 import org.springframework.beans.factory.ObjectProvider;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 启动期遍历容器内所有 {@link AbstractAmqpListener} bean，声明 AMQP 拓扑并把每个 listener
@@ -64,8 +68,35 @@ public class AmqpListenerRegistrar implements RabbitListenerConfigurer {
     @Override
     public void configureRabbitListeners(RabbitListenerEndpointRegistrar registrar) {
         List<AbstractAmqpListener<?>> all = listeners.stream().toList();
+        validateMainConsumers(all);
         all.forEach(listener -> register(registrar, listener));
         log.info("[AMQP] {} listener endpoint(s) registered", all.size());
+    }
+
+    /**
+     * 启动期拦住「忘了覆盖 consumerGroup」和「两个主消费者绑同一 queue」。
+     */
+    public static void validateMainConsumers(List<AbstractAmqpListener<?>> listeners) {
+        Map<String, String> queueOwners = new LinkedHashMap<>();
+        for (AbstractAmqpListener<?> listener : listeners) {
+            if (listener instanceof AbstractDlqListener<?>) {
+                continue;
+            }
+            String queue = listener.resolveQueueName();
+            if (queue.endsWith("." + AmqpProperties.DEFAULT_CONSUMER_GROUP)) {
+                throw AmqpErrorCode.CONSUMER_INIT_FAILED.toServiceException(
+                        new IllegalStateException(
+                                listener.getClass().getName()
+                                        + " 仍使用默认 consumerGroup=eagle_default，必须覆盖 getConsumerGroup()"));
+            }
+            String previous = queueOwners.put(queue, listener.getClass().getName());
+            if (previous != null) {
+                throw AmqpErrorCode.CONSUMER_INIT_FAILED.toServiceException(
+                        new IllegalStateException(
+                                "多个主消费者绑到同一 queue=" + queue + ": " + previous
+                                        + " 与 " + listener.getClass().getName()));
+            }
+        }
     }
 
     /**
@@ -121,6 +152,13 @@ public class AmqpListenerRegistrar implements RabbitListenerConfigurer {
             rabbitAdmin.declareQueue(queue);
             Binding binding = BindingBuilder.bind(queue).to(exchange).with(listener.resolveRoutingKey());
             rabbitAdmin.declareBinding(binding);
+
+            // 主消费者一并声明 DLQ：没有 AbstractDlqListener 时 recoverer / broker DLX 也有落点
+            Queue dlq = QueueBuilder.durable(ExchangeNaming.deadLetterQueue(listenQueue)).build();
+            dlq.setIgnoreDeclarationExceptions(true);
+            rabbitAdmin.declareQueue(dlq);
+            rabbitAdmin.declareBinding(
+                    BindingBuilder.bind(dlq).to(new TopicExchange(dlxName)).with(listenQueue));
         }
 
         SimpleRabbitListenerEndpoint endpoint = new SimpleRabbitListenerEndpoint();

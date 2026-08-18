@@ -89,16 +89,34 @@ public class AuthIntegrationEventPublisher {
     @Async("taskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onAccountDeleted(AccountDeletedEvent event) {
-        publisher.publish(TOPIC, "account.deleted",
-                new AccountDeletedIntegrationEvent(event.accountId()));
-        log.debug("published account.deleted, accountId={}", event.accountId());
+        try {
+            publisher.publish(TOPIC, "account.deleted",
+                    new AccountDeletedIntegrationEvent(event.accountId()));
+            log.debug("published account.deleted, accountId={}", event.accountId());
+        } catch (RuntimeException mqEx) {
+            log.warn("AMQP publish failed, falling back to HTTP delete, accountId={}",
+                    event.accountId(), mqEx);
+            try {
+                systemUserSyncClient.deleteByAccountId(event.accountId());
+                log.info("HTTP fallback delete succeeded, accountId={}", event.accountId());
+            } catch (RuntimeException httpEx) {
+                log.error("Both MQ and HTTP delete failed for accountId={} — orphan User may remain",
+                        event.accountId(), httpEx);
+            }
+        }
     }
 
     @Async("taskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onAccountPhoneChanged(AccountPhoneChangedEvent event) {
-        publisher.publish(TOPIC, "account.phone-changed",
-                new AccountPhoneChangedIntegrationEvent(event.accountId(), event.phone()));
-        log.debug("published account.phone-changed, accountId={}", event.accountId());
+        try {
+            publisher.publish(TOPIC, "account.phone-changed",
+                    new AccountPhoneChangedIntegrationEvent(event.accountId(), event.phone()));
+            log.debug("published account.phone-changed, accountId={}", event.accountId());
+        } catch (RuntimeException mqEx) {
+            // 本仓库 User 不存手机号；下游副本服务未绑定 queue 时会 unroutable。
+            log.error("AMQP publish failed for account.phone-changed, accountId={} — "
+                    + "downstream phone replica was not notified", event.accountId(), mqEx);
+        }
     }
 }

@@ -23,7 +23,7 @@
 - **接口幂等** — `TOKEN` / `BUSINESS_KEY` / `RESULT_CACHE` 三种模式，注解驱动
 - **分布式 ID** — Snowflake / UUID v7 / TSID / NanoId，以及订单号 / 支付单号语义生成
 - **流量治理** — 网关 Redis 限流（集群级）+ `eagle-resilience-starter` 的 `@RateLimit`（单实例）
-- **跨服务一致性** — 本地事务 + 领域事件 + AFTER_COMMIT 发 AMQP 集成事件 + 消费方幂等；**没有 Seata**
+- **跨服务一致性** — 本地事务 + AFTER_COMMIT 发 AMQP（`publish()` 等 broker confirm，nack / 不可路由抛失败）+ 关键路径 HTTP 降级 + 消费方幂等；**没有 Seata / outbox**
 - **实时推送** — STOMP WebSocket + SSE，离线消息存储
 - **分库分表** — Apache ShardingSphere YAML 驱动
 - **容错弹性** — Resilience4J 熔断 / 重试 / 超时

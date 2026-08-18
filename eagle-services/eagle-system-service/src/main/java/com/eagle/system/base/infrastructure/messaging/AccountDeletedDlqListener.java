@@ -91,6 +91,7 @@ public class AccountDeletedDlqListener extends AbstractDlqListener<AccountDelete
                     "base 域 User 级联删除失败 - 详见 MDC traceId 关联的业务异常"));
         } catch (RuntimeException ex) {
             log.error("persist dead letter failed, eventId={}", event.getEventId(), ex);
+            throw ex;
         }
     }
 }

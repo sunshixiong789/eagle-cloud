@@ -1,7 +1,9 @@
 package com.eagle.auth.core.infrastructure.remote;
 
 import com.eagle.auth.core.infrastructure.event.integration.AccountRegisteredIntegrationEvent;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.service.annotation.DeleteExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
 
@@ -9,7 +11,7 @@ import org.springframework.web.service.annotation.PostExchange;
  * 跨服务同步创建 User 的内部 API 客户端
  * (调 eagle-system-service {@code POST /internal/users/from-account})。
  *
- * <p><strong>定位</strong>:RocketMQ 投递 {@code account.registered} 失败时的同步降级通道。
+ * <p><strong>定位</strong>:AMQP 投递失败（含 broker nack / 不可路由）时的同步降级通道。
  * 主链路仍是 MQ —— 异步、解耦、可重试;HTTP 仅在 broker 不可达时兜底,保证不丢账号同步。
  *
  * <p>{@link AccountRegisteredIntegrationEvent} 的字段直接序列化为 JSON,
@@ -26,4 +28,10 @@ public interface SystemUserSyncClient {
      */
     @PostExchange("/from-account")
     void syncFromAccount(@RequestBody AccountRegisteredIntegrationEvent event);
+
+    /**
+     * 同步删除 User。下游找不到对应 User 即跳过，重复调用安全。
+     */
+    @DeleteExchange("/from-account/{accountId}")
+    void deleteByAccountId(@PathVariable Long accountId);
 }

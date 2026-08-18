@@ -11,7 +11,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.eagle.auth.core.domain.event.AccountDeletedEvent;
+import com.eagle.amqp.exception.AmqpErrorCode;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,5 +43,15 @@ class AuthIntegrationEventPublisherTest {
         assertEquals(100L, captor.getValue().getAccountId());
         assertEquals("13900139000", captor.getValue().getPhone());
         assertEquals("1.0", captor.getValue().getEventVersion());
+    }
+
+    @Test
+    void shouldFallBackToHttpWhenDeletePublishFails() {
+        doThrow(AmqpErrorCode.PUBLISH_FAILED.toServiceException())
+                .when(publisher).publish(eq("eagle_auth_events"), eq("account.deleted"), any());
+
+        bridge.onAccountDeleted(new AccountDeletedEvent(88L));
+
+        verify(systemUserSyncClient).deleteByAccountId(88L);
     }
 }

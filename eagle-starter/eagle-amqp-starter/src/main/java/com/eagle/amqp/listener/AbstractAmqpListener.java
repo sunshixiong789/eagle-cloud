@@ -94,10 +94,9 @@ public abstract class AbstractAmqpListener<T extends BaseEvent> {
     /**
      * 消费者分组，决定 queue 名后缀。
      *
-     * <p><b>同一 topic 上的每个消费者都应覆盖此方法给出唯一值。</b>
-     * 共用默认值会让多个消费者绑到同一个 queue，退化成竞争消费 ——
-     * 迁移前正因为 13 个消费者未覆盖此方法而产生了线上缺陷
-     * （邀请绑定事件的"发会员天数"与"发站内信"二选一执行）。
+     * <p><b>同一 topic 上的每个消费者都必须覆盖此方法给出唯一值。</b>
+     * 仍返回 {@code eagle_default}、或与另一个主消费者解析出同一 queue，
+     * {@code AmqpListenerRegistrar} 会在启动期失败。
      *
      * @return 消费者分组名
      */

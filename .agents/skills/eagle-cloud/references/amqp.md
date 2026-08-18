@@ -14,8 +14,9 @@ description: Use when working with RabbitMQ/Spring AMQP in eagle-cloud projects 
 
 - 同模块事件 → Spring `ApplicationEvent`
 - 强一致性 RPC → RestClient / `@HttpExchange`
-- 本地事务 + 发消息原子保证 → 本项目现网零调用，未提供；用
-  `@TransactionalEventListener(phase = AFTER_COMMIT)` + DB 唯一约束幂等替代
+- 本地事务 + 发消息原子保证 → 没有 outbox。用
+  `@TransactionalEventListener(phase = AFTER_COMMIT)` + `publish()` 等 broker confirm
+  （nack / 不可路由会抛 `PUBLISH_FAILED`）+ 关键路径 HTTP 降级 + 消费方 DB 唯一约束幂等
 - 延迟消息 / 顺序消息 / MQ 分布式锁 → 现网零调用，未提供；分布式锁用 `eagle-redis-starter` 的 `DistributedLock`
 
 ## 依赖与启用
@@ -38,14 +39,9 @@ spring:
 eagle:
   amqp:
     exchange-prefix: dev_          # exchange 名的环境前缀，跨环境共享 topic（如 eagle_auth_events）留空
-    consumer-group: eagle_default  # 每个消费者必须覆盖 getConsumerGroup() 给唯一值，否则退化为竞争消费
-    consumer:
-      prefetch: 32
-      retry-alert-threshold: 3
-      max-attempts: 4
-      initial-backoff: 1s
-      max-backoff: 30s
-      multiplier: 2.0
+    publisher-confirm-timeout: 5s  # publish() 等待 broker confirm / return 的超时
+    # 不要依赖 consumer-group 默认值；每个 AbstractAmqpListener 必须覆盖 getConsumerGroup()，
+    # 仍用 eagle_default 或两个主消费者绑同一 queue 会启动失败
 ```
 
 ⚠️ 此 starter **不**使用 `@RabbitListener` 注解——队列名是运行时由 `getTopic()` 推导的，编译期常量注解表达不了。
@@ -67,7 +63,8 @@ eagle:
 | `AbstractDlqListener<T>`                    | 死信消费者，实现 `getOriginalTopic() / getOriginalConsumerGroup() / getEventClass() / handleDeadLetter(T, totalAttempts)` |
 | `ExchangeNaming`                            | 拓扑命名工具：`exchange()` / `queue()` / `deadLetterExchange()` / `deadLetterQueue()`   |
 | `AmqpListenerRegistrar`                     | `RabbitListenerConfigurer`，启动期遍历所有 `AbstractAmqpListener` bean 声明拓扑 + 注册 endpoint |
-| `EagleRepublishRecoverer`                   | 唯一的 `MessageRecoverer` bean，重试耗尽后投 DLX；DLX 与 routing key 按 SpEL 逐条消息求值       |
+| `EagleRepublishRecoverer`                   | 继承框架 `RepublishMessageRecovererWithConfirms`，重试耗尽后投 DLX 并等 confirm；停机回队 |
+| `EagleAmqpRetry`                            | Boot `RabbitListenerRetrySettingsCustomizer`：坏报文 / 强制回队不退避                       |
 | `AmqpErrorCode`                             | 错误码（16001-16003，沿用原 RocketMQ 号段）                                                |
 
 ## AMQP 拓扑（与 RocketMQ 语义的关键差异）
@@ -83,8 +80,9 @@ DLQ        {queue}.dlq                          主 queue 声明 x-dead-letter-e
 `getRoutingKey()` 默认值是 `"#"`（全订阅），**不是** `"*"`。子类要按 tag 分流时（如单 exchange 多 routing key 广播），显式覆盖
 `getRoutingKey()` 返回具体值，如 `"account.registered"`。
 
-⚠️ **每个消费者必须显式覆盖 `getConsumerGroup()`** 给唯一值——共用默认值 `eagle_default` 会让多个消费者绑到同一 queue，
-退化为竞争消费（一条消息只会被其中一个处理，这正是 RocketMQ 时代的线上 bug 根因）。
+⚠️ **每个消费者必须显式覆盖 `getConsumerGroup()`** 给唯一值。启动期会校验：仍用 `eagle_default`、
+或两个主消费者解析出同一 queue 名，直接启动失败。主 listener 注册时会一并声明 DLQ，
+即使还没有 `AbstractDlqListener`，recoverer / broker DLX 也有落点。
 
 ## 最小示例
 
@@ -185,8 +183,22 @@ RabbitMQ 没有 RocketMQ Broker 侧的递增退避重试，改由消费线程内
 
 - `retry.max-retries`（默认 3，即含首次共 4 次）耗尽后由 `EagleRepublishRecoverer` 投递到 DLX，`x-eagle-attempts` header 记录总尝试次数
 - `handleDeadLetter(event, totalAttempts)` 拿到的是真实次数，不再像 RocketMQ 时代恒为 0
-- 反序列化失败直接进 DLQ（不重试）：`AmqpMessageDispatcher` 抛 `AmqpRejectAndDontRequeueException`，报文有问题重试多少次都一样
+- 反序列化失败**不退避**：`AmqpRejectAndDontRequeueException` 经 `EagleAmqpRetry` 穿透 cause 链，直接进 recoverer → DLQ
+- 停机或 `ImmediateRequeueAmqpException`：recoverer 回队，不推进 DLQ
+- DLQ 处理失败抛 `ImmediateRequeueAmqpException`，证据留在 DLQ，不再静默 ack
 - DLQ listener 走**不挂 retry advice** 的独立容器工厂 —— 死信重试会在 DLQ 里打转
+
+### 发布语义
+
+`DomainEventPublisher.publish()` 会等 `CorrelationData.getFuture()`（框架 API）：
+
+- broker **ack** 且无 return → 返回
+- **nack** / **不可路由** / **超时** → 抛 `PUBLISH_FAILED`
+
+连接断开时先走 Boot 的 `spring.rabbitmq.template.retry.*`（starter 默认打开，最多再试 2 次）。
+关键集成事件（账号注册 / 删除）在 AFTER_COMMIT 里捕获该异常后走 HTTP 降级。
+
+进程在事务提交之后、`publish()` 返回之前崩溃，消息仍可能丢 —— 没有 outbox。不要为此自研半消息。
 
 ### DLQ 保留策略走 policy，不写进队列声明
 
@@ -204,8 +216,9 @@ DLQ 声明**不带任何 arguments**。保留策略（`x-message-ttl` / `x-max-l
 
 | key                            | 类型     | 默认             | 说明                      |
 |--------------------------------|--------|----------------|-------------------------|
-| `eagle.amqp.exchange-prefix`   | String | `""`           | exchange 名环境前缀          |
-| `eagle.amqp.consumer-group`    | String | `eagle_default`| 消费者默认分组，**必须被每个消费者覆盖** |
+| `eagle.amqp.exchange-prefix`            | String   | `""`            | exchange 名环境前缀 |
+| `eagle.amqp.consumer-group`             | String   | `eagle_default` | 仅作覆盖前的占位；主消费者仍用此值会启动失败 |
+| `eagle.amqp.publisher-confirm-timeout`  | Duration | `5s`            | `publish()` 等 confirm / return 的超时 |
 
 消费行为（下面这些默认值由 starter 的 `EagleAmqpDefaultsEnvironmentPostProcessor` 提供，
 优先级最低，yml / 环境变量 / Consul KV 配了都能盖掉）：
@@ -219,12 +232,14 @@ DLQ 声明**不带任何 arguments**。保留策略（`x-message-ttl` / `x-max-l
 | `spring.rabbitmq.listener.simple.retry.max-interval`     | `30s`      | 退避时长上限                      |
 | `spring.rabbitmq.listener.simple.retry.multiplier`       | `2.0`      | 退避倍率                        |
 | `spring.rabbitmq.listener.simple.default-requeue-rejected`| `false`    | 由 starter 设在工厂上，显式配置仍优先     |
+| `spring.rabbitmq.template.retry.enabled`                 | `true`     | 发布遇连接断开时按官方 retry 重试         |
+| `spring.rabbitmq.template.retry.max-retries`             | `2`        | 不含首次                                    |
 
 ## 常见错误
 
 - ❌ `@RabbitListener` 注解 → ✅ **不用注解**，继承 `AbstractAmqpListener` + 实现 3 个抽象方法
 - ❌ 覆盖 `getTagExpression()` → ✅ 方法已改名 **`getRoutingKey()`**，默认 `"#"`（不是 RocketMQ 语义的 `"*"`）
-- ❌ 消费者不覆盖 `getConsumerGroup()` → ✅ 必须覆盖为唯一值，否则同 exchange 多消费者竞争消费
+- ❌ 消费者不覆盖 `getConsumerGroup()` → ✅ 必须覆盖为唯一值，否则**启动失败**（不再静默竞争消费）
 - ❌ `publisher.publishAsync/publishDelayed/publishOrdered(...)` → ✅ 接口已删除这些方法（现网零调用）；只有 `publish(topic, event)` / `publish(topic, routingKey, event)`
 - ❌ DLQ 子类只覆盖 `getOriginalConsumerGroup()` → ✅ 还必须覆盖 **`getOriginalTopic()`**（新增的抽象方法）
 - ❌ 用 `MsgId` 做幂等 → ✅ 用 `BaseEvent.eventId`

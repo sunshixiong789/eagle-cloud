@@ -5,6 +5,7 @@ import com.eagle.amqp.properties.AmqpProperties;
 import com.eagle.amqp.publisher.DomainEventPublisher;
 import com.eagle.amqp.publisher.RabbitDomainEventPublisher;
 import com.eagle.amqp.support.AmqpMessageDispatcher;
+import com.eagle.amqp.support.EagleAmqpRetry;
 import com.eagle.amqp.support.EagleRepublishRecoverer;
 import com.eagle.amqp.support.PublishConfirmLogger;
 import com.eagle.amqp.support.UnroutableMessageLogger;
@@ -15,6 +16,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.RabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.retry.MessageRecoverer;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.amqp.autoconfigure.RabbitListenerRetrySettingsCustomizer;
 import org.springframework.boot.amqp.autoconfigure.RabbitProperties;
 import org.springframework.boot.amqp.autoconfigure.RabbitTemplateCustomizer;
 import org.springframework.boot.amqp.autoconfigure.SimpleRabbitListenerContainerFactoryConfigurer;
@@ -22,6 +24,7 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import tools.jackson.databind.ObjectMapper;
 
@@ -94,9 +97,24 @@ public class EagleAmqpAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public MessageRecoverer eagleMessageRecoverer(RabbitTemplate rabbitTemplate,
-                                                  RabbitProperties rabbitProperties) {
+                                                  RabbitProperties rabbitProperties,
+                                                  AmqpProperties amqpProperties,
+                                                  ConfigurableApplicationContext applicationContext) {
         long maxRetries = rabbitProperties.getListener().getSimple().getRetry().getMaxRetries();
-        return new EagleRepublishRecoverer(rabbitTemplate, maxRetries);
+        EagleRepublishRecoverer recoverer = new EagleRepublishRecoverer(
+                rabbitTemplate, maxRetries, applicationContext);
+        recoverer.applyConfirmTimeout(amqpProperties.getPublisherConfirmTimeout());
+        return recoverer;
+    }
+
+    /**
+     * 坏报文和强制回队不走进退避。Boot 会收集全部 {@link RabbitListenerRetrySettingsCustomizer}
+     * 装进 retry policy。
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "eagleAmqpRetrySettingsCustomizer")
+    public RabbitListenerRetrySettingsCustomizer eagleAmqpRetrySettingsCustomizer() {
+        return settings -> settings.setExceptionPredicate(EagleAmqpRetry::shouldRetry);
     }
 
     /**

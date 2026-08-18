@@ -3,6 +3,8 @@ package com.eagle.amqp.properties;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.time.Duration;
+
 /**
  * AMQP（RabbitMQ）拓扑命名配置。
  *
@@ -43,6 +45,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class AmqpProperties {
 
     /**
+     * 未覆盖 {@code getConsumerGroup()} 时的默认分组。启动期若仍使用此值会直接失败。
+     */
+    public static final String DEFAULT_CONSUMER_GROUP = "eagle_default";
+
+    /**
      * exchange / queue 名的环境前缀，如 {@code dev_} / {@code test_} / {@code prod_}。
      *
      * <p>留空表示不加前缀 —— 跨环境共享的历史 topic（如 {@code eagle_auth_events}）
@@ -57,5 +64,14 @@ public class AmqpProperties {
      * {@code getConsumerGroup()} 给出唯一值 —— 共用默认值会让它们绑到同一个 queue，
      * 退化成竞争消费（这正是迁移前存在的线上缺陷）。
      */
-    private String consumerGroup = "eagle_default";
+    private String consumerGroup = DEFAULT_CONSUMER_GROUP;
+
+    /**
+     * 等待 broker publisher confirm / return 的超时。
+     *
+     * <p>{@code DomainEventPublisher.publish} 用 Spring AMQP 的
+     * {@code CorrelationData.getFuture()} 等结果，nack 或不可路由会抛
+     * {@code PUBLISH_FAILED}。超时同样视为发布失败。
+     */
+    private Duration publisherConfirmTimeout = Duration.ofSeconds(5);
 }

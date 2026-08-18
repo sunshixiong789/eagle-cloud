@@ -34,13 +34,16 @@ public class EagleAmqpDefaultsEnvironmentPostProcessor implements EnvironmentPos
      * 默认值取自迁移前 {@code eagle.amqp.consumer.*} 的取值，保证行为不变：
      * max-attempts 4（含首次）即 max-retries 3。
      */
-    private static final Map<String, Object> DEFAULTS = Map.of(
-            "spring.rabbitmq.listener.simple.retry.enabled", "true",
-            "spring.rabbitmq.listener.simple.retry.max-retries", "3",
-            "spring.rabbitmq.listener.simple.retry.initial-interval", "1s",
-            "spring.rabbitmq.listener.simple.retry.multiplier", "2.0",
-            "spring.rabbitmq.listener.simple.retry.max-interval", "30s",
-            "spring.rabbitmq.listener.simple.prefetch", "32");
+    private static final Map<String, Object> DEFAULTS = Map.ofEntries(
+            Map.entry("spring.rabbitmq.listener.simple.retry.enabled", "true"),
+            Map.entry("spring.rabbitmq.listener.simple.retry.max-retries", "3"),
+            Map.entry("spring.rabbitmq.listener.simple.retry.initial-interval", "1s"),
+            Map.entry("spring.rabbitmq.listener.simple.retry.multiplier", "2.0"),
+            Map.entry("spring.rabbitmq.listener.simple.retry.max-interval", "30s"),
+            Map.entry("spring.rabbitmq.listener.simple.prefetch", "32"),
+            Map.entry("spring.rabbitmq.template.retry.enabled", "true"),
+            Map.entry("spring.rabbitmq.template.retry.max-retries", "2"),
+            Map.entry("spring.rabbitmq.template.retry.initial-interval", "200ms"));
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
